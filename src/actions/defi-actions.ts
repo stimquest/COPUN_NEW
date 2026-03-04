@@ -310,6 +310,8 @@ export async function getMonitorPoints(monitorId: string) {
     return data.reduce((sum, row) => sum + row.points, 0);
 }
 
+export async function getLeaderboard(type: 'monitors', limit?: number): Promise<{ monitor_id: string; total_points: number; }[]>;
+export async function getLeaderboard(type: 'clubs', limit?: number): Promise<{ club_id: string; total_points: number; }[]>;
 export async function getLeaderboard(type: 'monitors' | 'clubs' = 'monitors', limit = 10) {
     const supabase = await createClient();
 
