@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getStageById, getPedagogicalContentByIds } from '@/services/data-service';
-import { getDefis, getStageExploits } from '@/actions/defi-actions';
+import { getDefis, getStageExploits, getClubSpotsForUser, getClubObservationTargets } from '@/actions/defi-actions';
 import DefisTab from '@/components/DefisTab';
 
 export default async function DefisPage({ params }: { params: Promise<{ id: string }> }) {
@@ -13,6 +13,14 @@ export default async function DefisPage({ params }: { params: Promise<{ id: stri
     const [availableDefis, assignedExploits] = await Promise.all([
         getDefis(),
         getStageExploits(id)
+    ]);
+
+    const spotFixeIds = availableDefis
+        .filter((d: { spot_fixe?: boolean }) => d.spot_fixe)
+        .map((d: { id: string }) => d.id);
+    const [clubSpots, clubObservationTargets] = await Promise.all([
+        getClubSpotsForUser(spotFixeIds),
+        getClubObservationTargets(),
     ]);
 
     // Extract themes from selected stage content
@@ -85,6 +93,8 @@ export default async function DefisPage({ params }: { params: Promise<{ id: stri
                     availableDefis={availableDefis}
                     assignedExploits={assignedExploits}
                     suggestedThemes={suggestedThemes}
+                    clubSpots={clubSpots}
+                    clubObservationTargets={clubObservationTargets}
                 />
             </main>
         </div>

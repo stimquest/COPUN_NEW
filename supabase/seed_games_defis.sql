@@ -1,19 +1,97 @@
--- Seed Data for Games and Defis
+-- Seed Data — Défis COPUN
 
--- Insert Defis
-INSERT INTO defis (id, description, instruction, type_preuve, icon, tags_theme) VALUES
-('defi_littoral_1', 'Cartographier l''estran', 'Lors de la marée basse, identifiez les différentes zones de l''estran et dessinez un croquis rapide des types de sols rencontrés (sable, rochers, vase).', 'photo', 'map', '{"caracteristiques_littoral","estran"}'),
-('defi_activites_1', 'Recenser les activités locales', 'Observez et listez 3 activités humaines différentes sur votre site de pratique (pêche, plaisance, kayak, etc.). Validez en cochant la case.', 'checkbox', 'menu_book', '{"activites_humaines"}'),
-('defi_bio_1', 'Identifier 3 espèces locales', 'Prenez en photo 3 espèces (animales ou végétales) distinctes rencontrées durant votre sortie et essayez de les nommer.', 'photo', 'set_meal', '{"biodiversite","cohabitation_vivant"}'),
-('defi_paysage_1', 'Définir 3 amers', 'Identifiez 3 points de repère fixes et utiles (amers) sur la côte et prenez-les en photo.', 'photo', 'map', '{"lecture_paysage"}'),
-('defi_reperes_1', 'Observer la montée des eaux', 'Placez un repère fixe au bord de l''eau et revenez 30 minutes plus tard pour mesurer la distance parcourue par la mer.', 'photo', 'straighten', '{"reperes_spatio_temporels","marée"}'),
-('defi_meteo_1', 'Estimer la force du vent', 'Observez l''état de la mer (moutons, vagues) et estimez la force du vent sur l''échelle de Beaufort.', 'checkbox', 'air', '{"interactions_climatiques","vent"}'),
-('defi_dechets_1', 'Collecte de la laisse de mer', 'Ramassez 5 déchets d''origine humaine dans la laisse de mer sans toucher aux éléments naturels (algues, bois).', 'photo', 'delete', '{"impact_presence_humaine","laisse de mer"}'),
-('defi_cohabitation_1', 'Observation à distance', 'Observez un groupe d''oiseaux ou d''autres animaux marins à distance (avec des jumelles si possible) pendant 5 minutes sans les déranger.', 'checkbox', 'shield', '{"cohabitation_vivant"}'),
-('defi_sciences_1', 'Contribuer à une base de données', 'Utilisez une application de sciences participatives (comme OBSenMER ou iNaturalist) pour signaler une de vos observations.', 'photo', 'biotech', '{"sciences_participatives"}'),
-('defi_jeu_1', 'Animer un jeu pédagogique', 'Créez un jeu (Quiz, Vrai/Faux...) à partir des thèmes de votre programme et jouez-y avec votre groupe.', 'checkbox', 'sports_esports', '{"transversal"}')
-ON CONFLICT (id) DO UPDATE SET description = EXCLUDED.description, instruction = EXCLUDED.instruction;
+-- Remove défis no longer in the library
+DELETE FROM defis WHERE id NOT IN (
+    'defi_bio_2', 'defi_laisse_1', 'defi_erosion_1', 'defi_faune_1',
+    'defi_bio_3', 'defi_bio_4', 'defi_dechets_1', 'defi_collectif_5',
+    'defi_jeu_1', 'defi_debat_1'
+);
 
--- Insert Games
-INSERT INTO game_cards (id, type, theme, related_objective_id, data) VALUES
--- Error processing CSV: ReferenceError: theme is not defined
+INSERT INTO defis (id, description, instruction, type_preuve, icon, tags_theme, points) VALUES
+
+-- ============================================================
+-- FIL ROUGE — Observations récurrentes à valeur scientifique
+-- Même spot, même protocole, à chaque stage
+-- ============================================================
+
+('defi_bio_2',
+ 'Inventaire du m²',
+ 'Délimitez toujours le même carré d''1 m² sur l''estran (balisé dès le premier passage). Comptez et photographiez chaque espèce présente. Notez le nombre d''individus par espèce visible.',
+ 'photo', 'grid_view', '{"biodiversite","caracteristiques_littoral"}', 5),
+
+('defi_laisse_1',
+ 'Laisse du jour',
+ 'Sur 10 mètres de laisse de mer, toujours au même endroit, photographiez et catégorisez ce que vous trouvez : plastique, autres déchets, éléments naturels (algues, coquilles, bois). Comptez les déchets d''origine humaine.',
+ 'photo', 'water', '{"impact_presence_humaine","caracteristiques_littoral","marée"}', 5),
+
+('defi_erosion_1',
+ 'Évolution de la côte',
+ 'Depuis le même point de vue, photographiez le même tronçon de côte (falaise, dune, berge, enrochement). Notez tout changement visible par rapport à la dernière observation.',
+ 'photo', 'landslide', '{"caracteristiques_littoral","impact_presence_humaine"}', 5),
+
+('defi_faune_1',
+ 'Faune observée',
+ 'Depuis le même point d''observation, notez toutes les espèces animales visibles pendant 10 minutes (oiseaux, mammifères marins, poissons en surface). Photographiez si possible. Notez espèce, nombre estimé et comportement (repos, vol, chasse…).',
+ 'photo', 'visibility', '{"biodiversite","cohabitation_vivant"}', 5),
+
+-- ============================================================
+-- AVENTURE — Défis ponctuels, variés, engageants
+-- ============================================================
+
+('defi_bio_3',
+ 'Espèce invasive',
+ 'Recherchez et photographiez une espèce invasive présente sur votre site (crépidule, spartine, griffes de sorcière, crabe vert…). Notez où elle se concentre et son abondance approximative.',
+ 'photo', 'pest_control', '{"biodiversite","impact_presence_humaine"}', 5),
+
+('defi_bio_4',
+ 'Traces de prédation',
+ 'Photographiez des traces d''activité animale laissées dans la nature : coquille percée par un prédateur, arête de poisson, plume arrachée, terrier, empreintes… La nature laisse des indices !',
+ 'photo', 'search', '{"biodiversite","cohabitation_vivant"}', 5),
+
+('defi_dechets_1',
+ 'Collecte et tri de déchets',
+ 'Ramassez des déchets sur votre site et triez-les par matière (plastique, métal, verre, textile, autre). Photographiez le tri réalisé.',
+ 'photo', 'delete', '{"impact_presence_humaine"}', 5),
+
+('defi_collectif_5',
+ 'Carte de l''écosystème local',
+ 'Le groupe dessine collectivement une carte ou schéma représentant l''écosystème de votre site : espèces observées, zones, interactions. Photographiez le résultat.',
+ 'photo', 'draw', '{"biodiversite","caracteristiques_littoral","transversal"}', 3),
+
+-- ============================================================
+-- CONFIANCE — Défis déclaratifs, pédagogiques
+-- ============================================================
+
+('defi_jeu_1',
+ 'Animer un quiz pédagogique',
+ 'Posez 5 questions minimum sur les thèmes environnementaux du stage. Le groupe répond collectivement à voix haute, la réponse majoritaire est retenue.',
+ 'quiz', 'sports_esports', '{"transversal"}', 2),
+
+('defi_debat_1',
+ 'Le dilemme du marin',
+ 'Soumettez au groupe un dilemme environnemental (ex : pêche vs protection, tourisme vs nature). Chaque participant argumente. Le groupe vote et justifie sa décision.',
+ 'checkbox', 'balance', '{"transversal","cohabitation_vivant"}', 2)
+
+ON CONFLICT (id) DO UPDATE SET
+    description = EXCLUDED.description,
+    instruction = EXCLUDED.instruction,
+    type_preuve = EXCLUDED.type_preuve,
+    icon = EXCLUDED.icon,
+    tags_theme = EXCLUDED.tags_theme,
+    points = EXCLUDED.points;
+
+-- Fil rouge défis : observation récurrente au même spot
+UPDATE defis SET spot_fixe = true WHERE id IN (
+    'defi_bio_2',
+    'defi_laisse_1',
+    'defi_erosion_1',
+    'defi_faune_1'
+);
+
+-- Reset spot_fixe for all other defis
+UPDATE defis SET spot_fixe = false WHERE id NOT IN (
+    'defi_bio_2',
+    'defi_laisse_1',
+    'defi_erosion_1',
+    'defi_faune_1'
+);

@@ -189,12 +189,12 @@ export async function updateStageExploitStatus(
     if (status === 'complete') {
         const { data: defi } = await supabase
             .from('defis')
-            .select('type_preuve')
+            .select('points')
             .eq('id', defiId)
             .single();
 
         if (defi) {
-            await awardPointsForDefiInternal(supabase, stageId, defiId, defi.type_preuve);
+            await awardPointsForDefiInternal(supabase, stageId, defiId, defi.points);
         }
     }
 
@@ -225,19 +225,12 @@ export async function removeStageExploit(stageId: string, defiId: string) {
 // LEADERBOARD POINTS
 // ==========================================
 
-const POINTS_BY_PROOF_TYPE: Record<string, number> = {
-    photo: 2,
-    checkbox: 1,
-    action: 1,
-    quiz: 1,
-};
-
 // Internal helper using existing supabase client
 async function awardPointsForDefiInternal(
     supabase: Awaited<ReturnType<typeof createClient>>,
     stageId: string,
     defiId: string,
-    proofType: string
+    points: number
 ) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
@@ -247,8 +240,6 @@ async function awardPointsForDefiInternal(
         .select('club_id')
         .eq('id', stageId)
         .single();
-
-    const points = POINTS_BY_PROOF_TYPE[proofType] || 1;
 
     await supabase
         .from('leaderboard_points')
@@ -265,20 +256,18 @@ async function awardPointsForDefiInternal(
 export async function awardPointsForDefi(
     stageId: string,
     defiId: string,
-    proofType: string
 ) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) return { success: false, error: 'Unauthorized' };
 
-    const { data: stage } = await supabase
-        .from('stages')
-        .select('club_id')
-        .eq('id', stageId)
-        .single();
+    const [{ data: stage }, { data: defi }] = await Promise.all([
+        supabase.from('stages').select('club_id').eq('id', stageId).single(),
+        supabase.from('defis').select('points').eq('id', defiId).single(),
+    ]);
 
-    const points = POINTS_BY_PROOF_TYPE[proofType] || 1;
+    const points = defi?.points ?? 2;
 
     const { error } = await supabase
         .from('leaderboard_points')
@@ -351,4 +340,148 @@ export async function getLeaderboard(type: 'monitors' | 'clubs' = 'monitors', li
             .sort((a, b) => b.total_points - a.total_points)
             .slice(0, limit);
     }
+}
+
+// ==========================================
+// CLUB OBSERVATION TARGETS (faune défi)
+// ==========================================
+
+export async function getClubObservationTargets() {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return [];
+
+    const { data: profile } = await supabase
+        .from('profiles').select('club_id').eq('id', user.id).single();
+    if (!profile?.club_id) return [];
+
+    const { data } = await supabase
+        .from('club_observation_targets')
+        .select('*')
+        .eq('club_id', profile.club_id)
+        .order('sort_order');
+    return data || [];
+}
+
+export async function saveClubObservationTargets(
+    targets: { name: string; categorie: string }[]
+) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false };
+
+    const { data: profile } = await supabase
+        .from('profiles').select('club_id').eq('id', user.id).single();
+    if (!profile?.club_id) return { success: false, error: 'No club' };
+
+    await supabase.from('club_observation_targets').delete().eq('club_id', profile.club_id);
+
+    if (targets.length === 0) return { success: true };
+
+    const { error } = await supabase.from('club_observation_targets').insert(
+        targets.map((t, i) => ({
+            club_id: profile.club_id,
+            name: t.name,
+            categorie: t.categorie,
+            sort_order: i,
+        }))
+    );
+
+    if (error) return { success: false, error: error.message };
+    return { success: true };
+}
+
+export async function completeFilRougeDefi(
+    stageId: string,
+    defiId: string,
+    structuredData: Record<string, unknown>,
+    photoUrl?: string
+) {
+    const supabase = await createClient();
+
+    const updateData: Record<string, unknown> = {
+        status: 'complete',
+        completed_at: new Date().toISOString(),
+        structured_data: structuredData,
+    };
+
+    if (photoUrl) {
+        const { data: existing } = await supabase
+            .from('stage_exploits')
+            .select('preuves_url')
+            .eq('stage_id', stageId)
+            .eq('exploit_id', defiId)
+            .single();
+        updateData.preuves_url = [...(existing?.preuves_url || []), photoUrl];
+    }
+
+    const { error } = await supabase
+        .from('stage_exploits')
+        .update(updateData)
+        .eq('stage_id', stageId)
+        .eq('exploit_id', defiId);
+
+    if (error) return { success: false, error: error.message };
+
+    const { data: defi } = await supabase
+        .from('defis').select('points').eq('id', defiId).single();
+    if (defi) await awardPointsForDefiInternal(supabase, stageId, defiId, defi.points);
+
+    revalidatePath(`/stages/${stageId}/defis`);
+    return { success: true };
+}
+
+// ==========================================
+// CLUB SPOTS (GPS reference points for recurring defis)
+// ==========================================
+
+export async function getClubSpotsForUser(defiIds: string[]) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user || defiIds.length === 0) return [];
+
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('club_id')
+        .eq('id', user.id)
+        .single();
+
+    if (!profile?.club_id) return [];
+
+    const { data } = await supabase
+        .from('club_spots')
+        .select('*')
+        .eq('club_id', profile.club_id)
+        .in('defi_id', defiIds);
+
+    return data || [];
+}
+
+export async function saveClubSpot(
+    defiId: string,
+    lat: number,
+    lng: number,
+    bearing: number | null
+) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, error: 'Unauthorized' };
+
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('club_id')
+        .eq('id', user.id)
+        .single();
+
+    if (!profile?.club_id) return { success: false, error: 'No club' };
+
+    const { error } = await supabase
+        .from('club_spots')
+        .upsert(
+            { club_id: profile.club_id, defi_id: defiId, gps_lat: lat, gps_lng: lng, bearing },
+            { onConflict: 'club_id,defi_id', ignoreDuplicates: false }
+        );
+
+    if (error) return { success: false, error: error.message };
+    return { success: true };
 }

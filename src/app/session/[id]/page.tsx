@@ -16,9 +16,20 @@ export default async function SessionRunnerPage({ params }: { params: Promise<{ 
     const { getSessionsForStage } = await import('@/services/data-service');
     const { getStageExploits } = await import('@/actions/defi-actions');
 
+    const { getClubSpotsForUser, getClubObservationTargets } = await import('@/actions/defi-actions');
+
     const [allSessions, assignedExploits] = await Promise.all([
         getSessionsForStage(session.stage_id),
         getStageExploits(session.stage_id)
+    ]);
+
+    const spotFixeIds = assignedExploits
+        .filter((e: { defis?: { spot_fixe?: boolean }; exploit_id: string }) => e.defis?.spot_fixe)
+        .map((e: { exploit_id: string }) => e.exploit_id);
+
+    const [clubSpots, clubObservationTargets] = await Promise.all([
+        getClubSpotsForUser(spotFixeIds),
+        getClubObservationTargets(),
     ]);
 
     return (
@@ -27,7 +38,7 @@ export default async function SessionRunnerPage({ params }: { params: Promise<{ 
             <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200">
                 <div className="flex items-center justify-between px-5 py-4">
                     <div className="flex items-center gap-3">
-                        <Link href={`/stages/${session.stage_id}`} className="bg-slate-900 p-2 rounded-xl text-white active:scale-95 transition-transform">
+                        <Link href={`/stages/${session.stage_id}`} className="size-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 active:scale-95 transition-transform">
                             <span className="material-symbols-outlined block">arrow_back</span>
                         </Link>
                         <div>
@@ -51,6 +62,8 @@ export default async function SessionRunnerPage({ params }: { params: Promise<{ 
                 sessionId={id}
                 allSessions={allSessions.map(s => ({ id: s.id, title: s.title, order: s.session_order }))}
                 assignedExploits={assignedExploits}
+                clubSpots={clubSpots}
+                clubObservationTargets={clubObservationTargets}
             />
         </div>
     );
