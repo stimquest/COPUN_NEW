@@ -3,6 +3,7 @@ import { getUserContent } from '@/actions/content-actions';
 import { getStages } from '@/services/data-service';
 import { Profile, PedagogicalContent, Stage } from '@/types';
 import Link from 'next/link';
+import SignOutButton from '@/components/SignOutButton';
 
 export default async function ProfilPage() {
     let profile: Profile | null = null;
@@ -76,8 +77,13 @@ export default async function ProfilPage() {
                 </div>
             </div>
 
-            {/* Content List */}
+            {/* Sign out */}
             <div className="px-5 mt-8 max-w-md mx-auto w-full">
+                <SignOutButton />
+            </div>
+
+            {/* Content List */}
+            <div className="px-5 mt-6 max-w-md mx-auto w-full">
                 <div className="flex items-center justify-between mb-4">
                     <h2 className="text-lg font-black text-slate-900">Mes Fiches</h2>
                     <Link href={stages.length > 0 ? `/stages/${stages[0].id}/program` : '/stages/new'} className="text-xs font-bold text-indigo-500 uppercase tracking-wider">
