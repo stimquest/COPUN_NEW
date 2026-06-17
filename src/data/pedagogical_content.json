@@ -22,7 +22,7 @@
     "objectif": "Savoir qu'il existe des outils (annuaires, applications) pour connaître les horaires.",
     "tip": "Les cycles sont si réguliers qu'on peut les calculer des années à l'avance.",
     "tags_theme": [
-      "reperes_spatio_temporels"
+      "caracteristiques_littoral"
     ],
     "tags_filtre": [
       "outils",
@@ -68,8 +68,7 @@
     "objectif": "Comprendre qu'il y a un moment de pause où le courant est quasi nul.",
     "tip": "C'est un bon moment pour certaines activités, mais il ne dure pas longtemps !",
     "tags_theme": [
-      "reperes_spatio_temporels",
-      "interactions_climatiques"
+      "caracteristiques_littoral"
     ],
     "tags_filtre": [
       "marée",
@@ -84,7 +83,7 @@
     "objectif": "Comprendre la prédictibilité scientifique des marées.",
     "tip": "La précision des calculs est telle qu'on peut prévoir un horaire à la minute près.",
     "tags_theme": [
-      "reperes_spatio_temporels"
+      "caracteristiques_littoral"
     ],
     "tags_filtre": [
       "outils",
@@ -99,7 +98,7 @@
     "objectif": "Comprendre l'importance du coefficient pour la sécurité et la pratique.",
     "tip": "Un gros coefficient signifie plus de courant et un estran qui découvre plus loin.",
     "tags_theme": [
-      "reperes_spatio_temporels"
+      "caracteristiques_littoral"
     ],
     "tags_filtre": [
       "marée",
@@ -114,8 +113,7 @@
     "objectif": "Comprendre la règle des douzièmes et la vitesse variable du flot.",
     "tip": "La marée est la plus rapide à mi-parcours, pas au début ni à la fin.",
     "tags_theme": [
-      "reperes_spatio_temporels",
-      "interactions_climatiques"
+      "caracteristiques_littoral"
     ],
     "tags_filtre": [
       "marée",
@@ -130,7 +128,7 @@
     "objectif": "Comprendre que c'est le moment des courants les plus forts.",
     "tip": "C'est un moment de vigilance accrue pour tous les navigateurs.",
     "tags_theme": [
-      "interactions_climatiques"
+      "caracteristiques_littoral"
     ],
     "tags_filtre": [
       "marée",
@@ -145,7 +143,7 @@
     "objectif": "Connaître le vocabulaire technique précis des marées.",
     "tip": "Le flot 'flotte' (monte), le jusant 'descend' (jus -> bas).",
     "tags_theme": [
-      "reperes_spatio_temporels"
+      "caracteristiques_littoral"
     ],
     "tags_filtre": [
       "marée",
@@ -256,7 +254,7 @@
     "objectif": "Comprendre les bases des différences de pression atmosphérique.",
     "tip": "Le vent est juste de l'air qui se déplace d'une zone de 'haute pression' (beaucoup d'air) à une zone de 'basse pression' (peu d'air).",
     "tags_theme": [
-      "interactions_climatiques"
+      "caracteristiques_littoral"
     ],
     "tags_filtre": [
       "vent",
@@ -271,7 +269,7 @@
     "objectif": "Comprendre le phénomène de vent local lié à l'échauffement de la terre.",
     "tip": "En journée, la terre chauffe plus vite que la mer. L'air chaud de la terre monte, et l'air frais de la mer prend sa place.",
     "tags_theme": [
-      "interactions_climatiques"
+      "caracteristiques_littoral"
     ],
     "tags_filtre": [
       "vent",
@@ -366,7 +364,7 @@
     "objectif": "Comprendre l'origine des courants (marées, vent, différences de densité).",
     "tip": "Le courant de marée est souvent le plus puissant près des côtes.",
     "tags_theme": [
-      "interactions_climatiques"
+      "caracteristiques_littoral"
     ],
     "tags_filtre": [
       "courant"
@@ -380,7 +378,7 @@
     "objectif": "Distinguer les courants de marée, de dérive (vent), et généraux.",
     "tip": "Imaginez des rivières invisibles dans la mer, chacune avec sa propre cause.",
     "tags_theme": [
-      "interactions_climatiques"
+      "caracteristiques_littoral"
     ],
     "tags_filtre": [
       "courant",
@@ -396,7 +394,7 @@
     "objectif": "Comprendre l'impact des courants sur la vitesse et la trajectoire.",
     "tip": "Un courant de 2 nœuds peut doubler votre vitesse ou vous arrêter complètement !",
     "tags_theme": [
-      "interactions_climatiques"
+      "caracteristiques_littoral"
     ],
     "tags_filtre": [
       "courant",
@@ -456,7 +454,7 @@
     "objectif": "Comprendre que les vagues sont principalement créées par le vent.",
     "tip": "Plus le vent souffle fort, longtemps et sur une grande distance, plus les vagues sont grosses.",
     "tags_theme": [
-      "interactions_climatiques"
+      "caracteristiques_littoral"
     ],
     "tags_filtre": [
       "vague",
@@ -471,7 +469,7 @@
     "objectif": "Distinguer la mer du vent (local) de la houle (formée au large).",
     "tip": "La houle est une onde longue et régulière, la mer du vent est courte et désordonnée.",
     "tags_theme": [
-      "interactions_climatiques"
+      "caracteristiques_littoral"
     ],
     "tags_filtre": [
       "vague",
@@ -578,7 +576,7 @@
     "objectif": "Comprendre l'inertie thermique de l'eau et son influence.",
     "tip": "La mer est plus lente à se réchauffer et à se refroidir que la terre, ce qui adoucit le climat côtier.",
     "tags_theme": [
-      "interactions_climatiques"
+      "caracteristiques_littoral"
     ],
     "tags_filtre": [
       "météo"
@@ -592,7 +590,7 @@
     "objectif": "Comprendre le cycle de l'eau et la condensation.",
     "tip": "Les nuages sont simplement des gouttelettes d'eau ou des cristaux de glace en suspension.",
     "tags_theme": [
-      "interactions_climatiques"
+      "caracteristiques_littoral"
     ],
     "tags_filtre": [
       "météo",
@@ -607,7 +605,7 @@
     "objectif": "Comprendre que le temps peut changer très vite en mer.",
     "tip": "Consultez toujours la météo avant de partir et continuez à observer le ciel.",
     "tags_theme": [
-      "reperes_spatio_temporels"
+      "caracteristiques_littoral"
     ],
     "tags_filtre": [
       "météo",
@@ -778,7 +776,7 @@
     "objectif": "Distinguer les débris naturels (algues, bois) des déchets humains.",
     "tip": "Les éléments naturels sont essentiels à l'écosystème, pas les déchets !",
     "tags_theme": [
-      "impact_presence_humaine"
+      "caracteristiques_littoral"
     ],
     "tags_filtre": [
       "laisse de mer",
@@ -793,7 +791,7 @@
     "objectif": "Comprendre que la laisse de mer est un indicateur des mouvements de l'eau.",
     "tip": "La forme de la laisse de mer peut vous donner des indices sur la direction des courants.",
     "tags_theme": [
-      "interactions_climatiques"
+      "caracteristiques_littoral"
     ],
     "tags_filtre": [
       "laisse de mer",
@@ -809,7 +807,7 @@
     "objectif": "Identifier les différents composants de la laisse de mer.",
     "tip": "Cherchez des coquillages, des 'œufs de raie', des os de seiche, des algues...",
     "tags_theme": [
-      "biodiversite_saisonnalite"
+      "lecture_paysage"
     ],
     "tags_filtre": [
       "laisse de mer"
@@ -823,8 +821,7 @@
     "objectif": "Comprendre que la composition de la laisse renseigne sur la santé de l'écosystème.",
     "tip": "Trop de plastique est un mauvais signe. La présence de certaines espèces peut être un bon signe.",
     "tags_theme": [
-      "impact_presence_humaine",
-      "biodiversite_saisonnalite"
+      "lecture_paysage"
     ],
     "tags_filtre": [
       "laisse de mer",
@@ -942,7 +939,7 @@
     "objectif": "\"Retenir qu’il y a dérangement dès qu’il y a un changement de comportement",
     "tip": "Rester à distance, ne pas faire de bruit, utiliser des jumelles",
     "tags_theme": [
-      "cohabitation_vivant"
+      "lecture_paysage"
     ],
     "tags_filtre": [
       "faune",
@@ -1033,7 +1030,7 @@
     "objectif": "Comprendre que les activités humaines sont soumises à différents rythmes : le rythme quotidien des marées, le rythme mensuel des cycles de la lune, le rythme annuel des saisons …",
     "tip": "La nature aura toujours le dernier mot, à charge pour l’homme d’ajuster ses activités pour être en sécurité et en harmonie avec le lieu. L’adaptation à tous ces rythmes passe par la connaissance.",
     "tags_theme": [
-      "reperes_spatio_temporels"
+      "caracteristiques_littoral"
     ],
     "tags_filtre": [
       "adaptation"
@@ -1092,7 +1089,7 @@
     "objectif": "Devenir une sentinelle de l'environnement.",
     "tip": "Une pollution, une espèce échouée, un filet abandonné... votre signalement peut déclencher une action.",
     "tags_theme": [
-      "sciences_participatives"
+      "lecture_paysage"
     ],
     "tags_filtre": [
       "action citoyenne"
@@ -1148,7 +1145,7 @@
     "objectif": "Comprendre les conséquences de nos actions (pollution, surexploitation...).",
     "tip": "Même un petit déchet peut avoir un impact énorme sur un animal.",
     "tags_theme": [
-      "impact_presence_humaine"
+      "caracteristiques_littoral"
     ],
     "tags_filtre": [
       "pollution"
@@ -1176,7 +1173,7 @@
     "objectif": "Observer les innovations et les changements de comportement.",
     "tip": "Matériaux recyclés, moteurs électriques, zones protégées... les choses bougent !",
     "tags_theme": [
-      "activites_humaines"
+      "lecture_paysage"
     ],
     "tags_filtre": [
       "adaptation",
@@ -1235,7 +1232,7 @@
     "objectif": "Décrire la nature fondamentale d'un nuage.",
     "tip": "Un nuage est une collection visible de minuscules gouttelettes d’eau ou de cristaux de glace suspendus dans l’air.",
     "tags_theme": [
-      "Nuages"
+      "caracteristiques_littoral"
     ],
     "tags_filtre": []
   },
@@ -1247,7 +1244,7 @@
     "objectif": "Expliquer la variation de couleur des nuages.",
     "tip": "Parce que les nuages épais ou chargés de gouttelettes cristallisées laissent passer moins de lumière ; un nuage très épais peut paraître gris ou sombre",
     "tags_theme": [
-      "Nuages"
+      "caracteristiques_littoral"
     ],
     "tags_filtre": []
   },
@@ -1259,8 +1256,7 @@
     "objectif": "Identifier le rôle des nuages dans le cycle de l'eau.",
     "tip": "Les nuages sont une étape du cycle de l’eau : l’eau s’évapore, monte, forme un nuage, puis retombe sous forme de précipitations (pluie, neige).",
     "tags_theme": [
-      "Nuages",
-      "Cycle de l'eau"
+      "caracteristiques_littoral"
     ],
     "tags_filtre": []
   },
@@ -1272,7 +1268,7 @@
     "objectif": "Définir ce qu'est le vent.",
     "tip": "Le vent est le déplacement de l’air par rapport à la surface de la Terre, causé par des différences de pression atmosphérique",
     "tags_theme": [
-      "Vent"
+      "caracteristiques_littoral"
     ],
     "tags_filtre": []
   },
@@ -1284,8 +1280,7 @@
     "objectif": "Définir la notion d'oiseau migrateur en Normandie.",
     "tip": "Un oiseau migrateur est une espèce qui effectue chaque année un déplacement régulier (souvent vers le sud ou vers le nord) pour l’hiver ou la reproduction, et qui passe ou s’arrête en Normandie dans ses trajets",
     "tags_theme": [
-      "Oiseaux migrateurs",
-      "Migrations"
+      "biodiversite_saisonnalite"
     ],
     "tags_filtre": []
   },
@@ -1297,9 +1292,7 @@
     "objectif": "Expliquer l'importance de la Normandie pour les migrations aviaires.",
     "tip": "Parce que le littoral, les zones humides et les estuaires normands constituent des escales ou des zones d’hivernage pour de nombreuses espèces migratrices",
     "tags_theme": [
-      "Oiseaux migrateurs",
-      "Migrations",
-      "Biodiversité"
+      "biodiversite_saisonnalite"
     ],
     "tags_filtre": []
   },
@@ -1326,7 +1319,7 @@
     "objectif": "Définir ce qu'est un courant marin.",
     "tip": "C’est un mouvement dirigé d’eau de mer, souvent horizontal, qui circule dans l’océan ou près des côtes. Pense-y comme à une « rivière dans l’océan ».",
     "tags_theme": [
-      "Courants marins"
+      "caracteristiques_littoral"
     ],
     "tags_filtre": []
   },
@@ -1338,8 +1331,7 @@
     "objectif": "Expliquer la nature de la houle.",
     "tip": "Une houle est une série d’ondes de gravité à la surface de l’eau qui ont été générées par du vent à distance et qui ont voyagé loin de leur origine, devenant organisées et régulières. Contrairement aux vagues « locales » générées directement par le vent à proximité, une houle vient souvent d’un système de tempête éloigné",
     "tags_theme": [
-      "Houle",
-      "Vagues"
+      "caracteristiques_littoral"
     ],
     "tags_filtre": []
   },
@@ -1351,7 +1343,7 @@
     "objectif": "Comprendre le décalage quotidien des marées.",
     "tip": "Parce que le jour lunaire (environ 24 h 50 min) est plus long que le jour solaire (24 h), donc chaque jour on revient « un peu plus tard » sous l’effet principal de la Lune Le décalage quotidien des horaires de marée est dû essentiellement au fait que la Lune **avance** dans son orbite pendant que la Terre tourne. Quelques éléments clés : Une « journée lunaire » (le temps que met un point de la Terre pour revenir sous la Lune) est d’environ **24 h 50 min** (et non de 24 h) parce que la Lune se déplace dans son orbite pendant que la Terre tourne. Puisque la Terre doit tourner un peu plus pour « rattraper » la position de la Lune, chaque marée haute, ou marée basse, se produit environ **50 minutes plus tard** que la veille (dans les zones à marée semi-diurne typiques).",
     "tags_theme": [
-      "Marées"
+      "caracteristiques_littoral"
     ],
     "tags_filtre": []
   },
@@ -1363,8 +1355,7 @@
     "objectif": "Expliquer le rôle de la curiosité dans l'observation.",
     "tip": "Un bon observateur est animé par la curiosité : il se questionne, il se demande « quoi ? », « pourquoi ? », « comment ? ».",
     "tags_theme": [
-      "Observation",
-      "Nature"
+      "lecture_paysage"
     ],
     "tags_filtre": []
   },
@@ -1376,8 +1367,7 @@
     "objectif": "Identifier l'importance des sens en observation.",
     "tip": "Utiliser activement les sens permet de détecter des détails subtils : l’observation ne se limite pas à regarder, mais aussi à écouter, sentir, toucher (quand c’est possible et respectueux)",
     "tags_theme": [
-      "Observation",
-      "Sens"
+      "lecture_paysage"
     ],
     "tags_filtre": []
   },
@@ -1389,9 +1379,7 @@
     "objectif": "Mettre en évidence le lien entre connaissance et observation.",
     "tip": "Connaître (ou chercher à connaître) les plantes, animaux, habitats de sa région permet de reconnaître ce qui est «normal», ce qui est «nouveau» ou «significatif». Cela enrichit l’observation",
     "tags_theme": [
-      "Observation",
-      "Connaissance",
-      "Biodiversité"
+      "lecture_paysage"
     ],
     "tags_filtre": []
   },
@@ -1403,9 +1391,7 @@
     "objectif": "Comprendre l'éthique de l'observation naturelle.",
     "tip": "Parce que l’observation ne doit pas nuire à ce qu’on observe : respecter animaux, plantes, milieux, ne pas les déranger ou les endommager. Cela garantit que l’observation est éthique et durable",
     "tags_theme": [
-      "Observation",
-      "Respect",
-      "Éthique"
+      "lecture_paysage"
     ],
     "tags_filtre": []
   },
@@ -1417,8 +1403,8 @@
     "objectif": "Définir la notion d'état de la mer.",
     "tip": "C’est l’ensemble des conditions de surface de la mer à un lieu donné, typiquement décrites par la hauteur des vagues, la longueur d’onde, la direction du vent ou de la houle, et parfois la fréquence des creux. Bien connaître l’état de la mer permet d’évaluer la sécurité et la difficulté de l’activité",
     "tags_theme": [
-      "État de la mer",
-      "Navigation"
+      "interactions_climatiques",
+      "reperes_spatio_temporels"
     ],
     "tags_filtre": []
   },
@@ -1430,9 +1416,8 @@
     "objectif": "Identifier les signes visuels de l'état de la mer.",
     "tip": "La présence de « moutons » (crêtes de vagues blanches) → vent important ; La direction des vagues / houle et si elles cassent ou non ; La visibilité à l’horizon (brume, pluie, mer agitée) → reflet des conditions météo. Ces observations simples peuvent donner beaucoup d’indices avant même d’être dans l’eau.",
     "tags_theme": [
-      "État de la mer",
-      "Observation",
-      "Sécurité"
+      "interactions_climatiques",
+      "lecture_paysage"
     ],
     "tags_filtre": []
   },
@@ -1444,9 +1429,7 @@
     "objectif": "Comprendre le lien entre protection environnementale et santé.",
     "tip": "Parce que la pollution de l’air, de l’eau ou des sols peut entraîner des maladies respiratoires, des cancers, des infections hydriques, etc. On peut voir l’environnement comme notre « maison commune » : si elle est en mauvais état, notre santé en pâtit.",
     "tags_theme": [
-      "Protection environnement",
-      "Santé",
-      "Pollution"
+      "impact_presence_humaine"
     ],
     "tags_filtre": []
   },
@@ -1458,8 +1441,7 @@
     "objectif": "Expliquer le processus de formation des nuages.",
     "tip": "L’air chaud et humide monte, se refroidit, la vapeur d’eau se condense autour de particules en suspension (poussière, sel…) et forme des gouttelettes ou des cristaux, ce qui crée un nuage.",
     "tags_theme": [
-      "Nuages",
-      "Formation"
+      "caracteristiques_littoral"
     ],
     "tags_filtre": []
   },
@@ -1471,8 +1453,7 @@
     "objectif": "Détailler le rôle de l'air ascendant dans la nébulosité.",
     "tip": "Parce que lorsqu’il monte, l’air se refroidit, ne peut plus contenir autant de vapeur d’eau, et la vapeur se condense pour former des gouttelettes ou des cristaux => nuage.",
     "tags_theme": [
-      "Nuages",
-      "Atmosphère"
+      "caracteristiques_littoral"
     ],
     "tags_filtre": []
   },
@@ -1484,9 +1465,7 @@
     "objectif": "Identifier l'utilité des nuages comme indicateurs météorologiques.",
     "tip": "Parce que certains types de nuages se forment dans des conditions spécifiques : par exemple, un voile de cirrostratus peut annoncer un front chaud, des cumulus verticaux une instabilité, un ciel entièrement stratus un temps stable mais couvert. Le type + altitude + forme peuvent donc être des signaux",
     "tags_theme": [
-      "Nuages",
-      "Météo",
-      "Prévisions"
+      "caracteristiques_littoral"
     ],
     "tags_filtre": []
   },
@@ -1498,9 +1477,7 @@
     "objectif": "Expliquer la formation des vents locaux (brises).",
     "tip": "Un vent local comme la brise de mer se forme parce que la terre se réchauffe plus vite que l’eau : l’air au-dessus de la terre monte, créant une basse pression, et l’air plus frais venant de la mer se déplace vers la terre. La nuit, la situation s’inverse avec la brise de terre vers la mer.",
     "tags_theme": [
-      "Vent",
-      "Brise",
-      "Météo locale"
+      "caracteristiques_littoral"
     ],
     "tags_filtre": []
   },
@@ -1512,9 +1489,7 @@
     "objectif": "Comprendre l'impact des migrations sur la gestion des zones naturelles.",
     "tip": "Parce que les zones d’escale ou d’hivernage doivent être protégées (zones humides, littoraux), car la perturbation ou destruction de ces milieux peut compromettre le succès migratoire des espèces",
     "tags_theme": [
-      "Migrations",
-      "Biodiversité",
-      "Gestion zones naturelles"
+      "biodiversite_saisonnalite"
     ],
     "tags_filtre": []
   },
@@ -1526,9 +1501,7 @@
     "objectif": "Identifier les facteurs influençant la taille de la houle.",
     "tip": "La vitesse du vent, la durée pendant laquelle il souffle, et la distance non interrompue sur laquelle il souffle (fetch) : c’est-à-dire la surface d’eau sur laquelle le vent agit sans interruption",
     "tags_theme": [
-      "Houle",
-      "Vagues",
-      "Facteurs"
+      "caracteristiques_littoral"
     ],
     "tags_filtre": []
   },
@@ -1540,9 +1513,8 @@
     "objectif": "Comprendre l'importance de la direction du vent et de la houle pour la sécurité.",
     "tip": "Parce que le vent peut générer des vagues ou accentuer la houle. Si le vent souffle contre la direction de la houle, la mer se « dérange », avec des vagues plus courtes, hachées et donc dangereuses.",
     "tags_theme": [
-      "Vent",
-      "Houle",
-      "Sécurité nautique"
+      "interactions_climatiques",
+      "reperes_spatio_temporels"
     ],
     "tags_filtre": []
   },
@@ -1554,9 +1526,8 @@
     "objectif": "Identifier les points d'observation essentiels pour la marée et les courants.",
     "tip": "Vérifier l’heure de haute/basse mer, l’amplitude, et identifier les zones de courant fort ou « ressac » potentiels",
     "tags_theme": [
-      "Marées",
-      "Courants",
-      "Sécurité nautique"
+      "interactions_climatiques",
+      "reperes_spatio_temporels"
     ],
     "tags_filtre": []
   },
@@ -1568,8 +1539,8 @@
     "objectif": "Expliquer le rôle de l'observation marine pour la sécurité.",
     "tip": "Parce qu’elle permet d’évaluer le niveau de risque (vagues, houle, courant, vent), d’adapter le matériel, de choisir un bon itinéraire ou de reporter si nécessaire. L’ignorance peut conduire à des situations dangereuses",
     "tags_theme": [
-      "État de la mer",
-      "Sécurité nautique"
+      "interactions_climatiques",
+      "reperes_spatio_temporels"
     ],
     "tags_filtre": []
   },
@@ -1581,9 +1552,7 @@
     "objectif": "Définir la période d'une houle.",
     "tip": "La période est le temps (exprimé en secondes) entre le passage de deux crêtes consécutives d’onde à un même point fixe. Les houles ont typiquement des périodes plus longues que les vagues de vent",
     "tags_theme": [
-      "Houle",
-      "Vagues",
-      "Terminologie"
+      "interactions_climatiques"
     ],
     "tags_filtre": []
   },
@@ -1595,9 +1564,7 @@
     "objectif": "Comprendre le lien entre protection et gestion des ressources naturelles.",
     "tip": "La protection de l’environnement implique de gérer durablement les ressources naturelles (eau, forêts, sols, biodiversité) afin qu’elles puissent satisfaire les besoins actuels **et futurs** sans s’épuiser",
     "tags_theme": [
-      "Protection environnement",
-      "Ressources naturelles",
-      "Développement durable"
+      "impact_presence_humaine"
     ],
     "tags_filtre": []
   },
@@ -1609,9 +1576,7 @@
     "objectif": "Expliquer l'importance de la gestion des déchets plastiques.",
     "tip": "Parce que les plastiques non recyclés polluent l’eau, les sols, et les écosystèmes, en particulier marins",
     "tags_theme": [
-      "Déchets plastiques",
-      "Pollution marine",
-      "Environnement"
+      "impact_presence_humaine"
     ],
     "tags_filtre": []
   },
@@ -1623,9 +1588,7 @@
     "objectif": "Identifier les raisons de la richesse de la biodiversité du littoral normand.",
     "tip": "Parce qu’il combine **entre mer, littoral, plaine et bocage** un ensemble de milieux diversifiés qui se trouvent dans un état d’équilibre fragile entre usages humains et nature",
     "tags_theme": [
-      "Biodiversité",
-      "Littoral normand",
-      "Enjeux environnementaux"
+      "impact_presence_humaine"
     ],
     "tags_filtre": []
   },
@@ -1637,9 +1600,7 @@
     "objectif": "Connaître les dispositifs de protection marine en Normandie.",
     "tip": "Le réseau **Natura 2000** compte en Normandie 94 sites dont **34 sites avec une partie marine**. Ces zones contribuent à protéger des habitats et des espèces marines ou littorales.",
     "tags_theme": [
-      "Protection marine",
-      "Natura 2000",
-      "Normandie"
+      "impact_presence_humaine"
     ],
     "tags_filtre": []
   },
@@ -1651,9 +1612,7 @@
     "objectif": "Expliquer l'influence de la géographie côtière sur l'état de la mer.",
     "tip": "Une baie fermée ou un cap exposé modifient la façon dont la houle entre, les courants, et la vitesse du vent. Une pente douce ou un récif proche peuvent amplifier les vagues",
     "tags_theme": [
-      "État de la mer",
-      "Topographie côtière",
-      "Phénomènes physiques"
+      "caracteristiques_littoral"
     ],
     "tags_filtre": []
   },
@@ -1665,8 +1624,7 @@
     "objectif": "Détailler les critères de classification des nuages.",
     "tip": "Le **niveau d’altitude** (bas, moyen, haut), la **forme** (cumulo- : en amas, strato- : en couches, cirro- : élevé/filamenteux) et la **capacité de précipitation** (par exemple les « nimbus »). Connaître ces critères permet d’identifier rapidement un type de nuage",
     "tags_theme": [
-      "Nuages",
-      "Classification"
+      "caracteristiques_littoral"
     ],
     "tags_filtre": []
   },
@@ -1678,9 +1636,7 @@
     "objectif": "Identifier le nuage annonciateur d'orages.",
     "tip": "Le nuage Cumulonimbus : développement vertical important, capable de produire pluie intense, grêle, tonnerre.",
     "tags_theme": [
-      "Nuages",
-      "Orages",
-      "Météo"
+      "caracteristiques_littoral"
     ],
     "tags_filtre": []
   },
@@ -1692,9 +1648,7 @@
     "objectif": "Définir la phénologie de la migration et son évolution en Normandie.",
     "tip": "La phénologie de la migration désigne le moment (date) auquel les oiseaux migrateurs commencent ou terminent leur migration. En Normandie, par exemple, certaines hirondelles et martinets arrivent ~18 jours plus tôt qu’il y a 50 ans",
     "tags_theme": [
-      "Migrations",
-      "Oiseaux migrateurs",
-      "Phénologie"
+      "biodiversite_saisonnalite"
     ],
     "tags_filtre": []
   },
@@ -1706,9 +1660,7 @@
     "objectif": "Expliquer l'impact du changement climatique sur les migrations.",
     "tip": "Il peut modifier les dates de départ ou d’arrivée (phénologie), la répartition des espèces, ou la durée d’hivernage. Exemple : les hirondelles arrivent plus tôt.",
     "tags_theme": [
-      "Changement climatique",
-      "Migrations",
-      "Oiseaux migrateurs"
+      "biodiversite_saisonnalite"
     ],
     "tags_filtre": []
   },
@@ -1720,9 +1672,7 @@
     "objectif": "Comprendre l'importance des courants marins pour les nutriments.",
     "tip": "Les courants transportent de l’eau riche en nutriments depuis les profondeurs ou les zones fertiles vers la surface ou vers d’autres régions, permettant à la chaîne alimentaire de prospérer",
     "tags_theme": [
-      "Courants marins",
-      "Nutriments",
-      "Océanographie"
+      "caracteristiques_littoral"
     ],
     "tags_filtre": []
   },
@@ -1734,9 +1684,7 @@
     "objectif": "Identifier les facteurs moteurs des courants de surface.",
     "tip": "Le vent, la rotation de la Terre (effet de Coriolis) et la forme des côtes / fonds marins",
     "tags_theme": [
-      "Courants marins",
-      "Facteurs",
-      "Océanographie"
+      "caracteristiques_littoral"
     ],
     "tags_filtre": []
   },
@@ -1770,9 +1718,8 @@
     "objectif": "Identifier les signes visuels d'un changement rapide des conditions maritimes.",
     "tip": "Par exemple : drapeaux qui se dressent, mousse étendue à la surface, nuages d’orage qui arrivent, diminution soudaine de visibilité. Ces signes indiquent de renforcer la vigilance ou de différer la sortie",
     "tags_theme": [
-      "Alertes météo",
-      "Sécurité nautique",
-      "Observation"
+      "lecture_paysage",
+      "reperes_spatio_temporels"
     ],
     "tags_filtre": []
   },
@@ -1784,9 +1731,7 @@
     "objectif": "Distinguer houle et vague de vent.",
     "tip": "Une vague de vent est générée localement par le vent soufflant à proximité / dans la même zone, alors qu’une houle a voyagé hors de la zone de génération, le vent local ne la contrôle plus directement. **Commentaire** : On peut souvent reconnaître une houle à ses longues périodes d’onde et sa régularité.",
     "tags_theme": [
-      "Houle",
-      "Vagues",
-      "Différences"
+      "interactions_climatiques"
     ],
     "tags_filtre": []
   },
@@ -1798,9 +1743,7 @@
     "objectif": "Comprendre l'influence de l'orientation de la houle.",
     "tip": "L’angle d’arrivée de la houle par rapport à la côte influence comment les vagues vont « prendre » la côte : une houle bien orientée face au littoral aura plus de potentiel pour produire de bonnes vagues, tandis qu’une houle venant de travers peut être moins efficace ou dégradée",
     "tags_theme": [
-      "Houle",
-      "Vagues",
-      "Orientation"
+      "interactions_climatiques"
     ],
     "tags_filtre": []
   },
@@ -1812,9 +1755,8 @@
     "objectif": "Expliquer l'importance de connaître les conditions de houle.",
     "tip": "Parce que la houle influence la hauteur des vagues, la période, l’énergie transmise, le moment d’arrivée des séries de vagues, et donc la sécurité (ex : pour baignade, surf, navigation) et l’érosion côtière. Même par vent calme, une grande houle lointaine peut provoquer des vagues puissantes ou des surcôtes",
     "tags_theme": [
-      "Houle",
-      "Sécurité nautique",
-      "Érosion côtière"
+      "interactions_climatiques",
+      "reperes_spatio_temporels"
     ],
     "tags_filtre": []
   },
@@ -1826,9 +1768,8 @@
     "objectif": "Établir le lien entre consommation responsable et sensibilisation environnementale.",
     "tip": "Une personne sensibilisée fait des choix plus responsables (produits durables, moins de déchets, consommation raisonnée) ce qui réduit l’impact environnemental",
     "tags_theme": [
-      "Consommation responsable",
-      "Sensibilisation",
-      "Environnement"
+      "sciences_participatives",
+      "impact_presence_humaine"
     ],
     "tags_filtre": []
   },
@@ -1840,8 +1781,7 @@
     "objectif": "Distinguer sensibilisation et action environnementale.",
     "tip": "La sensibilisation concerne la prise de conscience et l’information ; l’action est l’application concrète (changer des habitudes, participer à des initiatives).",
     "tags_theme": [
-      "Sensibilisation",
-      "Action environnementale"
+      "sciences_participatives"
     ],
     "tags_filtre": []
   },
@@ -1853,9 +1793,7 @@
     "objectif": "Expliquer l'espoir d'action face aux défis climatiques.",
     "tip": "Parce que même si certains effets du changement sont déjà irréversibles, la réduction des émissions, l’adaptation et les transitions vers des modes de vie plus durables peuvent limiter les risques futurs et améliorer la résilience des sociétés",
     "tags_theme": [
-      "Changement climatique",
-      "Action environnementale",
-      "Résilience"
+      "sciences_participatives"
     ],
     "tags_filtre": []
   },
@@ -1867,10 +1805,7 @@
     "objectif": "Comprendre l'importance du suivi des mammifères marins comme indicateurs écologiques.",
     "tip": "Parce que ces espèces sont souvent situées au sommet de la chaîne trophique, sont sensibles aux modifications de leur milieu (pollution, bruit sous-marin, changement climatique) et leur état permet d’évaluer l’état global de l’écosystème marin. Leur suivi est donc une forme de “sentinelle” pour la biodiversité marine.",
     "tags_theme": [
-      "Mammifères marins",
-      "Biodiversité marine",
-      "Indicateurs écologiques",
-      "Pollution"
+      "impact_presence_humaine"
     ],
     "tags_filtre": []
   }

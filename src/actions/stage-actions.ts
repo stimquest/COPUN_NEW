@@ -59,7 +59,7 @@ export async function unlinkCardFromStep(stepId: string, cardId: string) {
     return { success: true };
 }
 
-export async function createStage(data: { title: string, activity: string, level: string, dates: string }) {
+export async function createStage(data: { title: string, activity: string, level: string, dates: string, suggested_thematics?: string[] }) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -76,6 +76,7 @@ export async function createStage(data: { title: string, activity: string, level
                 level: data.level,
                 dates: data.dates,
                 selected_content: [],
+                suggested_thematics: data.suggested_thematics ?? [],
                 owner_id: user.id
             }
         ])
@@ -210,7 +211,7 @@ export async function addStep(sessionId: string, stageId: string, order: number)
     const supabase = await createClient();
     // 1. Shift existing steps
     const { error: shiftError } = await supabase
-        .rpc('shift_session_steps', {
+        .rpc('shift_session_structure', {
             p_session_id: sessionId,
             p_min_order: order
         });
@@ -262,4 +263,114 @@ export async function deleteStep(stepId: string, stageId: string) {
 
     revalidatePath(`/stages/${stageId}/sessions`);
     return { success: true };
+}
+
+export async function deleteStage(stageId: string) {
+    const supabase = await createClient();
+    const { error } = await supabase
+        .from('stages')
+        .delete()
+        .eq('id', stageId);
+
+    if (error) return { success: false, error: error.message };
+    revalidatePath('/stages');
+    return { success: true };
+}
+
+// ─── Step Todos ───────────────────────────────────────────────────────────────
+
+export async function addStepTodo(stepId: string, stageId: string, text: string, order: number) {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+        .from('step_todos')
+        .insert({ session_step_id: stepId, text, todo_order: order })
+        .select()
+        .single();
+
+    if (error) return { success: false, error: error.message };
+    revalidatePath(`/stages/${stageId}/sessions`);
+    return { success: true, todo: data };
+}
+
+export async function updateStepTodo(todoId: string, stageId: string, patch: { text?: string; done?: boolean; todo_order?: number }) {
+    const supabase = await createClient();
+    const { error } = await supabase
+        .from('step_todos')
+        .update(patch)
+        .eq('id', todoId);
+
+    if (error) return { success: false, error: error.message };
+    revalidatePath(`/stages/${stageId}/sessions`);
+    return { success: true };
+}
+
+export async function deleteStepTodo(todoId: string, stageId: string) {
+    const supabase = await createClient();
+    const { error } = await supabase
+        .from('step_todos')
+        .delete()
+        .eq('id', todoId);
+
+    if (error) return { success: false, error: error.message };
+    revalidatePath(`/stages/${stageId}/sessions`);
+    return { success: true };
+}
+
+export async function getStepTodosForStage(stageId: string): Promise<{ step_id: string; todos: import('@/types').StepTodo[] }[]> {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+        .from('step_todos')
+        .select(`
+            *,
+            session_structure!inner(
+                id,
+                sessions!inner(
+                    stage_id
+                )
+            )
+        `)
+        .eq('session_structure.sessions.stage_id', stageId)
+        .order('todo_order');
+
+    if (error || !data) return [];
+
+    const grouped: Record<string, import('@/types').StepTodo[]> = {};
+    data.forEach((row: Record<string, unknown>) => {
+        const stepId = row.session_step_id as string;
+        if (!grouped[stepId]) grouped[stepId] = [];
+        grouped[stepId].push(row as import('@/types').StepTodo);
+    });
+
+    return Object.entries(grouped).map(([step_id, todos]) => ({ step_id, todos }));
+}
+
+export async function getPastTodosForUser(stageId: string): Promise<string[]> {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return [];
+
+    const { data, error } = await supabase
+        .from('step_todos')
+        .select(`
+            text,
+            session_structure!inner(
+                sessions!inner(
+                    stages!inner(owner_id)
+                )
+            )
+        `)
+        .eq('session_structure.sessions.stages.owner_id', user.id)
+        .neq('session_structure.sessions.stage_id', stageId)
+        .order('created_at', { ascending: false })
+        .limit(200);
+
+    if (error || !data) return [];
+
+    const seen = new Set<string>();
+    const texts: string[] = [];
+    data.forEach((row: Record<string, unknown>) => {
+        const t = (row.text as string).trim();
+        if (!seen.has(t)) { seen.add(t); texts.push(t); }
+    });
+    return texts;
 }

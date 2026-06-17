@@ -6,7 +6,8 @@ export type Stage = {
   activity: string;
   level: string;
   dates: string;
-  selected_content?: string[]; // IDs of PedagogicalContent
+  selected_content?: string[];
+  suggested_thematics?: string[];
 };
 
 export type Session = {
@@ -23,6 +24,15 @@ export type SessionStep = {
   step_duration_minutes: number;
   step_description: string;
   step_order: number;
+};
+
+export type StepTodo = {
+  id: string;
+  session_step_id: string;
+  text: string;
+  done: boolean;
+  todo_order: number;
+  created_at: string;
 };
 
 export type PedagogicalContent = {

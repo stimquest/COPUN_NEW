@@ -1,6 +1,7 @@
 import { getStageById, getSessionsForStage } from '@/services/data-service';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { DeleteStageButton } from '@/components/DeleteStageButton';
 
 export default async function StageCockpitPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
@@ -18,10 +19,11 @@ export default async function StageCockpitPage({ params }: { params: Promise<{ i
                 <Link href="/stages" className="size-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 active:scale-95 transition-transform">
                     <span className="material-symbols-outlined">arrow_back</span>
                 </Link>
-                <div>
+                <div className="flex-1">
                     <h1 className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Pilotage du Stage</h1>
                     <p className="text-lg font-bold leading-none text-slate-900">{stage.title}</p>
                 </div>
+                <DeleteStageButton stageId={stage.id} />
             </header>
 
             <main className="flex-1 px-4 py-6 space-y-8 overflow-y-auto pb-36 max-w-6xl mx-auto w-full">
@@ -96,7 +98,7 @@ export default async function StageCockpitPage({ params }: { params: Promise<{ i
                     </Link>
 
                     {/* Layer 4: COMPAGNON (Execution) */}
-                    <Link href={`/session/${firstSessionId || '#'}`} className="block h-full border-b-8 border-indigo-400 rounded-[1.5rem] md:order-4 group">
+                    <Link href={firstSessionId ? `/session/${firstSessionId}` : `/stages/${id}/sessions`} className="block h-full border-b-8 border-indigo-400 rounded-[1.5rem] md:order-4 group">
                         <div className="bg-[#1a1744] text-white p-6 rounded-[1.5rem] shadow-sm flex flex-col h-full hover:shadow-md transition-shadow relative overflow-hidden">
                             <div className="absolute inset-0 bg-linear-to-br from-indigo-500/10 to-transparent group-hover:from-indigo-500/20 transition-colors"></div>
                             <div className="size-12 rounded-xl bg-indigo-500/20 text-indigo-300 flex items-center justify-center shrink-0 mb-6 relative z-10 group-hover:scale-110 transition-transform">

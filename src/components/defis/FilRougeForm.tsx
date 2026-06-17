@@ -113,10 +113,11 @@ export default function FilRougeForm({ defiId, defiDescription, stageId, clubTar
         const valid = newTargets.filter(t => t.name.trim());
         if (!valid.length) return;
         setIsSavingTargets(true);
-        await saveClubObservationTargets(valid);
+        const result = await saveClubObservationTargets(valid);
         setIsSavingTargets(false);
         setConfigMode(false);
-        setFauneEntries(valid.map((t, i) => ({ targetId: String(i), name: t.name, count: '', frequency: '' })));
+        const saved = result.success && result.targets ? result.targets : [];
+        setFauneEntries(saved.map(t => ({ targetId: t.id, name: t.name, count: '', frequency: '' as Frequency })));
     };
 
     const canSubmit = () => {

@@ -131,6 +131,9 @@ export async function getDashboardStages() {
         const stageSessionIds = stageSessions.map(s => s.id);
         const stageValidations = validationsData?.filter(v => stageSessionIds.includes(v.session_id)) || [];
 
+        // First session by order — used by the dashboard "play" shortcut
+        const firstSession = [...stageSessions].sort((a, b) => a.session_order - b.session_order)[0];
+
         // Extract Top 2 themes
         const themesCount = new Map<string, number>();
         stage.selected_content?.forEach((contentId: string) => {
@@ -150,7 +153,8 @@ export async function getDashboardStages() {
             validationCount: stageValidations.length,
             contentCount: stage.selected_content?.length || 0,
             themes: topThemes,
-            totalSessions: stageSessions.length
+            totalSessions: stageSessions.length,
+            firstSessionId: firstSession?.id ?? null
         };
     });
 

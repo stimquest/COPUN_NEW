@@ -378,17 +378,17 @@ export async function saveClubObservationTargets(
 
     if (targets.length === 0) return { success: true };
 
-    const { error } = await supabase.from('club_observation_targets').insert(
+    const { data: inserted, error } = await supabase.from('club_observation_targets').insert(
         targets.map((t, i) => ({
             club_id: profile.club_id,
             name: t.name,
             categorie: t.categorie,
             sort_order: i,
         }))
-    );
+    ).select('id, name, categorie');
 
     if (error) return { success: false, error: error.message };
-    return { success: true };
+    return { success: true, targets: inserted ?? [] };
 }
 
 export async function completeFilRougeDefi(
@@ -415,13 +415,14 @@ export async function completeFilRougeDefi(
         updateData.preuves_url = [...(existing?.preuves_url || []), photoUrl];
     }
 
-    const { error } = await supabase
+    const { error, count } = await supabase
         .from('stage_exploits')
         .update(updateData)
         .eq('stage_id', stageId)
         .eq('exploit_id', defiId);
 
     if (error) return { success: false, error: error.message };
+    if (!count || count === 0) return { success: false, error: 'Exploit introuvable' };
 
     const { data: defi } = await supabase
         .from('defis').select('points').eq('id', defiId).single();

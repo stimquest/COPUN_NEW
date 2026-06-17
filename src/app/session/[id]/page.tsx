@@ -1,4 +1,6 @@
-import { getSessionFull, getUserValidationsForSession } from '@/services/data-service';
+import { getSessionFull, getUserValidationsForSession, getSessionsForStage } from '@/services/data-service';
+import { getStageExploits, getClubSpotsForUser, getClubObservationTargets } from '@/actions/defi-actions';
+import { getStepTodosForStage } from '@/actions/stage-actions';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import SessionRunnerClient from './SessionRunnerClient';
@@ -10,18 +12,21 @@ export default async function SessionRunnerPage({ params }: { params: Promise<{ 
     if (!data || !data.session) return notFound();
 
     const { session, steps, links, contentPool } = data;
-    const initialValidations = await getUserValidationsForSession(id); // Fetch validations
 
-    // Fetch all sessions for navigation
-    const { getSessionsForStage } = await import('@/services/data-service');
-    const { getStageExploits } = await import('@/actions/defi-actions');
-
-    const { getClubSpotsForUser, getClubObservationTargets } = await import('@/actions/defi-actions');
-
-    const [allSessions, assignedExploits] = await Promise.all([
+    const [
+        initialValidations,
+        allSessions,
+        assignedExploits,
+        todosGrouped,
+    ] = await Promise.all([
+        getUserValidationsForSession(id),
         getSessionsForStage(session.stage_id),
-        getStageExploits(session.stage_id)
+        getStageExploits(session.stage_id),
+        getStepTodosForStage(session.stage_id),
     ]);
+
+    const todosByStep: Record<string, import('@/types').StepTodo[]> = {};
+    todosGrouped.forEach(({ step_id, todos }) => { todosByStep[step_id] = todos; });
 
     const spotFixeIds = assignedExploits
         .filter((e: { defis?: { spot_fixe?: boolean }; exploit_id: string }) => e.defis?.spot_fixe)
@@ -33,22 +38,16 @@ export default async function SessionRunnerPage({ params }: { params: Promise<{ 
     ]);
 
     return (
-        <div className="flex flex-col min-h-screen bg-slate-50 pb-24">
-            {/* HEADER COMPACT */}
-            <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200">
+        <div className="flex flex-col min-h-screen bg-[#f8f9fc] pb-24">
+            <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-100">
                 <div className="flex items-center justify-between px-5 py-4">
                     <div className="flex items-center gap-3">
                         <Link href={`/stages/${session.stage_id}`} className="size-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 active:scale-95 transition-transform">
                             <span className="material-symbols-outlined block">arrow_back</span>
                         </Link>
                         <div>
-                            <h1 className="text-lg font-extrabold text-slate-900 tracking-tight leading-none">{session.title}</h1>
-                            <p className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">Séance N°{session.session_order}</p>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 rounded-full border border-slate-200">
-                            <span className="material-symbols-outlined text-emerald-600 text-[18px]">cloud_done</span>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Séance {session.session_order}</p>
+                            <h1 className="text-base font-extrabold text-slate-900 leading-tight">{session.title}</h1>
                         </div>
                     </div>
                 </div>
@@ -60,10 +59,12 @@ export default async function SessionRunnerPage({ params }: { params: Promise<{ 
                 links={links}
                 initialValidations={initialValidations}
                 sessionId={id}
+                stageId={session.stage_id}
                 allSessions={allSessions.map(s => ({ id: s.id, title: s.title, order: s.session_order }))}
                 assignedExploits={assignedExploits}
                 clubSpots={clubSpots}
                 clubObservationTargets={clubObservationTargets}
+                todosByStep={todosByStep}
             />
         </div>
     );

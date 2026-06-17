@@ -9,6 +9,8 @@ import { Stage, Session, PedagogicalContent, SessionStep } from '@/types';
 import { useRouter } from 'next/navigation';
 import { SESSION_TEMPLATES, SessionTemplate } from '@/data/session-templates';
 import CardDetailModal from '@/components/CardDetailModal';
+import { StepTodoList } from '@/components/StepTodoList';
+import { StepTodo } from '@/types';
 
 type SessionWithSteps = Session & { steps: SessionStep[] };
 
@@ -16,12 +18,16 @@ export default function SessionsManagerClient({
     stage,
     initialSessions,
     fullPool,
-    initialLinks
+    initialLinks,
+    initialTodosByStep,
+    pastTodos,
 }: {
     stage: Stage,
     initialSessions: SessionWithSteps[],
     fullPool: PedagogicalContent[],
-    initialLinks: { session_step_id: string, pedagogical_content_id: string }[]
+    initialLinks: { session_step_id: string, pedagogical_content_id: string }[],
+    initialTodosByStep: Record<string, StepTodo[]>,
+    pastTodos: string[],
 }) {
     const router = useRouter();
     const [links, setLinks] = useState<Record<string, string[]>>(() => {
@@ -181,7 +187,7 @@ export default function SessionsManagerClient({
                                                 <div
                                                     key={card.id}
                                                     onClick={() => setSelectedCardForDetail(card)}
-                                                    className="bg-white border border-slate-200 pl-3 pr-1 py-1 rounded-lg flex items-center justify-between gap-3 shadow-sm hover:border-indigo-100 hover:bg-slate-50 transition-all cursor-pointer group active:scale-95 w-full max-w-[280px] md:max-w-sm"
+                                                    className="bg-white border border-slate-200 pl-3 pr-1 py-1 rounded-lg flex items-center justify-between gap-3 shadow-sm hover:border-indigo-100 hover:bg-slate-50 transition-all cursor-pointer group active:scale-95 w-full max-w-70 md:max-w-sm"
                                                 >
                                                     <div className="flex items-center gap-2 overflow-hidden flex-1">
                                                         <span className={clsx("size-2 rounded-full shrink-0",
@@ -204,6 +210,16 @@ export default function SessionsManagerClient({
                                             ))}
                                         </div>
                                     )}
+
+                                    {/* Todo list — plan de cours */}
+                                    <div className="pl-7 pt-2 border-t border-slate-50 mt-1">
+                                        <StepTodoList
+                                            stepId={step.id}
+                                            stageId={stage.id}
+                                            initialTodos={initialTodosByStep[step.id] ?? []}
+                                            pastSuggestions={pastTodos}
+                                        />
+                                    </div>
                                 </div>
                             );
                         };

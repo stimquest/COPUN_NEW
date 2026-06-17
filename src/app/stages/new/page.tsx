@@ -4,13 +4,17 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createStage } from '@/actions/stage-actions';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import SeasonalGuide from '@/components/SeasonalGuide';
+import { ThematicTag } from '@/data/seasonal-context';
 
 export default function NewStagePage() {
     const router = useRouter();
     const [isSaving, setIsSaving] = useState(false);
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
+    const [showGuide, setShowGuide] = useState(false);
+    const [suggestedThematics, setSuggestedThematics] = useState<ThematicTag[]>([]);
     const [formData, setFormData] = useState({
         title: '',
         activity: 'Catamaran',
@@ -31,21 +35,33 @@ export default function NewStagePage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (startDate && endDate) {
+            setShowGuide(true);
+        }
+    };
+
+    const saveStage = async (thematics: ThematicTag[]) => {
         setIsSaving(true);
-
         const formattedDates = formatDateRange(startDate, endDate);
-
         const res = await createStage({
             ...formData,
-            dates: formattedDates
+            dates: formattedDates,
+            suggested_thematics: thematics,
         });
-
         if (res.success) {
             router.push('/stages');
         } else {
             alert('Erreur: ' + res.error);
             setIsSaving(false);
         }
+    };
+
+    const handleGuideValidate = (thematics: ThematicTag[]) => {
+        saveStage(thematics);
+    };
+
+    const handleGuideSkip = () => {
+        saveStage([]);
     };
 
     return (
@@ -63,7 +79,35 @@ export default function NewStagePage() {
                     animate={{ opacity: 1, y: 0 }}
                     className="bg-white rounded-[2.5rem] p-8 shadow-xl border-2 border-slate-100"
                 >
-                    <form onSubmit={handleSubmit} className="space-y-6">
+                    <AnimatePresence mode="wait">
+                    {showGuide ? (
+                        <motion.div
+                            key="guide"
+                            initial={{ opacity: 0, x: 30 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -30 }}
+                            className="space-y-4"
+                        >
+                            <div className="space-y-1 mb-6">
+                                <p className="text-[10px] font-black tracking-widest text-indigo-500 uppercase">Étape 2 — Contexte</p>
+                                <h2 className="text-lg font-black text-slate-900">Guidez votre programme</h2>
+                                <p className="text-xs text-slate-500">Ces informations vont présélectionner les thématiques les plus pertinentes pour votre semaine.</p>
+                            </div>
+                            <SeasonalGuide
+                                startDate={startDate}
+                                onSuggestions={handleGuideValidate}
+                                onSkip={handleGuideSkip}
+                            />
+                        </motion.div>
+                    ) : (
+                        <motion.form
+                            key="form"
+                            initial={{ opacity: 0, x: -30 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: 30 }}
+                            onSubmit={handleSubmit}
+                            className="space-y-6"
+                        >
                         <div className="space-y-2">
                             <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Nom du Stage</label>
                             <input
@@ -149,13 +193,15 @@ export default function NewStagePage() {
                                     <span className="animate-spin material-symbols-outlined">progress_activity</span>
                                 ) : (
                                     <>
-                                        <span className="material-symbols-outlined">rocket_launch</span>
-                                        CRÉER LE STAGE
+                                        <span className="material-symbols-outlined">arrow_forward</span>
+                                        SUIVANT
                                     </>
                                 )}
                             </button>
                         </div>
-                    </form>
+                        </motion.form>
+                    )}
+                    </AnimatePresence>
                 </motion.div>
             </main>
         </div>

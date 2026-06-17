@@ -16,6 +16,7 @@ export type DashboardStage = {
     contentCount: number;
     themes: string[];
     totalSessions: number;
+    firstSessionId: string | null;
 };
 
 type Props = {
@@ -60,7 +61,7 @@ export default function StageDashboardCard({ stage }: Props) {
                                 onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
-                                    router.push(`/session/${stage.id}`);
+                                    router.push(stage.firstSessionId ? `/session/${stage.firstSessionId}` : `/stages/${stage.id}`);
                                 }}
                                 className="size-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-sm cursor-pointer"
                                 title="Lancer la séance"

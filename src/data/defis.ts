@@ -6,6 +6,9 @@ export interface Defi {
     type_preuve: 'photo' | 'checkbox' | 'action' | 'quiz';
     icon: string;
     tags_theme: string[];
+    /** TRUE = smartphone needed on-site in real time (live GPS / immediate photo).
+     *  FALSE = can be noted on paper and recorded calmly afterwards. */
+    terrain_temps_reel?: boolean;
 }
 
 export const DEFIS: Defi[] = [

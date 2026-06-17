@@ -13,6 +13,7 @@ type Defi = {
     tags_theme: string[];
     stage_type: string[];
     spot_fixe: boolean;
+    terrain_temps_reel: boolean;
     points: number;
 };
 
@@ -41,9 +42,26 @@ const pointsBadgeColor = (points: number) => {
     return 'bg-slate-100 text-slate-500';
 };
 
+/** Field-constraint badge so the instructor chooses in full knowledge. */
+function TerrainBadge({ tempsReel }: { tempsReel: boolean }) {
+    if (tempsReel) {
+        return (
+            <span className="text-[10px] font-black text-orange-600 bg-orange-50 border border-orange-100 px-1.5 py-0.5 rounded flex items-center gap-0.5" title="Nécessite le smartphone sur place (GPS / photo immédiate)">
+                <span className="material-symbols-outlined text-xs">smartphone</span>Sur le terrain
+            </span>
+        );
+    }
+    return (
+        <span className="text-[10px] font-black text-teal-600 bg-teal-50 border border-teal-100 px-1.5 py-0.5 rounded flex items-center gap-0.5" title="Réalisable sur papier puis saisie au calme après la séance">
+            <span className="material-symbols-outlined text-xs">edit_note</span>Différé possible
+        </span>
+    );
+}
+
 export default function DefisTab({ stageId, availableDefis, assignedExploits, suggestedThemes = [] }: Props) {
     const [isPending, startTransition] = useTransition();
     const [selectedTheme, setSelectedTheme] = useState<string | null>(null);
+    const [terrainFilter, setTerrainFilter] = useState<'all' | 'differe' | 'terrain'>('all');
 
     const assignedIds = useMemo(() => new Set(assignedExploits.map(e => e.exploit_id)), [assignedExploits]);
 
@@ -56,8 +74,10 @@ export default function DefisTab({ stageId, availableDefis, assignedExploits, su
     const unassignedDefis = useMemo(() => availableDefis.filter(d => {
         if (assignedIds.has(d.id)) return false;
         if (selectedTheme && !d.tags_theme?.includes(selectedTheme)) return false;
+        if (terrainFilter === 'differe' && d.terrain_temps_reel) return false;
+        if (terrainFilter === 'terrain' && !d.terrain_temps_reel) return false;
         return true;
-    }), [availableDefis, assignedIds, selectedTheme]);
+    }), [availableDefis, assignedIds, selectedTheme, terrainFilter]);
 
     const { suggestedUnassigned, otherUnassigned } = useMemo(() => {
         const suggested: Defi[] = [];
@@ -112,6 +132,7 @@ export default function DefisTab({ stageId, availableDefis, assignedExploits, su
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
                                             <h4 className="font-bold text-slate-900 text-sm">{exploit.defis.description}</h4>
+                                            <TerrainBadge tempsReel={exploit.defis.terrain_temps_reel} />
                                             {exploit.defis.spot_fixe && (
                                                 <span className="text-[10px] font-black text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded flex items-center gap-0.5">
                                                     <span className="material-symbols-outlined text-xs">location_on</span>Spot
@@ -150,6 +171,27 @@ export default function DefisTab({ stageId, availableDefis, assignedExploits, su
                     <span className="material-symbols-outlined text-amber-600">explore</span>
                     Défis Disponibles ({unassignedDefis.length})
                 </h3>
+
+                {/* Field-constraint filter */}
+                <div className="flex gap-2 mb-4">
+                    {([
+                        { id: 'all' as const, label: 'Tous', icon: 'apps' },
+                        { id: 'differe' as const, label: 'Différé', icon: 'edit_note' },
+                        { id: 'terrain' as const, label: 'Sur le terrain', icon: 'smartphone' },
+                    ]).map(opt => (
+                        <button key={opt.id} onClick={() => setTerrainFilter(opt.id)}
+                            className={clsx(
+                                'flex items-center gap-1 px-3 py-1.5 text-xs font-bold rounded-full transition whitespace-nowrap',
+                                terrainFilter === opt.id
+                                    ? opt.id === 'terrain' ? 'bg-orange-500 text-white' : opt.id === 'differe' ? 'bg-teal-500 text-white' : 'bg-slate-800 text-white'
+                                    : 'bg-white text-slate-500 border border-slate-200'
+                            )}
+                        >
+                            <span className="material-symbols-outlined text-sm">{opt.icon}</span>
+                            {opt.label}
+                        </button>
+                    ))}
+                </div>
 
                 {allThemes.length > 0 && (
                     <div className="overflow-x-auto -mx-4 px-4 pb-3 mb-4 no-scrollbar" style={{ WebkitOverflowScrolling: 'touch' }}>
@@ -231,6 +273,7 @@ function DefiListItem({ defi, onAssign, isPending, variant }: {
             <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5 flex-wrap mb-1">
                     <h4 className="font-bold text-slate-900">{defi.description}</h4>
+                    <TerrainBadge tempsReel={defi.terrain_temps_reel} />
                     {defi.spot_fixe && (
                         <span className="text-[10px] font-black text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded flex items-center gap-0.5">
                             <span className="material-symbols-outlined text-xs">location_on</span>Spot
