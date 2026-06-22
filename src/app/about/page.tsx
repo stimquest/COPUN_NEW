@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 
 const dimensions = [
@@ -70,9 +71,12 @@ export default function AboutPage() {
                         <span className="material-symbols-outlined text-[10rem]">sailing</span>
                     </div>
                     <div className="relative z-10 space-y-4">
-                        <span className="inline-block bg-emerald-500/20 text-emerald-400 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest border border-emerald-500/30">
-                            Pour un littoral vivant et protégé
-                        </span>
+                        <div className="flex items-center gap-4 mb-2">
+                            <Image src="/logo.jpg" alt="COP'UN logo" width={72} height={72} className="rounded-full shrink-0 shadow-lg" />
+                            <span className="inline-block bg-emerald-500/20 text-emerald-400 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest border border-emerald-500/30">
+                                Pour un littoral vivant et protégé
+                            </span>
+                        </div>
                         <h1 className="text-4xl font-black leading-tight">
                             Former des<br />Sentinelles<br />du Littoral
                         </h1>

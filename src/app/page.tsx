@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 
 export default function LandingPage() {
@@ -11,8 +12,8 @@ export default function LandingPage() {
             <main className="flex-1 flex flex-col items-center justify-center px-6 py-16 relative z-10">
 
                 {/* Logo */}
-                <div className="size-20 bg-white/10 backdrop-blur-xl rounded-3xl mx-auto flex items-center justify-center border border-white/20 mb-8 shadow-2xl">
-                    <span className="material-symbols-outlined text-white text-4xl">waves</span>
+                <div className="size-32 mx-auto mb-6 drop-shadow-2xl">
+                    <Image src="/logo.jpg" alt="COP'UN logo" width={128} height={128} className="rounded-full w-full h-full object-cover" priority />
                 </div>
 
                 {/* Title */}
