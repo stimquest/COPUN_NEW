@@ -324,11 +324,26 @@ export default function ProgramBuilderClient({ stage, fullPool }: { stage: Stage
 
                             {/* Level */}
                             <div className="space-y-2">
-                                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Niveau</p>
+                                <div className="flex items-center gap-2">
+                                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Niveau d&apos;implication</p>
+                                    <LevelInfoButton />
+                                </div>
                                 <div className="flex bg-[#EBF0F7] p-1 rounded-xl gap-1">
-                                    {[1, 2, 3].map(lvl => (
-                                        <button key={lvl} onClick={() => setSelectedLevel(lvl as 1 | 2 | 3)} className={clsx("flex-1 py-2 rounded-lg text-[11px] font-black transition-all", selectedLevel === lvl ? "bg-white text-slate-900 shadow-sm" : "text-slate-400 hover:text-slate-600")}>
-                                            N{lvl}
+                                    {([
+                                        { lvl: 1 as const, label: 'N1', sub: 'Découverte' },
+                                        { lvl: 2 as const, label: 'N2', sub: 'Approfondissement' },
+                                        { lvl: 3 as const, label: 'N3', sub: 'Engagement' },
+                                    ]).map(({ lvl, label, sub }) => (
+                                        <button
+                                            key={lvl}
+                                            onClick={() => setSelectedLevel(lvl)}
+                                            className={clsx(
+                                                "flex-1 flex flex-col items-center py-2.5 px-1 rounded-lg transition-all",
+                                                selectedLevel === lvl ? "bg-white text-slate-900 shadow-sm" : "text-slate-400 hover:text-slate-600"
+                                            )}
+                                        >
+                                            <span className="text-[12px] font-black">{label}</span>
+                                            <span className="text-[9px] font-bold text-center leading-tight mt-0.5 opacity-70">{sub}</span>
                                         </button>
                                     ))}
                                 </div>
@@ -550,5 +565,86 @@ export default function ProgramBuilderClient({ stage, fullPool }: { stage: Stage
             <CardCreatorModal isOpen={isCreatorOpen} onClose={() => setIsCreatorOpen(false)} onCreated={() => router.refresh()} />
             <CardDetailModal isOpen={!!selectedCardForDetail} onClose={() => setSelectedCardForDetail(null)} content={selectedCardForDetail} />
         </div>
+    );
+}
+
+const LEVEL_INFO = [
+    {
+        label: 'N1 — Découverte',
+        sub: 'Je prends conscience',
+        color: 'text-sky-600',
+        bg: 'bg-sky-50',
+        border: 'border-sky-100',
+        description: "Le stagiaire découvre le milieu littoral et ses enjeux. Il observe, s'interroge et commence à identifier les interactions entre activités humaines et environnement. Les fiches N1 visent l'éveil et la curiosité — pas encore d'engagement actif, mais une prise de conscience progressive.",
+    },
+    {
+        label: 'N2 — Approfondissement',
+        sub: 'J\'agis en conscience',
+        color: 'text-indigo-600',
+        bg: 'bg-indigo-50',
+        border: 'border-indigo-100',
+        description: "Le stagiaire commence à intégrer ce qu'il a observé dans ses comportements. Il adapte ses gestes, fait des choix éclairés et comprend pourquoi certaines pratiques protègent le littoral. Les fiches N2 ancrent la connaissance dans l'action quotidienne.",
+    },
+    {
+        label: 'N3 — Engagement',
+        sub: 'J\'agis de façon responsable',
+        color: 'text-emerald-600',
+        bg: 'bg-emerald-50',
+        border: 'border-emerald-100',
+        description: "Le stagiaire devient acteur de la protection du littoral. Il anticipe les impacts, partage ses connaissances et s'implique dans des démarches collectives (sciences participatives, sensibilisation). Les fiches N3 visent l'autonomie et la posture de sentinelle.",
+    },
+];
+
+function LevelInfoButton() {
+    const [open, setOpen] = useState(false);
+
+    return (
+        <>
+            <button
+                onClick={() => setOpen(true)}
+                className="size-5 rounded-full bg-slate-100 text-slate-400 hover:bg-indigo-100 hover:text-indigo-500 transition-colors flex items-center justify-center shrink-0"
+                title="En savoir plus sur les niveaux"
+            >
+                <span className="material-symbols-outlined text-[13px]">info</span>
+            </button>
+
+            <AnimatePresence>
+                {open && (
+                    <>
+                        <motion.div
+                            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                            className="fixed inset-0 bg-slate-900/50 z-50 backdrop-blur-sm"
+                            onClick={() => setOpen(false)}
+                        />
+                        <motion.div
+                            initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
+                            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+                            className="fixed bottom-0 left-0 right-0 bg-white rounded-t-[2rem] z-50 max-h-[85vh] overflow-y-auto shadow-2xl"
+                        >
+                            <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-slate-100">
+                                <div>
+                                    <h3 className="text-lg font-black text-slate-900">Niveaux d&apos;implication</h3>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Progression COP&apos;UN</p>
+                                </div>
+                                <button onClick={() => setOpen(false)} className="size-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+                                    <span className="material-symbols-outlined">close</span>
+                                </button>
+                            </div>
+                            <div className="px-6 py-5 space-y-4 pb-10">
+                                {LEVEL_INFO.map((lvl) => (
+                                    <div key={lvl.label} className={clsx("rounded-2xl border p-5 space-y-2", lvl.bg, lvl.border)}>
+                                        <div>
+                                            <p className={clsx("text-sm font-black", lvl.color)}>{lvl.label}</p>
+                                            <p className={clsx("text-[11px] font-bold italic", lvl.color, "opacity-70")}>{lvl.sub}</p>
+                                        </div>
+                                        <p className="text-sm text-slate-600 font-medium leading-relaxed">{lvl.description}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
+        </>
     );
 }

@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr';
 import { type NextRequest, NextResponse } from 'next/server';
 
-const PUBLIC_PATHS = ['/', '/login'];
+const PUBLIC_PATHS = ['/', '/login', '/auth/callback', '/auth/reset-password'];
 
 export async function updateSession(request: NextRequest) {
     let response = NextResponse.next({
@@ -33,16 +33,29 @@ export async function updateSession(request: NextRequest) {
 
     const { data: { user } } = await supabase.auth.getUser();
     const path = request.nextUrl.pathname;
-    const isPublic = PUBLIC_PATHS.includes(path);
+    const isPublic = PUBLIC_PATHS.some(p => path === p || path.startsWith(p + '/'));
 
-    // Not logged in → redirect to landing (unless already on a public page)
+    // Non connecté → page publique seulement
     if (!user && !isPublic) {
         return NextResponse.redirect(new URL('/', request.url));
     }
 
-    // Already logged in → skip landing/login, go straight to app
-    if (user && isPublic) {
+    // Déjà connecté → pas besoin de rester sur login/landing
+    if (user && (path === '/' || path === '/login')) {
         return NextResponse.redirect(new URL('/stages', request.url));
+    }
+
+    // Route /admin → vérifier le rôle admin
+    if (user && path.startsWith('/admin')) {
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .single();
+
+        if (!profile || profile.role !== 'admin') {
+            return NextResponse.redirect(new URL('/stages', request.url));
+        }
     }
 
     return response;

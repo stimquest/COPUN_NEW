@@ -1,6 +1,7 @@
 import { getProfile, getUserStats } from '@/actions/user-actions';
 import { getUserContent } from '@/actions/content-actions';
 import { getStages } from '@/services/data-service';
+import { getMyTotalPoints } from '@/actions/quiz-actions';
 import { Profile, PedagogicalContent, Stage } from '@/types';
 import Link from 'next/link';
 import SignOutButton from '@/components/SignOutButton';
@@ -11,18 +12,21 @@ export default async function ProfilPage() {
     let userContent: PedagogicalContent[] = [];
     let stages: Stage[] = [];
 
+    let totalPoints = 0;
     try {
         const results = await Promise.allSettled([
             getProfile(),
             getUserStats(),
             getUserContent(),
-            getStages()
+            getStages(),
+            getMyTotalPoints(),
         ]);
 
         profile = results[0].status === 'fulfilled' ? results[0].value as Profile : null;
         stats = results[1].status === 'fulfilled' ? (results[1].value || stats) : stats;
         userContent = results[2].status === 'fulfilled' ? (results[2].value as PedagogicalContent[] || []) : [];
         stages = results[3].status === 'fulfilled' ? (results[3].value as Stage[] || []) : [];
+        totalPoints = results[4].status === 'fulfilled' ? (results[4].value as number) : 0;
     } catch (err) {
         console.error('Erreur lors du chargement du profil:', err);
     }
@@ -65,20 +69,54 @@ export default async function ProfilPage() {
 
             {/* Stats Grid */}
             <div className="px-5 -mt-8">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-3 gap-3">
+                    <div className="bg-indigo-600 p-5 rounded-2xl shadow-xl shadow-indigo-500/30 flex flex-col items-center justify-center text-center col-span-1">
+                        <span className="text-4xl font-black text-white mb-1">{totalPoints}</span>
+                        <span className="text-[9px] text-indigo-200 font-black uppercase tracking-widest">Points</span>
+                    </div>
                     <div className="bg-white p-5 rounded-2xl shadow-xl shadow-slate-200/50 flex flex-col items-center justify-center text-center">
                         <span className="text-4xl font-black text-emerald-500 mb-1">{stats?.totalValidations || 0}</span>
-                        <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Validations</span>
+                        <span className="text-[9px] text-slate-400 font-black uppercase tracking-widest">Validations</span>
                     </div>
                     <div className="bg-white p-5 rounded-2xl shadow-xl shadow-slate-200/50 flex flex-col items-center justify-center text-center">
                         <span className="text-4xl font-black text-indigo-500 mb-1">{stats?.createdContent || 0}</span>
-                        <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Fiches Créées</span>
+                        <span className="text-[9px] text-slate-400 font-black uppercase tracking-widest">Fiches</span>
                     </div>
                 </div>
             </div>
 
+            {/* Accès admin */}
+            {profile.role === 'admin' && (
+                <div className="px-5 mt-8 max-w-md mx-auto w-full">
+                    <Link href="/admin" className="flex items-center gap-4 bg-violet-50 border border-violet-100 rounded-2xl px-5 py-4 hover:shadow-md active:scale-[0.98] transition-all group">
+                        <div className="size-11 rounded-xl bg-violet-100 text-violet-600 flex items-center justify-center shrink-0">
+                            <span className="material-symbols-outlined">admin_panel_settings</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <p className="font-bold text-violet-900 text-sm">Gestion des accès</p>
+                            <p className="text-xs text-violet-400 mt-0.5">Créer comptes, inviter, gérer les rôles</p>
+                        </div>
+                        <span className="material-symbols-outlined text-violet-300 group-hover:translate-x-1 transition-transform">arrow_forward_ios</span>
+                    </Link>
+                </div>
+            )}
+
+            {/* Guide COPUN */}
+            <div className="px-5 mt-4 max-w-md mx-auto w-full">
+                <Link href="/about" className="flex items-center gap-4 bg-white rounded-2xl px-5 py-4 shadow-sm border border-slate-100 hover:shadow-md active:scale-[0.98] transition-all group">
+                    <div className="size-11 rounded-xl bg-indigo-50 text-indigo-500 flex items-center justify-center shrink-0">
+                        <span className="material-symbols-outlined">auto_stories</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <p className="font-bold text-slate-900 text-sm">Guide de la méthode</p>
+                        <p className="text-xs text-slate-400 mt-0.5">Comprendre, Observer, Protéger — la démarche COPUN</p>
+                    </div>
+                    <span className="material-symbols-outlined text-slate-300 group-hover:translate-x-1 transition-transform">arrow_forward_ios</span>
+                </Link>
+            </div>
+
             {/* Sign out */}
-            <div className="px-5 mt-8 max-w-md mx-auto w-full">
+            <div className="px-5 mt-4 max-w-md mx-auto w-full">
                 <SignOutButton />
             </div>
 

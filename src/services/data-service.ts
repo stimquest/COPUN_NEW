@@ -86,23 +86,25 @@ export async function getDashboardStages() {
         `)
         .in('stage_id', stageIds);
 
-    // We get session links to calculate validation progress
+    // We get session links (for ordering + session count)
     const { data: sessionsData } = await supabase
         .from('sessions')
         .select(`
             id,
             stage_id,
-            session_order,
-            steps:session_structure(id)
+            session_order
         `)
         .in('stage_id', stageIds);
 
-    // We get validations
+    // Fetch validated content_ids by this user across all stage sessions
     const sessionIds = sessionsData?.map(s => s.id) || [];
-    const { data: validationsData } = await supabase
-        .from('session_validations')
-        .select('session_id')
-        .in('session_id', sessionIds);
+    const { data: validationsData } = sessionIds.length > 0
+        ? await supabase
+            .from('user_validations')
+            .select('session_id, content_id')
+            .eq('user_id', user.id)
+            .in('session_id', sessionIds)
+        : { data: [] };
 
     // Get the content pool just to extract themes if possible (optimized)
     // To limit payload, we only fetch content IDs that are actually selected in stages
@@ -128,8 +130,15 @@ export async function getDashboardStages() {
         const totalExploits = exploits.length;
 
         const stageSessions = sessionsData?.filter(s => s.stage_id === stage.id) || [];
-        const stageSessionIds = stageSessions.map(s => s.id);
-        const stageValidations = validationsData?.filter(v => stageSessionIds.includes(v.session_id)) || [];
+        const stageSessionIds = new Set(stageSessions.map(s => s.id));
+        const selectedSet = new Set(stage.selected_content ?? []);
+        // Count distinct content_ids that belong to this stage's selected_content
+        const validatedContentIds = new Set(
+            (validationsData ?? [])
+                .filter(v => stageSessionIds.has(v.session_id) && selectedSet.has(v.content_id))
+                .map(v => v.content_id)
+        );
+        const stageValidations = validatedContentIds;
 
         // First session by order — used by the dashboard "play" shortcut
         const firstSession = [...stageSessions].sort((a, b) => a.session_order - b.session_order)[0];
@@ -150,7 +159,7 @@ export async function getDashboardStages() {
         return {
             ...stage,
             exploitsSummary: { completed: completedExploits, total: totalExploits },
-            validationCount: stageValidations.length,
+            validationCount: stageValidations.size,
             contentCount: stage.selected_content?.length || 0,
             themes: topThemes,
             totalSessions: stageSessions.length,

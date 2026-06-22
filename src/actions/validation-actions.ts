@@ -46,5 +46,6 @@ export async function toggleValidation(contentId: string, sessionId: string) {
     }
 
     revalidatePath(`/session/${sessionId}`);
+    revalidatePath('/stages');
     return { success: true };
 }

@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import clsx from 'clsx';
 import { saveStageGameResult, saveQuizAttempt } from '@/actions/game-actions';
+import { awardStageQuizPoints } from '@/actions/quiz-actions';
 
 type GameItemData = Record<string, unknown>;
 
@@ -89,19 +90,86 @@ export default function PlayClient({ game }: { game: Game }) {
         if (currentIndex < totalCards - 1) {
             setCurrentIndex(prev => prev + 1);
         } else {
-            // Game finished
+            const finalScore = score + (isCorrect ? 1 : 0);
             setIsFinished(true);
-            // Save results
             if (game.stage_id) {
-                await saveStageGameResult(game.stage_id, game.id, score + (isCorrect ? 1 : 0), totalCards, answers);
+                await saveStageGameResult(game.stage_id, game.id, finalScore, totalCards, answers);
+                // Si c'est un quiz de bilan, on attribue les points moniteur
+                if (game.game_data.leGrandQuizz) {
+                    await awardStageQuizPoints(game.stage_id, game.id, finalScore, totalCards);
+                }
             }
-            await saveQuizAttempt(game.theme || 'Mixte', score + (isCorrect ? 1 : 0), totalCards);
+            await saveQuizAttempt(game.theme || 'Mixte', finalScore, totalCards);
         }
     };
 
     if (isFinished) {
         const finalScore = score;
         const percentage = Math.round((finalScore / totalCards) * 100);
+        const isStageQuiz = !!game.game_data.leGrandQuizz && !!game.stage_id;
+        const isExcellent = percentage >= 85;
+        const isGood = percentage >= 70;
+
+        // Écran félicitations élèves pour les quiz de bilan de stage
+        if (isStageQuiz) {
+            return (
+                <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-6 text-center">
+                    {/* Étoiles animées */}
+                    <div className="relative mb-8">
+                        <div className={clsx(
+                            'size-36 rounded-full flex flex-col items-center justify-center border-4 shadow-2xl mx-auto',
+                            isExcellent ? 'border-amber-400 bg-amber-500/20 shadow-amber-500/30' :
+                                isGood ? 'border-emerald-400 bg-emerald-500/20 shadow-emerald-500/30' :
+                                    'border-slate-500 bg-slate-800 shadow-slate-700/30'
+                        )}>
+                            <span className="text-5xl mb-1">
+                                {isExcellent ? '🏆' : isGood ? '⭐' : '💪'}
+                            </span>
+                            <span className={clsx(
+                                'text-2xl font-black',
+                                isExcellent ? 'text-amber-400' : isGood ? 'text-emerald-400' : 'text-slate-400'
+                            )}>{percentage}%</span>
+                        </div>
+                    </div>
+
+                    {/* Message groupe */}
+                    <h2 className={clsx(
+                        'text-3xl font-black uppercase tracking-tight mb-2',
+                        isExcellent ? 'text-amber-400' : isGood ? 'text-emerald-400' : 'text-slate-300'
+                    )}>
+                        {isExcellent ? 'Sentinelles de l\'Océan !' : isGood ? 'Bien joué !' : 'On progresse ensemble !'}
+                    </h2>
+                    <p className="text-slate-400 font-medium mb-2">
+                        {finalScore} bonne{finalScore > 1 ? 's' : ''} réponse{finalScore > 1 ? 's' : ''} sur {totalCards}
+                    </p>
+
+                    {/* Message adapté */}
+                    <p className="text-slate-500 text-sm max-w-xs leading-relaxed mb-10">
+                        {isExcellent
+                            ? 'Votre groupe a brillamment retenu les notions de la semaine. Vous êtes de vraies sentinelles du littoral !'
+                            : isGood
+                                ? 'Bonne transmission ! Le groupe a bien assimilé les notions essentielles de la semaine.'
+                                : 'Certaines notions méritent d\'être revues ensemble. Chaque stage est un pas de plus vers la conscience du littoral.'}
+                    </p>
+
+                    {/* Points moniteur */}
+                    <div className="bg-indigo-600/20 border border-indigo-500/30 rounded-2xl px-8 py-5 flex flex-col items-center gap-1 mb-8 w-full max-w-xs">
+                        <p className="text-[10px] font-black text-indigo-300 uppercase tracking-widest">Vos points moniteur</p>
+                        <span className="text-5xl font-black text-white">{isExcellent ? 10 : isGood ? 9 : 8}</span>
+                        <p className="text-xs text-indigo-400 font-medium">ajoutés à votre classement</p>
+                    </div>
+
+                    <button
+                        onClick={() => router.push(`/stages/${game.stage_id}`)}
+                        className="w-full max-w-xs px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black text-sm uppercase tracking-widest active:scale-95 transition-transform"
+                    >
+                        Retour au stage
+                    </button>
+                </div>
+            );
+        }
+
+        // Écran standard pour les jeux libres
         return (
             <div className="min-h-screen flex items-center justify-center p-6">
                 <div className="bg-white rounded-3xl shadow-xl p-10 max-w-md w-full text-center">
@@ -164,11 +232,12 @@ export default function PlayClient({ game }: { game: Game }) {
                 </div>
             </header>
 
-            {/* Card Content */}
-            <main className="flex-1 flex items-center justify-center p-6">
-                <div className="bg-white rounded-3xl shadow-xl p-8 max-w-2xl w-full">
+            {/* Card Content — scrollable, padded so content never hides behind fixed button */}
+            <main className="flex-1 overflow-y-auto px-4 py-6 pb-32">
+                <div className="bg-white rounded-3xl shadow-xl p-6 max-w-2xl mx-auto w-full">
                     {currentCard?.type === 'triage' && (
                         <TriageCard
+                            key={currentIndex}
                             data={currentCard.data as { statement: string; isTrue: boolean }}
                             onAnswer={handleAnswer}
                             showFeedback={showFeedback}
@@ -177,6 +246,7 @@ export default function PlayClient({ game }: { game: Game }) {
                     )}
                     {currentCard?.type === 'quizz' && (
                         <QuizzCard
+                            key={currentIndex}
                             data={currentCard.data as { question: string; answers?: string[]; options?: string[]; correctAnswerIndex?: number; correctAnswer?: number; explanation?: string }}
                             onAnswer={handleAnswer}
                             showFeedback={showFeedback}
@@ -184,6 +254,7 @@ export default function PlayClient({ game }: { game: Game }) {
                     )}
                     {currentCard?.type === 'mots' && (
                         <MotsCard
+                            key={currentIndex}
                             data={currentCard.data as { definition: string; answer: string }}
                             onAnswer={handleAnswer}
                             showFeedback={showFeedback}
@@ -191,23 +262,26 @@ export default function PlayClient({ game }: { game: Game }) {
                     )}
                     {currentCard?.type === 'dilemme' && (
                         <DilemmeCard
+                            key={currentIndex}
                             data={currentCard.data as { optionA: string; optionB: string; explanation: string }}
                             onAnswer={handleAnswer}
                             showFeedback={showFeedback}
                         />
                     )}
-
-                    {/* Next Button */}
-                    {showFeedback && (
-                        <button
-                            onClick={handleNext}
-                            className="w-full mt-6 px-6 py-4 bg-indigo-600 text-white rounded-xl font-bold text-lg hover:bg-indigo-700 transition"
-                        >
-                            {currentIndex < totalCards - 1 ? 'Suivant' : 'Voir les Résultats'}
-                        </button>
-                    )}
                 </div>
             </main>
+
+            {/* Bouton Suivant — toujours visible, ancré en bas */}
+            {showFeedback && (
+                <div className="above-nav fixed left-0 right-0 z-40 px-4 pt-4 pb-4 bg-slate-50/95 backdrop-blur-sm border-t border-slate-200">
+                    <button
+                        onClick={handleNext}
+                        className="w-full max-w-2xl mx-auto block px-6 py-4 bg-indigo-600 text-white rounded-2xl font-bold text-lg hover:bg-indigo-700 active:scale-[0.98] transition-all shadow-lg shadow-indigo-600/20"
+                    >
+                        {currentIndex < totalCards - 1 ? 'Suivant →' : 'Voir les Résultats'}
+                    </button>
+                </div>
+            )}
         </div>
     );
 }

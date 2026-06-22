@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import clsx from 'clsx';
 import { SessionStep, PedagogicalContent, StepTodo } from '@/types';
 import { toggleValidation } from '@/actions/validation-actions';
-import { updateStageExploitStatus, uploadDefiPhoto, saveClubSpot } from '@/actions/defi-actions';
+import { updateStageExploitStatus, uploadDefiPhoto, saveClubSpot, removeDefiPhoto } from '@/actions/defi-actions';
 import { updateStepTodo } from '@/actions/stage-actions';
 import CardDetailModal from '@/components/CardDetailModal';
 import FilRougeForm from '@/components/defis/FilRougeForm';
@@ -126,6 +126,28 @@ const DIMENSION_STYLES = {
 
 function subscribe() { return () => { }; }
 
+function compressImage(file: File, maxPx: number, quality: number): Promise<File> {
+    return new Promise((resolve) => {
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+        img.onload = () => {
+            URL.revokeObjectURL(url);
+            const scale = Math.min(1, maxPx / Math.max(img.width, img.height));
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.round(img.width * scale);
+            canvas.height = Math.round(img.height * scale);
+            canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height);
+            canvas.toBlob(
+                (blob) => resolve(blob ? new File([blob], file.name, { type: 'image/jpeg' }) : file),
+                'image/jpeg',
+                quality,
+            );
+        };
+        img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+        img.src = url;
+    });
+}
+
 // ─── main component ───────────────────────────────────────────────────────────
 
 export default function SessionRunnerClient({
@@ -170,7 +192,13 @@ export default function SessionRunnerClient({
         startTransition(async () => {
             addOptimisticValidation(contentId);
             setValidatedIds(prev => prev.includes(contentId) ? prev.filter(id => id !== contentId) : [...prev, contentId]);
-            await toggleValidation(contentId, sessionId);
+            const res = await toggleValidation(contentId, sessionId);
+            if (!res.success) {
+                console.error('[toggleValidation] erreur:', res.error);
+                alert('Erreur validation : ' + res.error);
+                // Revert optimistic update
+                setValidatedIds(prev => prev.includes(contentId) ? prev.filter(id => id !== contentId) : [...prev, contentId]);
+            }
         });
     };
 
@@ -237,8 +265,9 @@ export default function SessionRunnerClient({
         if (!file || !defiId) return;
         setIsUploading(defiId);
         try {
+            const compressed = await compressImage(file, 1200, 0.8);
             const formData = new FormData();
-            formData.append('file', file);
+            formData.append('file', compressed);
             const result = await uploadDefiPhoto(formData);
             if (result.success && result.url) {
                 handleCompleteDefi(defiId, result.url);
@@ -646,9 +675,17 @@ export default function SessionRunnerClient({
                                                     exploit.preuves_url?.length > 0 && (
                                                         <div className="flex gap-2 flex-wrap">
                                                             {exploit.preuves_url.map((url, idx) => (
-                                                                <div key={idx} className="relative size-16 rounded-xl overflow-hidden border-2 border-emerald-200">
-                                                                    <img src={url} alt="Preuve" className="size-full object-cover" />
-                                                                </div>
+                                                                <ProofPhoto
+                                                                    key={idx}
+                                                                    url={url}
+                                                                    onDelete={() => {
+                                                                        if (!confirm('Supprimer cette photo ?')) return;
+                                                                        startTransition(async () => {
+                                                                            await removeDefiPhoto(stageId, exploit.exploit_id, url);
+                                                                            router.refresh();
+                                                                        });
+                                                                    }}
+                                                                />
                                                             ))}
                                                         </div>
                                                     )
@@ -669,6 +706,27 @@ export default function SessionRunnerClient({
                 content={selectedCardForDetail}
             />
         </>
+    );
+}
+
+function ProofPhoto({ url, onDelete }: { url: string; onDelete: () => void }) {
+    const [broken, setBroken] = useState(false);
+    return (
+        <div className="relative size-16 rounded-xl overflow-hidden border-2 border-emerald-200 group">
+            {broken ? (
+                <div className="absolute inset-0 bg-slate-100 flex items-center justify-center">
+                    <span className="material-symbols-outlined text-slate-300 text-2xl">broken_image</span>
+                </div>
+            ) : (
+                <img src={url} alt="Preuve" className="size-full object-cover" onError={() => setBroken(true)} />
+            )}
+            <button
+                onClick={onDelete}
+                className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100"
+            >
+                <span className="material-symbols-outlined text-white text-xl drop-shadow">delete</span>
+            </button>
+        </div>
     );
 }
 

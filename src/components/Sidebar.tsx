@@ -8,7 +8,7 @@ const navItems = [
     { name: 'Accueil', href: '/stages', icon: 'dashboard', fill: true },
     { name: 'Jeux', href: '/jeux', icon: 'quiz', fill: false },
     { name: 'Stats', href: '/stats', icon: 'leaderboard', fill: false },
-    { name: 'Outils', href: '/profil', icon: 'settings', fill: false },
+    { name: 'Profil', href: '/profil', icon: 'person', fill: false },
 ];
 
 export function Sidebar() {

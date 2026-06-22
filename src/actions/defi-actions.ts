@@ -185,21 +185,63 @@ export async function updateStageExploitStatus(
         return { success: false, error: error.message };
     }
 
-    // Award points when défi is completed
+    // Award points when défi is completed — barème validé : +3 GPS spot fixe, +2 tout autre défi
     if (status === 'complete') {
         const { data: defi } = await supabase
             .from('defis')
-            .select('points')
+            .select('spot_fixe')
             .eq('id', defiId)
             .single();
 
-        if (defi) {
-            await awardPointsForDefiInternal(supabase, stageId, defiId, defi.points);
-        }
+        const points = defi?.spot_fixe ? 3 : 2;
+        await awardPointsForDefiInternal(supabase, stageId, defiId, points);
     }
 
     revalidatePath(`/stages/${stageId}`);
     revalidatePath(`/stages/${stageId}/defis`);
+    return { success: true };
+}
+
+export async function removeDefiPhoto(
+    stageId: string,
+    defiId: string,
+    photoUrl: string,
+): Promise<{ success: boolean; error?: string }> {
+    const supabase = await createClient();
+
+    // Extract storage path from public URL (everything after "/object/public/defis/")
+    const marker = '/object/public/defis/';
+    const markerIdx = photoUrl.indexOf(marker);
+    if (markerIdx !== -1) {
+        const storagePath = decodeURIComponent(photoUrl.slice(markerIdx + marker.length));
+        await supabase.storage.from('defis').remove([storagePath]);
+        // Ignore storage error — file may already be gone
+    }
+
+    // Remove URL from preuves_url array and revert status to en_cours
+    const { data: existing } = await supabase
+        .from('stage_exploits')
+        .select('preuves_url')
+        .eq('stage_id', stageId)
+        .eq('exploit_id', defiId)
+        .single();
+
+    const remaining = (existing?.preuves_url ?? []).filter((u: string) => u !== photoUrl);
+
+    const { error } = await supabase
+        .from('stage_exploits')
+        .update({
+            preuves_url: remaining,
+            status: remaining.length === 0 ? 'en_cours' : 'complete',
+            completed_at: remaining.length === 0 ? null : undefined,
+        })
+        .eq('stage_id', stageId)
+        .eq('exploit_id', defiId);
+
+    if (error) return { success: false, error: error.message };
+
+    revalidatePath(`/session/${stageId}`);
+    revalidatePath(`/stages/${stageId}`);
     return { success: true };
 }
 
@@ -299,44 +341,60 @@ export async function getMonitorPoints(monitorId: string) {
     return data.reduce((sum, row) => sum + row.points, 0);
 }
 
-export async function getLeaderboard(type: 'monitors', limit?: number): Promise<{ monitor_id: string; total_points: number; }[]>;
-export async function getLeaderboard(type: 'clubs', limit?: number): Promise<{ club_id: string; total_points: number; }[]>;
-export async function getLeaderboard(type: 'monitors' | 'clubs' = 'monitors', limit = 10) {
+export async function getLeaderboard(type?: 'monitors', limit?: number): Promise<{ monitor_id: string; full_name: string; club_name: string | null; total_points: number }[]>;
+export async function getLeaderboard(type: 'clubs', limit?: number): Promise<{ club_id: string; club_name: string; total_points: number }[]>;
+export async function getLeaderboard(type: 'monitors' | 'clubs' = 'monitors', limit = 10): Promise<
+    { monitor_id: string; full_name: string; club_name: string | null; total_points: number }[] |
+    { club_id: string; club_name: string; total_points: number }[]
+> {
     const supabase = await createClient();
 
     if (type === 'monitors') {
         const { data, error } = await supabase
             .from('leaderboard_points')
-            .select('monitor_id, points');
+            .select('monitor_id, points, profiles(full_name, clubs(name))')
+            .order('points', { ascending: false });
 
         if (error || !data) return [];
 
-        const byMonitor = new Map<string, number>();
-        data.forEach(row => {
-            byMonitor.set(row.monitor_id, (byMonitor.get(row.monitor_id) || 0) + row.points);
+        const byMonitor = new Map<string, { full_name: string; club_name: string | null; total: number }>();
+        data.forEach((row: Record<string, unknown>) => {
+            const id = row.monitor_id as string;
+            const profile = row.profiles as { full_name?: string; clubs?: { name?: string } } | null;
+            const existing = byMonitor.get(id);
+            byMonitor.set(id, {
+                full_name: profile?.full_name ?? 'Moniteur',
+                club_name: profile?.clubs?.name ?? null,
+                total: (existing?.total ?? 0) + (row.points as number),
+            });
         });
 
         return Array.from(byMonitor.entries())
-            .map(([id, pts]) => ({ monitor_id: id, total_points: pts }))
+            .map(([id, v]) => ({ monitor_id: id, full_name: v.full_name, club_name: v.club_name, total_points: v.total }))
             .sort((a, b) => b.total_points - a.total_points)
             .slice(0, limit);
     } else {
         const { data, error } = await supabase
             .from('leaderboard_points')
-            .select('club_id, points')
+            .select('club_id, points, clubs(name)')
             .not('club_id', 'is', null);
 
         if (error || !data) return [];
 
-        const byClub = new Map<string, number>();
-        data.forEach(row => {
-            if (row.club_id) {
-                byClub.set(row.club_id, (byClub.get(row.club_id) || 0) + row.points);
-            }
+        const byClub = new Map<string, { name: string; total: number }>();
+        data.forEach((row: Record<string, unknown>) => {
+            if (!row.club_id) return;
+            const id = row.club_id as string;
+            const club = row.clubs as { name?: string } | null;
+            const existing = byClub.get(id);
+            byClub.set(id, {
+                name: club?.name ?? 'Club',
+                total: (existing?.total ?? 0) + (row.points as number),
+            });
         });
 
         return Array.from(byClub.entries())
-            .map(([id, pts]) => ({ club_id: id, total_points: pts }))
+            .map(([id, v]) => ({ club_id: id, club_name: v.name, total_points: v.total }))
             .sort((a, b) => b.total_points - a.total_points)
             .slice(0, limit);
     }

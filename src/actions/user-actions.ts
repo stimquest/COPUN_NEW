@@ -37,8 +37,8 @@ export async function toggleValidation(contentId: string, sessionId: string, isV
         if (error) return { success: false, error: error.message };
     }
 
-    // Revalidate the session page to update UI
     revalidatePath(`/session/${sessionId}`);
+    revalidatePath('/stages');
     return { success: true };
 }
 
