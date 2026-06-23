@@ -6,14 +6,30 @@ import Link from 'next/link';
 import { createStage } from '@/actions/stage-actions';
 import { motion, AnimatePresence } from 'framer-motion';
 import SeasonalGuide from '@/components/SeasonalGuide';
+import DatePicker from '@/components/DatePicker';
 import { ThematicTag } from '@/data/seasonal-context';
 
 export default function NewStagePage() {
     const router = useRouter();
     const [isSaving, setIsSaving] = useState(false);
     const [startDate, setStartDate] = useState('');
-    const [endDate, setEndDate] = useState('');
+    const [durationDays, setDurationDays] = useState(5);
     const [showGuide, setShowGuide] = useState(false);
+
+    // Fin calculée : début + (durée - 1) jours
+    const endDate = (() => {
+        if (!startDate) return '';
+        const d = new Date(startDate);
+        d.setDate(d.getDate() + durationDays - 1);
+        return d.toISOString().slice(0, 10);
+    })();
+
+    const DURATION_OPTIONS = [
+        { days: 3, label: '3 jours' },
+        { days: 5, label: '5 jours' },
+        { days: 7, label: '1 semaine' },
+        { days: 14, label: '2 semaines' },
+    ];
     const [suggestedThematics, setSuggestedThematics] = useState<ThematicTag[]>([]);
     const [formData, setFormData] = useState({
         title: '',
@@ -151,34 +167,70 @@ export default function NewStagePage() {
 
                         <div className="space-y-4">
                             <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Période du Stage</label>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-1">
-                                    <span className="text-[9px] font-bold text-slate-400 ml-1">DÉBUT</span>
-                                    <input
-                                        required
-                                        type="date"
-                                        className="w-full h-14 bg-slate-50 border-2 border-slate-100 rounded-2xl px-4 font-bold text-slate-900 focus:border-indigo-500 outline-hidden transition-all"
-                                        value={startDate}
-                                        onChange={e => setStartDate(e.target.value)}
-                                    />
+
+                            {/* Jour de début */}
+                            <div className="space-y-1">
+                                <span className="text-[9px] font-bold text-slate-400 ml-1">JOUR DE DÉBUT</span>
+                                <DatePicker
+                                    value={startDate}
+                                    onChange={setStartDate}
+                                    placeholder="Choisir le 1er jour"
+                                />
+                            </div>
+
+                            {/* Durée */}
+                            <div className="space-y-1">
+                                <span className="text-[9px] font-bold text-slate-400 ml-1">DURÉE</span>
+                                <div className="grid grid-cols-4 gap-2">
+                                    {DURATION_OPTIONS.map(opt => (
+                                        <button
+                                            key={opt.days}
+                                            type="button"
+                                            onClick={() => setDurationDays(opt.days)}
+                                            className={`h-14 rounded-2xl border-2 font-black text-xs transition-all active:scale-95 ${
+                                                durationDays === opt.days
+                                                    ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-200'
+                                                    : 'bg-slate-50 border-slate-100 text-slate-500 hover:border-slate-300'
+                                            }`}
+                                        >
+                                            {opt.label}
+                                        </button>
+                                    ))}
                                 </div>
-                                <div className="space-y-1">
-                                    <span className="text-[9px] font-bold text-slate-400 ml-1">FIN</span>
-                                    <input
-                                        required
-                                        type="date"
-                                        className="w-full h-14 bg-slate-50 border-2 border-slate-100 rounded-2xl px-4 font-bold text-slate-900 focus:border-indigo-500 outline-hidden transition-all"
-                                        value={endDate}
-                                        onChange={e => setEndDate(e.target.value)}
-                                    />
+                                {/* Réglage fin : +/- jours pour les durées atypiques */}
+                                <div className="flex items-center justify-center gap-3 pt-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setDurationDays(d => Math.max(1, d - 1))}
+                                        className="size-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 active:scale-90 transition-all"
+                                    >
+                                        <span className="material-symbols-outlined text-[18px]">remove</span>
+                                    </button>
+                                    <span className="text-xs font-bold text-slate-500 w-24 text-center">
+                                        {durationDays} jour{durationDays > 1 ? 's' : ''}
+                                    </span>
+                                    <button
+                                        type="button"
+                                        onClick={() => setDurationDays(d => Math.min(60, d + 1))}
+                                        className="size-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 active:scale-90 transition-all"
+                                    >
+                                        <span className="material-symbols-outlined text-[18px]">add</span>
+                                    </button>
                                 </div>
                             </div>
+
+                            {/* Récapitulatif */}
                             {startDate && endDate && (
                                 <div className="bg-indigo-50 p-4 rounded-2xl border-2 border-indigo-100 flex items-center gap-3">
                                     <span className="material-symbols-outlined text-indigo-500">calendar_month</span>
-                                    <span className="text-xs font-black text-indigo-600 uppercase italic">
-                                        Selection : {formatDateRange(startDate, endDate)}
-                                    </span>
+                                    <div>
+                                        <span className="block text-xs font-black text-indigo-600 uppercase italic">
+                                            {formatDateRange(startDate, endDate)}
+                                        </span>
+                                        <span className="block text-[10px] font-semibold text-indigo-400">
+                                            {durationDays} jour{durationDays > 1 ? 's' : ''} de stage
+                                        </span>
+                                    </div>
                                 </div>
                             )}
                         </div>
