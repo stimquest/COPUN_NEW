@@ -170,7 +170,7 @@ export default function CardDetailModal({ isOpen, onClose, content }: CardDetail
                                 </div>
 
 
-                                {/* RIGHT COLUMN: Jeux & Défis */}
+                                {/* RIGHT COLUMN: Jeux & Ressources */}
                                 <div className="space-y-10">
                                     {/* JEUX SECTION */}
                                     <section>
@@ -200,6 +200,47 @@ export default function CardDetailModal({ isOpen, onClose, content }: CardDetail
                                             </div>
                                         )}
                                     </section>
+
+                                    {/* RESSOURCES SECTION */}
+                                    {content.ressources && content.ressources.length > 0 && (
+                                        <section>
+                                            <div className="flex items-center gap-2 mb-4">
+                                                <div className="size-8 rounded-lg bg-teal-600 text-white flex items-center justify-center">
+                                                    <span className="material-symbols-outlined text-lg">menu_book</span>
+                                                </div>
+                                                <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Ressources</h3>
+                                            </div>
+                                            <div className="space-y-2">
+                                                {content.ressources.map((r, idx) => (
+                                                    r.type === 'url' ? (
+                                                        <a
+                                                            key={idx}
+                                                            href={r.url}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="flex items-center gap-3 px-4 py-3 bg-blue-50 border border-blue-100 rounded-xl hover:bg-blue-100 transition group"
+                                                        >
+                                                            <span className="material-symbols-outlined text-blue-500 text-base shrink-0">link</span>
+                                                            <span className="text-sm font-semibold text-blue-800 flex-1 truncate">{r.label}</span>
+                                                            <span className="material-symbols-outlined text-blue-300 text-sm group-hover:translate-x-0.5 transition-transform">open_in_new</span>
+                                                        </a>
+                                                    ) : (
+                                                        <a
+                                                            key={idx}
+                                                            href={`/ressources/${r.fiche_memo_id}`}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="flex items-center gap-3 px-4 py-3 bg-teal-50 border border-teal-100 rounded-xl hover:bg-teal-100 transition group"
+                                                        >
+                                                            <span className="material-symbols-outlined text-teal-500 text-base shrink-0">article</span>
+                                                            <span className="text-sm font-semibold text-teal-800 flex-1 truncate">{r.label}</span>
+                                                            <span className="material-symbols-outlined text-teal-300 text-sm group-hover:translate-x-0.5 transition-transform">open_in_new</span>
+                                                        </a>
+                                                    )
+                                                ))}
+                                            </div>
+                                        </section>
+                                    )}
                                 </div>
                             </div>
                         </div>

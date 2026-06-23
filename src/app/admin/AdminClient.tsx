@@ -3,6 +3,9 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { createUserAccount, inviteUser, updateUserRole } from '@/actions/admin-actions';
+import { FichesAdminTab } from './FichesAdminTab';
+import type { PedagogicalContent } from '@/types';
+import type { FicheMemo } from '@/actions/fiche-memo-actions';
 
 type User = {
     id: string;
@@ -15,11 +18,13 @@ type User = {
 
 type Club = { id: string; name: string };
 
-type Tab = 'users' | 'create' | 'invite';
+type Tab = 'users' | 'create' | 'invite' | 'fiches';
 
-export function AdminClient({ users: initialUsers, clubs, error }: {
+export function AdminClient({ users: initialUsers, clubs, fiches, fichesMemo, error }: {
     users: User[];
     clubs: Club[];
+    fiches: PedagogicalContent[];
+    fichesMemo: FicheMemo[];
     error?: string;
 }) {
     const [tab, setTab] = useState<Tab>('users');
@@ -77,7 +82,9 @@ export function AdminClient({ users: initialUsers, clubs, error }: {
                 </Link>
                 <div>
                     <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Administration</p>
-                    <p className="text-lg font-bold leading-none text-slate-900">Gestion des accès</p>
+                    <p className="text-lg font-bold leading-none text-slate-900">
+                        {tab === 'fiches' ? 'Fiches pédagogiques' : 'Gestion des accès'}
+                    </p>
                 </div>
                 <div className="ml-auto flex items-center gap-2 bg-violet-50 text-violet-700 px-3 py-1.5 rounded-full border border-violet-200">
                     <span className="material-symbols-outlined text-sm">admin_panel_settings</span>
@@ -85,28 +92,22 @@ export function AdminClient({ users: initialUsers, clubs, error }: {
                 </div>
             </header>
 
-            <main className="flex-1 px-4 py-6 max-w-2xl mx-auto w-full space-y-6 pb-36">
-
-                {error && (
-                    <div className="p-4 rounded-2xl bg-red-50 text-red-700 border border-red-100 text-sm font-semibold">
-                        {error}
-                    </div>
-                )}
-
-                {/* Tabs */}
-                <div className="bg-white rounded-2xl p-1.5 flex gap-1 shadow-sm border border-slate-100">
+            {/* Tabs — hors du conteneur max-w pour être pleine largeur */}
+            <div className="bg-white border-b border-slate-100 px-6 py-2">
+                <div className="flex gap-1 max-w-6xl mx-auto">
                     {([
                         { key: 'users', label: 'Utilisateurs', icon: 'group', count: users.length },
+                        { key: 'fiches', label: 'Fiches péda.', icon: 'auto_stories', count: fiches.length },
                         { key: 'create', label: 'Créer un compte', icon: 'person_add', count: null },
                         { key: 'invite', label: 'Invitation', icon: 'mail', count: null },
                     ] as const).map(t => (
                         <button
                             key={t.key}
                             onClick={() => { setTab(t.key); setMessage(null); }}
-                            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+                            className={`flex items-center gap-1.5 py-2 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
                                 tab === t.key
                                     ? 'bg-slate-900 text-white shadow-sm'
-                                    : 'text-slate-400 hover:text-slate-700'
+                                    : 'text-slate-400 hover:text-slate-700 hover:bg-slate-50'
                             }`}
                         >
                             <span className="material-symbols-outlined text-sm">{t.icon}</span>
@@ -119,6 +120,22 @@ export function AdminClient({ users: initialUsers, clubs, error }: {
                         </button>
                     ))}
                 </div>
+            </div>
+
+            {/* Onglet Fiches — pleine largeur, layout split-panel */}
+            {tab === 'fiches' && (
+                <div className="flex-1 overflow-hidden">
+                    <FichesAdminTab initialFiches={fiches} fichesMemo={fichesMemo} />
+                </div>
+            )}
+
+            <main className={`flex-1 px-4 py-6 max-w-2xl mx-auto w-full space-y-6 pb-36 ${tab === 'fiches' ? 'hidden' : ''}`}>
+
+                {error && (
+                    <div className="p-4 rounded-2xl bg-red-50 text-red-700 border border-red-100 text-sm font-semibold">
+                        {error}
+                    </div>
+                )}
 
                 {/* Message feedback */}
                 {message && (

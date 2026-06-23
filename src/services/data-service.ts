@@ -189,6 +189,108 @@ export async function getSessionsForStage(stageId: string) {
     return data;
 }
 
+/**
+ * Statistiques d'avancement d'un stage pour la carte de pilotage.
+ * Progression de transmission, défis validés, quiz fait/score, prochaine séance.
+ */
+export async function getStageCockpitStats(stageId: string) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+
+    const { data: stage } = await supabase
+        .from('stages')
+        .select('selected_content, dates')
+        .eq('id', stageId)
+        .single();
+
+    const selectedContent: string[] = stage?.selected_content ?? [];
+    const contentCount = selectedContent.length;
+
+    // Sessions + étapes du stage
+    const { data: sessions } = await supabase
+        .from('sessions')
+        .select('id, title, session_order')
+        .eq('stage_id', stageId)
+        .order('session_order', { ascending: true });
+
+    const sessionIds = (sessions ?? []).map(s => s.id);
+    const selectedSet = new Set(selectedContent);
+
+    // Étapes de ces sessions (pour connaître les fiches "placées")
+    let placedCount = 0;
+    let stepIds: string[] = [];
+    if (sessionIds.length > 0) {
+        const { data: steps } = await supabase
+            .from('session_structure')
+            .select('id')
+            .in('session_id', sessionIds);
+        stepIds = (steps ?? []).map(s => s.id);
+
+        if (stepIds.length > 0) {
+            const { data: links } = await supabase
+                .from('session_step_pedagogical_links')
+                .select('pedagogical_content_id')
+                .in('session_step_id', stepIds);
+
+            // Fiches distinctes placées qui font partie du réservoir prévu
+            const placed = new Set(
+                (links ?? [])
+                    .map(l => l.pedagogical_content_id)
+                    .filter(cid => selectedSet.has(cid))
+            );
+            placedCount = placed.size;
+        }
+    }
+
+    // Notions validées dans ces sessions
+    let validatedCount = 0;
+    if (sessionIds.length > 0 && contentCount > 0) {
+        const { data: validations } = await supabase
+            .from('user_validations')
+            .select('content_id, session_id')
+            .eq('user_id', user.id)
+            .in('session_id', sessionIds);
+
+        const validated = new Set(
+            (validations ?? [])
+                .filter(v => selectedSet.has(v.content_id))
+                .map(v => v.content_id)
+        );
+        validatedCount = validated.size;
+    }
+
+    // Défis
+    const { data: exploits } = await supabase
+        .from('stage_exploits')
+        .select('status')
+        .eq('stage_id', stageId);
+
+    const defisTotal = exploits?.length ?? 0;
+    const defisDone = (exploits ?? []).filter(e => e.status === 'complete').length;
+
+    // Quiz
+    const { data: quiz } = await supabase
+        .from('stage_quizzes')
+        .select('completed_at, score_correct, score_total, points_awarded')
+        .eq('stage_id', stageId)
+        .maybeSingle();
+
+    return {
+        contentCount,        // Prévu (réservoir du stage)
+        placedCount,         // Placé (lié à une étape de séance)
+        validatedCount,      // Réalisé (validé sur le terrain)
+        progressPct: contentCount > 0 ? Math.round((validatedCount / contentCount) * 100) : 0,
+        defisTotal,
+        defisDone,
+        sessionsCount: sessions?.length ?? 0,
+        quizDone: !!quiz?.completed_at,
+        quizScore: quiz?.score_correct ?? null,
+        quizTotal: quiz?.score_total ?? null,
+        quizPoints: quiz?.points_awarded ?? null,
+    };
+}
+
 export async function getPedagogicalPool() {
     const supabase = await createClient();
     const { data, error } = await supabase
