@@ -132,9 +132,8 @@ export default function ClassementClient({ monitors, clubs, myPoints }: Props) {
             <section className="bg-white rounded-2xl border border-slate-100 p-5 space-y-3">
                 <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Barème des points</h3>
                 {[
-                    { label: 'Quiz de fin de stage', pts: '8 pts', icon: 'quiz' },
-                    { label: 'Bonus quiz 70-85%', pts: '+1 pt', icon: 'trending_up' },
-                    { label: 'Bonus quiz 85-100%', pts: '+2 pts', icon: 'workspace_premium' },
+                    { label: 'Quiz — par bonne réponse', pts: '2 pts', icon: 'quiz' },
+                    { label: 'Quiz de 10 réussi sans faute', pts: '+5 pts', icon: 'workspace_premium' },
                     { label: 'Défi complété', pts: '+2 pts', icon: 'flag' },
                     { label: 'Défi GPS spot fixe', pts: '+3 pts', icon: 'location_on' },
                 ].map(item => (

@@ -121,19 +121,41 @@ export default function QuizLaunchClient({ stageId, stageTitle }: Props) {
                 </div>
             )}
 
-            {/* Barème rappel */}
-            <div className="bg-white/5 border border-white/10 rounded-2xl px-4 py-4 space-y-2">
-                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Vos points</p>
-                {[
-                    { label: 'Quiz complété', pts: '8 pts' },
-                    { label: 'Score du groupe 70-85%', pts: '+1 pt' },
-                    { label: 'Score du groupe 85-100%', pts: '+2 pts' },
-                ].map(item => (
-                    <div key={item.label} className="flex items-center justify-between">
-                        <span className="text-xs text-slate-400 font-medium">{item.label}</span>
-                        <span className="text-xs font-black text-violet-400">{item.pts}</span>
-                    </div>
-                ))}
+            {/* Barème simple + aperçu du gain */}
+            <div className="bg-white/5 border border-white/10 rounded-2xl px-4 py-4 space-y-3">
+                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Comment gagner des points</p>
+
+                <div className="flex items-center justify-between">
+                    <span className="text-sm text-slate-300 font-medium flex items-center gap-2">
+                        <span className="material-symbols-outlined text-[18px] text-violet-400">check_circle</span>
+                        Par bonne réponse du groupe
+                    </span>
+                    <span className="text-sm font-black text-violet-400">2 pts</span>
+                </div>
+
+                <div className="flex items-center justify-between">
+                    <span className="text-sm text-slate-300 font-medium flex items-center gap-2">
+                        <span className="material-symbols-outlined text-[18px] text-amber-400">star</span>
+                        Quiz de 10 sans faute
+                    </span>
+                    <span className="text-sm font-black text-amber-400">+5 pts</span>
+                </div>
+
+                {/* Aperçu dynamique */}
+                <div className="mt-1 pt-3 border-t border-white/10 flex items-center justify-between">
+                    <span className="text-xs text-slate-400">
+                        Avec {questionCount} questions, max possible
+                    </span>
+                    <span className="text-base font-black text-white">
+                        {questionCount * 2 + (questionCount >= 10 ? 5 : 0)} pts
+                    </span>
+                </div>
+                {questionCount < 10 && (
+                    <p className="text-[11px] text-amber-300/80 leading-snug flex items-start gap-1.5">
+                        <span className="material-symbols-outlined text-[14px] mt-0.5">lightbulb</span>
+                        Lancez un quiz de 10 questions pour viser le bonus et marquer le maximum.
+                    </p>
+                )}
             </div>
 
             {/* CTA */}

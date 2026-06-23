@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion, type Variants } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import StageDashboardCard from './StageDashboardCard';
@@ -23,12 +23,12 @@ interface Props {
     initials: string;
 }
 
-const stagger = {
+const stagger: Variants = {
     hidden: {},
     show: { transition: { staggerChildren: 0.08 } },
 };
 
-const fadeUp = {
+const fadeUp: Variants = {
     hidden: { opacity: 0, y: 18 },
     show:   { opacity: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' } },
 };

@@ -3,10 +3,21 @@
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 
-// Barème validé 2026-06-18
-const POINTS_QUIZ_BASE = 8;
-const POINTS_BONUS_MID = 1;   // 70-85%
-const POINTS_BONUS_HIGH = 2;  // 85-100%
+// Barème révisé 2026-06-23 — volontairement simple et lisible :
+//   • 2 points par bonne réponse
+//   • +5 points bonus si quiz complet (10 questions) réussi sans aucune faute
+// Conséquence : un quiz de 10 rapporte bien plus qu'un quiz de 3, sans formule opaque.
+const POINTS_PER_CORRECT = 2;
+const FULL_QUIZ_SIZE = 10;
+const PERFECT_FULL_BONUS = 5;
+
+function computeQuizPoints(scoreCorrect: number, scoreTotal: number): number {
+    let points = scoreCorrect * POINTS_PER_CORRECT;
+    if (scoreTotal >= FULL_QUIZ_SIZE && scoreCorrect === scoreTotal) {
+        points += PERFECT_FULL_BONUS;
+    }
+    return points;
+}
 
 // Mapping dimension pédagogique → thèmes de game_cards (thèmes réels de la base)
 const DIMENSION_TO_THEMES: Record<string, string[]> = {
@@ -45,33 +56,64 @@ export async function generateStageQuiz(
         .eq('id', stageId)
         .single();
 
+    const selectedContent: string[] = stage?.selected_content ?? [];
+
+    let quizzCards: Record<string, unknown>[] | null = null;
     let targetThemes: string[] = [];
 
     if (forceTheme) {
+        // Thème forcé : pioche uniquement dans ce thème
         targetThemes = [forceTheme];
-    } else if (stage?.selected_content?.length) {
-        // Mode auto : thèmes dérivés des dimensions des fiches pédagogiques
-        const { data: selectedCards } = await supabase
-            .from('pedagogical_content')
-            .select('dimension')
-            .in('id', stage.selected_content);
+        const { data } = await supabase
+            .from('game_cards')
+            .select('*')
+            .eq('type', 'quizz')
+            .in('theme', targetThemes);
+        quizzCards = data;
+    } else if (selectedContent.length) {
+        // Mode auto, priorité 1 : questions DIRECTEMENT liées aux fiches du stage.
+        // C'est ce qui valide vraiment la transmission.
+        const { data: linkedCards } = await supabase
+            .from('game_cards')
+            .select('*')
+            .eq('type', 'quizz')
+            .in('related_objective_id', selectedContent);
 
-        const dimensions = [...new Set((selectedCards ?? []).map(c => c.dimension).filter(Boolean))];
-        const themeSet = new Set<string>();
-        dimensions.forEach(dim => {
-            (DIMENSION_TO_THEMES[dim] ?? ['Général']).forEach(t => themeSet.add(t));
-        });
-        targetThemes = Array.from(themeSet);
+        quizzCards = linkedCards ?? null;
+
+        // Priorité 2 : si pas assez de questions liées, complète par les thèmes des dimensions.
+        if (!quizzCards || quizzCards.length < questionCount) {
+            const { data: selectedCards } = await supabase
+                .from('pedagogical_content')
+                .select('dimension')
+                .in('id', selectedContent);
+
+            const dimensions = [...new Set((selectedCards ?? []).map(c => c.dimension).filter(Boolean))];
+            const themeSet = new Set<string>();
+            dimensions.forEach(dim => {
+                (DIMENSION_TO_THEMES[dim] ?? ['Général']).forEach(t => themeSet.add(t));
+            });
+            targetThemes = Array.from(themeSet);
+
+            if (targetThemes.length > 0) {
+                const { data: themeCards } = await supabase
+                    .from('game_cards')
+                    .select('*')
+                    .eq('type', 'quizz')
+                    .in('theme', targetThemes);
+
+                // Fusionne sans doublons (par id)
+                const seen = new Set((quizzCards ?? []).map((c: Record<string, unknown>) => c.id));
+                const merged = [...(quizzCards ?? [])];
+                (themeCards ?? []).forEach((c: Record<string, unknown>) => {
+                    if (!seen.has(c.id)) { merged.push(c); seen.add(c.id); }
+                });
+                quizzCards = merged;
+            }
+        }
     }
 
-    // Pioche des cartes quizz selon les thèmes ciblés
-    let query = supabase.from('game_cards').select('*').eq('type', 'quizz');
-    if (targetThemes.length > 0) {
-        query = query.in('theme', targetThemes);
-    }
-    let { data: quizzCards } = await query;
-
-    // Fallback : toutes les cartes quizz si aucune trouvée pour ces thèmes
+    // Fallback ultime : toutes les cartes quizz si rien trouvé
     if (!quizzCards?.length) {
         const { data: allQuizz } = await supabase
             .from('game_cards')
@@ -106,7 +148,7 @@ export async function generateStageQuiz(
         .from('games')
         .insert({
             title: `Quiz — ${stage?.title ?? 'Stage'}`,
-            theme: targetThemes[0] ?? 'Général',
+            theme: forceTheme ?? targetThemes[0] ?? 'Général',
             stage_id: stageId,
             game_data: {
                 leGrandQuizz: {
@@ -168,9 +210,8 @@ export async function awardStageQuizPoints(
 
     const score_pct = scoreTotal > 0 ? Math.round((scoreCorrect / scoreTotal) * 100) : 0;
 
-    let points_awarded = POINTS_QUIZ_BASE;
-    if (score_pct >= 85) points_awarded += POINTS_BONUS_HIGH;
-    else if (score_pct >= 70) points_awarded += POINTS_BONUS_MID;
+    // 2 pts par bonne réponse (+ bonus sans-faute sur quiz complet) — voir computeQuizPoints.
+    const points_awarded = computeQuizPoints(scoreCorrect, scoreTotal);
 
     // Met à jour stage_quizzes avec les résultats
     await supabase
