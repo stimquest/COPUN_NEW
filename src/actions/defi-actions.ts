@@ -350,27 +350,46 @@ export async function getLeaderboard(type: 'monitors' | 'clubs' = 'monitors', li
     const supabase = await createClient();
 
     if (type === 'monitors') {
+        // NB : pas de join PostgREST profiles(...) ici — la FK leaderboard_points.monitor_id
+        // pointe vers auth.users, pas profiles, donc le join implicite échoue. On agrège
+        // d'abord les points, puis on charge les profils en une requête séparée.
         const { data, error } = await supabase
             .from('leaderboard_points')
-            .select('monitor_id, points, profiles(full_name, clubs(name))')
-            .order('points', { ascending: false });
+            .select('monitor_id, points');
 
         if (error || !data) return [];
 
-        const byMonitor = new Map<string, { full_name: string; club_name: string | null; total: number }>();
+        const totals = new Map<string, number>();
         data.forEach((row: Record<string, unknown>) => {
             const id = row.monitor_id as string;
-            const profile = row.profiles as { full_name?: string; clubs?: { name?: string } } | null;
-            const existing = byMonitor.get(id);
-            byMonitor.set(id, {
-                full_name: profile?.full_name ?? 'Moniteur',
-                club_name: profile?.clubs?.name ?? null,
-                total: (existing?.total ?? 0) + (row.points as number),
+            if (!id) return;
+            totals.set(id, (totals.get(id) ?? 0) + (row.points as number));
+        });
+
+        const monitorIds = Array.from(totals.keys());
+        if (monitorIds.length === 0) return [];
+
+        const { data: profiles } = await supabase
+            .from('profiles')
+            .select('id, full_name, clubs(name)')
+            .in('id', monitorIds);
+
+        const profileMap = new Map<string, { full_name: string | null; club_name: string | null }>();
+        (profiles ?? []).forEach((p: Record<string, unknown>) => {
+            const club = p.clubs as { name?: string } | null;
+            profileMap.set(p.id as string, {
+                full_name: (p.full_name as string) ?? null,
+                club_name: club?.name ?? null,
             });
         });
 
-        return Array.from(byMonitor.entries())
-            .map(([id, v]) => ({ monitor_id: id, full_name: v.full_name, club_name: v.club_name, total_points: v.total }))
+        return monitorIds
+            .map(id => ({
+                monitor_id: id,
+                full_name: profileMap.get(id)?.full_name ?? 'Moniteur',
+                club_name: profileMap.get(id)?.club_name ?? null,
+                total_points: totals.get(id) ?? 0,
+            }))
             .sort((a, b) => b.total_points - a.total_points)
             .slice(0, limit);
     } else {
