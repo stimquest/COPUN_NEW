@@ -4,6 +4,55 @@ import { createClient } from '@/lib/supabase/server';
 import { PedagogicalContent } from '@/types';
 import { revalidatePath } from 'next/cache';
 
+export async function getAllPedagogicalContent(): Promise<PedagogicalContent[]> {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+        .from('pedagogical_content')
+        .select('*')
+        .order('dimension', { ascending: true })
+        .order('niveau', { ascending: true });
+
+    if (error) {
+        console.error('Error fetching all pedagogical content:', error.message);
+        return [];
+    }
+    return data as PedagogicalContent[];
+}
+
+export async function updatePedagogicalContent(id: string, data: Partial<PedagogicalContent>) {
+    const supabase = await createClient();
+    const { error } = await supabase
+        .from('pedagogical_content')
+        .update(data)
+        .eq('id', id);
+
+    if (error) {
+        console.error('Error updating pedagogical content:', error.message);
+        return { success: false, error: error.message };
+    }
+
+    revalidatePath('/admin');
+    revalidatePath('/stages');
+    return { success: true };
+}
+
+export async function deletePedagogicalContent(id: string) {
+    const supabase = await createClient();
+    const { error } = await supabase
+        .from('pedagogical_content')
+        .delete()
+        .eq('id', id);
+
+    if (error) {
+        console.error('Error deleting pedagogical content:', error.message);
+        return { success: false, error: error.message };
+    }
+
+    revalidatePath('/admin');
+    revalidatePath('/stages');
+    return { success: true };
+}
+
 export async function createPedagogicalContent(data: Partial<PedagogicalContent>) {
     // Get current user
     const supabase = await createClient();

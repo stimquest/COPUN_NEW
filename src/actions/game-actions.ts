@@ -103,6 +103,7 @@ export async function createGame(title: string, theme: string, stageId: string |
         revalidatePath(`/stages/${stageId}`);
     }
     revalidatePath('/jeux');
+    revalidatePath('/ressources/jeux');
 
     return { success: true, gameId: data.id };
 }
@@ -164,6 +165,7 @@ export async function deleteGame(gameId: string) {
     }
 
     revalidatePath('/jeux');
+    revalidatePath('/ressources/jeux');
     return { success: true };
 }
 

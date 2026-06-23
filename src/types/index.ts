@@ -35,6 +35,10 @@ export type StepTodo = {
   created_at: string;
 };
 
+export type PedagogicalRessource =
+    | { type: 'fiche_memo'; label: string; fiche_memo_id: string }
+    | { type: 'url'; label: string; url: string };
+
 export type PedagogicalContent = {
   id: string;
   question: string;
@@ -44,6 +48,7 @@ export type PedagogicalContent = {
   dimension: Dimension;
   tags_theme: string[];
   tags_filtre: string[];
+  ressources?: PedagogicalRessource[];
   owner_id?: string;
   is_public?: boolean;
   club_id?: string;
