@@ -31,7 +31,7 @@ export default function RootLayout({
         {/* eslint-disable-next-line @next/next/no-page-custom-font */}
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
       </head>
-      <body className={`${inter.variable} font-sans antialiased min-h-screen bg-[#EBF0F7] text-slate-900 md:flex`}>
+      <body className={`${inter.variable} font-sans antialiased min-h-screen bg-[#EBF0F7] text-slate-900 md:flex overflow-x-hidden`}>
         <Sidebar />
         {/*
           Zone de sécurité globale pour la nav flottante mobile :

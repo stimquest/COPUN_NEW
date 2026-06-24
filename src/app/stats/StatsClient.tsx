@@ -79,42 +79,46 @@ export default function StatsClient({ monitors, clubs, currentUserId, myPoints }
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: index * 0.08 }}
                                 className={clsx(
-                                    "p-6 rounded-[2rem] border shadow-sm flex items-center gap-6 relative overflow-hidden",
+                                    "p-4 sm:p-5 rounded-[2rem] border shadow-sm flex items-center gap-3 relative overflow-hidden",
                                     item.isMe ? "bg-indigo-50 border-indigo-200 ring-2 ring-indigo-200" : "bg-white border-slate-100"
                                 )}
                             >
-                                {/* Rank Badge */}
+                                {/* Rang */}
                                 <div className={clsx(
-                                    "absolute -left-3 -top-3 size-16 rounded-3xl rotate-12 flex items-end justify-end p-3 text-xl font-black",
+                                    "size-9 shrink-0 rounded-xl flex items-center justify-center text-sm font-black",
                                     index === 0 ? "bg-yellow-400 text-yellow-900" :
-                                        index === 1 ? "bg-slate-300 text-slate-800" :
+                                        index === 1 ? "bg-slate-200 text-slate-700" :
                                             index === 2 ? "bg-amber-600 text-amber-100" :
                                                 "bg-slate-100 text-slate-400"
                                 )}>
-                                    <span className="-rotate-12">#{index + 1}</span>
+                                    {index + 1}
                                 </div>
 
-                                <div className="ml-8 flex-1 flex items-center gap-4">
-                                    <div className={clsx(
-                                        "size-12 rounded-2xl flex items-center justify-center font-black text-sm shrink-0",
-                                        index === 0 ? "bg-yellow-100 text-yellow-700" :
-                                            index === 1 ? "bg-slate-100 text-slate-600" :
-                                                index === 2 ? "bg-amber-100 text-amber-700" :
-                                                    "bg-indigo-50 text-indigo-500"
-                                    )}>
-                                        {initials(item.name)}
-                                    </div>
-                                    <div className="min-w-0">
-                                        <h3 className="text-base font-black text-slate-900 uppercase leading-tight truncate flex items-center gap-2">
+                                {/* Avatar */}
+                                <div className={clsx(
+                                    "size-11 shrink-0 rounded-2xl flex items-center justify-center font-black text-sm",
+                                    index === 0 ? "bg-yellow-100 text-yellow-700" :
+                                        index === 1 ? "bg-slate-100 text-slate-600" :
+                                            index === 2 ? "bg-amber-100 text-amber-700" :
+                                                "bg-indigo-50 text-indigo-500"
+                                )}>
+                                    {initials(item.name)}
+                                </div>
+
+                                {/* Nom + sous-titre — bloc qui rétrécit */}
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-1.5 min-w-0">
+                                        <h3 className="text-sm sm:text-base font-black text-slate-900 uppercase leading-tight truncate">
                                             {item.name}
-                                            {item.isMe && <span className="text-[9px] bg-indigo-600 text-white px-1.5 py-0.5 rounded-full tracking-widest">VOUS</span>}
                                         </h3>
-                                        {item.sub && <p className="text-xs font-bold text-slate-400 uppercase mt-0.5 truncate">{item.sub}</p>}
+                                        {item.isMe && <span className="shrink-0 text-[9px] bg-indigo-600 text-white px-1.5 py-0.5 rounded-full tracking-widest">VOUS</span>}
                                     </div>
+                                    {item.sub && <p className="text-[11px] font-bold text-slate-400 uppercase mt-0.5 truncate">{item.sub}</p>}
                                 </div>
 
-                                <div className="text-right shrink-0">
-                                    <span className={clsx("text-2xl font-black block leading-none", index < 3 ? "text-indigo-600" : "text-slate-900")}>{item.points}</span>
+                                {/* Points */}
+                                <div className="text-right shrink-0 pl-1">
+                                    <span className={clsx("text-xl sm:text-2xl font-black block leading-none", index < 3 ? "text-indigo-600" : "text-slate-900")}>{item.points}</span>
                                     <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Points</span>
                                 </div>
                             </motion.div>
