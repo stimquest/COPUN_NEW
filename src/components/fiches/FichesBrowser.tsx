@@ -8,10 +8,12 @@ import { THEMATIC_TAG_LABELS, SAISON_LABELS, ALL_THEMATIC_TAGS, ALL_SAISON_IDS }
 
 interface Props {
     fiches: FicheMemo[];
-    canModerate: boolean;
+    currentUserId?: string | null;
+    isAdmin?: boolean;
+    isModerator?: boolean;
 }
 
-export default function FichesBrowser({ fiches, canModerate }: Props) {
+export default function FichesBrowser({ fiches, currentUserId, isAdmin, isModerator }: Props) {
     const [search, setSearch] = useState('');
     const [theme, setTheme] = useState<ThematicTag | null>(null);
     const [saison, setSaison] = useState<string | null>(null);
@@ -128,7 +130,13 @@ export default function FichesBrowser({ fiches, canModerate }: Props) {
             {filtered.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                     {filtered.map(fiche => (
-                        <FicheCard key={fiche.id} fiche={fiche} canModerate={canModerate} canDelete={canModerate} />
+                        <FicheCard
+                            key={fiche.id}
+                            fiche={fiche}
+                            currentUserId={currentUserId}
+                            isAdmin={isAdmin}
+                            isModerator={isModerator}
+                        />
                     ))}
                 </div>
             ) : (

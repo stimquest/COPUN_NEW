@@ -9,13 +9,20 @@ import { THEMATIC_TAG_LABELS, SAISON_LABELS } from './fiche-constants';
 
 interface FicheCardProps {
     fiche: FicheMemo;
-    canModerate?: boolean;
-    canDelete?: boolean;
+    currentUserId?: string | null;
+    isAdmin?: boolean;
+    isModerator?: boolean; // référent : admin OU instructor
 }
 
-export default function FicheCard({ fiche, canModerate, canDelete }: FicheCardProps) {
+export default function FicheCard({ fiche, currentUserId, isAdmin, isModerator }: FicheCardProps) {
     const router = useRouter();
     const [isPending, startTransition] = useTransition();
+
+    // Droits alignés sur les policies RLS
+    const isAuthor = !!currentUserId && fiche.auteur_id === currentUserId;
+    const canEdit = isAuthor || isModerator;        // update : auteur ou référent
+    const canDelete = isAuthor || isAdmin;          // delete : auteur ou admin
+    const canModerate = isModerator;                // publier/dépublier : référent
 
     const handleDelete = () => {
         if (!confirm(`Supprimer la fiche "${fiche.titre}" ?`)) return;
@@ -36,63 +43,30 @@ export default function FicheCard({ fiche, canModerate, canDelete }: FicheCardPr
         });
     };
 
+    const showActions = canEdit || canDelete || (canModerate && fiche.statut === 'publie');
+
     return (
-        <div className={`group bg-white rounded-2xl border p-6 hover:shadow-xl transition-all relative ${
+        <div className={`group flex flex-col bg-white rounded-2xl border p-5 hover:shadow-xl transition-all ${
             fiche.statut === 'brouillon' ? 'border-amber-200 bg-amber-50/30' : 'border-slate-200 hover:border-teal-400'
         }`}>
-            {fiche.statut === 'brouillon' && (
-                <span className="absolute top-3 left-3 px-2 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-bold uppercase rounded-full tracking-widest">
-                    Brouillon
-                </span>
-            )}
-
-            <div className={`absolute top-3 right-3 flex gap-1 opacity-100 sm:opacity-60 sm:group-hover:opacity-100 transition ${isPending ? 'pointer-events-none opacity-50' : ''}`}>
-                <Link
-                    href={`/ressources/${fiche.id}/edit`}
-                    className="size-8 rounded-lg bg-slate-100 hover:bg-blue-100 flex items-center justify-center text-slate-500 hover:text-blue-600 transition"
-                    title="Modifier"
-                >
-                    <span className="material-symbols-outlined text-lg">edit</span>
-                </Link>
-                {canModerate && (
-                    <button
-                        onClick={handleToggleStatut}
-                        disabled={isPending}
-                        className={`size-8 rounded-lg flex items-center justify-center transition disabled:opacity-50 ${
-                            fiche.statut === 'publie'
-                                ? 'bg-slate-100 hover:bg-amber-100 text-slate-500 hover:text-amber-600'
-                                : 'bg-slate-100 hover:bg-green-100 text-slate-500 hover:text-green-600'
-                        }`}
-                        title={fiche.statut === 'publie' ? 'Dépublier' : 'Publier'}
-                    >
-                        <span className="material-symbols-outlined text-lg">
-                            {fiche.statut === 'publie' ? 'unpublished' : 'publish'}
-                        </span>
-                    </button>
+            {/* Zone cliquable → détail */}
+            <Link href={`/ressources/${fiche.id}`} className="block flex-1">
+                {fiche.statut === 'brouillon' && (
+                    <span className="inline-block mb-2 px-2 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-bold uppercase rounded-full tracking-widest">
+                        Brouillon
+                    </span>
                 )}
-                {canDelete && (
-                    <button
-                        onClick={handleDelete}
-                        disabled={isPending}
-                        className="size-8 rounded-lg bg-slate-100 hover:bg-red-100 flex items-center justify-center text-slate-500 hover:text-red-600 transition disabled:opacity-50"
-                        title="Supprimer"
-                    >
-                        <span className="material-symbols-outlined text-lg">delete</span>
-                    </button>
-                )}
-            </div>
 
-            <Link href={`/ressources/${fiche.id}`} className="block mt-2">
                 <div className="flex items-start gap-3 mb-3">
                     <div className="size-11 rounded-xl bg-teal-100 flex items-center justify-center text-teal-600 group-hover:bg-teal-600 group-hover:text-white transition shrink-0">
                         <span className="material-symbols-outlined text-xl">article</span>
                     </div>
-                    <div>
+                    <div className="min-w-0">
                         <h3 className="font-bold text-slate-900 group-hover:text-teal-700 transition leading-snug">
                             {fiche.titre}
                         </h3>
                         {fiche.auteur && (
-                            <p className="text-xs text-slate-400 mt-0.5">
+                            <p className="text-xs text-slate-400 mt-0.5 truncate">
                                 {fiche.auteur.full_name ?? fiche.auteur.email}
                             </p>
                         )}
@@ -121,7 +95,7 @@ export default function FicheCard({ fiche, canModerate, canDelete }: FicheCardPr
                 </p>
             </Link>
 
-            {/* Bouton de validation explicite pour les brouillons (référent) */}
+            {/* Bouton de validation pour les brouillons (référent) */}
             {canModerate && fiche.statut === 'brouillon' && (
                 <button
                     onClick={handleToggleStatut}
@@ -131,6 +105,43 @@ export default function FicheCard({ fiche, canModerate, canDelete }: FicheCardPr
                     <span className="material-symbols-outlined text-lg">check_circle</span>
                     {isPending ? 'Publication…' : 'Valider et publier'}
                 </button>
+            )}
+
+            {/* Barre d'actions en pied (séparée du contenu) */}
+            {showActions && (
+                <div className={`flex items-center justify-end gap-1 mt-4 pt-3 border-t border-slate-100 ${isPending ? 'opacity-50 pointer-events-none' : ''}`}>
+                    {canEdit && (
+                        <Link
+                            href={`/ressources/${fiche.id}/edit`}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-blue-600 text-xs font-bold transition"
+                            title="Modifier"
+                        >
+                            <span className="material-symbols-outlined text-[18px]">edit</span>
+                            Modifier
+                        </Link>
+                    )}
+                    {canModerate && fiche.statut === 'publie' && (
+                        <button
+                            onClick={handleToggleStatut}
+                            disabled={isPending}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-slate-500 hover:bg-amber-50 hover:text-amber-600 text-xs font-bold transition"
+                            title="Dépublier"
+                        >
+                            <span className="material-symbols-outlined text-[18px]">unpublished</span>
+                            Dépublier
+                        </button>
+                    )}
+                    {canDelete && (
+                        <button
+                            onClick={handleDelete}
+                            disabled={isPending}
+                            className="size-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-red-50 hover:text-red-600 transition"
+                            title="Supprimer"
+                        >
+                            <span className="material-symbols-outlined text-[18px]">delete</span>
+                        </button>
+                    )}
+                </div>
             )}
         </div>
     );
