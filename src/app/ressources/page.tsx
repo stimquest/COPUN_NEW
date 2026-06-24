@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { getAllFichesMemo } from '@/actions/fiche-memo-actions';
 import { getProfile } from '@/actions/user-actions';
 import FicheCard from '@/components/fiches/FicheCard';
+import FichesBrowser from '@/components/fiches/FichesBrowser';
 
 export default async function RessourcesPage() {
     const [fiches, profile] = await Promise.all([
@@ -70,7 +71,7 @@ export default async function RessourcesPage() {
                 </section>
             )}
 
-            {/* Fiches publiées */}
+            {/* Fiches publiées — avec recherche et filtres */}
             {fichesPubliees.length > 0 ? (
                 <section>
                     {canModerate && fichesBrouillon.length > 0 && (
@@ -78,16 +79,7 @@ export default async function RessourcesPage() {
                             Publiées ({fichesPubliees.length})
                         </h2>
                     )}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                        {fichesPubliees.map(fiche => (
-                            <FicheCard
-                                key={fiche.id}
-                                fiche={fiche}
-                                canModerate={canModerate}
-                                canDelete={canModerate}
-                            />
-                        ))}
-                    </div>
+                    <FichesBrowser fiches={fichesPubliees} canModerate={canModerate} />
                 </section>
             ) : (
                 !canModerate || fichesBrouillon.length === 0 ? (

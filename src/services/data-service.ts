@@ -20,8 +20,7 @@ export async function getStageById(id: string) {
         .select('*')
         .eq('id', id)
         .eq('owner_id', user.id) // Enforce ownership
-        .single();
-
+        .maybeSingle(); // null sans erreur si le stage n'existe pas / n'appartient pas au user
 
     if (error) {
         console.error('Data Error (getStageById):', error.message);

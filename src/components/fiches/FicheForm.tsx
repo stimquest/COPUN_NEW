@@ -6,6 +6,7 @@ import { createFicheMemo, updateFicheMemo } from '@/actions/fiche-memo-actions';
 import type { FicheMemo, CreateFicheData } from '@/actions/fiche-memo-actions';
 import type { ThematicTag } from '@/data/seasonal-context';
 import { THEMATIC_TAG_LABELS, SAISON_LABELS, ALL_THEMATIC_TAGS, ALL_SAISON_IDS } from './fiche-constants';
+import RichTextEditor from './RichTextEditor';
 
 interface FicheFormProps {
     fiche?: FicheMemo;
@@ -21,6 +22,18 @@ export default function FicheForm({ fiche }: FicheFormProps) {
     const [contenu, setContenu] = useState(fiche?.contenu ?? '');
     const [tagsThematiques, setTagsThematiques] = useState<ThematicTag[]>(fiche?.tags_thematiques ?? []);
     const [tagsSaisons, setTagsSaisons] = useState<string[]>(fiche?.tags_saisons ?? []);
+    const [tags, setTags] = useState<string[]>(fiche?.tags ?? []);
+    const [tagInput, setTagInput] = useState('');
+
+    const addTag = () => {
+        const t = tagInput.trim().toLowerCase();
+        if (t && !tags.includes(t)) setTags(prev => [...prev, t]);
+        setTagInput('');
+    };
+    const removeTag = (t: string) => setTags(prev => prev.filter(x => x !== t));
+
+    // Le contenu WYSIWYG est de l'HTML ; on considère vide si pas de texte réel
+    const contentIsEmpty = (html: string) => !html.replace(/<[^>]*>/g, '').trim();
 
     const toggleThematique = (tag: ThematicTag) => {
         setTagsThematiques(prev =>
@@ -42,7 +55,7 @@ export default function FicheForm({ fiche }: FicheFormProps) {
             setError('Le titre est obligatoire.');
             return;
         }
-        if (!contenu.trim()) {
+        if (contentIsEmpty(contenu)) {
             setError('Le contenu est obligatoire.');
             return;
         }
@@ -50,9 +63,10 @@ export default function FicheForm({ fiche }: FicheFormProps) {
         const data: CreateFicheData = {
             titre: titre.trim(),
             resume: resume.trim() || undefined,
-            contenu: contenu.trim(),
+            contenu,
             tags_thematiques: tagsThematiques,
             tags_saisons: tagsSaisons,
+            tags,
         };
 
         startTransition(async () => {
@@ -112,20 +126,19 @@ export default function FicheForm({ fiche }: FicheFormProps) {
                 />
             </div>
 
-            {/* Contenu */}
+            {/* Contenu — éditeur visuel */}
             <div>
                 <label className="block text-sm font-bold text-slate-700 mb-2">
                     Contenu <span className="text-red-500">*</span>
                 </label>
-                <textarea
+                <RichTextEditor
                     value={contenu}
-                    onChange={e => setContenu(e.target.value)}
-                    placeholder="Décris ici le contenu de la fiche mémo..."
-                    rows={10}
-                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-400 text-slate-900 resize-y font-mono text-sm"
-                    required
+                    onChange={setContenu}
+                    placeholder="Décris ici le contenu de la fiche mémo…"
                 />
-                <p className="text-xs text-slate-400 mt-1">Tu peux utiliser des listes à puces (* item) et des titres (## Titre)</p>
+                <p className="text-xs text-slate-400 mt-1">
+                    Utilise la barre d&apos;outils pour mettre en forme, ajouter des liens ou des images (via URL externe, sans consommer le stockage).
+                </p>
             </div>
 
             {/* Tags thématiques */}
@@ -174,6 +187,43 @@ export default function FicheForm({ fiche }: FicheFormProps) {
                         </button>
                     ))}
                 </div>
+            </div>
+
+            {/* Tags libres (mots-clés) */}
+            <div>
+                <label className="block text-sm font-bold text-slate-700 mb-2">
+                    Mots-clés
+                    <span className="font-normal text-slate-400 ml-2">— pour retrouver la fiche (ex : oiseaux, marée, dune)</span>
+                </label>
+                <div className="flex gap-2 mb-2">
+                    <input
+                        type="text"
+                        value={tagInput}
+                        onChange={e => setTagInput(e.target.value)}
+                        onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addTag(); } }}
+                        placeholder="Ajouter un mot-clé puis Entrée"
+                        className="flex-1 px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-400 text-slate-900 text-sm"
+                    />
+                    <button
+                        type="button"
+                        onClick={addTag}
+                        className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 rounded-xl text-sm font-bold transition"
+                    >
+                        Ajouter
+                    </button>
+                </div>
+                {tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                        {tags.map(t => (
+                            <span key={t} className="flex items-center gap-1 px-2.5 py-1 bg-slate-100 text-slate-700 rounded-full text-xs font-semibold">
+                                #{t}
+                                <button type="button" onClick={() => removeTag(t)} className="hover:text-red-600 transition">
+                                    <span className="material-symbols-outlined text-sm">close</span>
+                                </button>
+                            </span>
+                        ))}
+                    </div>
+                )}
             </div>
 
             {/* Actions */}

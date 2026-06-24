@@ -57,6 +57,7 @@ export default function NewStagePage() {
     };
 
     const saveStage = async (thematics: ThematicTag[]) => {
+        if (isSaving) return; // garde anti double-soumission
         setIsSaving(true);
         const formattedDates = formatDateRange(startDate, endDate);
         const res = await createStage({
@@ -65,7 +66,8 @@ export default function NewStagePage() {
             suggested_thematics: thematics,
         });
         if (res.success) {
-            router.push('/stages');
+            // Redirige vers le pilotage du nouveau stage (chargement léger, suite logique)
+            router.push(res.stageId ? `/stages/${res.stageId}` : '/stages');
         } else {
             alert('Erreur: ' + res.error);
             setIsSaving(false);
@@ -82,6 +84,16 @@ export default function NewStagePage() {
 
     return (
         <div className="min-h-screen bg-slate-50">
+            {/* Overlay de chargement pendant la création + redirection */}
+            {isSaving && (
+                <div className="fixed inset-0 z-200 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center">
+                    <div className="bg-white rounded-3xl px-8 py-7 shadow-2xl flex flex-col items-center gap-3">
+                        <span className="animate-spin material-symbols-outlined text-4xl text-indigo-600">progress_activity</span>
+                        <p className="text-sm font-bold text-slate-700">Création du stage…</p>
+                    </div>
+                </div>
+            )}
+
             <header className="bg-white border-b border-slate-200 px-6 py-6 flex items-center gap-4">
                 <Link href="/stages" className="size-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
                     <span className="material-symbols-outlined">arrow_back</span>
@@ -113,6 +125,7 @@ export default function NewStagePage() {
                                 startDate={startDate}
                                 onSuggestions={handleGuideValidate}
                                 onSkip={handleGuideSkip}
+                                isSaving={isSaving}
                             />
                         </motion.div>
                     ) : (

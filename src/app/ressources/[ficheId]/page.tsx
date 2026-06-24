@@ -4,6 +4,7 @@ import { getFicheMemoById } from '@/actions/fiche-memo-actions';
 import { getProfile } from '@/actions/user-actions';
 import { THEMATIC_TAG_LABELS, SAISON_LABELS } from '@/components/fiches/fiche-constants';
 import FicheActions from '@/components/fiches/FicheActions';
+import FicheContent from '@/components/fiches/FicheContent';
 
 export default async function FicheDetailPage({ params }: { params: Promise<{ ficheId: string }> }) {
     const { ficheId } = await params;
@@ -71,6 +72,11 @@ export default async function FicheDetailPage({ params }: { params: Promise<{ fi
                             {SAISON_LABELS[saison] ?? saison}
                         </span>
                     ))}
+                    {(fiche.tags ?? []).map(tag => (
+                        <span key={tag} className="px-3 py-1 bg-slate-100 text-slate-600 text-xs font-semibold rounded-full">
+                            #{tag}
+                        </span>
+                    ))}
                 </div>
 
                 <p className="text-xs text-slate-400">
@@ -82,9 +88,7 @@ export default async function FicheDetailPage({ params }: { params: Promise<{ fi
 
             {/* Contenu */}
             <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8">
-                <div className="prose prose-slate max-w-none whitespace-pre-wrap text-slate-700 leading-relaxed">
-                    {fiche.contenu}
-                </div>
+                <FicheContent html={fiche.contenu} />
             </div>
         </div>
     );

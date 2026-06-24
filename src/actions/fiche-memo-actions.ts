@@ -13,6 +13,7 @@ export interface FicheMemo {
     contenu: string;
     tags_thematiques: ThematicTag[];
     tags_saisons: string[];
+    tags: string[];
     statut: FicheStatut;
     auteur_id: string | null;
     created_at: string;
@@ -26,6 +27,7 @@ export interface CreateFicheData {
     contenu: string;
     tags_thematiques: ThematicTag[];
     tags_saisons: string[];
+    tags: string[];
 }
 
 export async function getAllFichesMemo(filtreStatut?: FicheStatut): Promise<FicheMemo[]> {
@@ -109,6 +111,7 @@ export async function createFicheMemo(ficheData: CreateFicheData) {
             contenu: ficheData.contenu,
             tags_thematiques: ficheData.tags_thematiques,
             tags_saisons: ficheData.tags_saisons,
+            tags: ficheData.tags ?? [],
             auteur_id: user.id,
             statut: 'brouillon',
         })

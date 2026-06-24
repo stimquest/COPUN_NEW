@@ -67,7 +67,7 @@ export async function createStage(data: { title: string, activity: string, level
         return { success: false, error: "Vous devez être connecté pour créer un stage." };
     }
 
-    const { error } = await supabase
+    const { data: created, error } = await supabase
         .from('stages')
         .insert([
             {
@@ -80,7 +80,7 @@ export async function createStage(data: { title: string, activity: string, level
                 owner_id: user.id
             }
         ])
-        .select()
+        .select('id')
         .single();
 
     if (error) {
@@ -89,7 +89,7 @@ export async function createStage(data: { title: string, activity: string, level
     }
 
     revalidatePath('/stages');
-    return { success: true };
+    return { success: true, stageId: created.id };
 }
 
 /**

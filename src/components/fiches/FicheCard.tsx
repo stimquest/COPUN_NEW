@@ -46,7 +46,7 @@ export default function FicheCard({ fiche, canModerate, canDelete }: FicheCardPr
                 </span>
             )}
 
-            <div className={`absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition ${isPending ? 'pointer-events-none opacity-50' : ''}`}>
+            <div className={`absolute top-3 right-3 flex gap-1 opacity-100 sm:opacity-60 sm:group-hover:opacity-100 transition ${isPending ? 'pointer-events-none opacity-50' : ''}`}>
                 <Link
                     href={`/ressources/${fiche.id}/edit`}
                     className="size-8 rounded-lg bg-slate-100 hover:bg-blue-100 flex items-center justify-center text-slate-500 hover:text-blue-600 transition"
@@ -120,6 +120,18 @@ export default function FicheCard({ fiche, canModerate, canDelete }: FicheCardPr
                     Mis à jour le {new Date(fiche.updated_at).toLocaleDateString('fr-FR')}
                 </p>
             </Link>
+
+            {/* Bouton de validation explicite pour les brouillons (référent) */}
+            {canModerate && fiche.statut === 'brouillon' && (
+                <button
+                    onClick={handleToggleStatut}
+                    disabled={isPending}
+                    className="mt-4 w-full flex items-center justify-center gap-2 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-bold transition disabled:opacity-50"
+                >
+                    <span className="material-symbols-outlined text-lg">check_circle</span>
+                    {isPending ? 'Publication…' : 'Valider et publier'}
+                </button>
+            )}
         </div>
     );
 }

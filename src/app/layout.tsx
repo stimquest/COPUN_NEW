@@ -33,7 +33,13 @@ export default function RootLayout({
       </head>
       <body className={`${inter.variable} font-sans antialiased min-h-screen bg-[#EBF0F7] text-slate-900 md:flex`}>
         <Sidebar />
-        <main className="flex-1 mx-auto w-full max-w-md md:max-w-7xl min-h-screen relative md:px-8 md:py-8">
+        {/*
+          Zone de sécurité globale pour la nav flottante mobile :
+          - pb réservé en bas pour que la nav (fixed, md:hidden) ne masque jamais le contenu
+          - inclut le safe-area iOS
+          - annulé en desktop (md:pb-8) où il n'y a pas de bottom nav
+        */}
+        <main className="flex-1 mx-auto w-full max-w-md md:max-w-7xl min-h-screen relative md:px-8 md:py-8 pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-8">
           {children}
         </main>
         <BottomNav />
