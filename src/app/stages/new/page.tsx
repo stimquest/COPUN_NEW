@@ -34,7 +34,8 @@ export default function NewStagePage() {
     const [formData, setFormData] = useState({
         title: '',
         activity: 'Catamaran',
-        level: 'Niveau 1'
+        level: 'Niveau 1',
+        nb_stagiaires: '' as string | number,
     });
 
     const formatDateRange = (start: string, end: string) => {
@@ -63,6 +64,7 @@ export default function NewStagePage() {
         const res = await createStage({
             ...formData,
             dates: formattedDates,
+            nb_stagiaires: formData.nb_stagiaires !== '' ? Number(formData.nb_stagiaires) : undefined,
             suggested_thematics: thematics,
         });
         if (res.success) {
@@ -176,6 +178,19 @@ export default function NewStagePage() {
                                     <option>Niveau 3</option>
                                 </select>
                             </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Nombre de Stagiaires</label>
+                            <input
+                                type="number"
+                                min={1}
+                                max={999}
+                                placeholder="ex: 12"
+                                className="w-full h-14 bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 font-bold text-slate-900 focus:border-indigo-500 outline-hidden transition-all"
+                                value={formData.nb_stagiaires}
+                                onChange={e => setFormData({ ...formData, nb_stagiaires: e.target.value })}
+                            />
                         </div>
 
                         <div className="space-y-4">

@@ -4,6 +4,7 @@ import './globals.css';
 import { BottomNav } from '@/components/BottomNav';
 import { Sidebar } from '@/components/Sidebar';
 import { cn } from "@/lib/utils";
+import { createClient } from '@/lib/supabase/server';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
@@ -19,11 +20,25 @@ export const metadata: Metadata = {
   themeColor: '#f8fafc',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  let role: string | null = null;
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+      role = profile?.role ?? null;
+    }
+  } catch { /* non connecté ou page publique */ }
+
   return (
     <html lang="fr" className={cn("h-full", "font-sans", inter.variable)} suppressHydrationWarning>
       <head>
@@ -42,7 +57,7 @@ export default function RootLayout({
         <main className="flex-1 mx-auto w-full max-w-md md:max-w-7xl min-h-screen relative md:px-8 md:py-8 pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-8">
           {children}
         </main>
-        <BottomNav />
+        <BottomNav role={role} />
       </body>
     </html>
   );

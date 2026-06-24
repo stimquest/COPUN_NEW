@@ -109,8 +109,9 @@ export function UserEditModal({ user, clubs, onClose, onSaved, onDeleted }: Prop
                             className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-3 text-sm text-slate-900 focus:outline-none focus:border-indigo-400 transition-colors"
                         >
                             <option value="instructor">Moniteur</option>
-                            <option value="admin">Admin</option>
-                            <option value="student">Stagiaire</option>
+                            <option value="moderator">Référent mémo</option>
+                            <option value="club_admin">Admin club</option>
+                            <option value="admin">Admin général</option>
                         </select>
                     </div>
                     <div>

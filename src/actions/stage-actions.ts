@@ -59,7 +59,7 @@ export async function unlinkCardFromStep(stepId: string, cardId: string) {
     return { success: true };
 }
 
-export async function createStage(data: { title: string, activity: string, level: string, dates: string, suggested_thematics?: string[] }) {
+export async function createStage(data: { title: string, activity: string, level: string, dates: string, nb_stagiaires?: number, suggested_thematics?: string[] }) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -75,6 +75,7 @@ export async function createStage(data: { title: string, activity: string, level
                 activity: data.activity,
                 level: data.level,
                 dates: data.dates,
+                nb_stagiaires: data.nb_stagiaires ?? null,
                 selected_content: [],
                 suggested_thematics: data.suggested_thematics ?? [],
                 owner_id: user.id
