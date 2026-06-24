@@ -26,28 +26,34 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   let role: string | null = null;
+  let fullName: string | null = null;
+  let email: string | null = null;
+  let clubName: string | null = null;
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
+      email = user.email ?? null;
       const { data: profile } = await supabase
         .from('profiles')
-        .select('role')
+        .select('role, full_name, club_id, clubs(name)')
         .eq('id', user.id)
         .single();
       role = profile?.role ?? null;
+      fullName = profile?.full_name ?? null;
+      const clubs = profile?.clubs as { name: string } | { name: string }[] | null;
+      clubName = clubs ? (Array.isArray(clubs) ? clubs[0]?.name : clubs.name) ?? null : null;
     }
   } catch { /* non connecté ou page publique */ }
 
   return (
     <html lang="fr" className={cn("h-full", "font-sans", inter.variable)} suppressHydrationWarning>
       <head>
-        {/* We can fallback to Google Fonts CDN if needed, but next/font is better performance */}
         {/* eslint-disable-next-line @next/next/no-page-custom-font */}
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
       </head>
       <body className={`${inter.variable} font-sans antialiased min-h-screen bg-[#EBF0F7] text-slate-900 md:flex overflow-x-hidden`}>
-        <Sidebar />
+        <Sidebar role={role} fullName={fullName} email={email} clubName={clubName} />
         {/*
           Zone de sécurité globale pour la nav flottante mobile :
           - pb réservé en bas pour que la nav (fixed, md:hidden) ne masque jamais le contenu

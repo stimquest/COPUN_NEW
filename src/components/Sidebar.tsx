@@ -4,15 +4,38 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import clsx from 'clsx';
 
-const navItems = [
+const baseNavItems = [
     { name: 'Accueil', href: '/stages', icon: 'dashboard', fill: true },
     { name: 'Ressources', href: '/ressources', icon: 'menu_book', fill: false },
     { name: 'Stats', href: '/stats', icon: 'leaderboard', fill: false },
     { name: 'Profil', href: '/profil', icon: 'person', fill: false },
 ];
 
-export function Sidebar() {
+const adminNavItem = { name: 'Admin', href: '/admin', icon: 'admin_panel_settings', fill: false };
+
+type SidebarProps = {
+    role?: string | null;
+    fullName?: string | null;
+    email?: string | null;
+    clubName?: string | null;
+};
+
+export function Sidebar({ role, fullName, email, clubName }: SidebarProps) {
     const pathname = usePathname();
+    const navItems = (role === 'admin' || role === 'club_admin')
+        ? [...baseNavItems, adminNavItem]
+        : baseNavItems;
+
+    const initials = fullName
+        ? fullName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
+        : (email?.[0] ?? '?').toUpperCase();
+
+    const roleLabel = ({
+        admin: 'Admin général',
+        club_admin: 'Admin club',
+        moderator: 'Référent mémo',
+        instructor: 'Moniteur',
+    } as Record<string, string>)[role ?? ''] ?? 'Moniteur';
 
     return (
         <aside className="hidden md:flex flex-col w-64 h-screen sticky top-0 bg-white border-r border-slate-200 shadow-sm p-6 z-50 shrink-0">
@@ -20,9 +43,10 @@ export function Sidebar() {
                 <span className="text-2xl font-black text-indigo-600 tracking-tight">COPUN.</span>
             </div>
 
-            <nav className="flex-1 space-y-2">
+            <nav className="flex-1 space-y-1">
                 {navItems.map((item) => {
                     const isActive = pathname.startsWith(item.href);
+                    const isAdmin = item.href === '/admin';
                     return (
                         <Link
                             key={item.name}
@@ -30,7 +54,9 @@ export function Sidebar() {
                             className={clsx(
                                 "flex items-center gap-4 px-4 py-3 rounded-xl transition-all font-semibold",
                                 isActive
-                                    ? "text-indigo-700 bg-indigo-50 shadow-sm"
+                                    ? isAdmin
+                                        ? "text-violet-700 bg-violet-50 shadow-sm"
+                                        : "text-indigo-700 bg-indigo-50 shadow-sm"
                                     : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"
                             )}
                         >
@@ -45,12 +71,14 @@ export function Sidebar() {
 
             <div className="mt-auto pt-6 border-t border-slate-100">
                 <div className="flex items-center gap-3 px-2">
-                    <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold shrink-0">
-                        CN
+                    <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold shrink-0 text-sm">
+                        {initials}
                     </div>
                     <div className="overflow-hidden">
-                        <p className="text-sm font-bold text-slate-800 truncate">Club Nautique</p>
-                        <p className="text-xs text-slate-500 truncate">Espace Moniteur</p>
+                        <p className="text-sm font-bold text-slate-800 truncate">{fullName || email || '—'}</p>
+                        <p className="text-xs text-slate-500 truncate">
+                            {clubName ? `${clubName} · ` : ''}{roleLabel}
+                        </p>
                     </div>
                 </div>
             </div>
