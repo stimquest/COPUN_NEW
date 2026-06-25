@@ -2,9 +2,11 @@ import { getProfile, getUserStats } from '@/actions/user-actions';
 import { getUserContent } from '@/actions/content-actions';
 import { getStages } from '@/services/data-service';
 import { getMyTotalPoints } from '@/actions/quiz-actions';
+import { getFilRougeDefis, getMonitorFilRouge } from '@/actions/defi-actions';
 import { Profile, PedagogicalContent, Stage } from '@/types';
 import Link from 'next/link';
 import SignOutButton from '@/components/SignOutButton';
+import { FilRougePicker } from '@/components/FilRougePicker';
 
 export default async function ProfilPage() {
     let profile: Profile | null = null;
@@ -13,6 +15,8 @@ export default async function ProfilPage() {
     let stages: Stage[] = [];
 
     let totalPoints = 0;
+    let filRougeDefis: Awaited<ReturnType<typeof getFilRougeDefis>> = [];
+    let filRougeId: string | null = null;
     try {
         const results = await Promise.allSettled([
             getProfile(),
@@ -20,6 +24,8 @@ export default async function ProfilPage() {
             getUserContent(),
             getStages(),
             getMyTotalPoints(),
+            getFilRougeDefis(),
+            getMonitorFilRouge(),
         ]);
 
         profile = results[0].status === 'fulfilled' ? results[0].value as Profile : null;
@@ -27,6 +33,8 @@ export default async function ProfilPage() {
         userContent = results[2].status === 'fulfilled' ? (results[2].value as PedagogicalContent[] || []) : [];
         stages = results[3].status === 'fulfilled' ? (results[3].value as Stage[] || []) : [];
         totalPoints = results[4].status === 'fulfilled' ? (results[4].value as number) : 0;
+        filRougeDefis = results[5].status === 'fulfilled' ? results[5].value : [];
+        filRougeId = results[6].status === 'fulfilled' ? results[6].value : null;
     } catch (err) {
         console.error('Erreur lors du chargement du profil:', err);
     }
@@ -85,16 +93,49 @@ export default async function ProfilPage() {
                 </div>
             </div>
 
+            {/* Défi de saison — fil rouge */}
+            <div className="px-5 mt-8 max-w-md mx-auto w-full">
+                <div className="flex items-center gap-2 mb-4">
+                    <span className="material-symbols-outlined text-emerald-500">timeline</span>
+                    <h2 className="text-base font-black text-slate-900">Défi de saison</h2>
+                    <span className="text-[10px] font-black bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full uppercase tracking-widest">Fil rouge</span>
+                </div>
+                <p className="text-xs text-slate-500 mb-4 leading-relaxed">
+                    Choisissez un défi d&apos;observation à mener tout au long de la saison.
+                    Il sera automatiquement assigné à chaque stage que vous créez.
+                    Vos stagiaires — différents chaque semaine — contribuent à un suivi scientifique continu sur votre spot.
+                </p>
+
+                {/* Lien vers le suivi si un fil rouge est actif */}
+                {filRougeId && (
+                    <Link
+                        href="/profil/fil-rouge"
+                        className="flex items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-2xl px-4 py-3 mb-4 hover:shadow-md active:scale-[0.98] transition-all group"
+                    >
+                        <span className="material-symbols-outlined text-emerald-500 text-xl">timeline</span>
+                        <div className="flex-1 min-w-0">
+                            <p className="font-bold text-emerald-900 text-sm">Voir le suivi de saison</p>
+                            <p className="text-xs text-emerald-600 mt-0.5">Historique, photos, évolution</p>
+                        </div>
+                        <span className="material-symbols-outlined text-emerald-300 group-hover:translate-x-1 transition-transform">arrow_forward_ios</span>
+                    </Link>
+                )}
+
+                <FilRougePicker defis={filRougeDefis} currentId={filRougeId} />
+            </div>
+
             {/* Accès admin */}
-            {profile.role === 'admin' && (
+            {(profile.role === 'admin' || profile.role === 'club_admin') && (
                 <div className="px-5 mt-8 max-w-md mx-auto w-full">
                     <Link href="/admin" className="flex items-center gap-4 bg-violet-50 border border-violet-100 rounded-2xl px-5 py-4 hover:shadow-md active:scale-[0.98] transition-all group">
                         <div className="size-11 rounded-xl bg-violet-100 text-violet-600 flex items-center justify-center shrink-0">
                             <span className="material-symbols-outlined">admin_panel_settings</span>
                         </div>
                         <div className="flex-1 min-w-0">
-                            <p className="font-bold text-violet-900 text-sm">Gestion des accès</p>
-                            <p className="text-xs text-violet-400 mt-0.5">Créer comptes, inviter, gérer les rôles</p>
+                            <p className="font-bold text-violet-900 text-sm">Espace administration</p>
+                            <p className="text-xs text-violet-400 mt-0.5">
+                                {profile.role === 'admin' ? 'Comptes, clubs, reporting national' : 'Reporting de votre club'}
+                            </p>
                         </div>
                         <span className="material-symbols-outlined text-violet-300 group-hover:translate-x-1 transition-transform">arrow_forward_ios</span>
                     </Link>

@@ -19,9 +19,20 @@ export async function getAllPedagogicalContent(): Promise<PedagogicalContent[]> 
     return data as PedagogicalContent[];
 }
 
-export async function updatePedagogicalContent(id: string, data: Partial<PedagogicalContent>) {
+async function requireAdminForContent() {
     const supabase = await createClient();
-    const { error } = await supabase
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+    if (profile?.role !== 'admin') return null;
+    return { user, supabase };
+}
+
+export async function updatePedagogicalContent(id: string, data: Partial<PedagogicalContent>) {
+    const ctx = await requireAdminForContent();
+    if (!ctx) return { success: false, error: 'Accès refusé.' };
+
+    const { error } = await ctx.supabase
         .from('pedagogical_content')
         .update(data)
         .eq('id', id);
@@ -37,8 +48,10 @@ export async function updatePedagogicalContent(id: string, data: Partial<Pedagog
 }
 
 export async function deletePedagogicalContent(id: string) {
-    const supabase = await createClient();
-    const { error } = await supabase
+    const ctx = await requireAdminForContent();
+    if (!ctx) return { success: false, error: 'Accès refusé.' };
+
+    const { error } = await ctx.supabase
         .from('pedagogical_content')
         .delete()
         .eq('id', id);

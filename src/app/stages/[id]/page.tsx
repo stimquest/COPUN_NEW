@@ -2,6 +2,7 @@ import { getStageById, getSessionsForStage, getStageCockpitStats } from '@/servi
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { DeleteStageButton } from '@/components/DeleteStageButton';
+import { SaveTemplateButton } from '@/components/SaveTemplateButton';
 
 // Statut calculé depuis les dates (mêmes règles que le dashboard)
 const MONTHS_FR: Record<string, number> = {
@@ -144,6 +145,7 @@ export default async function StageCockpitPage({ params }: { params: Promise<{ i
                         <span className="material-symbols-outlined text-[20px]">arrow_back</span>
                     </Link>
                     <p className="flex-1 text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Pilotage du stage</p>
+                    <SaveTemplateButton stageId={stage.id} stageTitle={stage.title} />
                     <DeleteStageButton stageId={stage.id} />
                 </div>
             </header>

@@ -3,6 +3,15 @@
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 
+async function requireAdmin() {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+    if (profile?.role !== 'admin') return null;
+    return { user, supabase };
+}
+
 // ==========================================
 // GAME CARDS (Individual quiz cards)
 // ==========================================
@@ -153,8 +162,10 @@ export async function getAllGames() {
 }
 
 export async function deleteGame(gameId: string) {
-    const supabase = await createClient();
-    const { error } = await supabase
+    const ctx = await requireAdmin();
+    if (!ctx) return { success: false, error: 'Accès refusé.' };
+
+    const { error } = await ctx.supabase
         .from('games')
         .delete()
         .eq('id', gameId);

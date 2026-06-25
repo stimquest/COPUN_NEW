@@ -535,6 +535,125 @@ export async function getClubSpotsForUser(defiIds: string[]) {
     return data || [];
 }
 
+// ==========================================
+// FIL ROUGE — Défi de saison du moniteur
+// ==========================================
+
+export type FilRougeDefi = {
+    id: string;
+    description: string;
+    instruction: string;
+    icon: string;
+    tags_theme: string[];
+    points: number;
+};
+
+export async function getFilRougeDefis(): Promise<FilRougeDefi[]> {
+    const supabase = await createClient();
+    const { data } = await supabase
+        .from('defis')
+        .select('id, description, instruction, icon, tags_theme, points')
+        .eq('fil_rouge', true)
+        .order('id');
+    return data ?? [];
+}
+
+export async function getMonitorFilRouge(): Promise<string | null> {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+    const { data } = await supabase
+        .from('profiles')
+        .select('defi_fil_rouge_id')
+        .eq('id', user.id)
+        .single();
+    return data?.defi_fil_rouge_id ?? null;
+}
+
+export async function setMonitorFilRouge(defiId: string | null): Promise<{ success: boolean; error?: string }> {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, error: 'Non connecté' };
+    const { error } = await supabase
+        .from('profiles')
+        .update({ defi_fil_rouge_id: defiId })
+        .eq('id', user.id);
+    if (error) return { success: false, error: error.message };
+    revalidatePath('/profil');
+    return { success: true };
+}
+
+export type FilRougeEntry = {
+    stage_id: string;
+    stage_title: string;
+    stage_dates: string;
+    exploit_id: string;
+    status: 'en_cours' | 'complete';
+    completed_at: string | null;
+    preuves_url: string[];
+    notes: string | null;
+    created_at: string;
+    defi: FilRougeDefi;
+};
+
+export async function getFilRougeHistory(): Promise<{ entries: FilRougeEntry[]; defi: FilRougeDefi | null }> {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { entries: [], defi: null };
+
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('defi_fil_rouge_id')
+        .eq('id', user.id)
+        .single();
+
+    const defiId = profile?.defi_fil_rouge_id;
+    if (!defiId) return { entries: [], defi: null };
+
+    // Récupère tous les stages du moniteur
+    const { data: stages } = await supabase
+        .from('stages')
+        .select('id, title, dates')
+        .eq('owner_id', user.id)
+        .order('created_at', { ascending: false });
+
+    if (!stages || stages.length === 0) return { entries: [], defi: null };
+
+    const stageIds = stages.map(s => s.id);
+
+    // Tous les exploits du défi fil rouge sur ces stages
+    const { data: exploits } = await supabase
+        .from('stage_exploits')
+        .select('stage_id, exploit_id, status, completed_at, preuves_url, notes, created_at')
+        .eq('exploit_id', defiId)
+        .in('stage_id', stageIds)
+        .order('created_at', { ascending: false });
+
+    // Le défi lui-même
+    const { data: defiData } = await supabase
+        .from('defis')
+        .select('id, description, instruction, icon, tags_theme, points')
+        .eq('id', defiId)
+        .single();
+
+    const stageMap = Object.fromEntries(stages.map(s => [s.id, s]));
+
+    const entries: FilRougeEntry[] = (exploits ?? []).map(e => ({
+        stage_id: e.stage_id,
+        stage_title: stageMap[e.stage_id]?.title ?? 'Stage',
+        stage_dates: stageMap[e.stage_id]?.dates ?? '',
+        exploit_id: e.exploit_id,
+        status: e.status,
+        completed_at: e.completed_at,
+        preuves_url: e.preuves_url ?? [],
+        notes: e.notes ?? null,
+        created_at: e.created_at,
+        defi: defiData as FilRougeDefi,
+    }));
+
+    return { entries, defi: defiData as FilRougeDefi | null };
+}
+
 export async function saveClubSpot(
     defiId: string,
     lat: number,

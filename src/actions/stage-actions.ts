@@ -89,6 +89,21 @@ export async function createStage(data: { title: string, activity: string, level
         return { success: false, error: error.message };
     }
 
+    // Auto-assigner le défi fil rouge du moniteur si défini
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('defi_fil_rouge_id')
+        .eq('id', user.id)
+        .single();
+
+    if (profile?.defi_fil_rouge_id) {
+        await supabase.from('stage_exploits').insert({
+            stage_id: created.id,
+            exploit_id: profile.defi_fil_rouge_id,
+            status: 'en_cours',
+        });
+    }
+
     revalidatePath('/stages');
     return { success: true, stageId: created.id };
 }
