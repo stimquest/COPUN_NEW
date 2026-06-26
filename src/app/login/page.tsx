@@ -26,6 +26,7 @@ function LoginForm() {
     async function handleForgot(formData: FormData) {
         setLoading(true);
         setMessage(null);
+        formData.set('origin', window.location.origin);
         await requestPasswordReset(formData);
         setMessage({ type: 'success', text: 'Si cet email existe, un lien de réinitialisation a été envoyé.' });
         setLoading(false);
