@@ -1,23 +1,8 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
+import { computeQuizPoints } from '@/lib/quiz-points';
 import { revalidatePath } from 'next/cache';
-
-// Barème révisé 2026-06-23 — volontairement simple et lisible :
-//   • 2 points par bonne réponse
-//   • +5 points bonus si quiz complet (10 questions) réussi sans aucune faute
-// Conséquence : un quiz de 10 rapporte bien plus qu'un quiz de 3, sans formule opaque.
-const POINTS_PER_CORRECT = 2;
-const FULL_QUIZ_SIZE = 10;
-const PERFECT_FULL_BONUS = 5;
-
-function computeQuizPoints(scoreCorrect: number, scoreTotal: number): number {
-    let points = scoreCorrect * POINTS_PER_CORRECT;
-    if (scoreTotal >= FULL_QUIZ_SIZE && scoreCorrect === scoreTotal) {
-        points += PERFECT_FULL_BONUS;
-    }
-    return points;
-}
 
 // Mapping dimension pédagogique → thèmes de game_cards (thèmes réels de la base)
 const DIMENSION_TO_THEMES: Record<string, string[]> = {

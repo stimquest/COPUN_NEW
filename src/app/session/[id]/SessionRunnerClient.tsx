@@ -478,7 +478,7 @@ export default function SessionRunnerClient({
                 {activeTab === 'bilan' && (
                     <div className="space-y-6">
                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">
-                            À remplir après la séance, au calme
+                            Ce que vous cochez ici alimente le bilan de fin de stage
                         </p>
 
                         {/* Todos check par étape */}
@@ -538,7 +538,7 @@ export default function SessionRunnerClient({
                         <section className="space-y-3">
                             <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest px-1 flex items-center gap-2">
                                 <span className="material-symbols-outlined text-[16px]">school</span>
-                                Notions acquises par le groupe
+                                Objectifs travaillés en séance
                             </h3>
                             {sessionContent.length === 0 ? (
                                 <div className="bg-white rounded-2xl border border-slate-100 p-6 text-center">

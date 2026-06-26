@@ -1,8 +1,10 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
+import { isStageObjectiveExecutionStatus, isStageObjectiveImpactLevel } from '@/lib/stage-objective-review';
 import { revalidatePath } from 'next/cache';
 import { SESSION_TEMPLATES } from '@/data/session-templates';
+import { StageObjectiveReviewDraft } from '@/types';
 
 /**
  * Persists the selected pedagogical pool for a stage.
@@ -389,4 +391,159 @@ export async function getPastTodosForUser(stageId: string): Promise<string[]> {
         if (!seen.has(t)) { seen.add(t); texts.push(t); }
     });
     return texts;
+}
+
+/* ─── CLÔTURE DE STAGE ─────────────────────────────────────────────── */
+
+type CloseStageInput = {
+  closingNotes: string;
+  objectiveReviews: StageObjectiveReviewDraft[];
+};
+
+export async function closeStage(stageId: string, input: CloseStageInput) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { success: false, error: 'Non autorisé' };
+  }
+
+  const { data: stage, error: stageError } = await supabase
+    .from('stages')
+    .select('selected_content')
+    .eq('id', stageId)
+    .eq('owner_id', user.id)
+    .single();
+
+  if (stageError || !stage) {
+    console.error('Error fetching stage before closing:', stageError);
+    return { success: false, error: stageError?.message || 'Stage introuvable' };
+  }
+
+  const selectedContent: string[] = stage.selected_content ?? [];
+  const selectedSet = new Set(selectedContent);
+  const reviewByContentId = new Map<string, StageObjectiveReviewDraft>();
+
+  for (const review of input.objectiveReviews ?? []) {
+    if (!review?.pedagogicalContentId || !selectedSet.has(review.pedagogicalContentId)) continue;
+    if (!review.executionStatus || !isStageObjectiveExecutionStatus(review.executionStatus)) {
+      return { success: false, error: 'Chaque objectif doit avoir un sort renseigné.' };
+    }
+
+    const normalizedReview: StageObjectiveReviewDraft = {
+      pedagogicalContentId: review.pedagogicalContentId,
+      executionStatus: review.executionStatus,
+      impactLevel: review.executionStatus === 'not_done'
+        ? null
+        : (review.impactLevel && isStageObjectiveImpactLevel(review.impactLevel) ? review.impactLevel : null),
+      note: typeof review.note === 'string' ? review.note.trim() : '',
+    };
+
+    if (normalizedReview.executionStatus !== 'not_done' && !normalizedReview.impactLevel) {
+      return { success: false, error: 'Renseignez aussi la qualité ressentie pour chaque objectif mené.' };
+    }
+
+    reviewByContentId.set(normalizedReview.pedagogicalContentId, normalizedReview);
+  }
+
+  if (selectedContent.length > 0) {
+    const missingReviews = selectedContent.filter(contentId => !reviewByContentId.has(contentId));
+    if (missingReviews.length > 0) {
+      return { success: false, error: 'Complétez l’analyse de chaque objectif avant de clôturer le stage.' };
+    }
+
+    const { error: reviewError } = await supabase
+      .from('stage_objective_reviews')
+      .upsert(
+        Array.from(reviewByContentId.values()).map(review => ({
+          stage_id: stageId,
+          pedagogical_content_id: review.pedagogicalContentId,
+          execution_status: review.executionStatus,
+          impact_level: review.executionStatus === 'not_done' ? null : review.impactLevel,
+          note: review.note || null,
+        })),
+        { onConflict: 'stage_id,pedagogical_content_id' }
+      );
+
+    if (reviewError) {
+      console.error('Error saving stage objective reviews:', reviewError);
+      return { success: false, error: reviewError.message };
+    }
+  }
+
+  const normalizedNotes = input.closingNotes.trim();
+
+  const { data, error } = await supabase
+    .from('stages')
+    .update({
+      closed_at: new Date().toISOString(),
+      closing_notes: normalizedNotes || null,
+    })
+    .eq('id', stageId)
+    .eq('owner_id', user.id)
+    .select('id, closed_at, closing_notes')
+    .single();
+
+  if (error) {
+    console.error('Error closing stage:', error);
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath(`/stages/${stageId}`);
+  revalidatePath(`/stages/${stageId}/bilan`);
+  revalidatePath('/stages');
+
+  return { success: true, stage: data };
+}
+
+export async function reopenStage(stageId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { success: false, error: 'Non autorisé' };
+  }
+
+  const { error } = await supabase
+    .from('stages')
+    .update({
+      closed_at: null,
+    })
+    .eq('id', stageId)
+    .eq('owner_id', user.id);
+
+  if (error) {
+    console.error('Error reopening stage:', error);
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath(`/stages/${stageId}`);
+  revalidatePath(`/stages/${stageId}/bilan`);
+  revalidatePath('/stages');
+
+  return { success: true };
+}
+
+export async function updateClosingNotes(stageId: string, closingNotes: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { success: false, error: 'Non autorisé' };
+  }
+
+  const { error } = await supabase
+    .from('stages')
+    .update({ closing_notes: closingNotes || null })
+    .eq('id', stageId)
+    .eq('owner_id', user.id);
+
+  if (error) {
+    console.error('Error updating closing notes:', error);
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath(`/stages/${stageId}`);
+  revalidatePath(`/stages/${stageId}/bilan`);
+  return { success: true };
 }

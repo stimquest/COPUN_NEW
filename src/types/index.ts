@@ -6,8 +6,11 @@ export type Stage = {
   activity: string;
   level: string;
   dates: string;
+  nb_stagiaires?: number | null;
   selected_content?: string[];
   suggested_thematics?: string[];
+  closed_at?: string | null;
+  closing_notes?: string | null;
 };
 
 export type Session = {
@@ -54,6 +57,29 @@ export type PedagogicalContent = {
   club_id?: string;
 };
 
+export type StageObjectiveExecutionStatus = 'not_done' | 'partial' | 'done';
+export type StageObjectiveImpactLevel = 'low' | 'medium' | 'high';
+
+export type StageObjectiveReviewDraft = {
+  pedagogicalContentId: string;
+  executionStatus: StageObjectiveExecutionStatus | null;
+  impactLevel: StageObjectiveImpactLevel | null;
+  note: string;
+};
+
+export type StageObjectiveReviewItem = {
+  pedagogicalContent: PedagogicalContent;
+  placedSessions: Pick<Session, 'id' | 'title'>[];
+  validatedSessions: Pick<Session, 'id' | 'title'>[];
+  isPlaced: boolean;
+  isValidated: boolean;
+  review: {
+    executionStatus: StageObjectiveExecutionStatus;
+    impactLevel: StageObjectiveImpactLevel | null;
+    note: string | null;
+  } | null;
+};
+
 export type Profile = {
   id: string;
   email: string;
@@ -73,4 +99,15 @@ export type Exploit = {
   description: string;
   photo_url: string;
   created_at: string;
+};
+
+export type TopicTrackingCategory = 'established' | 'improving' | 'fragile' | 'emerging' | 'dormant';
+
+export type TopicTracking = {
+  tag: string;
+  category: TopicTrackingCategory;
+  occurrences: number;
+  lastScore: number;
+  previousScore: number | null;
+  lastClosedAt: string | null;
 };
