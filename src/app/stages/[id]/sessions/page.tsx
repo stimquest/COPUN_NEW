@@ -1,5 +1,6 @@
 import { getStageById, getSessionsForStage, getPedagogicalPool, getSessionStepLinks } from '@/services/data-service';
 import { getStepTodosForStage, getPastTodosForUser } from '@/actions/stage-actions';
+import { getUserContent } from '@/actions/content-actions';
 import SessionsManagerClient from './SessionsManagerClient';
 import { notFound } from 'next/navigation';
 
@@ -9,9 +10,10 @@ export default async function SessionsManagerPage({ params }: { params: Promise<
     const stage = await getStageById(id);
     if (!stage) return notFound();
 
-    const [sessions, pool, todosGrouped, pastTodos] = await Promise.all([
+    const [sessions, copunPool, customPool, todosGrouped, pastTodos] = await Promise.all([
         getSessionsForStage(id),
         getPedagogicalPool(),
+        getUserContent(),
         getStepTodosForStage(id),
         getPastTodosForUser(id),
     ]);
@@ -26,7 +28,8 @@ export default async function SessionsManagerPage({ params }: { params: Promise<
         <SessionsManagerClient
             stage={stage}
             initialSessions={sessions}
-            fullPool={pool}
+            copunPool={copunPool}
+            customPool={customPool}
             initialLinks={links}
             initialTodosByStep={todosByStep}
             pastTodos={pastTodos}
