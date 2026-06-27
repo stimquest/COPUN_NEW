@@ -138,7 +138,8 @@ function ObjectifDropdown({ intention, setIntention }: { intention: string | nul
     );
 }
 
-export default function ProgramBuilderClient({ stage, fullPool }: { stage: Stage, fullPool: PedagogicalContent[] }) {
+export default function ProgramBuilderClient({ stage, copunPool, customPool }: { stage: Stage, copunPool: PedagogicalContent[], customPool: PedagogicalContent[] }) {
+    const fullPool = useMemo(() => [...copunPool, ...customPool], [copunPool, customPool]);
     const router = useRouter();
     const [activeTab, setActiveTab] = useState<'EXPLORER' | 'SELECTION'>('EXPLORER');
     const [selectedLevel, setSelectedLevel] = useState<1 | 2 | 3>(1);
@@ -152,13 +153,13 @@ export default function ProgramBuilderClient({ stage, fullPool }: { stage: Stage
     const [isCreatorOpen, setIsCreatorOpen] = useState(false);
     const [selectedCardForDetail, setSelectedCardForDetail] = useState<PedagogicalContent | null>(null);
 
-    // Filter by level
+    // Filter COPUN cards by level (custom cards have their own section)
     const poolMatchingLevel = useMemo(() => {
-        return fullPool.filter(card => {
+        return copunPool.filter(card => {
             const cardLevel = Number(card.niveau);
             return cardLevel === selectedLevel || (selectedLevel === 3 && cardLevel === 4);
         });
-    }, [fullPool, selectedLevel]);
+    }, [copunPool, selectedLevel]);
 
     // Group cards by dimension, filtered by selected themes and tags
     const groupedCards = useMemo(() => {
@@ -412,6 +413,14 @@ export default function ProgramBuilderClient({ stage, fullPool }: { stage: Stage
                         </section>
 
                         {/* CARDS GROUPED BY DIMENSION */}
+                        {/* SECTION LABEL — environnemental */}
+                        <div className="flex items-center gap-3 px-1">
+                            <div className="size-6 rounded-lg bg-teal-600 flex items-center justify-center shrink-0">
+                                <span className="material-symbols-outlined text-white text-sm">eco</span>
+                            </div>
+                            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-teal-700">Contenu environnemental COP&apos;UN</p>
+                        </div>
+
                         {groupedCards.length === 0 ? (
                             <div className="text-center py-16 text-slate-400">
                                 <span className="material-symbols-outlined text-5xl mb-3">search_off</span>
@@ -505,12 +514,74 @@ export default function ProgramBuilderClient({ stage, fullPool }: { stage: Stage
                                 ))}
                             </div>
                         )}
+                        {/* MES FICHES SPORTIVES */}
+                        {customPool.length > 0 && (
+                            <section className="space-y-3 pt-2">
+                                <div className="flex items-center gap-3 px-1">
+                                    <div className="size-6 rounded-lg bg-indigo-500 flex items-center justify-center shrink-0">
+                                        <span className="material-symbols-outlined text-white text-sm">sports</span>
+                                    </div>
+                                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-indigo-600">Mes fiches sportives</p>
+                                    <span className="text-[10px] font-bold text-slate-400 bg-white px-2 py-0.5 rounded-full">{customPool.length}</span>
+                                </div>
+                                <div className="space-y-2 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-3 md:space-y-0">
+                                    {customPool.map(card => {
+                                        const isSelected = programIds.includes(card.id);
+                                        return (
+                                            <div key={card.id} className={clsx(
+                                                "rounded-2xl transition-all flex flex-col relative overflow-hidden",
+                                                isSelected ? "bg-slate-900 shadow-lg" : "bg-white shadow-sm"
+                                            )}>
+                                                <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl bg-indigo-500" />
+                                                <div className="pl-5 pr-4 pt-4 pb-3 flex flex-col flex-1">
+                                                    <div className="flex items-start justify-between gap-2 mb-2">
+                                                        <div className="flex flex-wrap gap-1.5">
+                                                            {card.ffv_level && (
+                                                                <span className={clsx("text-[9px] font-black uppercase tracking-widest", isSelected ? "text-white/50" : "text-indigo-500")}>
+                                                                    N{card.ffv_level} FFVoile
+                                                                </span>
+                                                            )}
+                                                            {(card.supports ?? []).slice(0, 2).map(s => (
+                                                                <span key={s} className={clsx("text-[9px] font-bold px-1.5 py-0.5 rounded-md", isSelected ? "bg-white/10 text-white/50" : "bg-slate-100 text-slate-500")}>
+                                                                    {s}
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                        <button onClick={() => setSelectedCardForDetail(card)} className={clsx("shrink-0 material-symbols-outlined text-base transition-colors", isSelected ? "text-white/30 hover:text-white/60" : "text-slate-300 hover:text-slate-500")}>
+                                                            info
+                                                        </button>
+                                                    </div>
+                                                    <p className={clsx("text-[13px] font-black leading-snug flex-1 mb-3", isSelected ? "text-white" : "text-slate-900")}>
+                                                        {card.question}
+                                                    </p>
+                                                    <p className={clsx("text-[10px] leading-relaxed mb-3", isSelected ? "text-white/40" : "text-slate-400")}>
+                                                        {card.objectif}
+                                                    </p>
+                                                    <button
+                                                        onClick={() => toggleCard(card.id)}
+                                                        className={clsx(
+                                                            "self-end flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase transition-all",
+                                                            isSelected
+                                                                ? "bg-white/10 text-white hover:bg-red-500"
+                                                                : "bg-indigo-600 text-white hover:bg-indigo-700"
+                                                        )}
+                                                    >
+                                                        <span className="material-symbols-outlined text-sm">{isSelected ? 'check' : 'add'}</span>
+                                                        {isSelected ? 'Ajouté' : 'Ajouter'}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </section>
+                        )}
                     </>
                 )}
 
                 {/* RESERVOIR TAB */}
                 {activeTab === 'SELECTION' && (
-                    <div className="space-y-4">
+                    <div className="space-y-6">
                         {programCards.length === 0 ? (
                             <div className="text-center py-20 text-slate-400">
                                 <span className="material-symbols-outlined text-5xl mb-3">inbox</span>
@@ -520,28 +591,89 @@ export default function ProgramBuilderClient({ stage, fullPool }: { stage: Stage
                         ) : (
                             <>
                                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">{programCards.length} question{programCards.length > 1 ? 's' : ''} sélectionnée{programCards.length > 1 ? 's' : ''}</p>
-                                <div className="space-y-2 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-3 md:space-y-0">
-                                    {programCards.map(card => {
-                                        const p = pillarOf(card);
-                                        return (
-                                            <div key={card.id} className="bg-white rounded-2xl overflow-hidden shadow-sm relative flex flex-col">
-                                                <div className={clsx("absolute left-0 top-0 bottom-0 w-1", p?.bg)} />
-                                                <div className="pl-5 pr-4 pt-4 pb-3 flex flex-col flex-1">
-                                                    <span className={clsx("text-[9px] font-black uppercase tracking-widest mb-2 flex items-center gap-1", p?.color)}>
-                                                        <span className="material-symbols-outlined text-[11px]">{p?.icon}</span>
-                                                        {card.dimension}
-                                                    </span>
-                                                    <p className="text-[13px] font-black text-slate-900 leading-snug flex-1 mb-2">{card.question}</p>
-                                                    <p className="text-[10px] text-slate-400 leading-relaxed mb-3">{card.objectif}</p>
-                                                    <button onClick={() => toggleCard(card.id)} className="self-end flex items-center gap-1 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase bg-red-50 text-red-400 hover:bg-red-100 transition-all">
-                                                        <span className="material-symbols-outlined text-sm">remove</span>
-                                                        Retirer
-                                                    </button>
+
+                                {/* COPUN environmental cards */}
+                                {(() => {
+                                    const copunCards = programCards.filter(c => c.source !== 'custom');
+                                    if (copunCards.length === 0) return null;
+                                    return (
+                                        <section className="space-y-3">
+                                            <div className="flex items-center gap-2 px-1">
+                                                <div className="size-5 rounded-md bg-teal-600 flex items-center justify-center shrink-0">
+                                                    <span className="material-symbols-outlined text-white text-[11px]">eco</span>
                                                 </div>
+                                                <p className="text-[10px] font-black uppercase tracking-[0.15em] text-teal-700">Environnemental COP&apos;UN</p>
+                                                <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{copunCards.length}</span>
                                             </div>
-                                        );
-                                    })}
-                                </div>
+                                            <div className="space-y-2 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-3 md:space-y-0">
+                                                {copunCards.map(card => {
+                                                    const p = pillarOf(card);
+                                                    return (
+                                                        <div key={card.id} className="bg-white rounded-2xl overflow-hidden shadow-sm relative flex flex-col">
+                                                            <div className={clsx("absolute left-0 top-0 bottom-0 w-1", p?.bg)} />
+                                                            <div className="pl-5 pr-4 pt-4 pb-3 flex flex-col flex-1">
+                                                                <span className={clsx("text-[9px] font-black uppercase tracking-widest mb-2 flex items-center gap-1", p?.color)}>
+                                                                    <span className="material-symbols-outlined text-[11px]">{p?.icon}</span>
+                                                                    {card.dimension}
+                                                                </span>
+                                                                <p className="text-[13px] font-black text-slate-900 leading-snug flex-1 mb-2">{card.question}</p>
+                                                                <p className="text-[10px] text-slate-400 leading-relaxed mb-3">{card.objectif}</p>
+                                                                <button onClick={() => toggleCard(card.id)} className="self-end flex items-center gap-1 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase bg-red-50 text-red-400 hover:bg-red-100 transition-all">
+                                                                    <span className="material-symbols-outlined text-sm">remove</span>
+                                                                    Retirer
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </section>
+                                    );
+                                })()}
+
+                                {/* Custom sports cards */}
+                                {(() => {
+                                    const sportCards = programCards.filter(c => c.source === 'custom');
+                                    if (sportCards.length === 0) return null;
+                                    return (
+                                        <section className="space-y-3">
+                                            <div className="flex items-center gap-2 px-1">
+                                                <div className="size-5 rounded-md bg-indigo-500 flex items-center justify-center shrink-0">
+                                                    <span className="material-symbols-outlined text-white text-[11px]">sports</span>
+                                                </div>
+                                                <p className="text-[10px] font-black uppercase tracking-[0.15em] text-indigo-600">Mes fiches sportives</p>
+                                                <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{sportCards.length}</span>
+                                            </div>
+                                            <div className="space-y-2 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-3 md:space-y-0">
+                                                {sportCards.map(card => (
+                                                    <div key={card.id} className="bg-white rounded-2xl overflow-hidden shadow-sm relative flex flex-col">
+                                                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500" />
+                                                        <div className="pl-5 pr-4 pt-4 pb-3 flex flex-col flex-1">
+                                                            <div className="flex flex-wrap gap-1.5 mb-2">
+                                                                {card.ffv_level && (
+                                                                    <span className="text-[9px] font-black uppercase tracking-widest text-indigo-500">
+                                                                        N{card.ffv_level} FFVoile
+                                                                    </span>
+                                                                )}
+                                                                {(card.supports ?? []).slice(0, 2).map(s => (
+                                                                    <span key={s} className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-500">
+                                                                        {s}
+                                                                    </span>
+                                                                ))}
+                                                            </div>
+                                                            <p className="text-[13px] font-black text-slate-900 leading-snug flex-1 mb-2">{card.question}</p>
+                                                            <p className="text-[10px] text-slate-400 leading-relaxed mb-3">{card.objectif}</p>
+                                                            <button onClick={() => toggleCard(card.id)} className="self-end flex items-center gap-1 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase bg-red-50 text-red-400 hover:bg-red-100 transition-all">
+                                                                <span className="material-symbols-outlined text-sm">remove</span>
+                                                                Retirer
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </section>
+                                    );
+                                })()}
                             </>
                         )}
                     </div>

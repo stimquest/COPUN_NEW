@@ -12,7 +12,7 @@ import {
     type StageClosingMemoDraft,
 } from '@/lib/stage-closing-memo';
 import { Button } from '@/components/ui/button';
-import { StageObjectiveReviewDraft, StageObjectiveReviewItem } from '@/types';
+import { StageObjectiveReviewDraft, StageObjectiveReviewItem, StageObjectiveExecutionStatus } from '@/types';
 
 type Props = {
     stageId: string;

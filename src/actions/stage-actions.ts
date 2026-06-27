@@ -43,6 +43,41 @@ export async function linkCardToStep(stepId: string, cardId: string) {
         return { success: false, error: error.message };
     }
 
+    // If the card is custom, copy its content_todos as step_todos for this step
+    const { data: card } = await supabase
+        .from('pedagogical_content')
+        .select('source')
+        .eq('id', cardId)
+        .single();
+
+    if (card?.source === 'custom') {
+        const { data: contentTodos } = await supabase
+            .from('content_todos')
+            .select('text, todo_order')
+            .eq('content_id', cardId)
+            .order('todo_order');
+
+        if (contentTodos && contentTodos.length > 0) {
+            const { data: existing } = await supabase
+                .from('step_todos')
+                .select('todo_order')
+                .eq('session_step_id', stepId)
+                .order('todo_order', { ascending: false })
+                .limit(1);
+
+            const baseOrder = existing?.[0]?.todo_order ?? -1;
+
+            await supabase.from('step_todos').insert(
+                contentTodos.map((t, i) => ({
+                    session_step_id: stepId,
+                    text: t.text,
+                    todo_order: baseOrder + 1 + i,
+                    done: false,
+                }))
+            );
+        }
+    }
+
     return { success: true };
 }
 
@@ -324,15 +359,102 @@ export async function updateStepTodo(todoId: string, stageId: string, patch: { t
 
 export async function deleteStepTodo(todoId: string, stageId: string) {
     const supabase = await createClient();
-    const { error } = await supabase
-        .from('step_todos')
-        .delete()
-        .eq('id', todoId);
 
-    if (error) return { success: false, error: error.message };
+    // Check if this todo has a linked_content_id and is the header
+    const { data: todo } = await supabase
+        .from('step_todos')
+        .select('session_step_id, linked_content_id, is_content_header')
+        .eq('id', todoId)
+        .single();
+
+    if (todo && todo.linked_content_id && todo.is_content_header) {
+        // Delete all todos for this step with this linked_content_id
+        const { error } = await supabase
+            .from('step_todos')
+            .delete()
+            .eq('session_step_id', todo.session_step_id)
+            .eq('linked_content_id', todo.linked_content_id);
+
+        if (error) return { success: false, error: error.message };
+    } else {
+        // Regular delete
+        const { error } = await supabase
+            .from('step_todos')
+            .delete()
+            .eq('id', todoId);
+
+        if (error) return { success: false, error: error.message };
+    }
+
     revalidatePath(`/stages/${stageId}/sessions`);
     return { success: true };
 }
+
+export async function addStepPedagogicalCard(stepId: string, stageId: string, cardId: string, startOrder: number) {
+    const supabase = await createClient();
+
+    // 1. Get the pedagogical content info (the question)
+    const { data: card, error: cardError } = await supabase
+        .from('pedagogical_content')
+        .select('question')
+        .eq('id', cardId)
+        .single();
+
+    if (cardError || !card) {
+        console.error('Error fetching pedagogical card:', cardError);
+        return { success: false, error: cardError?.message || 'Fiche introuvable' };
+    }
+
+    // 2. Get its content_todos
+    const { data: contentTodos } = await supabase
+        .from('content_todos')
+        .select('text, todo_order')
+        .eq('content_id', cardId)
+        .order('todo_order');
+
+    // 3. Insert the header
+    const { data: headerData, error: headerError } = await supabase
+        .from('step_todos')
+        .insert({
+            session_step_id: stepId,
+            text: card.question,
+            linked_content_id: cardId,
+            is_content_header: true,
+            done: false,
+            todo_order: startOrder,
+        })
+        .select()
+        .single();
+
+    if (headerError) {
+        console.error('Error inserting card header:', headerError);
+        return { success: false, error: headerError.message };
+    }
+
+    // 4. Insert sub-todos
+    if (contentTodos && contentTodos.length > 0) {
+        const subTodosToInsert = contentTodos.map((t, i) => ({
+            session_step_id: stepId,
+            text: t.text,
+            linked_content_id: cardId,
+            is_content_header: false,
+            done: false,
+            todo_order: startOrder + 1 + i,
+        }));
+
+        const { error: subError } = await supabase
+            .from('step_todos')
+            .insert(subTodosToInsert);
+
+        if (subError) {
+            console.error('Error inserting card sub-todos:', subError);
+        }
+    }
+
+    revalidatePath(`/stages/${stageId}/sessions`);
+    return { success: true };
+}
+
 
 export async function getStepTodosForStage(stageId: string): Promise<{ step_id: string; todos: import('@/types').StepTodo[] }[]> {
     const supabase = await createClient();

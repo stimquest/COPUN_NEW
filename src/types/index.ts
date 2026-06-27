@@ -36,11 +36,15 @@ export type StepTodo = {
   done: boolean;
   todo_order: number;
   created_at: string;
+  linked_content_id?: string | null;
+  is_content_header?: boolean;
 };
 
 export type PedagogicalRessource =
     | { type: 'fiche_memo'; label: string; fiche_memo_id: string }
     | { type: 'url'; label: string; url: string };
+
+export type ContentSource = 'copun' | 'custom';
 
 export type PedagogicalContent = {
   id: string;
@@ -55,6 +59,17 @@ export type PedagogicalContent = {
   owner_id?: string;
   is_public?: boolean;
   club_id?: string;
+  source?: ContentSource;
+  ffv_level?: number | null;
+  supports?: string[];
+};
+
+export type ContentTodo = {
+  id: string;
+  content_id: string;
+  text: string;
+  todo_order: number;
+  created_at: string;
 };
 
 export type StageObjectiveExecutionStatus = 'not_done' | 'partial' | 'done';
