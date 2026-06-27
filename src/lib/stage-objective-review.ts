@@ -26,13 +26,13 @@ const CONTEXTUAL_IMPACT_OPTIONS: Record<Exclude<StageObjectiveExecutionStatus, '
     helper: string;
 }>> = {
     partial: [
-        { value: 'low', label: "Rien n'a accroché", helper: "Le sujet a été abordé, mais rien ne semble avoir laissé de trace." },
-        { value: 'medium', label: 'Quelques repères', helper: "Des éléments ont été retenus, mais restent fragiles ou à consolider." },
+        { value: 'low', label: "Pas d'accroche", helper: "Le sujet a été abordé, mais rien ne semble avoir laissé de trace." },
+        { value: 'medium', label: 'Repères', helper: "Des éléments ont été retenus, mais restent fragiles ou à consolider." },
         { value: 'high', label: 'Bonne amorce', helper: "Le lien avec la pratique est compris, le groupe a envie d'aller plus loin." },
     ],
     done: [
         { value: 'low', label: 'Peu retenu', helper: "L'objectif a été mené, mais les stagiaires peinent à restituer l'essentiel." },
-        { value: 'medium', label: 'Saisi dans les grandes lignes', helper: "Le groupe a compris l'essentiel, même sans encore l'appliquer spontanément." },
+        { value: 'medium', label: 'Grandes lignes', helper: "Le groupe a compris l'essentiel, même sans encore l'appliquer spontanément." },
         { value: 'high', label: 'Bien intégré', helper: "Le groupe a assimilé le contenu et fait le lien avec sa pratique." },
     ],
 };

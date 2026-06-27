@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import {
     STAGE_OBJECTIVE_EXECUTION_OPTIONS,
     formatStageObjectiveTheme,
@@ -40,6 +41,8 @@ export function StageObjectiveReviewList({
     title = 'Analyse des objectifs fixés',
     intro,
 }: Props) {
+    const [expandedMemos, setExpandedMemos] = useState<Record<string, boolean>>({});
+
     if (items.length === 0) {
         return (
             <section className="rounded-[2rem] border border-dashed border-slate-300 bg-white p-6">
@@ -145,7 +148,7 @@ export function StageObjectiveReviewList({
                                                                 impactLevel: option.value === 'not_done' || option.value !== review.executionStatus ? null : review.impactLevel,
                                                             })}
                                                             className={cn(
-                                                                'rounded-xl border border-transparent px-3 py-2.5 text-center text-sm font-black transition active:scale-[0.98]',
+                                                                'rounded-xl border border-transparent px-3 py-2 text-center text-xs font-black transition active:scale-[0.98]',
                                                                 selected ? selectedTone(option.value) : 'bg-white text-slate-600 hover:text-slate-950'
                                                             )}
                                                         >
@@ -162,49 +165,80 @@ export function StageObjectiveReviewList({
                                         </div>
 
                                         <div>
-                                            <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-400">{impactPrompt.label}</p>
-                                            <p className="mt-1 text-xs leading-relaxed text-slate-500">{impactPrompt.helper}</p>
-                                            <div className="mt-2 grid gap-2 sm:grid-cols-3 xl:grid-cols-1">
-                                                {impactOptions.map(option => {
-                                                    const selected = review.impactLevel === option.value;
-                                                    return (
-                                                        <button
-                                                            key={option.value}
-                                                            type="button"
-                                                            disabled={impactDisabled}
-                                                            onClick={() => onChangeDraft?.(item.pedagogicalContent.id, { impactLevel: option.value })}
-                                                            className={cn(
-                                                                'rounded-2xl border px-3.5 py-3 text-left transition active:scale-[0.98]',
-                                                                impactDisabled && 'cursor-not-allowed border-slate-100 bg-slate-100 text-slate-300',
-                                                                !impactDisabled && selected && selectedTone(option.value),
-                                                                !impactDisabled && !selected && 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
-                                                            )}
-                                                        >
-                                                            <p className="text-sm font-black leading-tight">{option.label}</p>
-                                                            <p className={cn('mt-1 text-[11px] leading-4', selected ? 'text-white/80' : 'text-slate-500')}>
-                                                                {option.helper}
-                                                            </p>
-                                                        </button>
-                                                    );
-                                                })}
-                                            </div>
-                                            {impactDisabled && (
-                                                <div className="mt-2 rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-3 py-3 text-xs font-medium text-slate-500">
-                                                    Pas de résultat à qualifier pour un objectif non mené.
-                                                </div>
+                                            {impactDisabled ? (
+                                                <>
+                                                    <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-400">Résultat attendu</p>
+                                                    <div className="mt-2 rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-3 py-2.5 text-xs font-medium text-slate-500">
+                                                        Aucun résultat à qualifier pour un objectif non mené.
+                                                    </div>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-400">{impactPrompt.label}</p>
+                                                    <div className="mt-2 grid grid-cols-3 gap-1 rounded-2xl border border-slate-200 bg-slate-100 p-1">
+                                                        {impactOptions.map(option => {
+                                                            const selected = review.impactLevel === option.value;
+                                                            return (
+                                                                <button
+                                                                    key={option.value}
+                                                                    type="button"
+                                                                    onClick={() => onChangeDraft?.(item.pedagogicalContent.id, { impactLevel: option.value })}
+                                                                    className={cn(
+                                                                        'rounded-xl border border-transparent px-2 py-2 text-center text-xs font-black transition active:scale-[0.98]',
+                                                                        selected ? selectedTone(option.value) : 'bg-white text-slate-600 hover:text-slate-950'
+                                                                    )}
+                                                                >
+                                                                    {option.label}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                    {impactMeta && (
+                                                        <p className="mt-2 rounded-2xl bg-slate-50 px-3 py-2 text-xs font-medium leading-relaxed text-slate-600 ring-1 ring-slate-200">
+                                                            {impactMeta.helper}
+                                                        </p>
+                                                    )}
+                                                </>
                                             )}
                                         </div>
                                     </div>
 
-                                    <div className="mt-4">
-                                        <label className="block text-xs font-black uppercase tracking-[0.16em] text-slate-400 mb-2">Mémo court <span className="font-semibold normal-case tracking-normal text-slate-400">optionnel</span></label>
-                                        <textarea
-                                            value={review.note}
-                                            onChange={(event) => onChangeDraft?.(item.pedagogicalContent.id, { note: event.target.value })}
-                                            placeholder="Ce qui explique le choix, ou une idée à garder…"
-                                            className="min-h-[86px] w-full resize-y rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-900 placeholder:text-slate-400 focus:border-sky-300 focus:outline-none focus:ring-4 focus:ring-sky-100"
-                                        />
-                                    </div>
+                                    {(() => {
+                                        const isMemoOpen = !!review.note || expandedMemos[item.pedagogicalContent.id];
+                                        return isMemoOpen ? (
+                                            <div className="mt-4">
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <label className="block text-xs font-black uppercase tracking-[0.16em] text-slate-400">Mémo court <span className="font-semibold normal-case tracking-normal text-slate-400">optionnel</span></label>
+                                                    {!review.note && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setExpandedMemos((prev: Record<string, boolean>) => ({ ...prev, [item.pedagogicalContent.id]: false }))}
+                                                            className="text-xs font-bold text-slate-400 hover:text-slate-600 transition"
+                                                        >
+                                                            Masquer
+                                                        </button>
+                                                    )}
+                                                </div>
+                                                <textarea
+                                                    value={review.note}
+                                                    onChange={(event) => onChangeDraft?.(item.pedagogicalContent.id, { note: event.target.value })}
+                                                    placeholder="Ce qui explique le choix, ou une idée à garder…"
+                                                    className="min-h-[86px] w-full resize-y rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-900 placeholder:text-slate-400 focus:border-sky-300 focus:outline-none focus:ring-4 focus:ring-sky-100"
+                                                />
+                                            </div>
+                                        ) : (
+                                            <div className="mt-4">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setExpandedMemos((prev: Record<string, boolean>) => ({ ...prev, [item.pedagogicalContent.id]: true }))}
+                                                    className="inline-flex items-center gap-1.5 rounded-xl border border-dashed border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-500 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-700 transition active:scale-[0.98]"
+                                                >
+                                                    <span className="material-symbols-outlined text-[16px]">add</span>
+                                                    Ajouter une note
+                                                </button>
+                                            </div>
+                                        );
+                                    })()}
                                 </>
                             ) : (
                                 <div className="mt-5 grid gap-3 md:grid-cols-2">
