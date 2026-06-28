@@ -319,12 +319,16 @@ export async function addStep(sessionId: string, stageId: string, order: number)
             .gte('step_order', order);
 
         if (steps && steps.length > 0) {
-            for (const s of steps) {
-                await supabase
+            const updates = steps.map(s => ({
+                id: s.id,
+                step_order: s.step_order + 1,
+            }));
+            await Promise.all(updates.map(u =>
+                supabase
                     .from('session_structure')
-                    .update({ step_order: s.step_order + 1 })
-                    .eq('id', s.id);
-            }
+                    .update({ step_order: u.step_order })
+                    .eq('id', u.id)
+            ));
         }
     }
 

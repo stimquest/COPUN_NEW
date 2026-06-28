@@ -11,7 +11,7 @@ export async function getDefis() {
     const supabase = await createClient();
     const { data, error } = await supabase
         .from('defis')
-        .select('*')
+        .select('id, description, instruction, type_preuve, icon, tags_theme, stage_type, spot_fixe, terrain_temps_reel, points')
         .order('id');
 
     if (error) {
@@ -25,7 +25,7 @@ export async function getDefisForStageType(stageType: string) {
     const supabase = await createClient();
     const { data, error } = await supabase
         .from('defis')
-        .select('*')
+        .select('id, description, instruction, type_preuve, icon, tags_theme, stage_type, spot_fixe, terrain_temps_reel, points')
         .contains('stage_type', [stageType])
         .order('id');
 
@@ -138,7 +138,7 @@ export async function getStageExploits(stageId: string) {
     const supabase = await createClient();
     const { data, error } = await supabase
         .from('stage_exploits')
-        .select('*, defis(*)')
+        .select('*, defis(id, description, instruction, type_preuve, icon, tags_theme, stage_type, spot_fixe, terrain_temps_reel, points)')
         .eq('stage_id', stageId)
         .order('created_at', { ascending: true });
 
@@ -161,8 +161,8 @@ export async function updateStageExploitStatus(
     if (status === 'complete') {
         updateData.completed_at = new Date().toISOString();
     }
+
     if (preuveUrl) {
-        // Append to preuves_url array
         const { data: existing } = await supabase
             .from('stage_exploits')
             .select('preuves_url')
@@ -183,18 +183,6 @@ export async function updateStageExploitStatus(
     if (error) {
         console.error('Error updating stage exploit:', error);
         return { success: false, error: error.message };
-    }
-
-    // Award points when défi is completed — barème validé : +3 GPS spot fixe, +2 tout autre défi
-    if (status === 'complete') {
-        const { data: defi } = await supabase
-            .from('defis')
-            .select('spot_fixe')
-            .eq('id', defiId)
-            .single();
-
-        const points = defi?.spot_fixe ? 3 : 2;
-        await awardPointsForDefiInternal(supabase, stageId, defiId, points);
     }
 
     revalidatePath(`/stages/${stageId}`);

@@ -47,32 +47,29 @@ export async function generateStageQuiz(
     let targetThemes: string[] = [];
 
     if (forceTheme) {
-        // Thème forcé : pioche uniquement dans ce thème
         targetThemes = [forceTheme];
         const { data } = await supabase
             .from('game_cards')
-            .select('*')
+            .select('id, type, theme, related_objective_id, data')
             .eq('type', 'quizz')
             .in('theme', targetThemes);
         quizzCards = data;
     } else if (selectedContent.length) {
-        // Mode auto, priorité 1 : questions DIRECTEMENT liées aux fiches du stage.
-        // C'est ce qui valide vraiment la transmission.
-        const { data: linkedCards } = await supabase
-            .from('game_cards')
-            .select('*')
-            .eq('type', 'quizz')
-            .in('related_objective_id', selectedContent);
+        const [{ data: linkedCards }, { data: selectedCards }] = await Promise.all([
+            supabase
+                .from('game_cards')
+                .select('id, type, theme, related_objective_id, data')
+                .eq('type', 'quizz')
+                .in('related_objective_id', selectedContent),
+            supabase
+                .from('pedagogical_content')
+                .select('dimension')
+                .in('id', selectedContent),
+        ]);
 
         quizzCards = linkedCards ?? null;
 
-        // Priorité 2 : si pas assez de questions liées, complète par les thèmes des dimensions.
         if (!quizzCards || quizzCards.length < questionCount) {
-            const { data: selectedCards } = await supabase
-                .from('pedagogical_content')
-                .select('dimension')
-                .in('id', selectedContent);
-
             const dimensions = [...new Set((selectedCards ?? []).map(c => c.dimension).filter(Boolean))];
             const themeSet = new Set<string>();
             dimensions.forEach(dim => {
@@ -83,11 +80,10 @@ export async function generateStageQuiz(
             if (targetThemes.length > 0) {
                 const { data: themeCards } = await supabase
                     .from('game_cards')
-                    .select('*')
+                    .select('id, type, theme, related_objective_id, data')
                     .eq('type', 'quizz')
                     .in('theme', targetThemes);
 
-                // Fusionne sans doublons (par id)
                 const seen = new Set((quizzCards ?? []).map((c: Record<string, unknown>) => c.id));
                 const merged = [...(quizzCards ?? [])];
                 (themeCards ?? []).forEach((c: Record<string, unknown>) => {
@@ -98,11 +94,10 @@ export async function generateStageQuiz(
         }
     }
 
-    // Fallback ultime : toutes les cartes quizz si rien trouvé
     if (!quizzCards?.length) {
         const { data: allQuizz } = await supabase
             .from('game_cards')
-            .select('*')
+            .select('id, type, theme, related_objective_id, data')
             .eq('type', 'quizz');
 
         if (!allQuizz?.length) {

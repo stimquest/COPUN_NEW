@@ -5,6 +5,7 @@ import { getMyTotalPoints } from '@/actions/quiz-actions';
 import { getFilRougeDefis, getMonitorFilRouge } from '@/actions/defi-actions';
 import { Profile, PedagogicalContent, Stage } from '@/types';
 import Link from 'next/link';
+import Image from 'next/image';
 import SignOutButton from '@/components/SignOutButton';
 import { FilRougePicker } from '@/components/FilRougePicker';
 
@@ -58,7 +59,7 @@ export default async function ProfilPage() {
                 <div className="flex flex-col items-center">
                     <div className="size-24 rounded-full bg-slate-100 border-4 border-white shadow-xl mb-4 overflow-hidden flex items-center justify-center">
                         {profile.avatar_url ? (
-                            <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                            <Image src={profile.avatar_url} alt="Avatar" width={96} height={96} className="w-full h-full object-cover" unoptimized />
                         ) : (
                             <span className="material-symbols-outlined text-4xl text-slate-300">person</span>
                         )}

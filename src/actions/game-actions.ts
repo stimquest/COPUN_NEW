@@ -18,7 +18,7 @@ async function requireAdmin() {
 
 export async function getGameCardsForContent(contentId?: string) {
     const supabase = await createClient();
-    let query = supabase.from('game_cards').select('*');
+    let query = supabase.from('game_cards').select('id, type, theme, related_objective_id, data');
 
     if (contentId) {
         query = query.eq('related_objective_id', contentId);
@@ -36,7 +36,7 @@ export async function getAllGameCards() {
     const supabase = await createClient();
     const { data, error } = await supabase
         .from('game_cards')
-        .select('*')
+        .select('id, type, theme, related_objective_id, data')
         .order('theme', { ascending: true })
         .order('type', { ascending: true });
 
@@ -49,7 +49,7 @@ export async function getAllGameCards() {
 
 export async function getFilteredGameCards(types: string[], themes: string[]) {
     const supabase = await createClient();
-    let query = supabase.from('game_cards').select('*');
+    let query = supabase.from('game_cards').select('id, type, theme, related_objective_id, data');
 
     if (types.length > 0) {
         query = query.in('type', types);
@@ -70,7 +70,7 @@ export async function getGameCardById(id: string) {
     const supabase = await createClient();
     const { data, error } = await supabase
         .from('game_cards')
-        .select('*')
+        .select('id, type, theme, related_objective_id, data')
         .eq('id', id)
         .single();
 

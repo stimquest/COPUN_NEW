@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react';
 import clsx from 'clsx';
+import Image from 'next/image';
 import { uploadDefiPhoto, completeFilRougeDefi, saveClubObservationTargets } from '@/actions/defi-actions';
 
 type ObservationTarget = { id: string; name: string; categorie: string };
@@ -414,7 +415,7 @@ function PhotoField({ photoUrl, isUploading, onCapture, required }: {
             </p>
             {photoUrl ? (
                 <div className="relative w-full h-32 rounded-xl overflow-hidden border border-slate-200">
-                    <img src={photoUrl} alt="Observation" className="w-full h-full object-cover" />
+                    <Image src={photoUrl} alt="Observation" width={400} height={200} className="w-full h-full object-cover" unoptimized />
                     <div className="absolute top-2 right-2 bg-emerald-500 text-white rounded-full p-1">
                         <span className="material-symbols-outlined text-sm">check</span>
                     </div>

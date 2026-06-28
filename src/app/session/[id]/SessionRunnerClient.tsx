@@ -2,6 +2,7 @@
 
 import { useState, useTransition, useSyncExternalStore, useRef, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import NextImage from 'next/image';
 import clsx from 'clsx';
 import { SessionStep, PedagogicalContent, StepTodo, StageObjectiveExecutionStatus } from '@/types';
 import { updateStageExploitStatus, uploadDefiPhoto, saveClubSpot, removeDefiPhoto } from '@/actions/defi-actions';
@@ -824,7 +825,7 @@ function ProofPhoto({ url, onDelete }: { url: string; onDelete: () => void }) {
                     <span className="material-symbols-outlined text-slate-300 text-2xl">broken_image</span>
                 </div>
             ) : (
-                <img src={url} alt="Preuve" className="size-full object-cover" onError={() => setBroken(true)} />
+                <NextImage src={url} alt="Preuve" fill className="size-full object-cover" onError={() => setBroken(true)} sizes="64px" />
             )}
             <button
                 onClick={onDelete}

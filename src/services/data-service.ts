@@ -19,10 +19,10 @@ export async function getStageById(id: string) {
 
     const { data, error } = await supabase
         .from('stages')
-        .select('*')
+        .select('id, title, activity, level, dates, nb_stagiaires, selected_content, suggested_thematics, closed_at, closing_notes, owner_id, created_at')
         .eq('id', id)
-        .eq('owner_id', user.id) // Enforce ownership
-        .maybeSingle(); // null sans erreur si le stage n'existe pas / n'appartient pas au user
+        .eq('owner_id', user.id)
+        .maybeSingle();
 
     if (error) {
         console.error('Data Error (getStageById):', error.message);
@@ -39,7 +39,7 @@ export async function getStages() {
 
     const { data, error } = await supabase
         .from('stages')
-        .select('*')
+        .select('id, title, activity, level, dates, nb_stagiaires, selected_content, suggested_thematics, closed_at, closing_notes, owner_id, created_at')
         .eq('owner_id', user.id)
         .order('created_at', { ascending: false });
 
@@ -604,7 +604,7 @@ export async function getPedagogicalPool() {
     const supabase = await createClient();
     const { data, error } = await supabase
         .from('pedagogical_content')
-        .select('*');
+        .select('id, question, objectif, tip, niveau, dimension, tags_theme, tags_filtre, ressources, owner_id, is_public, club_id, source, ffv_level, supports');
 
     if (error) {
         console.error('Error fetching pool:', error);
@@ -618,7 +618,7 @@ export async function getPedagogicalContentByIds(ids: string[]) {
     const supabase = await createClient();
     const { data, error } = await supabase
         .from('pedagogical_content')
-        .select('*')
+        .select('id, question, objectif, tip, niveau, dimension, tags_theme, tags_filtre, ressources, owner_id, is_public, club_id, source, ffv_level, supports')
         .in('id', ids);
 
     if (error) {
@@ -634,7 +634,7 @@ export async function getSessionStepLinks(stepIds: string[]) {
     const supabase = await createClient();
     const { data, error } = await supabase
         .from('session_step_pedagogical_links')
-        .select('*')
+        .select('session_step_id, pedagogical_content_id')
         .in('session_step_id', stepIds);
 
     if (error) {
