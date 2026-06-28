@@ -9,7 +9,8 @@ import { Stage, Session, PedagogicalContent, SessionStep } from '@/types';
 import { useRouter } from 'next/navigation';
 import { SESSION_TEMPLATES, SessionTemplate } from '@/data/session-templates';
 import CardDetailModal from '@/components/CardDetailModal';
-import { StepTodoList } from '@/components/StepTodoList';
+import { VOILE_THEMES } from '@/data/voile-themes';
+import { StepContentList } from '@/components/StepContentList';
 import { StepTodo } from '@/types';
 
 type SessionWithSteps = Session & { steps: SessionStep[] };
@@ -17,14 +18,16 @@ type SessionWithSteps = Session & { steps: SessionStep[] };
 export default function SessionsManagerClient({
     stage,
     initialSessions,
-    fullPool,
+    copunPool,
+    customPool,
     initialLinks,
     initialTodosByStep,
     pastTodos,
 }: {
     stage: Stage,
     initialSessions: SessionWithSteps[],
-    fullPool: PedagogicalContent[],
+    copunPool: PedagogicalContent[],
+    customPool: PedagogicalContent[],
     initialLinks: { session_step_id: string, pedagogical_content_id: string }[],
     initialTodosByStep: Record<string, StepTodo[]>,
     pastTodos: string[],
@@ -39,10 +42,14 @@ export default function SessionsManagerClient({
         return map;
     });
 
+    // COPUN cards filtered by stage reservoir (custom cards are linked inline)
     const selectedPool = useMemo(() => {
-        const selectedIds = stage.selected_content || [];
-        return fullPool.filter(c => selectedIds.includes(c.id));
-    }, [fullPool, stage.selected_content]);
+        const selectedIds = new Set(stage.selected_content || []);
+        return copunPool.filter(c => selectedIds.has(c.id));
+    }, [copunPool, stage.selected_content]);
+
+    // Full pool needed to resolve linked card objects (custom cards linked before pool change)
+    const fullPool = useMemo(() => [...copunPool, ...customPool], [copunPool, customPool]);
 
     const [activeStepId, setActiveStepId] = useState<string | null>(null);
     const [stepToDelete, setStepToDelete] = useState<string | null>(null);
@@ -181,43 +188,51 @@ export default function SessionsManagerClient({
                                         </div>
                                     </div>
 
-                                    {linkedCards.length > 0 && (
-                                        <div className="flex flex-wrap gap-2 pt-1 pl-7">
-                                            {linkedCards.map((card) => (
-                                                <div
-                                                    key={card.id}
-                                                    onClick={() => setSelectedCardForDetail(card)}
-                                                    className="bg-white border border-slate-200 pl-3 pr-1 py-1 rounded-lg flex items-center justify-between gap-3 shadow-sm hover:border-indigo-100 hover:bg-slate-50 transition-all cursor-pointer group active:scale-95 w-full max-w-70 md:max-w-sm"
-                                                >
-                                                    <div className="flex items-center gap-2 overflow-hidden flex-1">
-                                                        <span className={clsx("size-2 rounded-full shrink-0",
-                                                            card.dimension === 'COMPRENDRE' ? "bg-amber-400" :
-                                                                card.dimension === 'OBSERVER' ? "bg-blue-400" : "bg-emerald-400"
-                                                        )}></span>
-                                                        <span className="text-[11px] font-bold text-slate-700 truncate block" title={card.question}>{card.question}</span>
-                                                    </div>
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            handleToggleLink(step.id, card.id);
-                                                        }}
-                                                        className="size-6 rounded-md flex items-center justify-center shrink-0 text-slate-300 hover:bg-red-50 hover:text-red-500 transition-colors"
-                                                        title="Retirer la notion"
-                                                    >
-                                                        <span className="material-symbols-outlined text-[16px]">close</span>
-                                                    </button>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
+{linkedCards.length > 0 && (
+                                         <div className="flex flex-wrap gap-2 pt-1 pl-7">
+                                             {linkedCards.map((card) => {
+                                                 const voileTheme = (card.tags_theme || [])[0] ? VOILE_THEMES.find(t => t.id === (card.tags_theme || [])[0]) : null;
+                                                 return (
+                                                     <div
+                                                         key={card.id}
+                                                         onClick={() => setSelectedCardForDetail(card)}
+                                                         className="bg-white border border-slate-200 pl-3 pr-1 py-1 rounded-lg flex items-center justify-between gap-3 shadow-sm hover:border-indigo-100 hover:bg-slate-50 transition-all cursor-pointer group active:scale-95 w-full max-w-70 md:max-w-sm"
+                                                     >
+                                                         <div className="flex items-center gap-2 overflow-hidden flex-1">
+                                                             <span className={clsx("size-2 rounded-full shrink-0",
+                                                                 card.source === 'custom' ? "bg-indigo-400" :
+                                                                 card.dimension === 'COMPRENDRE' ? "bg-amber-400" :
+                                                                     card.dimension === 'OBSERVER' ? "bg-blue-400" : "bg-emerald-400"
+                                                             )}></span>
+                                                             {card.source === 'custom' && voileTheme && (
+                                                                 <span className="material-symbols-outlined text-[14px] text-indigo-600">{voileTheme.icon}</span>
+                                                             )}
+                                                             <span className="text-[11px] font-bold text-slate-700 truncate block" title={card.question}>{card.question}</span>
+                                                         </div>
+                                                         <button
+                                                             onClick={(e) => {
+                                                                 e.stopPropagation();
+                                                                 handleToggleLink(step.id, card.id);
+                                                             }}
+                                                             className="size-6 rounded-md flex items-center justify-center shrink-0 text-slate-300 hover:bg-red-50 hover:text-red-500 transition-colors"
+                                                             title="Retirer la notion"
+                                                         >
+                                                             <span className="material-symbols-outlined text-[16px]">close</span>
+                                                         </button>
+                                                     </div>
+                                                 );
+                                             })}
+                                         </div>
+                                     )}
 
                                     {/* Todo list — plan de cours */}
                                     <div className="pl-7 pt-2 border-t border-slate-50 mt-1">
-                                        <StepTodoList
+                                        <StepContentList
                                             stepId={step.id}
                                             stageId={stage.id}
                                             initialTodos={initialTodosByStep[step.id] ?? []}
                                             pastSuggestions={pastTodos}
+                                            customPool={customPool}
                                         />
                                     </div>
                                 </div>
@@ -504,58 +519,73 @@ function CardSelectorModal({ pool, currentLinks, allStageLinks, activeStepId, on
                     </div>
                     <button onClick={onClose} className="size-12 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400"><span className="material-symbols-outlined font-bold">close</span></button>
                 </div>
-                <div className="flex-1 overflow-y-auto p-6 space-y-4">
-                    {pool.length > 0 ? (
-                        pool.map((card) => {
-                            const isLinkedHere = currentLinks.includes(card.id);
-                            const isLinkedElsewhere = otherLinkedCardIds.has(card.id);
-
-                            return (
-                                <div
-                                    key={card.id}
-                                    onClick={() => onToggle(card.id)}
-                                    className={clsx(
-                                        "p-6 rounded-3xl border-2 transition-all cursor-pointer relative overflow-hidden",
-                                        isLinkedHere ? "bg-indigo-50 border-indigo-600 shadow-md translate-x-1" : "bg-white border-slate-100"
-                                    )}
-                                >
-                                    <div className="flex justify-between items-center relative z-10">
-                                        <div className="flex gap-4 items-center flex-1">
-                                            <div className={clsx("size-12 rounded-2xl flex items-center justify-center shrink-0 shadow-sm", card.dimension === 'COMPRENDRE' ? "bg-amber-100 text-amber-600" : card.dimension === 'OBSERVER' ? "bg-blue-100 text-blue-600" : "bg-emerald-100 text-emerald-600")}>
-                                                <span className="material-symbols-outlined text-2xl">{card.dimension === 'COMPRENDRE' ? 'psychology' : card.dimension === 'OBSERVER' ? 'visibility' : 'nature'}</span>
-                                            </div>
-                                            <div className="space-y-0.5">
-                                                <h4 className="text-sm font-black text-slate-900 leading-tight">{card.question}</h4>
-                                                {isLinkedElsewhere && !isLinkedHere && (
-                                                    <span className="inline-flex items-center gap-1 text-[9px] font-black text-indigo-400 uppercase tracking-widest bg-indigo-50 px-2 py-0.5 rounded-full">
-                                                        <span className="material-symbols-outlined text-[12px]">history</span> Déjà utilisé
-                                                    </span>
-                                                )}
-                                                {isLinkedHere && (
-                                                    <span className="inline-flex items-center gap-1 text-[9px] font-black text-emerald-500 uppercase tracking-widest bg-emerald-50 px-2 py-0.5 rounded-full">
-                                                        <span className="material-symbols-outlined text-[12px]">task_alt</span> Assigné ici
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
-                                        <div className={clsx("size-8 rounded-full flex items-center justify-center transition-all", isLinkedHere ? "bg-indigo-600 text-white shadow-lg" : "bg-slate-50 text-slate-300")}>
-                                            <span className="material-symbols-outlined text-[20px] font-bold">{isLinkedHere ? 'done' : 'add'}</span>
-                                        </div>
-                                    </div>
-                                    {isLinkedElsewhere && !isLinkedHere && (
-                                        <div className="absolute top-0 right-0 py-1 px-3 bg-indigo-100 rounded-bl-xl">
-                                            <span className="text-[8px] font-black text-indigo-600 uppercase">Stage</span>
-                                        </div>
-                                    )}
-                                </div>
-                            );
-                        })
-                    ) : (
+                <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                    {pool.length === 0 ? (
                         <div className="text-center py-12 px-6 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
                             <span className="material-symbols-outlined text-4xl text-slate-300 mb-3">inventory_2</span>
                             <p className="text-slate-400 font-bold mb-4">Vos objectifs (Étape 1) sont vides.</p>
                             <Link href={`/stages/${stageId}/program`} className="inline-block px-8 py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl active:scale-95 transition-all">Choisir les objectifs</Link>
                         </div>
+                    ) : (
+                        <>
+                            {/* COPUN environmental cards */}
+                            {pool.filter(c => c.source !== 'custom').length > 0 && (
+                                <section className="space-y-3">
+                                    <div className="flex items-center gap-2">
+                                        <div className="size-5 rounded-md bg-teal-600 flex items-center justify-center shrink-0">
+                                            <span className="material-symbols-outlined text-white text-[11px]">eco</span>
+                                        </div>
+                                        <p className="text-[10px] font-black uppercase tracking-[0.15em] text-teal-700">Environnemental COP&apos;UN</p>
+                                    </div>
+                                    <div className="space-y-3">
+                                        {pool.filter(c => c.source !== 'custom').map((card) => {
+                                            const isLinkedHere = currentLinks.includes(card.id);
+                                            const isLinkedElsewhere = otherLinkedCardIds.has(card.id);
+                                            return (
+                                                <div
+                                                    key={card.id}
+                                                    onClick={() => onToggle(card.id)}
+                                                    className={clsx(
+                                                        "p-5 rounded-2xl border-2 transition-all cursor-pointer relative overflow-hidden",
+                                                        isLinkedHere ? "bg-teal-50 border-teal-500 shadow-md" : "bg-white border-slate-100"
+                                                    )}
+                                                >
+                                                    <div className="flex justify-between items-center">
+                                                        <div className="flex gap-3 items-center flex-1">
+                                                            <div className={clsx("size-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm", card.dimension === 'COMPRENDRE' ? "bg-amber-100 text-amber-600" : card.dimension === 'OBSERVER' ? "bg-blue-100 text-blue-600" : "bg-emerald-100 text-emerald-600")}>
+                                                                <span className="material-symbols-outlined text-xl">{card.dimension === 'COMPRENDRE' ? 'psychology' : card.dimension === 'OBSERVER' ? 'visibility' : 'nature'}</span>
+                                                            </div>
+                                                            <div className="space-y-0.5">
+                                                                <h4 className="text-sm font-black text-slate-900 leading-tight">{card.question}</h4>
+                                                                {isLinkedElsewhere && !isLinkedHere && (
+                                                                    <span className="inline-flex items-center gap-1 text-[9px] font-black text-indigo-400 uppercase tracking-widest bg-indigo-50 px-2 py-0.5 rounded-full">
+                                                                        <span className="material-symbols-outlined text-[12px]">history</span> Déjà utilisé
+                                                                    </span>
+                                                                )}
+                                                                {isLinkedHere && (
+                                                                    <span className="inline-flex items-center gap-1 text-[9px] font-black text-teal-600 uppercase tracking-widest bg-teal-50 px-2 py-0.5 rounded-full">
+                                                                        <span className="material-symbols-outlined text-[12px]">task_alt</span> Assigné ici
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                        <div className={clsx("size-8 rounded-full flex items-center justify-center transition-all shrink-0", isLinkedHere ? "bg-teal-600 text-white shadow-lg" : "bg-slate-50 text-slate-300")}>
+                                                            <span className="material-symbols-outlined text-[20px] font-bold">{isLinkedHere ? 'done' : 'add'}</span>
+                                                        </div>
+                                                    </div>
+                                                    {isLinkedElsewhere && !isLinkedHere && (
+                                                        <div className="absolute top-0 right-0 py-1 px-3 bg-indigo-100 rounded-bl-xl">
+                                                            <span className="text-[8px] font-black text-indigo-600 uppercase">Stage</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </section>
+                            )}
+
+                        </>
                     )}
                     <div className="h-32" />
                 </div>

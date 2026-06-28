@@ -2,8 +2,10 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { createUserAccount, inviteUser, updateUserRole } from '@/actions/admin-actions';
+import { createUserAccount, inviteUser } from '@/actions/admin-actions';
 import { FichesAdminTab } from './FichesAdminTab';
+import { ReportingTab } from './ReportingTab';
+import { UserEditModal } from './UserEditModal';
 import type { PedagogicalContent } from '@/types';
 import type { FicheMemo } from '@/actions/fiche-memo-actions';
 
@@ -13,24 +15,27 @@ type User = {
     full_name?: string;
     role: string;
     created_at: string;
+    club_id?: string | null;
     clubs?: { name: string } | null;
 };
 
 type Club = { id: string; name: string };
 
-type Tab = 'users' | 'create' | 'invite' | 'fiches';
+type Tab = 'users' | 'create' | 'invite' | 'fiches' | 'reporting';
 
-export function AdminClient({ users: initialUsers, clubs, fiches, fichesMemo, error }: {
+export function AdminClient({ users: initialUsers, clubs, fiches, fichesMemo, error, userRole }: {
     users: User[];
     clubs: Club[];
     fiches: PedagogicalContent[];
     fichesMemo: FicheMemo[];
     error?: string;
+    userRole?: string | null;
 }) {
     const [tab, setTab] = useState<Tab>('users');
     const [users, setUsers] = useState(initialUsers);
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState<{ type: 'error' | 'success'; text: string } | null>(null);
+    const [editingUser, setEditingUser] = useState<User | null>(null);
 
     async function handleCreate(formData: FormData) {
         setLoading(true);
@@ -54,23 +59,18 @@ export function AdminClient({ users: initialUsers, clubs, fiches, fichesMemo, er
         setLoading(false);
     }
 
-    async function handleRoleChange(userId: string, role: string) {
-        const result = await updateUserRole(userId, role);
-        if (!result.error) {
-            setUsers(prev => prev.map(u => u.id === userId ? { ...u, role } : u));
-        }
-    }
-
     const roleLabel = (role: string) => ({
-        admin: 'Admin',
+        admin: 'Admin général',
+        club_admin: 'Admin club',
+        moderator: 'Référent mémo',
         instructor: 'Moniteur',
-        student: 'Stagiaire',
     }[role] ?? role);
 
     const roleColor = (role: string) => ({
         admin: 'bg-violet-100 text-violet-700',
+        club_admin: 'bg-purple-100 text-purple-700',
+        moderator: 'bg-teal-100 text-teal-700',
         instructor: 'bg-indigo-100 text-indigo-700',
-        student: 'bg-slate-100 text-slate-600',
     }[role] ?? 'bg-slate-100 text-slate-600');
 
     return (
@@ -98,6 +98,7 @@ export function AdminClient({ users: initialUsers, clubs, fiches, fichesMemo, er
                     {([
                         { key: 'users', label: 'Utilisateurs', icon: 'group', count: users.length },
                         { key: 'fiches', label: 'Fiches péda.', icon: 'auto_stories', count: fiches.length },
+                        { key: 'reporting', label: 'Reporting', icon: 'analytics', count: null },
                         { key: 'create', label: 'Créer un compte', icon: 'person_add', count: null },
                         { key: 'invite', label: 'Invitation', icon: 'mail', count: null },
                     ] as const).map(t => (
@@ -129,7 +130,14 @@ export function AdminClient({ users: initialUsers, clubs, fiches, fichesMemo, er
                 </div>
             )}
 
-            <main className={`flex-1 px-4 py-6 max-w-2xl mx-auto w-full space-y-6 pb-36 ${tab === 'fiches' ? 'hidden' : ''}`}>
+            {/* Onglet Reporting */}
+            {tab === 'reporting' && (
+                <main className="flex-1 px-4 py-6 max-w-2xl mx-auto w-full pb-36">
+                    <ReportingTab userRole={userRole} />
+                </main>
+            )}
+
+            <main className={`flex-1 px-4 py-6 max-w-2xl mx-auto w-full space-y-6 pb-36 ${tab === 'fiches' || tab === 'reporting' ? 'hidden' : ''}`}>
 
                 {error && (
                     <div className="p-4 rounded-2xl bg-red-50 text-red-700 border border-red-100 text-sm font-semibold">
@@ -160,29 +168,34 @@ export function AdminClient({ users: initialUsers, clubs, fiches, fichesMemo, er
                                 <p className="text-sm font-semibold">Aucun utilisateur trouvé.</p>
                             </div>
                         ) : users.map(u => (
-                            <div key={u.id} className="bg-white rounded-2xl px-5 py-4 shadow-sm border border-slate-100 flex items-center gap-4">
+                            <button
+                                key={u.id}
+                                onClick={() => setEditingUser(u)}
+                                className="w-full text-left bg-white rounded-2xl px-5 py-4 shadow-sm border border-slate-100 hover:border-indigo-300 hover:shadow-md transition-all flex items-center gap-4 active:scale-[0.99] group"
+                            >
                                 <div className="size-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-400 shrink-0 font-black text-sm">
                                     {(u.full_name ?? u.email)[0].toUpperCase()}
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <p className="font-bold text-slate-900 text-sm truncate">{u.full_name || '—'}</p>
                                     <p className="text-xs text-slate-400 truncate">{u.email}</p>
-                                    {u.clubs?.name && (
-                                        <p className="text-[10px] text-slate-400 font-semibold mt-0.5">{u.clubs.name}</p>
-                                    )}
+                                    <div className="flex items-center gap-1.5 mt-1">
+                                        <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${roleColor(u.role)}`}>
+                                            {roleLabel(u.role)}
+                                        </span>
+                                        {u.clubs?.name ? (
+                                            <span className="text-[9px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full truncate max-w-35">
+                                                {u.clubs.name}
+                                            </span>
+                                        ) : (
+                                            <span className="text-[9px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
+                                                Sans club
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
-                                <div className="flex items-center gap-2 shrink-0">
-                                    <select
-                                        value={u.role}
-                                        onChange={e => handleRoleChange(u.id, e.target.value)}
-                                        className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-full border-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 ${roleColor(u.role)}`}
-                                    >
-                                        <option value="instructor">Moniteur</option>
-                                        <option value="admin">Admin</option>
-                                        <option value="student">Stagiaire</option>
-                                    </select>
-                                </div>
-                            </div>
+                                <span className="material-symbols-outlined text-slate-300 group-hover:text-indigo-400 transition-colors shrink-0">edit</span>
+                            </button>
                         ))}
                     </div>
                 )}
@@ -300,6 +313,25 @@ export function AdminClient({ users: initialUsers, clubs, fiches, fichesMemo, er
                 )}
 
             </main>
+
+            {/* Panneau d'édition de compte */}
+            {editingUser && (
+                <UserEditModal
+                    user={editingUser}
+                    clubs={clubs}
+                    onClose={() => setEditingUser(null)}
+                    onSaved={(updated) => {
+                        setUsers(prev => prev.map(u => u.id === updated.id ? { ...u, ...updated } : u));
+                        setEditingUser(null);
+                        setMessage({ type: 'success', text: 'Compte mis à jour.' });
+                    }}
+                    onDeleted={(userId) => {
+                        setUsers(prev => prev.filter(u => u.id !== userId));
+                        setEditingUser(null);
+                        setMessage({ type: 'success', text: 'Compte supprimé.' });
+                    }}
+                />
+            )}
         </div>
     );
 }

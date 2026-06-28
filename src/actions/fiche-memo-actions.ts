@@ -4,6 +4,19 @@ import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import type { ThematicTag } from '@/data/seasonal-context';
 
+async function requireAdminOrModerator() {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+    if (!profile || !['admin', 'moderator'].includes(profile.role)) return null;
+    return { user, supabase };
+}
+
 export type FicheStatut = 'brouillon' | 'publie';
 
 export interface FicheMemo {
@@ -13,6 +26,7 @@ export interface FicheMemo {
     contenu: string;
     tags_thematiques: ThematicTag[];
     tags_saisons: string[];
+    tags: string[];
     statut: FicheStatut;
     auteur_id: string | null;
     created_at: string;
@@ -26,6 +40,7 @@ export interface CreateFicheData {
     contenu: string;
     tags_thematiques: ThematicTag[];
     tags_saisons: string[];
+    tags: string[];
 }
 
 export async function getAllFichesMemo(filtreStatut?: FicheStatut): Promise<FicheMemo[]> {
@@ -109,6 +124,7 @@ export async function createFicheMemo(ficheData: CreateFicheData) {
             contenu: ficheData.contenu,
             tags_thematiques: ficheData.tags_thematiques,
             tags_saisons: ficheData.tags_saisons,
+            tags: ficheData.tags ?? [],
             auteur_id: user.id,
             statut: 'brouillon',
         })
@@ -129,6 +145,17 @@ export async function updateFicheMemo(
     ficheData: Partial<CreateFicheData & { statut: FicheStatut }>
 ) {
     const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, error: 'Non connecté' };
+
+    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+    const role = profile?.role;
+
+    // Auteur ou admin/modérateur
+    if (!['admin', 'moderator'].includes(role)) {
+        const { data: fiche } = await supabase.from('fiches_memo').select('auteur_id').eq('id', id).single();
+        if (fiche?.auteur_id !== user.id) return { success: false, error: 'Accès refusé.' };
+    }
 
     const { error } = await supabase
         .from('fiches_memo')
@@ -154,9 +181,10 @@ export async function depublierFicheMemo(id: string) {
 }
 
 export async function deleteFicheMemo(id: string) {
-    const supabase = await createClient();
+    const ctx = await requireAdminOrModerator();
+    if (!ctx) return { success: false, error: 'Accès refusé.' };
 
-    const { error } = await supabase
+    const { error } = await ctx.supabase
         .from('fiches_memo')
         .delete()
         .eq('id', id);

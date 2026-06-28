@@ -15,11 +15,11 @@ export default async function ProgramPage({ params }: { params: Promise<{ id: st
 
     if (!stage) return notFound();
 
-    const fullPool = [...systemPool, ...userPool];
     return (
         <ProgramBuilderClient
             stage={stage}
-            fullPool={fullPool}
+            copunPool={systemPool}
+            customPool={userPool}
         />
     );
 }

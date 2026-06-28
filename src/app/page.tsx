@@ -19,7 +19,7 @@ export default function LandingPage() {
                 {/* Title */}
                 <h1 className="text-5xl font-black text-white uppercase tracking-tight mb-3 text-center">COP&apos;UN</h1>
                 <p className="text-slate-400 font-medium text-center max-w-xs leading-relaxed mb-12">
-                    L&apos;outil de préparation des <strong className="text-slate-300">Sentinelles du Littoral</strong> — pour les moniteurs de voile engagés.
+                    Un outil pour intégrer l&apos;environnement marin dans vos séances et faire de chaque vague une vague de conscience.
                 </p>
 
                 {/* Feature pills */}

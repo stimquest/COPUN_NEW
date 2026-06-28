@@ -1,5 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
-import { Session, SessionStep, PedagogicalContent } from '@/types';
+import { summarizeObjectiveReviews, type ObjectiveAnalyticsInput, type StageObjectiveAnalyticsSummary } from '@/lib/stage-objective-analytics';
+import { isStageObjectiveExecutionStatus, isStageObjectiveImpactLevel } from '@/lib/stage-objective-review';
+import { Session, SessionStep, PedagogicalContent, StageObjectiveReviewItem, TopicTracking } from '@/types';
 
 
 export async function getStageById(id: string) {
@@ -17,11 +19,10 @@ export async function getStageById(id: string) {
 
     const { data, error } = await supabase
         .from('stages')
-        .select('*')
+        .select('id, title, activity, level, dates, nb_stagiaires, selected_content, suggested_thematics, closed_at, closing_notes, owner_id, created_at')
         .eq('id', id)
-        .eq('owner_id', user.id) // Enforce ownership
-        .single();
-
+        .eq('owner_id', user.id)
+        .maybeSingle();
 
     if (error) {
         console.error('Data Error (getStageById):', error.message);
@@ -38,7 +39,7 @@ export async function getStages() {
 
     const { data, error } = await supabase
         .from('stages')
-        .select('*')
+        .select('id, title, activity, level, dates, nb_stagiaires, selected_content, suggested_thematics, closed_at, closing_notes, owner_id, created_at')
         .eq('owner_id', user.id)
         .order('created_at', { ascending: false });
 
@@ -276,6 +277,17 @@ export async function getStageCockpitStats(stageId: string) {
         .eq('stage_id', stageId)
         .maybeSingle();
 
+    // Total points gagnés sur ce stage (quiz + défis)
+    let stageTotalPoints = 0;
+    const { data: pointsRows } = await supabase
+        .from('leaderboard_points')
+        .select('points')
+        .eq('stage_id', stageId);
+
+    if (pointsRows) {
+        stageTotalPoints = pointsRows.reduce((sum: number, r: { points: number }) => sum + r.points, 0);
+    }
+
     return {
         contentCount,        // Prévu (réservoir du stage)
         placedCount,         // Placé (lié à une étape de séance)
@@ -288,6 +300,303 @@ export async function getStageCockpitStats(stageId: string) {
         quizScore: quiz?.score_correct ?? null,
         quizTotal: quiz?.score_total ?? null,
         quizPoints: quiz?.points_awarded ?? null,
+        stageTotalPoints,
+    };
+}
+
+export async function getStageObjectiveReviewItems(stageId: string): Promise<StageObjectiveReviewItem[]> {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return [];
+
+    const { data: stage, error: stageError } = await supabase
+        .from('stages')
+        .select('selected_content')
+        .eq('id', stageId)
+        .eq('owner_id', user.id)
+        .single();
+
+    if (stageError || !stage) {
+        console.error('Error fetching stage objective review items:', stageError);
+        return [];
+    }
+
+    const selectedContent: string[] = stage.selected_content ?? [];
+    if (selectedContent.length === 0) return [];
+
+    const selectedSet = new Set(selectedContent);
+
+    const [{ data: contentRows }, { data: reviewRows }, { data: sessions }] = await Promise.all([
+        supabase.from('pedagogical_content').select('*').in('id', selectedContent),
+        supabase
+            .from('stage_objective_reviews')
+            .select('pedagogical_content_id, execution_status, impact_level, note')
+            .eq('stage_id', stageId),
+        supabase.from('sessions').select('id, title, session_order').eq('stage_id', stageId).order('session_order', { ascending: true }),
+    ]);
+
+    const contentById = new Map((contentRows as PedagogicalContent[] ?? []).map(content => [content.id, content]));
+    const orderedSessions = (sessions ?? []).map(session => ({ id: session.id, title: session.title }));
+    const sessionIds = orderedSessions.map(session => session.id);
+
+    let stepRows: Array<{ id: string; session_id: string }> = [];
+    let linkRows: Array<{ session_step_id: string; pedagogical_content_id: string }> = [];
+    let validationRows: Array<{ content_id: string; session_id: string }> = [];
+
+    if (sessionIds.length > 0) {
+        const [{ data: steps }, { data: validations }] = await Promise.all([
+            supabase.from('session_structure').select('id, session_id').in('session_id', sessionIds),
+            supabase
+                .from('user_validations')
+                .select('content_id, session_id')
+                .eq('user_id', user.id)
+                .in('session_id', sessionIds),
+        ]);
+
+        stepRows = steps ?? [];
+        validationRows = validations ?? [];
+
+        if (stepRows.length > 0) {
+            const { data: links } = await supabase
+                .from('session_step_pedagogical_links')
+                .select('session_step_id, pedagogical_content_id')
+                .in('session_step_id', stepRows.map(step => step.id));
+
+            linkRows = links ?? [];
+        }
+    }
+
+    const reviewByContentId = new Map(
+        (reviewRows ?? []).map(review => [
+            review.pedagogical_content_id,
+            {
+                executionStatus: review.execution_status,
+                impactLevel: review.impact_level,
+                note: review.note,
+            },
+        ])
+    );
+
+    const stepToSessionId = new Map(stepRows.map(step => [step.id, step.session_id]));
+    const placedByContentId = new Map<string, Set<string>>();
+    const validatedByContentId = new Map<string, Set<string>>();
+
+    linkRows.forEach(link => {
+        if (!selectedSet.has(link.pedagogical_content_id)) return;
+        const sessionId = stepToSessionId.get(link.session_step_id);
+        if (!sessionId) return;
+        const bucket = placedByContentId.get(link.pedagogical_content_id) ?? new Set<string>();
+        bucket.add(sessionId);
+        placedByContentId.set(link.pedagogical_content_id, bucket);
+    });
+
+    validationRows.forEach(validation => {
+        if (!selectedSet.has(validation.content_id)) return;
+        const bucket = validatedByContentId.get(validation.content_id) ?? new Set<string>();
+        bucket.add(validation.session_id);
+        validatedByContentId.set(validation.content_id, bucket);
+    });
+
+    const sessionsFromSet = (set?: Set<string>) => {
+        if (!set) return [];
+        return orderedSessions.filter(session => set.has(session.id));
+    };
+
+    return selectedContent
+        .map(contentId => {
+            const pedagogicalContent = contentById.get(contentId);
+            if (!pedagogicalContent) return null;
+
+            const placedSessions = sessionsFromSet(placedByContentId.get(contentId));
+            const validatedSessions = sessionsFromSet(validatedByContentId.get(contentId));
+
+            return {
+                pedagogicalContent,
+                placedSessions,
+                validatedSessions,
+                isPlaced: placedSessions.length > 0,
+                isValidated: validatedSessions.length > 0,
+                review: reviewByContentId.get(contentId) ?? null,
+            } satisfies StageObjectiveReviewItem;
+        })
+        .filter((item): item is StageObjectiveReviewItem => item !== null);
+}
+
+export type StageObjectiveDashboardStats = {
+    stagesCount: number;
+    summary: StageObjectiveAnalyticsSummary;
+    recentStages: Array<{
+        id: string;
+        title: string;
+        dates: string | null;
+        closedAt: string | null;
+        summary: StageObjectiveAnalyticsSummary;
+    }>;
+    dimensions: Array<{
+        label: string;
+        summary: StageObjectiveAnalyticsSummary;
+    }>;
+    topicTracking: {
+        established: TopicTracking[];
+        improving: TopicTracking[];
+        fragile: TopicTracking[];
+        emerging: TopicTracking[];
+        dormant: TopicTracking[];
+    };
+};
+
+export async function getStageObjectiveDashboardStats(): Promise<StageObjectiveDashboardStats> {
+    const emptySummary = summarizeObjectiveReviews([]);
+    const empty: StageObjectiveDashboardStats = { stagesCount: 0, summary: emptySummary, recentStages: [], dimensions: [], topicTracking: { established: [], improving: [], fragile: [], emerging: [], dormant: [] } };
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return empty;
+
+    const { data: stages, error: stagesError } = await supabase
+        .from('stages')
+        .select('id, title, dates, closed_at, selected_content')
+        .eq('owner_id', user.id)
+        .not('closed_at', 'is', null)
+        .order('closed_at', { ascending: false })
+        .limit(20);
+
+    if (stagesError || !stages?.length) return empty;
+
+    const stageIds = stages.map(stage => stage.id);
+    const selectedContentIds = Array.from(new Set(
+        stages.flatMap(stage => (stage.selected_content ?? []) as string[])
+    ));
+
+    const [{ data: reviewRows }, { data: contentRows }, { data: allContentRows }] = await Promise.all([
+        supabase
+            .from('stage_objective_reviews')
+            .select('stage_id, pedagogical_content_id, execution_status, impact_level')
+            .in('stage_id', stageIds),
+        selectedContentIds.length > 0
+            ? supabase.from('pedagogical_content').select('id, dimension, tags_filtre').in('id', selectedContentIds)
+            : Promise.resolve({ data: [] }),
+        supabase.from('pedagogical_content').select('tags_filtre'),
+    ]);
+
+    const reviewByKey = new Map<string, ObjectiveAnalyticsInput>();
+    (reviewRows ?? []).forEach(review => {
+        const executionStatus = isStageObjectiveExecutionStatus(review.execution_status) ? review.execution_status : null;
+        const impactLevel = review.impact_level && isStageObjectiveImpactLevel(review.impact_level) ? review.impact_level : null;
+        reviewByKey.set(`${review.stage_id}:${review.pedagogical_content_id}`, { executionStatus, impactLevel });
+    });
+
+    const dimensionByContentId = new Map((contentRows ?? []).map(content => [content.id, content.dimension ?? 'Sans dimension']));
+    const contentById = new Map((contentRows ?? []).map(content => [content.id, content]));
+    const allInputs: ObjectiveAnalyticsInput[] = [];
+    const dimensionInputs = new Map<string, ObjectiveAnalyticsInput[]>();
+
+    const recentStages = stages.map(stage => {
+        const stageInputs = ((stage.selected_content ?? []) as string[]).map(contentId => {
+            const input = reviewByKey.get(`${stage.id}:${contentId}`) ?? { executionStatus: null, impactLevel: null };
+            const dimension = dimensionByContentId.get(contentId) ?? 'Sans dimension';
+            allInputs.push(input);
+            dimensionInputs.set(dimension, [...(dimensionInputs.get(dimension) ?? []), input]);
+            return input;
+        });
+
+        return {
+            id: stage.id,
+            title: stage.title,
+            dates: stage.dates,
+            closedAt: stage.closed_at,
+            summary: summarizeObjectiveReviews(stageInputs),
+        };
+    });
+
+    const dimensions = Array.from(dimensionInputs.entries())
+        .map(([label, inputs]) => ({ label, summary: summarizeObjectiveReviews(inputs) }))
+        .sort((a, b) => b.summary.totalObjectives - a.summary.totalObjectives)
+        .slice(0, 6);
+
+    // --- Suivi des sujets ---
+    const allTags = new Set<string>();
+    (allContentRows ?? []).forEach((c: { tags_filtre?: string[] }) => c.tags_filtre?.forEach(tag => allTags.add(tag)));
+
+    const tagOccurrences = new Map<string, Array<{ stageId: string; stageClosedAt: string | null; score: number }>>();
+
+    stages.forEach(stage => {
+        (stage.selected_content ?? []).forEach((contentId: string) => {
+            const review = reviewByKey.get(`${stage.id}:${contentId}`);
+            if (!review?.executionStatus || review.executionStatus === 'not_done') return;
+            const content = contentById.get(contentId) as { tags_filtre?: string[] } | undefined;
+            if (!content?.tags_filtre?.length) return;
+
+            const execScore = review.executionStatus === 'done' ? 2 : 1;
+            const impactScore = review.impactLevel === 'high' ? 2 : review.impactLevel === 'medium' ? 1 : 0;
+            const score = execScore + impactScore;
+
+            content.tags_filtre.forEach(tag => {
+                if (!allTags.has(tag)) return;
+                const list = tagOccurrences.get(tag) ?? [];
+                const existing = list.find(o => o.stageId === stage.id);
+                if (existing) {
+                    if (score > existing.score) existing.score = score;
+                } else {
+                    list.push({ stageId: stage.id, stageClosedAt: stage.closed_at, score });
+                }
+                tagOccurrences.set(tag, list);
+            });
+        });
+    });
+
+    const topicTrackingList: TopicTracking[] = Array.from(allTags).map(tag => {
+        const occurrences = (tagOccurrences.get(tag) ?? []).sort((a, b) => {
+            if (!a.stageClosedAt && !b.stageClosedAt) return 0;
+            if (!a.stageClosedAt) return 1;
+            if (!b.stageClosedAt) return -1;
+            return new Date(b.stageClosedAt).getTime() - new Date(a.stageClosedAt).getTime();
+        });
+
+        const lastScore = occurrences[0]?.score ?? 0;
+        const previousScore = occurrences[1]?.score ?? null;
+        const avg = occurrences.length > 0 ? occurrences.reduce((s, o) => s + o.score, 0) / occurrences.length : 0;
+
+        let category: TopicTracking['category'];
+        if (occurrences.length >= 3) {
+            if (avg >= 3.5) category = 'established';
+            else if (lastScore > (previousScore ?? 0)) category = 'improving';
+            else if (avg < 2.5) category = 'fragile';
+            else category = 'dormant';
+        } else if (occurrences.length === 2) {
+            if (lastScore > previousScore!) category = 'improving';
+            else if (avg >= 3.5) category = 'emerging';
+            else category = 'dormant';
+        } else if (occurrences.length === 1) {
+            if (lastScore >= 4) category = 'emerging';
+            else category = 'dormant';
+        } else {
+            category = 'dormant';
+        }
+
+        return {
+            tag,
+            category,
+            occurrences: occurrences.length,
+            lastScore,
+            previousScore,
+            lastClosedAt: occurrences[0]?.stageClosedAt ?? null,
+        };
+    });
+
+    const topicTracking = {
+        established: topicTrackingList.filter(t => t.category === 'established').sort((a, b) => b.occurrences - a.occurrences),
+        improving: topicTrackingList.filter(t => t.category === 'improving').sort((a, b) => b.occurrences - a.occurrences),
+        fragile: topicTrackingList.filter(t => t.category === 'fragile').sort((a, b) => b.occurrences - a.occurrences),
+        emerging: topicTrackingList.filter(t => t.category === 'emerging').sort((a, b) => b.lastScore - a.lastScore),
+        dormant: topicTrackingList.filter(t => t.category === 'dormant').sort((a, b) => a.occurrences - b.occurrences),
+    };
+
+    return {
+        stagesCount: stages.length,
+        summary: summarizeObjectiveReviews(allInputs),
+        recentStages: recentStages.slice(0, 5),
+        dimensions,
+        topicTracking,
     };
 }
 
@@ -295,7 +604,7 @@ export async function getPedagogicalPool() {
     const supabase = await createClient();
     const { data, error } = await supabase
         .from('pedagogical_content')
-        .select('*');
+        .select('id, question, objectif, tip, niveau, dimension, tags_theme, tags_filtre, ressources, owner_id, is_public, club_id, source, ffv_level, supports');
 
     if (error) {
         console.error('Error fetching pool:', error);
@@ -309,7 +618,7 @@ export async function getPedagogicalContentByIds(ids: string[]) {
     const supabase = await createClient();
     const { data, error } = await supabase
         .from('pedagogical_content')
-        .select('*')
+        .select('id, question, objectif, tip, niveau, dimension, tags_theme, tags_filtre, ressources, owner_id, is_public, club_id, source, ffv_level, supports')
         .in('id', ids);
 
     if (error) {
@@ -325,7 +634,7 @@ export async function getSessionStepLinks(stepIds: string[]) {
     const supabase = await createClient();
     const { data, error } = await supabase
         .from('session_step_pedagogical_links')
-        .select('*')
+        .select('session_step_id, pedagogical_content_id')
         .in('session_step_id', stepIds);
 
     if (error) {
@@ -338,47 +647,75 @@ export async function getSessionStepLinks(stepIds: string[]) {
 export async function getSessionFull(sessionId: string) {
     const supabase = await createClient();
 
-    // 1. Get Session & Steps
+    // 1. Get Session (minimal columns)
     const { data: sessionData, error: sessionError } = await supabase
         .from('sessions')
-        .select(`
-            *,
-            steps:session_structure(*)
-        `)
+        .select('id, stage_id, title, session_order')
         .eq('id', sessionId)
         .single();
 
     if (sessionError || !sessionData) return null;
 
-    const session = sessionData as Session & { steps: SessionStep[] };
+    const session = sessionData as Session;
 
-    // Sort steps
-    session.steps.sort((a, b) => a.step_order - b.step_order);
+    // 2. Get Steps (ordered server-side)
+    const { data: stepsData } = await supabase
+        .from('session_structure')
+        .select('id, session_id, step_title, step_duration_minutes, step_description, step_order')
+        .eq('session_id', sessionId)
+        .order('step_order', { ascending: true });
 
-    // 2. Get Links for these steps
-    const stepIds = session.steps.map(s => s.id);
-    const { data: links } = await supabase
-        .from('session_step_pedagogical_links')
-        .select('session_step_id, pedagogical_content_id')
-        .in('session_step_id', stepIds);
+    const steps = (stepsData as SessionStep[]) || [];
 
-    // 3. Get Content Details
-    const contentIds = links?.map(l => l.pedagogical_content_id) || [];
+    if (steps.length === 0) {
+        return {
+            session,
+            steps: [],
+            links: [],
+            contentPool: [],
+        };
+    }
+
+    const stepIds = steps.map(s => s.id);
+
+    // 3. Get Links + Todos with linked_content in parallel
+    const [linksResult, todosResult] = await Promise.all([
+        supabase
+            .from('session_step_pedagogical_links')
+            .select('session_step_id, pedagogical_content_id')
+            .in('session_step_id', stepIds),
+        supabase
+            .from('step_todos')
+            .select('linked_content_id')
+            .in('session_step_id', stepIds)
+            .not('linked_content_id', 'is', null),
+    ]);
+
+    const links = linksResult.data || [];
+    const todosWithContent = todosResult.data || [];
+
+    // 4. Build content IDs set
+    const contentIds = new Set<string>();
+    links.forEach(l => contentIds.add(l.pedagogical_content_id));
+    todosWithContent.forEach(t => {
+        if (t.linked_content_id) contentIds.add(t.linked_content_id);
+    });
+
+    // 5. Get Pedagogical Content (specific columns)
     let contentMap: PedagogicalContent[] = [];
-
-    if (contentIds.length > 0) {
+    if (contentIds.size > 0) {
         const { data: content } = await supabase
             .from('pedagogical_content')
-            .select('*')
-            .in('id', contentIds);
+            .select('id, question, objectif, tip, niveau, dimension, tags_theme, tags_filtre, ressources, owner_id, is_public, club_id, source, ffv_level, supports')
+            .in('id', Array.from(contentIds));
         contentMap = (content as PedagogicalContent[]) || [];
     }
 
     return {
         session,
-        steps: session.steps,
-        links: links || [],
-        contentPool: contentMap
+        steps,
+        links,
+        contentPool: contentMap,
     };
 }
 

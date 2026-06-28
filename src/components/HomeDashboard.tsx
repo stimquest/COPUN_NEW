@@ -3,6 +3,8 @@
 import { motion, type Variants } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useMemo } from 'react';
+import Image from 'next/image';
 import StageDashboardCard from './StageDashboardCard';
 import type { DashboardStage } from './StageDashboardCard';
 import { getPeriodForMonth } from '@/data/seasonal-context';
@@ -72,10 +74,26 @@ export default function HomeDashboard({ stages, profile, stats, initials }: Prop
     const greeting = hour < 12 ? 'Bonjour' : hour < 18 ? 'Bon après-midi' : 'Bonsoir';
     const firstName = profile?.full_name?.split(' ')[0] ?? 'Moniteur';
 
-    const activeStages   = stages.filter(s => !isStageArchived(s.dates, now)).length;
-    const archivedStages = stages.filter(s => isStageArchived(s.dates, now));
-    const currentStages  = stages.filter(s => !isStageArchived(s.dates, now));
-    const totalDefis     = stats?.totalValidations ?? 0;
+    const { activeStages, archivedStages, currentStages } = useMemo(() => {
+        const active: DashboardStage[] = [];
+        const archived: DashboardStage[] = [];
+        const current: DashboardStage[] = [];
+        stages.forEach(s => {
+            const archivedFlag = isStageArchived(s.dates, now);
+            if (archivedFlag) {
+                archived.push(s);
+            } else {
+                active.push(s);
+                current.push(s);
+            }
+        });
+        return {
+            activeStages: active.length,
+            archivedStages: archived,
+            currentStages: current,
+        };
+    }, [stages, now]);
+    const totalDefis = stats?.totalValidations ?? 0;
 
     return (
         <div className="flex flex-col min-h-screen bg-slate-50 pb-36">
@@ -99,7 +117,7 @@ export default function HomeDashboard({ stages, profile, stats, initials }: Prop
                         <Link href="/profil">
                             <div className="size-9 rounded-full bg-white/20 border border-white/30 flex items-center justify-center text-white font-bold text-sm overflow-hidden hover:bg-white/30 transition-colors">
                                 {profile?.avatar_url
-                                    ? <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                                    ? <Image src={profile.avatar_url} alt="Avatar" width={36} height={36} className="w-full h-full object-cover" unoptimized />
                                     : initials
                                 }
                             </div>

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import clsx from 'clsx';
 import { saveStageGameResult, saveQuizAttempt } from '@/actions/game-actions';
 import { awardStageQuizPoints } from '@/actions/quiz-actions';
+import { computeQuizPoints } from '@/lib/quiz-points';
 
 type GameItemData = Record<string, unknown>;
 
@@ -90,7 +91,7 @@ export default function PlayClient({ game }: { game: Game }) {
         if (currentIndex < totalCards - 1) {
             setCurrentIndex(prev => prev + 1);
         } else {
-            const finalScore = score + (isCorrect ? 1 : 0);
+            const finalScore = score;
             setIsFinished(true);
             if (game.stage_id) {
                 await saveStageGameResult(game.stage_id, game.id, finalScore, totalCards, answers);
@@ -106,6 +107,7 @@ export default function PlayClient({ game }: { game: Game }) {
     if (isFinished) {
         const finalScore = score;
         const percentage = Math.round((finalScore / totalCards) * 100);
+        const pointsAwarded = computeQuizPoints(finalScore, totalCards);
         const isStageQuiz = !!game.game_data.leGrandQuizz && !!game.stage_id;
         const isExcellent = percentage >= 85;
         const isGood = percentage >= 70;
@@ -132,38 +134,38 @@ export default function PlayClient({ game }: { game: Game }) {
                         </div>
                     </div>
 
-                    {/* Message groupe */}
+                    {/* Message groupe collectif */}
                     <h2 className={clsx(
                         'text-3xl font-black uppercase tracking-tight mb-2',
                         isExcellent ? 'text-amber-400' : isGood ? 'text-emerald-400' : 'text-slate-300'
                     )}>
-                        {isExcellent ? 'Sentinelles de l\'Océan !' : isGood ? 'Bien joué !' : 'On progresse ensemble !'}
+                        {isExcellent ? 'Votre équipe est composée de vraies sentinelles de l\'Océan !' : isGood ? 'Votre équipe a brillamment joué !' : 'Votre équipe a bien progressé !'}
                     </h2>
                     <p className="text-slate-400 font-medium mb-2">
-                        {finalScore} bonne{finalScore > 1 ? 's' : ''} réponse{finalScore > 1 ? 's' : ''} sur {totalCards}
+                        Vous avez obtenu {finalScore} bonne{finalScore > 1 ? 's' : ''} réponse{finalScore > 1 ? 's' : ''} sur {totalCards}
                     </p>
 
                     {/* Message adapté */}
                     <p className="text-slate-500 text-sm max-w-xs leading-relaxed mb-10">
                         {isExcellent
-                            ? 'Votre groupe a brillamment retenu les notions de la semaine. Vous êtes de vraies sentinelles du littoral !'
+                            ? 'Ensemble, vous avez retenu l\'essentiel de la semaine. Votre groupe est prêt à devenir ambassadeur du littoral !'
                             : isGood
-                                ? 'Bonne transmission ! Le groupe a bien assimilé les notions essentielles de la semaine.'
+                                ? 'Votre équipe a bien assimilé les notions essentielles. Continuez ainsi, vous êtes sur la bonne vague !'
                                 : 'Certaines notions méritent d\'être revues ensemble. Chaque stage est un pas de plus vers la conscience du littoral.'}
                     </p>
 
-                    {/* Points moniteur */}
+                    {/* Points de stage */}
                     <div className="bg-indigo-600/20 border border-indigo-500/30 rounded-2xl px-8 py-5 flex flex-col items-center gap-1 mb-8 w-full max-w-xs">
-                        <p className="text-[10px] font-black text-indigo-300 uppercase tracking-widest">Vos points moniteur</p>
-                        <span className="text-5xl font-black text-white">{isExcellent ? 10 : isGood ? 9 : 8}</span>
-                        <p className="text-xs text-indigo-400 font-medium">ajoutés à votre classement</p>
+                        <p className="text-[10px] font-black text-indigo-300 uppercase tracking-widest">Points gagnés pour ce stage</p>
+                        <span className="text-5xl font-black text-white">+{pointsAwarded}</span>
+                        <p className="text-xs text-indigo-400 font-medium">ajoutés à votre banque de points moniteur</p>
                     </div>
 
                     <button
-                        onClick={() => router.push(`/stages/${game.stage_id}`)}
+                        onClick={() => router.push(`/stages/${game.stage_id}/bilan`)}
                         className="w-full max-w-xs px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black text-sm uppercase tracking-widest active:scale-95 transition-transform"
                     >
-                        Retour au stage
+                        Passer au bilan du stage
                     </button>
                 </div>
             );
@@ -273,7 +275,7 @@ export default function PlayClient({ game }: { game: Game }) {
 
             {/* Bouton Suivant — toujours visible, ancré en bas */}
             {showFeedback && (
-                <div className="above-nav fixed left-0 right-0 z-40 px-4 pt-4 pb-4 bg-slate-50/95 backdrop-blur-sm border-t border-slate-200">
+                <div className="above-nav fixed left-0 right-0 z-40 px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] bg-slate-50/95 backdrop-blur-sm border-t border-slate-200">
                     <button
                         onClick={handleNext}
                         className="w-full max-w-2xl mx-auto block px-6 py-4 bg-indigo-600 text-white rounded-2xl font-bold text-lg hover:bg-indigo-700 active:scale-[0.98] transition-all shadow-lg shadow-indigo-600/20"

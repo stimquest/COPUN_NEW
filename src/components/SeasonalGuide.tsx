@@ -44,9 +44,10 @@ type Props = {
     startDate: string;
     onSuggestions: (thematics: ThematicTag[]) => void;
     onSkip: () => void;
+    isSaving?: boolean;
 };
 
-export default function SeasonalGuide({ startDate, onSuggestions, onSkip }: Props) {
+export default function SeasonalGuide({ startDate, onSuggestions, onSkip, isSaving = false }: Props) {
     const month = startDate ? new Date(startDate).getMonth() + 1 : new Date().getMonth() + 1;
     const period = getPeriodForMonth(month);
 
@@ -58,7 +59,7 @@ export default function SeasonalGuide({ startDate, onSuggestions, onSkip }: Prop
         : null;
 
     const handleValidate = () => {
-        if (suggestions) onSuggestions(suggestions);
+        if (suggestions && !isSaving) onSuggestions(suggestions);
     };
 
     return (
@@ -160,17 +161,25 @@ export default function SeasonalGuide({ startDate, onSuggestions, onSkip }: Prop
                 <button
                     type="button"
                     onClick={onSkip}
-                    className="flex-1 h-12 border-2 border-slate-200 rounded-2xl text-xs font-black text-slate-500 uppercase tracking-wider hover:bg-slate-50 transition-all"
+                    disabled={isSaving}
+                    className="flex-1 h-12 border-2 border-slate-200 rounded-2xl text-xs font-black text-slate-500 uppercase tracking-wider hover:bg-slate-50 transition-all disabled:opacity-40"
                 >
                     Passer cette étape
                 </button>
                 <button
                     type="button"
                     onClick={handleValidate}
-                    disabled={!suggestions}
-                    className="flex-1 h-12 bg-indigo-600 text-white rounded-2xl text-xs font-black uppercase tracking-wider disabled:opacity-40 hover:bg-indigo-700 transition-all"
+                    disabled={!suggestions || isSaving}
+                    className="flex-1 h-12 bg-indigo-600 text-white rounded-2xl text-xs font-black uppercase tracking-wider disabled:opacity-40 hover:bg-indigo-700 transition-all flex items-center justify-center gap-2"
                 >
-                    Valider
+                    {isSaving ? (
+                        <>
+                            <span className="animate-spin material-symbols-outlined text-lg">progress_activity</span>
+                            Création…
+                        </>
+                    ) : (
+                        'Valider'
+                    )}
                 </button>
             </div>
         </div>

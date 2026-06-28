@@ -34,6 +34,7 @@ type Props = {
     suggestedThemes?: string[];
     clubSpots: { defi_id: string }[];
     clubObservationTargets: unknown[];
+    filRougeId?: string | null;
 };
 
 const pointsBadgeColor = (points: number) => {
@@ -58,7 +59,7 @@ function TerrainBadge({ tempsReel }: { tempsReel: boolean }) {
     );
 }
 
-export default function DefisTab({ stageId, availableDefis, assignedExploits, suggestedThemes = [] }: Props) {
+export default function DefisTab({ stageId, availableDefis, assignedExploits, suggestedThemes = [], filRougeId }: Props & { filRougeId?: string | null }) {
     const [isPending, startTransition] = useTransition();
     const [selectedTheme, setSelectedTheme] = useState<string | null>(null);
     const [terrainFilter, setTerrainFilter] = useState<'all' | 'differe' | 'terrain'>('all');
@@ -97,8 +98,64 @@ export default function DefisTab({ stageId, availableDefis, assignedExploits, su
         startTransition(async () => { await removeStageExploit(stageId, defiId); });
     };
 
+    // Exploit fil rouge assigné à ce stage
+    const filRougeExploit = filRougeId ? assignedExploits.find(e => e.exploit_id === filRougeId) : null;
+    const filRougeDefi = filRougeId ? availableDefis.find(d => d.id === filRougeId) : null;
+
     return (
         <div className="space-y-8">
+
+            {/* Défi fil rouge épinglé */}
+            {filRougeId && (filRougeExploit || filRougeDefi) && (
+                <section>
+                    <div className="flex items-center gap-2 mb-3">
+                        <span className="material-symbols-outlined text-emerald-500 text-lg">timeline</span>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600">Défi de saison — Fil rouge</p>
+                    </div>
+                    {filRougeExploit ? (
+                        <div className="p-4 rounded-2xl border-2 border-emerald-300 bg-linear-to-br from-emerald-50 to-teal-50">
+                            <div className="flex items-start gap-3">
+                                <div className={clsx(
+                                    'size-11 rounded-xl flex items-center justify-center shrink-0',
+                                    filRougeExploit.status === 'complete' ? 'bg-emerald-500 text-white' : 'bg-emerald-100 text-emerald-600'
+                                )}>
+                                    <span className="material-symbols-outlined">
+                                        {filRougeExploit.status === 'complete' ? 'check' : filRougeExploit.defis.icon}
+                                    </span>
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-1.5 flex-wrap mb-1">
+                                        <h4 className="font-black text-slate-900 text-sm">{filRougeExploit.defis.description}</h4>
+                                        {filRougeExploit.status === 'complete'
+                                            ? <span className="text-[10px] font-black text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded">Validé ce stage ✓</span>
+                                            : <span className="text-[10px] font-black text-teal-700 bg-teal-100 px-1.5 py-0.5 rounded">À réaliser</span>
+                                        }
+                                    </div>
+                                    <p className="text-xs text-slate-600 leading-relaxed">{filRougeExploit.defis.instruction}</p>
+                                </div>
+                            </div>
+                        </div>
+                    ) : filRougeDefi ? (
+                        /* Fil rouge défini mais pas encore assigné à ce stage — cas impossible normalement grâce à l'auto-assign, mais sécurité */
+                        <div className="p-4 rounded-2xl border-2 border-dashed border-emerald-200 bg-emerald-50 flex items-center gap-3">
+                            <div className="size-11 rounded-xl bg-emerald-100 text-emerald-500 flex items-center justify-center shrink-0">
+                                <span className="material-symbols-outlined">{filRougeDefi.icon}</span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="font-bold text-slate-900 text-sm">{filRougeDefi.description}</p>
+                                <p className="text-xs text-slate-500 mt-0.5">Non assigné à ce stage</p>
+                            </div>
+                            <button
+                                onClick={() => handleAssign(filRougeDefi.id)}
+                                disabled={isPending}
+                                className="px-3 py-2 text-xs font-bold rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition disabled:opacity-50 shrink-0"
+                            >
+                                Assigner
+                            </button>
+                        </div>
+                    ) : null}
+                </section>
+            )}
 
             {/* Assigned Defis */}
             <section>
@@ -253,59 +310,189 @@ export default function DefisTab({ stageId, availableDefis, assignedExploits, su
     );
 }
 
+const PREUVE_LABEL: Record<string, { icon: string; label: string }> = {
+    photo:    { icon: 'photo_camera',  label: 'Photo requise' },
+    checkbox: { icon: 'check_box',     label: 'Validation simple' },
+    action:   { icon: 'touch_app',     label: 'Action terrain' },
+    quiz:     { icon: 'quiz',          label: 'Quiz de validation' },
+};
+
+function DefiDetailDrawer({ defi, onClose, onAssign, isPending, variant }: {
+    defi: Defi;
+    onClose: () => void;
+    onAssign: (id: string) => void;
+    isPending: boolean;
+    variant: 'suggested' | 'other';
+}) {
+    const preuve = PREUVE_LABEL[defi.type_preuve] ?? { icon: 'task_alt', label: defi.type_preuve };
+    return (
+        <>
+            {/* Backdrop */}
+            <div
+                className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm"
+                onClick={onClose}
+            />
+            {/* Drawer */}
+            <div className="fixed inset-x-0 bottom-0 z-50 rounded-t-3xl bg-white shadow-2xl max-h-[85vh] overflow-y-auto">
+                <div className="sticky top-0 bg-white rounded-t-3xl px-5 pt-4 pb-3 border-b border-slate-100 flex items-start gap-3">
+                    <div className={clsx(
+                        "size-12 rounded-2xl flex items-center justify-center shrink-0",
+                        variant === 'suggested' ? 'bg-indigo-100 text-indigo-600' : 'bg-amber-100 text-amber-600'
+                    )}>
+                        <span className="material-symbols-outlined text-2xl">{defi.icon}</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <h2 className="font-black text-slate-900 text-base leading-tight">{defi.description}</h2>
+                        <div className="flex items-center gap-1.5 flex-wrap mt-1">
+                            <TerrainBadge tempsReel={defi.terrain_temps_reel} />
+                            {defi.spot_fixe && (
+                                <span className="text-[10px] font-black text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                                    <span className="material-symbols-outlined text-xs">location_on</span>Spot fixe
+                                </span>
+                            )}
+                            <span className={clsx("text-[10px] font-black px-1.5 py-0.5 rounded", pointsBadgeColor(defi.points))}>
+                                {defi.points} pts
+                            </span>
+                        </div>
+                    </div>
+                    <button onClick={onClose} className="size-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 shrink-0">
+                        <span className="material-symbols-outlined text-lg">close</span>
+                    </button>
+                </div>
+
+                <div className="px-5 py-5 space-y-5">
+                    {/* Ce qu'il faut faire */}
+                    <section>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Ce qu&apos;il faut faire</p>
+                        <p className="text-sm text-slate-700 leading-relaxed">{defi.instruction}</p>
+                    </section>
+
+                    {/* Preuve attendue */}
+                    <section className="bg-slate-50 rounded-2xl p-4 flex items-center gap-3">
+                        <span className="material-symbols-outlined text-slate-400 text-xl">{preuve.icon}</span>
+                        <div>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Preuve attendue</p>
+                            <p className="text-sm font-bold text-slate-700">{preuve.label}</p>
+                        </div>
+                    </section>
+
+                    {/* Thématiques */}
+                    {defi.tags_theme?.length > 0 && (
+                        <section>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Thématiques</p>
+                            <div className="flex flex-wrap gap-1.5">
+                                {defi.tags_theme.map(tag => (
+                                    <span key={tag} className="text-xs px-3 py-1 rounded-full font-semibold bg-emerald-50 text-emerald-700">
+                                        {tag}
+                                    </span>
+                                ))}
+                            </div>
+                        </section>
+                    )}
+                </div>
+
+                {/* CTA sticky */}
+                <div className="sticky bottom-0 bg-white border-t border-slate-100 px-5 py-4 pb-[max(env(safe-area-inset-bottom),5.5rem)] md:pb-4">
+                    <button
+                        onClick={() => { onAssign(defi.id); onClose(); }}
+                        disabled={isPending}
+                        className={clsx(
+                            "w-full py-3.5 rounded-xl font-black text-sm uppercase tracking-widest transition active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2",
+                            variant === 'suggested' ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-slate-900 text-white hover:bg-slate-700'
+                        )}
+                    >
+                        <span className="material-symbols-outlined text-lg">add</span>
+                        Assigner ce défi
+                    </button>
+                </div>
+            </div>
+        </>
+    );
+}
+
 function DefiListItem({ defi, onAssign, isPending, variant }: {
     defi: Defi;
     onAssign: (id: string) => void;
     isPending: boolean;
     variant: 'suggested' | 'other';
 }) {
+    const [showDetail, setShowDetail] = useState(false);
+
     return (
-        <div className={clsx(
-            "p-4 rounded-xl border transition flex items-start gap-4",
-            variant === 'suggested' ? 'bg-indigo-50/50 border-indigo-100 hover:border-indigo-300' : 'bg-white border-slate-200 hover:border-emerald-300'
-        )}>
+        <>
             <div className={clsx(
-                "size-10 rounded-full flex items-center justify-center shrink-0",
-                variant === 'suggested' ? 'bg-indigo-100 text-indigo-600' : 'bg-amber-100 text-amber-600'
+                "p-4 rounded-xl border transition flex items-start gap-4",
+                variant === 'suggested' ? 'bg-indigo-50/50 border-indigo-100 hover:border-indigo-300' : 'bg-white border-slate-200 hover:border-emerald-300'
             )}>
-                <span className="material-symbols-outlined">{defi.icon}</span>
-            </div>
-            <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1.5 flex-wrap mb-1">
-                    <h4 className="font-bold text-slate-900">{defi.description}</h4>
-                    <TerrainBadge tempsReel={defi.terrain_temps_reel} />
-                    {defi.spot_fixe && (
-                        <span className="text-[10px] font-black text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded flex items-center gap-0.5">
-                            <span className="material-symbols-outlined text-xs">location_on</span>Spot
-                        </span>
+                <button
+                    onClick={() => setShowDetail(true)}
+                    className={clsx(
+                        "size-10 rounded-full flex items-center justify-center shrink-0 hover:scale-110 transition-transform",
+                        variant === 'suggested' ? 'bg-indigo-100 text-indigo-600' : 'bg-amber-100 text-amber-600'
                     )}
-                    <span className={clsx("text-[10px] font-black px-1.5 py-0.5 rounded", pointsBadgeColor(defi.points))}>
-                        {defi.points} pts
-                    </span>
-                </div>
-                <p className="text-sm text-slate-500 line-clamp-2">{defi.instruction}</p>
-                <div className="flex flex-wrap gap-1 mt-2">
-                    {defi.tags_theme?.slice(0, 3).map(tag => (
-                        <span key={tag} className={clsx(
-                            "text-xs px-2 py-0.5 rounded-full font-medium",
-                            variant === 'suggested' ? 'bg-indigo-100 text-indigo-700' : 'bg-emerald-50 text-emerald-600'
-                        )}>
-                            {tag}
+                    title="Voir le détail"
+                >
+                    <span className="material-symbols-outlined">{defi.icon}</span>
+                </button>
+                <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap mb-1">
+                        <button
+                            onClick={() => setShowDetail(true)}
+                            className="font-bold text-slate-900 text-left hover:text-indigo-700 transition-colors"
+                        >
+                            {defi.description}
+                        </button>
+                        <TerrainBadge tempsReel={defi.terrain_temps_reel} />
+                        {defi.spot_fixe && (
+                            <span className="text-[10px] font-black text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                                <span className="material-symbols-outlined text-xs">location_on</span>Spot
+                            </span>
+                        )}
+                        <span className={clsx("text-[10px] font-black px-1.5 py-0.5 rounded", pointsBadgeColor(defi.points))}>
+                            {defi.points} pts
                         </span>
-                    ))}
+                    </div>
+                    <p className="text-sm text-slate-500 line-clamp-2">{defi.instruction}</p>
+                    <div className="flex flex-wrap gap-1 mt-2 items-center">
+                        {defi.tags_theme?.slice(0, 3).map(tag => (
+                            <span key={tag} className={clsx(
+                                "text-xs px-2 py-0.5 rounded-full font-medium",
+                                variant === 'suggested' ? 'bg-indigo-100 text-indigo-700' : 'bg-emerald-50 text-emerald-600'
+                            )}>
+                                {tag}
+                            </span>
+                        ))}
+                        <button
+                            onClick={() => setShowDetail(true)}
+                            className="text-[10px] font-black text-slate-400 hover:text-indigo-600 transition-colors flex items-center gap-0.5 ml-1"
+                        >
+                            <span className="material-symbols-outlined text-xs">info</span>
+                            Voir plus
+                        </button>
+                    </div>
                 </div>
+                <button
+                    onClick={() => onAssign(defi.id)}
+                    disabled={isPending}
+                    className={clsx(
+                        "px-4 py-2 text-sm font-bold rounded-lg transition disabled:opacity-50 shrink-0 flex items-center gap-1",
+                        variant === 'suggested' ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    )}
+                >
+                    <span className="material-symbols-outlined text-sm">add</span>
+                    Assigner
+                </button>
             </div>
-            <button
-                onClick={() => onAssign(defi.id)}
-                disabled={isPending}
-                className={clsx(
-                    "px-4 py-2 text-sm font-bold rounded-lg transition disabled:opacity-50 shrink-0 flex items-center gap-1",
-                    variant === 'suggested' ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                )}
-            >
-                <span className="material-symbols-outlined text-sm">add</span>
-                Assigner
-            </button>
-        </div>
+
+            {showDetail && (
+                <DefiDetailDrawer
+                    defi={defi}
+                    onClose={() => setShowDetail(false)}
+                    onAssign={onAssign}
+                    isPending={isPending}
+                    variant={variant}
+                />
+            )}
+        </>
     );
 }

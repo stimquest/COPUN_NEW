@@ -86,7 +86,7 @@ export async function listUsers() {
 
     const { data, error } = await ctx.supabase
         .from('profiles')
-        .select('id, email, full_name, role, created_at, clubs!club_id(name)')
+        .select('id, email, full_name, role, created_at, club_id, clubs!club_id(name)')
         .order('created_at', { ascending: false });
 
     if (error) return { error: error.message, users: [] };
@@ -101,6 +101,38 @@ export async function updateUserRole(userId: string, role: string) {
     const { error } = await ctx.supabase.rpc('admin_update_role', {
         p_user_id: userId,
         p_role: role,
+    });
+
+    if (error) return { error: error.message };
+    return { success: true };
+}
+
+// Mise à jour groupée du profil (nom, rôle, club) via RPC SECURITY DEFINER
+export async function updateUserProfile(
+    userId: string,
+    data: { full_name: string; role: string; club_id: string | null }
+) {
+    const ctx = await requireAdmin();
+    if (!ctx) return { error: 'Accès refusé.' };
+
+    const { error } = await ctx.supabase.rpc('admin_update_profile', {
+        p_user_id: userId,
+        p_full_name: data.full_name || null,
+        p_role: data.role,
+        p_club_id: data.club_id,
+    });
+
+    if (error) return { error: error.message };
+    return { success: true };
+}
+
+// Supprimer un compte utilisateur via RPC SECURITY DEFINER (cascade auth.users → profiles)
+export async function deleteUser(userId: string) {
+    const ctx = await requireAdmin();
+    if (!ctx) return { error: 'Accès refusé.' };
+
+    const { error } = await ctx.supabase.rpc('admin_delete_user', {
+        p_user_id: userId,
     });
 
     if (error) return { error: error.message };

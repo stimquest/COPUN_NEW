@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getStageById, getPedagogicalContentByIds } from '@/services/data-service';
-import { getDefis, getStageExploits, getClubSpotsForUser, getClubObservationTargets } from '@/actions/defi-actions';
+import { getDefis, getStageExploits, getClubSpotsForUser, getClubObservationTargets, getMonitorFilRouge } from '@/actions/defi-actions';
 import DefisTab from '@/components/DefisTab';
 
 export default async function DefisPage({ params }: { params: Promise<{ id: string }> }) {
@@ -10,9 +10,10 @@ export default async function DefisPage({ params }: { params: Promise<{ id: stri
 
     if (!stage) return notFound();
 
-    const [availableDefis, assignedExploits] = await Promise.all([
+    const [availableDefis, assignedExploits, filRougeId] = await Promise.all([
         getDefis(),
-        getStageExploits(id)
+        getStageExploits(id),
+        getMonitorFilRouge(),
     ]);
 
     const spotFixeIds = availableDefis
@@ -95,6 +96,7 @@ export default async function DefisPage({ params }: { params: Promise<{ id: stri
                     suggestedThemes={suggestedThemes}
                     clubSpots={clubSpots}
                     clubObservationTargets={clubObservationTargets}
+                    filRougeId={filRougeId}
                 />
             </main>
         </div>

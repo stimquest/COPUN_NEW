@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useOptimistic, useTransition, useSyncExternalStore, useRef } from 'react';
+import { useState, useTransition, useSyncExternalStore, useRef, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import NextImage from 'next/image';
 import clsx from 'clsx';
-import { SessionStep, PedagogicalContent, StepTodo } from '@/types';
-import { toggleValidation } from '@/actions/validation-actions';
+import { SessionStep, PedagogicalContent, StepTodo, StageObjectiveExecutionStatus } from '@/types';
 import { updateStageExploitStatus, uploadDefiPhoto, saveClubSpot, removeDefiPhoto } from '@/actions/defi-actions';
-import { updateStepTodo } from '@/actions/stage-actions';
+import { VOILE_THEMES } from '@/data/voile-themes';
+import { updateStepTodo, upsertObjectiveReview } from '@/actions/stage-actions';
 import CardDetailModal from '@/components/CardDetailModal';
 import FilRougeForm from '@/components/defis/FilRougeForm';
 
@@ -59,6 +60,7 @@ type Props = {
     contentPool: PedagogicalContent[];
     links: { session_step_id: string; pedagogical_content_id: string }[];
     initialValidations: string[];
+    initialReviews: Record<string, StageObjectiveExecutionStatus>;
     sessionId: string;
     stageId: string;
     allSessions: { id: string; title: string; order: number }[];
@@ -150,15 +152,22 @@ function compressImage(file: File, maxPx: number, quality: number): Promise<File
 
 // ─── main component ───────────────────────────────────────────────────────────
 
+const EXECUTION_CHIPS: { value: StageObjectiveExecutionStatus; label: string; active: string }[] = [
+    { value: 'not_done', label: 'Non abordé', active: 'bg-slate-800 text-white border-slate-900' },
+    { value: 'partial',  label: 'Effleuré',   active: 'bg-orange-500 text-white border-orange-600' },
+    { value: 'done',     label: 'Travaillé',  active: 'bg-emerald-500 text-white border-emerald-600' },
+];
+
 export default function SessionRunnerClient({
-    steps, contentPool, links, initialValidations, sessionId, stageId,
+    steps, contentPool, links, initialReviews, sessionId, stageId,
     allSessions, assignedExploits, clubSpots, clubObservationTargets, todosByStep,
 }: Props) {
-    const [activeTab, setActiveTab] = useState<'plan' | 'bilan' | 'defis'>('plan');
-    const [validatedIds, setValidatedIds] = useState<string[]>(initialValidations);
+    const [activeTab, setActiveTab] = useState<'plan' | 'defis'>('plan');
+    const [localReviews, setLocalReviews] = useState<Record<string, StageObjectiveExecutionStatus>>(initialReviews);
     const [localTodosByStep, setLocalTodosByStep] = useState<Record<string, StepTodo[]>>(todosByStep);
     const [selectedCardForDetail, setSelectedCardForDetail] = useState<PedagogicalContent | null>(null);
-    const [isPending, startTransition] = useTransition();
+    const [pendingKeys, setPendingKeys] = useState<Set<string>>(new Set());
+    const [, startTransition] = useTransition();
     const router = useRouter();
 
     // Défi photo / GPS state
@@ -177,49 +186,86 @@ export default function SessionRunnerClient({
     const isClient = useSyncExternalStore(subscribe, () => true, () => false);
 
     const spotsByDefiId = new Map(clubSpots.map(s => [s.defi_id, s]));
+    const stepIdSet = useMemo(() => new Set(steps.map(s => s.id)), [steps]);
 
-    const [optimisticValidations, addOptimisticValidation] = useOptimistic(
-        validatedIds,
-        (state, newId: string) => state.includes(newId) ? state.filter(id => id !== newId) : [...state, newId]
-    );
-
-    const getContentForStep = (stepId: string) => {
-        const linkIds = links.filter(l => l.session_step_id === stepId).map(l => l.pedagogical_content_id);
-        return contentPool.filter(c => linkIds.includes(c.id));
-    };
-
-    const handleToggleValidation = async (contentId: string) => {
-        startTransition(async () => {
-            addOptimisticValidation(contentId);
-            setValidatedIds(prev => prev.includes(contentId) ? prev.filter(id => id !== contentId) : [...prev, contentId]);
-            const res = await toggleValidation(contentId, sessionId);
-            if (!res.success) {
-                console.error('[toggleValidation] erreur:', res.error);
-                alert('Erreur validation : ' + res.error);
-                // Revert optimistic update
-                setValidatedIds(prev => prev.includes(contentId) ? prev.filter(id => id !== contentId) : [...prev, contentId]);
+    const contentByStepId = useMemo(() => {
+        const contentMap = new Map<string, PedagogicalContent>();
+        contentPool.forEach(c => contentMap.set(c.id, c));
+        const stepMap = new Map<string, PedagogicalContent[]>();
+        links.forEach(link => {
+            const content = contentMap.get(link.pedagogical_content_id);
+            if (content) {
+                const arr = stepMap.get(link.session_step_id);
+                if (arr) arr.push(content);
+                else stepMap.set(link.session_step_id, [content]);
             }
         });
-    };
+        return stepMap;
+    }, [links, contentPool]);
 
-    const handleToggleTodoDone = async (stepId: string, todo: StepTodo) => {
+    const sessionContentIds = useMemo(() => {
+        const ids = new Set<string>();
+        links.forEach(l => {
+            if (stepIdSet.has(l.session_step_id)) ids.add(l.pedagogical_content_id);
+        });
+        return ids;
+    }, [links, stepIdSet]);
+
+    const allStepTodos = useMemo(() => steps.flatMap(s => localTodosByStep[s.id] ?? []), [steps, localTodosByStep]);
+
+    const sportFicheIds = useMemo(() => {
+        const ids = new Set<string>();
+        allStepTodos.forEach(t => {
+            if (t.linked_content_id && t.is_content_header) ids.add(t.linked_content_id);
+        });
+        return ids;
+    }, [allStepTodos]);
+
+    const allObjectiveIds = useMemo(() => [...sessionContentIds, ...sportFicheIds], [sessionContentIds, sportFicheIds]);
+    const reviewedCount = useMemo(() => allObjectiveIds.filter(id => localReviews[id] != null).length, [allObjectiveIds, localReviews]);
+    const doneTodosCount = useMemo(() => allStepTodos.filter(t => t.done).length, [allStepTodos]);
+    const completedDefis = useMemo(() => assignedExploits.filter(e => e.status === 'complete').length, [assignedExploits]);
+
+    const handleSetReview = useCallback((contentId: string, status: StageObjectiveExecutionStatus) => {
+        const next = localReviews[contentId] === status ? null : status;
+        setLocalReviews(prev => {
+            const updated = { ...prev };
+            if (next === null) delete updated[contentId];
+            else updated[contentId] = next;
+            return updated;
+        });
+        setPendingKeys(prev => new Set(prev).add(`review:${contentId}`));
+        startTransition(async () => {
+            await upsertObjectiveReview(stageId, contentId, next);
+            setPendingKeys(prev => { const s = new Set(prev); s.delete(`review:${contentId}`); return s; });
+        });
+    }, [localReviews, stageId, startTransition]);
+
+    const handleToggleTodoDone = useCallback(async (stepId: string, todo: StepTodo) => {
         const next = !todo.done;
         setLocalTodosByStep(prev => ({
             ...prev,
             [stepId]: (prev[stepId] ?? []).map(t => t.id === todo.id ? { ...t, done: next } : t),
         }));
-        await updateStepTodo(todo.id, stageId, { done: next });
-    };
+        setPendingKeys(prev => new Set(prev).add(`todo:${todo.id}`));
+        try {
+            await updateStepTodo(todo.id, stageId, { done: next });
+        } finally {
+            setPendingKeys(prev => { const s = new Set(prev); s.delete(`todo:${todo.id}`); return s; });
+        }
+    }, [stageId]);
 
     // Défi handlers
-    const handleCompleteDefi = (defiId: string, preuveUrl?: string) => {
+    const handleCompleteDefi = useCallback((defiId: string, preuveUrl?: string) => {
+        setPendingKeys(prev => new Set(prev).add(`defi:${defiId}`));
         startTransition(async () => {
             await updateStageExploitStatus(stageId, defiId, 'complete', preuveUrl);
+            setPendingKeys(prev => { const s = new Set(prev); s.delete(`defi:${defiId}`); return s; });
             router.refresh();
         });
-    };
+    }, [stageId, startTransition, router]);
 
-    const handleSaisirClick = async (defiId: string, defiDescription: string) => {
+    const handleSaisirClick = useCallback(async (defiId: string, defiDescription: string) => {
         setIsLocating(defiId);
         try {
             const pos = await getCurrentPosition();
@@ -237,22 +283,22 @@ export default function SessionRunnerClient({
         } finally {
             setIsLocating(null);
         }
-    };
+    }, [spotsByDefiId]);
 
-    const handleConfirmSpot = () => {
+    const handleConfirmSpot = useCallback(() => {
         if (!spotGuidance) return;
         const { defiId, defiDescription, isNew, lat, lng } = spotGuidance;
         setSpotGuidance(null);
         setFilRougeForm({ defiId, defiDescription, isFirstSpot: isNew, gpsCoords: { lat, lng } });
-    };
+    }, [spotGuidance]);
 
-    const handleFilRougeSuccess = async () => {
+    const handleFilRougeSuccess = useCallback(async () => {
         if (filRougeForm?.isFirstSpot && filRougeForm.gpsCoords) {
             await saveClubSpot(filRougeForm.defiId, filRougeForm.gpsCoords.lat, filRougeForm.gpsCoords.lng, null);
         }
         setFilRougeForm(null);
         router.refresh();
-    };
+    }, [filRougeForm, router]);
 
     const handlePhotoClick = (defiId: string) => {
         currentDefiIdRef.current = defiId;
@@ -280,17 +326,7 @@ export default function SessionRunnerClient({
         }
     };
 
-    // Totals for badge counts
-    const sessionContentIds = new Set(
-        links.filter(l => steps.some(s => s.id === l.session_step_id)).map(l => l.pedagogical_content_id)
-    );
-    const sessionContent = contentPool.filter(c => sessionContentIds.has(c.id));
-    const validatedCount = sessionContent.filter(c => optimisticValidations.includes(c.id)).length;
 
-    const allTodos = steps.flatMap(s => localTodosByStep[s.id] ?? []);
-    const doneTodosCount = allTodos.filter(t => t.done).length;
-
-    const completedDefis = assignedExploits.filter(e => e.status === 'complete').length;
 
     if (!isClient) return null;
 
@@ -380,9 +416,8 @@ export default function SessionRunnerClient({
             {/* Tab bar */}
             <div className="sticky top-17.25 z-40 bg-white border-b border-slate-100 px-4 py-3">
                 <div className="flex p-1 bg-slate-100 rounded-2xl gap-1">
-                    <TabButton active={activeTab === 'plan'} onClick={() => setActiveTab('plan')} icon="list_alt" label="PLAN" />
-                    <TabButton active={activeTab === 'bilan'} onClick={() => setActiveTab('bilan')} icon="task_alt" label="BILAN"
-                        badge={sessionContent.length > 0 ? `${validatedCount}/${sessionContent.length}` : undefined}
+                    <TabButton active={activeTab === 'plan'} onClick={() => setActiveTab('plan')} icon="sailing" label="SÉANCE"
+                        badge={allObjectiveIds.length > 0 ? `${reviewedCount}/${allObjectiveIds.length}` : undefined}
                     />
                     <TabButton active={activeTab === 'defis'} onClick={() => setActiveTab('defis')} icon="eco" label="DÉFIS"
                         badge={assignedExploits.length > 0 ? `${completedDefis}/${assignedExploits.length}` : undefined}
@@ -392,14 +427,14 @@ export default function SessionRunnerClient({
 
             <main className="px-4 py-6 max-w-lg mx-auto w-full min-h-[60vh]">
 
-                {/* ── PLAN ── */}
+                {/* ── SÉANCE ── */}
                 {activeTab === 'plan' && (
                     <div className="space-y-3">
                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 mb-4">
-                            Rappel de votre préparation — consultez avant la séance
+                            Cochez les points réalisés et validez les objectifs travaillés
                         </p>
                         {steps.map((step, idx) => {
-                            const contents = getContentForStep(step.id);
+                            const contents = contentByStepId.get(step.id) ?? [];
                             const todos = localTodosByStep[step.id] ?? [];
                             const isFirst = idx === 0;
                             const isLast = idx === steps.length - 1;
@@ -426,40 +461,224 @@ export default function SessionRunnerClient({
                                         </div>
                                     </div>
 
-                                    {/* Cartes pédagogiques */}
-                                    {contents.length > 0 && (
-                                        <div className="px-5 pt-4 pb-3 space-y-2">
-                                            <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest">Notions</p>
-                                            {contents.map(content => {
-                                                const style = DIMENSION_STYLES[content.dimension as keyof typeof DIMENSION_STYLES] || DIMENSION_STYLES.COMPRENDRE;
-                                                return (
-                                                    <button key={content.id}
-                                                        onClick={() => setSelectedCardForDetail(content)}
-                                                        className={clsx("w-full text-left bg-slate-50 rounded-xl px-4 py-3 border-l-4 flex items-center gap-3 hover:bg-slate-100 transition-colors", style.border)}
-                                                    >
-                                                        <span className={clsx("material-symbols-outlined text-[18px] shrink-0", style.textIcon)}>{style.icon}</span>
-                                                        <div className="flex-1 min-w-0">
-                                                            <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">{content.dimension}</p>
-                                                            <p className="text-xs font-bold text-slate-800 truncate">{content.question}</p>
-                                                        </div>
-                                                        <span className="material-symbols-outlined text-slate-300 text-[16px] shrink-0">chevron_right</span>
-                                                    </button>
-                                                );
-                                            })}
-                                        </div>
-                                    )}
+{/* Cartes pédagogiques environnementales */}
+                                             {contents.filter(c => c.source !== 'custom').length > 0 && (
+                                                 <div className="px-5 pt-4 pb-3 space-y-3">
+                                                     <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest">Notions environnementales</p>
+                                                     {contents.filter(c => c.source !== 'custom').map(content => {
+                                                         const style = DIMENSION_STYLES[content.dimension as keyof typeof DIMENSION_STYLES] || DIMENSION_STYLES.COMPRENDRE;
+                                                         const currentStatus = localReviews[content.id] ?? null;
+                                                         return (
+                                                             <div key={content.id} className={clsx(
+                                                                 "rounded-xl border-l-4 border-y border-r overflow-hidden transition-colors",
+                                                                 style.border,
+                                                                 currentStatus === 'done' ? "bg-emerald-50/50 border-emerald-100" :
+                                                                 currentStatus === 'partial' ? "bg-orange-50/50 border-orange-100" :
+                                                                 currentStatus === 'not_done' ? "bg-slate-100/80 border-slate-200" :
+                                                                 "bg-slate-50 border-slate-100"
+                                                             )}>
+                                                                 <button
+                                                                     onClick={() => setSelectedCardForDetail(content)}
+                                                                     className="w-full flex items-center gap-3 px-4 py-3 text-left"
+                                                                 >
+                                                                     <span className={clsx("material-symbols-outlined text-[18px] shrink-0", style.textIcon)}>{style.icon}</span>
+                                                                     <div className="flex-1 min-w-0">
+                                                                         <p className={clsx("text-[9px] font-black uppercase tracking-wide mb-0.5", style.textPill)}>{content.dimension}</p>
+                                                                         <p className="text-xs font-bold text-slate-800 leading-snug">{content.question}</p>
+                                                                     </div>
+                                                                     <span className="material-symbols-outlined text-slate-300 text-[14px] shrink-0">open_in_new</span>
+                                                                 </button>
+                                                                 <div className="flex gap-1 px-3 pb-3">
+                                                                     {EXECUTION_CHIPS.map(chip => {
+                                                                         const selected = currentStatus === chip.value;
+                                                                         return (
+                                                                             <button
+                                                                                 key={chip.value}
+                                                                 onClick={() => handleSetReview(content.id, chip.value)}
+                                                                 disabled={pendingKeys.has(`review:${content.id}`)}
+                                                                 className={clsx(
+                                                                     "flex-1 rounded-lg border py-1.5 text-[10px] font-black transition-all active:scale-[0.97] disabled:opacity-60",
+                                                                     selected
+                                                                         ? chip.active
+                                                                         : "bg-white border-slate-200 text-slate-500"
+                                                                 )}
+                                                                             >
+                                                                                 {chip.label}
+                                                                             </button>
+                                                                         );
+                                                                     })}
+                                                                 </div>
+                                                             </div>
+                                                         );
+                                                     })}
+                                                 </div>
+                                             )}
 
-                                    {/* Todos en lecture seule */}
+                                             {/* Fiches sportives voile */}
+                                             {contents.filter(c => c.source === 'custom').length > 0 && (
+                                                 <div className="px-5 pt-4 pb-3 space-y-3">
+                                                     <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest">Notions sportives</p>
+                                                     {contents.filter(c => c.source === 'custom').map(content => {
+                                                         const theme = (content.tags_theme || [])[0] ? VOILE_THEMES.find(t => t.id === (content.tags_theme || [])[0]) : null;
+                                                         const currentStatus = localReviews[content.id] ?? null;
+                                                         return (
+                                                             <div key={content.id} className={clsx(
+                                                                 "rounded-xl border-l-4 border-y border-r overflow-hidden transition-colors border-l-indigo-400",
+                                                                 currentStatus === 'done' ? "bg-emerald-50/50 border-emerald-100" :
+                                                                 currentStatus === 'partial' ? "bg-orange-50/50 border-orange-100" :
+                                                                 currentStatus === 'not_done' ? "bg-slate-100/80 border-slate-200" :
+                                                                 "bg-slate-50 border-slate-100"
+                                                             )}>
+                                                                 <button
+                                                                     onClick={() => setSelectedCardForDetail(content)}
+                                                                     className="w-full flex items-center gap-3 px-4 py-3 text-left"
+                                                                 >
+                                                                     <span className="material-symbols-outlined text-[18px] shrink-0 text-indigo-600">{theme?.icon || 'sailing'}</span>
+                                                                     <div className="flex-1 min-w-0">
+                                                                         <p className="text-[9px] font-black uppercase tracking-wide mb-0.5 text-indigo-600">Sportif</p>
+                                                                         {theme && <p className="text-[9px] font-bold text-indigo-500 mb-0.5">{theme.label}</p>}
+                                                                         <p className="text-xs font-bold text-slate-800 leading-snug">{content.question}</p>
+                                                                     </div>
+                                                                     <span className="material-symbols-outlined text-slate-300 text-[14px] shrink-0">open_in_new</span>
+                                                                 </button>
+                                                                 <div className="flex gap-1 px-3 pb-3">
+                                                                     {EXECUTION_CHIPS.map(chip => {
+                                                                         const selected = currentStatus === chip.value;
+                                                                         return (
+                                                                             <button
+                                                                                 key={chip.value}
+                                                                 onClick={() => handleSetReview(content.id, chip.value)}
+                                                                 disabled={pendingKeys.has(`review:${content.id}`)}
+                                                                 className={clsx(
+                                                                     "flex-1 rounded-lg border py-1.5 text-[10px] font-black transition-all active:scale-[0.97] disabled:opacity-60",
+                                                                     selected
+                                                                         ? chip.active
+                                                                         : "bg-white border-slate-200 text-slate-500"
+                                                                 )}
+                                                                             >
+                                                                                 {chip.label}
+                                                                             </button>
+                                                                         );
+                                                                     })}
+                                                                 </div>
+                                                             </div>
+                                                         );
+                                                     })}
+                                                 </div>
+                                             )}
+
+
+                                    {/* Points de cours & Fiches sportives */}
                                     {todos.length > 0 && (
                                         <div className="px-5 pt-2 pb-4 space-y-1">
                                             {contents.length > 0 && <div className="h-px bg-slate-50 mb-3" />}
-                                            <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest mb-2">Points de cours</p>
-                                            {todos.map(todo => (
-                                                <div key={todo.id} className="flex items-start gap-2.5 py-1">
-                                                    <span className="size-1.5 rounded-full bg-slate-300 shrink-0 mt-1.5" />
-                                                    <p className="text-xs font-medium text-slate-600 leading-snug">{todo.text}</p>
-                                                </div>
-                                            ))}
+                                            <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest mb-2">Pédagogie Sportive</p>
+                                            <div className="space-y-1.5">
+                                                {todos.map(todo => {
+                                                    if (todo.linked_content_id) {
+                                                        const ficheSportive = contentPool.find(c => c.id === todo.linked_content_id);
+                                                        if (todo.is_content_header) {
+                                                            const sportStatus = ficheSportive ? (localReviews[ficheSportive.id] ?? null) : null;
+                                                            return (
+                                                                <div
+                                                                    key={todo.id}
+                                                                    className={clsx(
+                                                                        "rounded-xl border-l-4 border-l-indigo-400 border-y border-r overflow-hidden mt-3 transition-colors",
+                                                                        sportStatus === 'done'     ? "bg-emerald-50/50 border-emerald-100" :
+                                                                        sportStatus === 'partial'  ? "bg-orange-50/50 border-orange-100" :
+                                                                        sportStatus === 'not_done' ? "bg-slate-100/80 border-slate-200" :
+                                                                        "bg-indigo-50/50 border-indigo-100/50"
+                                                                    )}
+                                                                >
+                                                                    {/* Header row — tap title zone opens detail */}
+                                                                    <div className="flex items-center gap-3 px-4 py-2.5">
+                                                                        <div className="flex-1 min-w-0">
+                                                                            <p className="text-[9px] font-black uppercase tracking-wide text-indigo-500">Fiche Sportive</p>
+                                                                            <p className="text-xs font-bold text-slate-800 truncate">{todo.text}</p>
+                                                                        </div>
+                                                                        <button
+                                                                            onClick={() => ficheSportive && setSelectedCardForDetail(ficheSportive)}
+                                                                            disabled={!ficheSportive}
+                                                                            className="size-7 rounded-lg bg-white border border-indigo-100 flex items-center justify-center text-indigo-400 active:scale-95 transition-all disabled:opacity-30 shrink-0"
+                                                                        >
+                                                                            <span className="material-symbols-outlined text-[14px]">open_in_new</span>
+                                                                        </button>
+                                                                    </div>
+                                                                    {/* Evaluation chips */}
+                                                                    {ficheSportive && (
+                                                                        <div className="flex gap-1 px-3 pb-3">
+                                                                            {EXECUTION_CHIPS.map(chip => {
+                                                                                const selected = sportStatus === chip.value;
+                                                                                return (
+                                                                                    <button
+                                                                                        key={chip.value}
+                                                                                        onClick={() => handleSetReview(ficheSportive.id, chip.value)}
+                                                                                        disabled={pendingKeys.has(`review:${ficheSportive.id}`)}
+                                                                                        className={clsx(
+                                                                                            "flex-1 rounded-lg border py-1.5 text-[10px] font-black transition-all active:scale-[0.97] disabled:opacity-60",
+                                                                                            selected ? chip.active : "bg-white border-slate-200 text-slate-500"
+                                                                                        )}
+                                                                                    >
+                                                                                        {chip.label}
+                                                                                    </button>
+                                                                                );
+                                                                            })}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            );
+                                                        } else {
+                                                            return (
+                                                                <button
+                                                                    key={todo.id}
+                                                                    onClick={() => handleToggleTodoDone(step.id, todo)}
+                                                                    className={clsx(
+                                                                        "w-full flex items-start gap-3 py-2 px-3 pl-6 rounded-xl text-left transition-all active:scale-[0.98]",
+                                                                        todo.done ? "bg-emerald-50/40" : "hover:bg-slate-50/80"
+                                                                    )}
+                                                                >
+                                                                    <div className={clsx(
+                                                                        "size-5 rounded-md border-2 shrink-0 mt-0.5 flex items-center justify-center transition-all",
+                                                                        todo.done ? "bg-emerald-500 border-emerald-500" : "border-slate-300"
+                                                                    )}>
+                                                                        {todo.done && <span className="material-symbols-outlined text-white text-[12px]">check</span>}
+                                                                    </div>
+                                                                    <span className={clsx(
+                                                                        "text-sm font-medium leading-snug",
+                                                                        todo.done ? "text-emerald-700 line-through" : "text-slate-600"
+                                                                    )}>
+                                                                        {todo.text}
+                                                                    </span>
+                                                                </button>
+                                                            );
+                                                        }
+                                                    } else {
+                                                        return (
+                                                            <button
+                                                                key={todo.id}
+                                                                onClick={() => handleToggleTodoDone(step.id, todo)}
+                                                                className={clsx(
+                                                                    "w-full flex items-start gap-3 py-2 px-3 rounded-xl text-left transition-all active:scale-[0.98]",
+                                                                    todo.done ? "bg-emerald-50/40" : "hover:bg-slate-50/80"
+                                                                )}
+                                                            >
+                                                                <div className={clsx(
+                                                                    "size-5 rounded-md border-2 shrink-0 mt-0.5 flex items-center justify-center transition-all",
+                                                                    todo.done ? "bg-emerald-500 border-emerald-500" : "border-slate-300"
+                                                                )}>
+                                                                    {todo.done && <span className="material-symbols-outlined text-white text-[12px]">check</span>}
+                                                                </div>
+                                                                <span className={clsx(
+                                                                    "text-sm font-medium leading-snug",
+                                                                    todo.done ? "text-emerald-700 line-through" : "text-slate-600"
+                                                                )}>
+                                                                    {todo.text}
+                                                                </span>
+                                                            </button>
+                                                        );
+                                                    }
+                                                })}
+                                            </div>
                                         </div>
                                     )}
 
@@ -471,118 +690,6 @@ export default function SessionRunnerClient({
                                 </div>
                             );
                         })}
-                    </div>
-                )}
-
-                {/* ── BILAN ── */}
-                {activeTab === 'bilan' && (
-                    <div className="space-y-6">
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">
-                            À remplir après la séance, au calme
-                        </p>
-
-                        {/* Todos check par étape */}
-                        {steps.some(s => (localTodosByStep[s.id] ?? []).length > 0) && (
-                            <section className="space-y-3">
-                                <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest px-1 flex items-center gap-2">
-                                    <span className="material-symbols-outlined text-[16px]">checklist</span>
-                                    Points de cours réalisés
-                                </h3>
-                                {steps.map(step => {
-                                    const todos = localTodosByStep[step.id] ?? [];
-                                    if (todos.length === 0) return null;
-                                    const doneCount = todos.filter(t => t.done).length;
-                                    return (
-                                        <div key={step.id} className="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
-                                            <div className="flex items-center justify-between px-5 py-3 border-b border-slate-50 bg-slate-50">
-                                                <p className="text-xs font-black text-slate-700">{step.step_title}</p>
-                                                <span className={clsx(
-                                                    "text-[10px] font-black px-2 py-0.5 rounded-full",
-                                                    doneCount === todos.length ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500"
-                                                )}>
-                                                    {doneCount}/{todos.length}
-                                                </span>
-                                            </div>
-                                            <div className="px-5 py-3 space-y-2">
-                                                {todos.map(todo => (
-                                                    <button
-                                                        key={todo.id}
-                                                        onClick={() => handleToggleTodoDone(step.id, todo)}
-                                                        className={clsx(
-                                                            "w-full flex items-start gap-3 py-2.5 px-3 rounded-xl text-left transition-all active:scale-[0.98]",
-                                                            todo.done ? "bg-emerald-50" : "hover:bg-slate-50"
-                                                        )}
-                                                    >
-                                                        <div className={clsx(
-                                                            "size-5 rounded-md border-2 shrink-0 mt-0.5 flex items-center justify-center transition-all",
-                                                            todo.done ? "bg-emerald-500 border-emerald-500" : "border-slate-300"
-                                                        )}>
-                                                            {todo.done && <span className="material-symbols-outlined text-white text-[12px]">check</span>}
-                                                        </div>
-                                                        <span className={clsx(
-                                                            "text-sm font-medium leading-snug",
-                                                            todo.done ? "text-emerald-700 line-through" : "text-slate-700"
-                                                        )}>
-                                                            {todo.text}
-                                                        </span>
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </section>
-                        )}
-
-                        {/* Validation des notions */}
-                        <section className="space-y-3">
-                            <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest px-1 flex items-center gap-2">
-                                <span className="material-symbols-outlined text-[16px]">school</span>
-                                Notions acquises par le groupe
-                            </h3>
-                            {sessionContent.length === 0 ? (
-                                <div className="bg-white rounded-2xl border border-slate-100 p-6 text-center">
-                                    <span className="material-symbols-outlined text-3xl text-slate-200 mb-2">menu_book</span>
-                                    <p className="text-sm text-slate-400 italic">Aucune fiche associée à cette séance.</p>
-                                </div>
-                            ) : (
-                                <div className="space-y-2">
-                                    {sessionContent.map(content => {
-                                        const style = DIMENSION_STYLES[content.dimension as keyof typeof DIMENSION_STYLES] || DIMENSION_STYLES.COMPRENDRE;
-                                        const isValidated = optimisticValidations.includes(content.id);
-                                        return (
-                                            <div key={content.id} className={clsx(
-                                                "bg-white rounded-2xl border-l-4 border-y border-r transition-all shadow-sm",
-                                                style.border,
-                                                isValidated ? "bg-slate-50 opacity-80" : "border-slate-100"
-                                            )}>
-                                                <div className="flex items-center gap-4 px-4 py-4">
-                                                    <div className={clsx("size-10 rounded-xl flex items-center justify-center shrink-0 border", style.bgIcon, style.textIcon, style.borderIcon)}>
-                                                        <span className="material-symbols-outlined text-xl">{style.icon}</span>
-                                                    </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <p className={clsx("text-[10px] font-black uppercase tracking-wide mb-0.5", style.textPill)}>{content.dimension}</p>
-                                                        <p className="text-sm font-bold text-slate-900 leading-snug">{content.objectif}</p>
-                                                    </div>
-                                                    <button
-                                                        onClick={() => handleToggleValidation(content.id)}
-                                                        disabled={isPending}
-                                                        className={clsx(
-                                                            "size-11 rounded-full border-2 flex items-center justify-center transition-all active:scale-95 shrink-0 disabled:opacity-50",
-                                                            isValidated
-                                                                ? `${style.bgSelected} text-white shadow-lg`
-                                                                : `bg-slate-50 border-slate-200 text-slate-300 ${style.hover}`
-                                                        )}
-                                                    >
-                                                        <span className="material-symbols-outlined text-xl">thumb_up</span>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            )}
-                        </section>
                     </div>
                 )}
 
@@ -644,7 +751,7 @@ export default function SessionRunnerClient({
                                                         {exploit.defis.spot_fixe ? (
                                                             <button
                                                                 onClick={() => handleSaisirClick(exploit.exploit_id, exploit.defis.description)}
-                                                                disabled={isPending || isLocating === exploit.exploit_id}
+                                                                disabled={pendingKeys.has(`defi:${exploit.exploit_id}`) || isLocating === exploit.exploit_id}
                                                                 className="flex-1 py-2.5 bg-emerald-600 text-white text-sm font-bold rounded-xl active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                                                             >
                                                                 {isLocating === exploit.exploit_id
@@ -654,7 +761,7 @@ export default function SessionRunnerClient({
                                                         ) : exploit.defis.type_preuve === 'photo' ? (
                                                             <button
                                                                 onClick={() => handlePhotoClick(exploit.exploit_id)}
-                                                                disabled={isPending || isUploading === exploit.exploit_id}
+                                                                disabled={pendingKeys.has(`defi:${exploit.exploit_id}`) || isUploading === exploit.exploit_id}
                                                                 className="flex-1 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-xl active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                                                             >
                                                                 {isUploading === exploit.exploit_id
@@ -664,7 +771,7 @@ export default function SessionRunnerClient({
                                                         ) : (
                                                             <button
                                                                 onClick={() => handleCompleteDefi(exploit.exploit_id)}
-                                                                disabled={isPending}
+                                                                disabled={pendingKeys.has(`defi:${exploit.exploit_id}`)}
                                                                 className="flex-1 py-2.5 bg-slate-900 text-white text-sm font-bold rounded-xl active:scale-[0.98] transition-all disabled:opacity-50"
                                                             >
                                                                 Valider
@@ -718,7 +825,7 @@ function ProofPhoto({ url, onDelete }: { url: string; onDelete: () => void }) {
                     <span className="material-symbols-outlined text-slate-300 text-2xl">broken_image</span>
                 </div>
             ) : (
-                <img src={url} alt="Preuve" className="size-full object-cover" onError={() => setBroken(true)} />
+                <NextImage src={url} alt="Preuve" fill className="size-full object-cover" onError={() => setBroken(true)} sizes="64px" />
             )}
             <button
                 onClick={onDelete}

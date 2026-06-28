@@ -1,8 +1,51 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
+import { isStageObjectiveExecutionStatus, isStageObjectiveImpactLevel } from '@/lib/stage-objective-review';
 import { revalidatePath } from 'next/cache';
 import { SESSION_TEMPLATES } from '@/data/session-templates';
+import { StageObjectiveReviewDraft, StageObjectiveExecutionStatus } from '@/types';
+
+/**
+ * Upserts the execution_status of a stage objective review from a session.
+ * Called live from the session runner — no impactLevel or note here.
+ */
+export async function upsertObjectiveReview(
+    stageId: string,
+    contentId: string,
+    executionStatus: StageObjectiveExecutionStatus | null,
+) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, error: 'Non autorisé' };
+
+    if (executionStatus === null) {
+        // If null, remove the draft review
+        const { error } = await supabase
+            .from('stage_objective_reviews')
+            .delete()
+            .eq('stage_id', stageId)
+            .eq('pedagogical_content_id', contentId);
+        if (error) return { success: false, error: error.message };
+    } else {
+        const { error } = await supabase
+            .from('stage_objective_reviews')
+            .upsert(
+                {
+                    stage_id: stageId,
+                    pedagogical_content_id: contentId,
+                    execution_status: executionStatus,
+                    impact_level: executionStatus === 'not_done' ? null : undefined,
+                },
+                { onConflict: 'stage_id,pedagogical_content_id', ignoreDuplicates: false }
+            );
+        if (error) return { success: false, error: error.message };
+    }
+
+    revalidatePath(`/stages/${stageId}/bilan`);
+    return { success: true };
+}
+
 
 /**
  * Persists the selected pedagogical pool for a stage.
@@ -41,6 +84,41 @@ export async function linkCardToStep(stepId: string, cardId: string) {
         return { success: false, error: error.message };
     }
 
+    // If the card is custom, copy its content_todos as step_todos for this step
+    const { data: card } = await supabase
+        .from('pedagogical_content')
+        .select('source')
+        .eq('id', cardId)
+        .single();
+
+    if (card?.source === 'custom') {
+        const { data: contentTodos } = await supabase
+            .from('content_todos')
+            .select('text, todo_order')
+            .eq('content_id', cardId)
+            .order('todo_order');
+
+        if (contentTodos && contentTodos.length > 0) {
+            const { data: existing } = await supabase
+                .from('step_todos')
+                .select('todo_order')
+                .eq('session_step_id', stepId)
+                .order('todo_order', { ascending: false })
+                .limit(1);
+
+            const baseOrder = existing?.[0]?.todo_order ?? -1;
+
+            await supabase.from('step_todos').insert(
+                contentTodos.map((t, i) => ({
+                    session_step_id: stepId,
+                    text: t.text,
+                    todo_order: baseOrder + 1 + i,
+                    done: false,
+                }))
+            );
+        }
+    }
+
     return { success: true };
 }
 
@@ -59,7 +137,7 @@ export async function unlinkCardFromStep(stepId: string, cardId: string) {
     return { success: true };
 }
 
-export async function createStage(data: { title: string, activity: string, level: string, dates: string, suggested_thematics?: string[] }) {
+export async function createStage(data: { title: string, activity: string, level: string, dates: string, nb_stagiaires?: number, suggested_thematics?: string[] }) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -67,7 +145,7 @@ export async function createStage(data: { title: string, activity: string, level
         return { success: false, error: "Vous devez être connecté pour créer un stage." };
     }
 
-    const { error } = await supabase
+    const { data: created, error } = await supabase
         .from('stages')
         .insert([
             {
@@ -75,12 +153,13 @@ export async function createStage(data: { title: string, activity: string, level
                 activity: data.activity,
                 level: data.level,
                 dates: data.dates,
+                nb_stagiaires: data.nb_stagiaires ?? null,
                 selected_content: [],
                 suggested_thematics: data.suggested_thematics ?? [],
                 owner_id: user.id
             }
         ])
-        .select()
+        .select('id')
         .single();
 
     if (error) {
@@ -88,8 +167,23 @@ export async function createStage(data: { title: string, activity: string, level
         return { success: false, error: error.message };
     }
 
+    // Auto-assigner le défi fil rouge du moniteur si défini
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('defi_fil_rouge_id')
+        .eq('id', user.id)
+        .single();
+
+    if (profile?.defi_fil_rouge_id) {
+        await supabase.from('stage_exploits').insert({
+            stage_id: created.id,
+            exploit_id: profile.defi_fil_rouge_id,
+            status: 'en_cours',
+        });
+    }
+
     revalidatePath('/stages');
-    return { success: true };
+    return { success: true, stageId: created.id };
 }
 
 /**
@@ -225,12 +319,16 @@ export async function addStep(sessionId: string, stageId: string, order: number)
             .gte('step_order', order);
 
         if (steps && steps.length > 0) {
-            for (const s of steps) {
-                await supabase
+            const updates = steps.map(s => ({
+                id: s.id,
+                step_order: s.step_order + 1,
+            }));
+            await Promise.all(updates.map(u =>
+                supabase
                     .from('session_structure')
-                    .update({ step_order: s.step_order + 1 })
-                    .eq('id', s.id);
-            }
+                    .update({ step_order: u.step_order })
+                    .eq('id', u.id)
+            ));
         }
     }
 
@@ -306,15 +404,102 @@ export async function updateStepTodo(todoId: string, stageId: string, patch: { t
 
 export async function deleteStepTodo(todoId: string, stageId: string) {
     const supabase = await createClient();
-    const { error } = await supabase
-        .from('step_todos')
-        .delete()
-        .eq('id', todoId);
 
-    if (error) return { success: false, error: error.message };
+    // Check if this todo has a linked_content_id and is the header
+    const { data: todo } = await supabase
+        .from('step_todos')
+        .select('session_step_id, linked_content_id, is_content_header')
+        .eq('id', todoId)
+        .single();
+
+    if (todo && todo.linked_content_id && todo.is_content_header) {
+        // Delete all todos for this step with this linked_content_id
+        const { error } = await supabase
+            .from('step_todos')
+            .delete()
+            .eq('session_step_id', todo.session_step_id)
+            .eq('linked_content_id', todo.linked_content_id);
+
+        if (error) return { success: false, error: error.message };
+    } else {
+        // Regular delete
+        const { error } = await supabase
+            .from('step_todos')
+            .delete()
+            .eq('id', todoId);
+
+        if (error) return { success: false, error: error.message };
+    }
+
     revalidatePath(`/stages/${stageId}/sessions`);
     return { success: true };
 }
+
+export async function addStepPedagogicalCard(stepId: string, stageId: string, cardId: string, startOrder: number) {
+    const supabase = await createClient();
+
+    // 1. Get the pedagogical content info (the question)
+    const { data: card, error: cardError } = await supabase
+        .from('pedagogical_content')
+        .select('question')
+        .eq('id', cardId)
+        .single();
+
+    if (cardError || !card) {
+        console.error('Error fetching pedagogical card:', cardError);
+        return { success: false, error: cardError?.message || 'Fiche introuvable' };
+    }
+
+    // 2. Get its content_todos
+    const { data: contentTodos } = await supabase
+        .from('content_todos')
+        .select('text, todo_order')
+        .eq('content_id', cardId)
+        .order('todo_order');
+
+    // 3. Insert the header
+    const { data: headerData, error: headerError } = await supabase
+        .from('step_todos')
+        .insert({
+            session_step_id: stepId,
+            text: card.question,
+            linked_content_id: cardId,
+            is_content_header: true,
+            done: false,
+            todo_order: startOrder,
+        })
+        .select()
+        .single();
+
+    if (headerError) {
+        console.error('Error inserting card header:', headerError);
+        return { success: false, error: headerError.message };
+    }
+
+    // 4. Insert sub-todos
+    if (contentTodos && contentTodos.length > 0) {
+        const subTodosToInsert = contentTodos.map((t, i) => ({
+            session_step_id: stepId,
+            text: t.text,
+            linked_content_id: cardId,
+            is_content_header: false,
+            done: false,
+            todo_order: startOrder + 1 + i,
+        }));
+
+        const { error: subError } = await supabase
+            .from('step_todos')
+            .insert(subTodosToInsert);
+
+        if (subError) {
+            console.error('Error inserting card sub-todos:', subError);
+        }
+    }
+
+    revalidatePath(`/stages/${stageId}/sessions`);
+    return { success: true };
+}
+
 
 export async function getStepTodosForStage(stageId: string): Promise<{ step_id: string; todos: import('@/types').StepTodo[] }[]> {
     const supabase = await createClient();
@@ -373,4 +558,159 @@ export async function getPastTodosForUser(stageId: string): Promise<string[]> {
         if (!seen.has(t)) { seen.add(t); texts.push(t); }
     });
     return texts;
+}
+
+/* ─── CLÔTURE DE STAGE ─────────────────────────────────────────────── */
+
+type CloseStageInput = {
+  closingNotes: string;
+  objectiveReviews: StageObjectiveReviewDraft[];
+};
+
+export async function closeStage(stageId: string, input: CloseStageInput) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { success: false, error: 'Non autorisé' };
+  }
+
+  const { data: stage, error: stageError } = await supabase
+    .from('stages')
+    .select('selected_content')
+    .eq('id', stageId)
+    .eq('owner_id', user.id)
+    .single();
+
+  if (stageError || !stage) {
+    console.error('Error fetching stage before closing:', stageError);
+    return { success: false, error: stageError?.message || 'Stage introuvable' };
+  }
+
+  const selectedContent: string[] = stage.selected_content ?? [];
+  const selectedSet = new Set(selectedContent);
+  const reviewByContentId = new Map<string, StageObjectiveReviewDraft>();
+
+  for (const review of input.objectiveReviews ?? []) {
+    if (!review?.pedagogicalContentId || !selectedSet.has(review.pedagogicalContentId)) continue;
+    if (!review.executionStatus || !isStageObjectiveExecutionStatus(review.executionStatus)) {
+      return { success: false, error: 'Chaque objectif doit avoir un sort renseigné.' };
+    }
+
+    const normalizedReview: StageObjectiveReviewDraft = {
+      pedagogicalContentId: review.pedagogicalContentId,
+      executionStatus: review.executionStatus,
+      impactLevel: review.executionStatus === 'not_done'
+        ? null
+        : (review.impactLevel && isStageObjectiveImpactLevel(review.impactLevel) ? review.impactLevel : null),
+      note: typeof review.note === 'string' ? review.note.trim() : '',
+    };
+
+    if (normalizedReview.executionStatus !== 'not_done' && !normalizedReview.impactLevel) {
+      return { success: false, error: 'Renseignez aussi la qualité ressentie pour chaque objectif mené.' };
+    }
+
+    reviewByContentId.set(normalizedReview.pedagogicalContentId, normalizedReview);
+  }
+
+  if (selectedContent.length > 0) {
+    const missingReviews = selectedContent.filter(contentId => !reviewByContentId.has(contentId));
+    if (missingReviews.length > 0) {
+      return { success: false, error: 'Complétez l’analyse de chaque objectif avant de clôturer le stage.' };
+    }
+
+    const { error: reviewError } = await supabase
+      .from('stage_objective_reviews')
+      .upsert(
+        Array.from(reviewByContentId.values()).map(review => ({
+          stage_id: stageId,
+          pedagogical_content_id: review.pedagogicalContentId,
+          execution_status: review.executionStatus,
+          impact_level: review.executionStatus === 'not_done' ? null : review.impactLevel,
+          note: review.note || null,
+        })),
+        { onConflict: 'stage_id,pedagogical_content_id' }
+      );
+
+    if (reviewError) {
+      console.error('Error saving stage objective reviews:', reviewError);
+      return { success: false, error: reviewError.message };
+    }
+  }
+
+  const normalizedNotes = input.closingNotes.trim();
+
+  const { data, error } = await supabase
+    .from('stages')
+    .update({
+      closed_at: new Date().toISOString(),
+      closing_notes: normalizedNotes || null,
+    })
+    .eq('id', stageId)
+    .eq('owner_id', user.id)
+    .select('id, closed_at, closing_notes')
+    .single();
+
+  if (error) {
+    console.error('Error closing stage:', error);
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath(`/stages/${stageId}`);
+  revalidatePath(`/stages/${stageId}/bilan`);
+  revalidatePath('/stages');
+
+  return { success: true, stage: data };
+}
+
+export async function reopenStage(stageId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { success: false, error: 'Non autorisé' };
+  }
+
+  const { error } = await supabase
+    .from('stages')
+    .update({
+      closed_at: null,
+    })
+    .eq('id', stageId)
+    .eq('owner_id', user.id);
+
+  if (error) {
+    console.error('Error reopening stage:', error);
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath(`/stages/${stageId}`);
+  revalidatePath(`/stages/${stageId}/bilan`);
+  revalidatePath('/stages');
+
+  return { success: true };
+}
+
+export async function updateClosingNotes(stageId: string, closingNotes: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { success: false, error: 'Non autorisé' };
+  }
+
+  const { error } = await supabase
+    .from('stages')
+    .update({ closing_notes: closingNotes || null })
+    .eq('id', stageId)
+    .eq('owner_id', user.id);
+
+  if (error) {
+    console.error('Error updating closing notes:', error);
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath(`/stages/${stageId}`);
+  revalidatePath(`/stages/${stageId}/bilan`);
+  return { success: true };
 }

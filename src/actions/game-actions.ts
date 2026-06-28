@@ -3,13 +3,22 @@
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 
+async function requireAdmin() {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+    if (profile?.role !== 'admin') return null;
+    return { user, supabase };
+}
+
 // ==========================================
 // GAME CARDS (Individual quiz cards)
 // ==========================================
 
 export async function getGameCardsForContent(contentId?: string) {
     const supabase = await createClient();
-    let query = supabase.from('game_cards').select('*');
+    let query = supabase.from('game_cards').select('id, type, theme, related_objective_id, data');
 
     if (contentId) {
         query = query.eq('related_objective_id', contentId);
@@ -27,7 +36,7 @@ export async function getAllGameCards() {
     const supabase = await createClient();
     const { data, error } = await supabase
         .from('game_cards')
-        .select('*')
+        .select('id, type, theme, related_objective_id, data')
         .order('theme', { ascending: true })
         .order('type', { ascending: true });
 
@@ -40,7 +49,7 @@ export async function getAllGameCards() {
 
 export async function getFilteredGameCards(types: string[], themes: string[]) {
     const supabase = await createClient();
-    let query = supabase.from('game_cards').select('*');
+    let query = supabase.from('game_cards').select('id, type, theme, related_objective_id, data');
 
     if (types.length > 0) {
         query = query.in('type', types);
@@ -61,7 +70,7 @@ export async function getGameCardById(id: string) {
     const supabase = await createClient();
     const { data, error } = await supabase
         .from('game_cards')
-        .select('*')
+        .select('id, type, theme, related_objective_id, data')
         .eq('id', id)
         .single();
 
@@ -153,8 +162,10 @@ export async function getAllGames() {
 }
 
 export async function deleteGame(gameId: string) {
-    const supabase = await createClient();
-    const { error } = await supabase
+    const ctx = await requireAdmin();
+    if (!ctx) return { success: false, error: 'Accès refusé.' };
+
+    const { error } = await ctx.supabase
         .from('games')
         .delete()
         .eq('id', gameId);

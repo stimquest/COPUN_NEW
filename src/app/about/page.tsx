@@ -78,10 +78,10 @@ export default function AboutPage() {
                             </span>
                         </div>
                         <h1 className="text-4xl font-black leading-tight">
-                            Former des<br />Sentinelles<br />du Littoral
+                            Comprendre.<br />Observer.<br />Protéger.<br />Ne faire qu&apos;UN.
                         </h1>
                         <p className="text-slate-300 text-base leading-relaxed max-w-sm">
-                            COPUN est un outil pédagogique pour les moniteurs nautiques. Il structure l'enseignement de la connaissance environnementale du littoral — de la préparation du stage à l'animation sur le terrain.
+                            COP&apos;UN est un outil pédagogique pour les moniteurs nautiques. Il structure l&apos;intégration de l&apos;environnement marin dans chaque séance — de la préparation du stage à l&apos;animation sur le terrain.
                         </p>
                     </div>
                 </section>
@@ -90,8 +90,11 @@ export default function AboutPage() {
                 <section className="space-y-6">
                     <div>
                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">La méthode</p>
-                        <h2 className="text-2xl font-black text-slate-900">3 mouvements inséparables</h2>
-                        <p className="text-sm text-slate-500 mt-1">On ne protège que ce qu'on comprend. On n'observe bien que ce qu'on connaît.</p>
+                        <h2 className="text-2xl font-black text-slate-900">Le cercle vertueux des apprentissages sens marin – environnement</h2>
+                        <p className="text-sm text-slate-500 mt-1">On ne protège que ce qu&apos;on comprend. On n&apos;observe bien que ce qu&apos;on connaît.</p>
+                        <p className="text-sm text-slate-500 mt-2 leading-relaxed">
+                            <strong className="text-slate-700">COP&apos;UN</strong> — <span className="italic">Comprendre, Observer, Protéger, et ne faire qu&apos;UN</span> — pour être en harmonie avec l&apos;environnement.
+                        </p>
                     </div>
 
                     <div className="space-y-4">
@@ -172,7 +175,7 @@ export default function AboutPage() {
                     </div>
                     <h3 className="text-lg font-black text-slate-900">Chaque observation compte</h3>
                     <p className="text-sm text-slate-600 leading-relaxed">
-                        Les données collectées par les clubs — inventaires d'estran, suivis de laisse, observations de faune — s'accumulent stage après stage. Elles rejoignent les bases de sciences participatives et deviennent utiles aux chercheurs qui étudient le littoral normand.
+                        Les données collectées par les clubs — inventaires d&apos;estran, suivis de laisse, observations de faune — s&apos;accumulent stage après stage. Elles rejoignent les bases de sciences participatives et deviennent utiles aux chercheurs qui étudient le littoral normand.
                     </p>
                     <p className="text-xs text-emerald-700 font-semibold">
                         Normandie : 94 sites Natura 2000 · 24 espèces de mammifères marins observées · Escale migratoire majeure
@@ -190,7 +193,7 @@ export default function AboutPage() {
                             { val: '128+', label: 'fiches pédagogiques', icon: 'menu_book' },
                             { val: '500+', label: 'cartes de jeu', icon: 'style' },
                             { val: '10', label: 'défis terrain', icon: 'eco' },
-                            { val: '4', label: "niveaux d'apprentissage", icon: 'school' },
+                            { val: '3', label: "niveaux d'apprentissage", icon: 'school' },
                         ].map((s) => (
                             <div key={s.label} className="bg-white rounded-2xl p-4 shadow-sm text-center">
                                 <span className="material-symbols-outlined text-slate-300 text-2xl mb-1 block">{s.icon}</span>

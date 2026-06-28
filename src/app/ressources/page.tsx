@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { getAllFichesMemo } from '@/actions/fiche-memo-actions';
 import { getProfile } from '@/actions/user-actions';
 import FicheCard from '@/components/fiches/FicheCard';
+import FichesBrowser from '@/components/fiches/FichesBrowser';
 
 export default async function RessourcesPage() {
     const [fiches, profile] = await Promise.all([
@@ -9,7 +10,10 @@ export default async function RessourcesPage() {
         getProfile(),
     ]);
 
-    const canModerate = profile?.role === 'admin' || profile?.role === 'instructor';
+    const isAdmin = profile?.role === 'admin';
+    const isModerator = profile?.role === 'admin' || profile?.role === 'instructor';
+    const canModerate = isModerator; // pour la section "en attente de validation"
+    const currentUserId = profile?.id ?? null;
 
     const fichesBrouillon = fiches.filter(f => f.statut === 'brouillon');
     const fichesPubliees = fiches.filter(f => f.statut === 'publie');
@@ -62,15 +66,16 @@ export default async function RessourcesPage() {
                             <FicheCard
                                 key={fiche.id}
                                 fiche={fiche}
-                                canModerate={canModerate}
-                                canDelete={canModerate}
+                                currentUserId={currentUserId}
+                                isAdmin={isAdmin}
+                                isModerator={isModerator}
                             />
                         ))}
                     </div>
                 </section>
             )}
 
-            {/* Fiches publiées */}
+            {/* Fiches publiées — avec recherche et filtres */}
             {fichesPubliees.length > 0 ? (
                 <section>
                     {canModerate && fichesBrouillon.length > 0 && (
@@ -78,16 +83,12 @@ export default async function RessourcesPage() {
                             Publiées ({fichesPubliees.length})
                         </h2>
                     )}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                        {fichesPubliees.map(fiche => (
-                            <FicheCard
-                                key={fiche.id}
-                                fiche={fiche}
-                                canModerate={canModerate}
-                                canDelete={canModerate}
-                            />
-                        ))}
-                    </div>
+                    <FichesBrowser
+                        fiches={fichesPubliees}
+                        currentUserId={currentUserId}
+                        isAdmin={isAdmin}
+                        isModerator={isModerator}
+                    />
                 </section>
             ) : (
                 !canModerate || fichesBrouillon.length === 0 ? (
