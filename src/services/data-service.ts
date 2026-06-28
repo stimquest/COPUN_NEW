@@ -647,60 +647,75 @@ export async function getSessionStepLinks(stepIds: string[]) {
 export async function getSessionFull(sessionId: string) {
     const supabase = await createClient();
 
-    // 1. Get Session & Steps
+    // 1. Get Session (minimal columns)
     const { data: sessionData, error: sessionError } = await supabase
         .from('sessions')
-        .select(`
-            *,
-            steps:session_structure(*)
-        `)
+        .select('id, stage_id, title, session_order')
         .eq('id', sessionId)
         .single();
 
     if (sessionError || !sessionData) return null;
 
-    const session = sessionData as Session & { steps: SessionStep[] };
+    const session = sessionData as Session;
 
-    // Sort steps
-    session.steps.sort((a, b) => a.step_order - b.step_order);
+    // 2. Get Steps (ordered server-side)
+    const { data: stepsData } = await supabase
+        .from('session_structure')
+        .select('id, session_id, step_title, step_duration_minutes, step_description, step_order')
+        .eq('session_id', sessionId)
+        .order('step_order', { ascending: true });
 
-    // 2. Get Links for these steps
-    const stepIds = session.steps.map(s => s.id);
-    const { data: links } = await supabase
-        .from('session_step_pedagogical_links')
-        .select('session_step_id, pedagogical_content_id')
-        .in('session_step_id', stepIds);
+    const steps = (stepsData as SessionStep[]) || [];
 
-    // 3. Get Content Details
-    const contentIds = new Set(links?.map(l => l.pedagogical_content_id) || []);
+    if (steps.length === 0) {
+        return {
+            session,
+            steps: [],
+            links: [],
+            contentPool: [],
+        };
+    }
 
-    // Fiches sportives are attached to step todos via linked_content_id, not the
-    // session_step_pedagogical_links table. Pull them in so the runner can open
-    // their detail and show their evaluation status.
-    const { data: todosWithContent } = await supabase
-        .from('step_todos')
-        .select('linked_content_id')
-        .in('session_step_id', stepIds)
-        .not('linked_content_id', 'is', null);
-    (todosWithContent ?? []).forEach((t) => {
+    const stepIds = steps.map(s => s.id);
+
+    // 3. Get Links + Todos with linked_content in parallel
+    const [linksResult, todosResult] = await Promise.all([
+        supabase
+            .from('session_step_pedagogical_links')
+            .select('session_step_id, pedagogical_content_id')
+            .in('session_step_id', stepIds),
+        supabase
+            .from('step_todos')
+            .select('linked_content_id')
+            .in('session_step_id', stepIds)
+            .not('linked_content_id', 'is', null),
+    ]);
+
+    const links = linksResult.data || [];
+    const todosWithContent = todosResult.data || [];
+
+    // 4. Build content IDs set
+    const contentIds = new Set<string>();
+    links.forEach(l => contentIds.add(l.pedagogical_content_id));
+    todosWithContent.forEach(t => {
         if (t.linked_content_id) contentIds.add(t.linked_content_id);
     });
 
+    // 5. Get Pedagogical Content (specific columns)
     let contentMap: PedagogicalContent[] = [];
-
     if (contentIds.size > 0) {
         const { data: content } = await supabase
             .from('pedagogical_content')
-            .select('*')
+            .select('id, question, objectif, tip, niveau, dimension, tags_theme, tags_filtre, ressources, owner_id, is_public, club_id, source, ffv_level, supports')
             .in('id', Array.from(contentIds));
         contentMap = (content as PedagogicalContent[]) || [];
     }
 
     return {
         session,
-        steps: session.steps,
-        links: links || [],
-        contentPool: contentMap
+        steps,
+        links,
+        contentPool: contentMap,
     };
 }
 

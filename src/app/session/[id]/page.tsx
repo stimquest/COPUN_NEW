@@ -20,19 +20,21 @@ export default async function SessionRunnerPage({ params }: { params: Promise<{ 
         allSessions,
         assignedExploits,
         todosGrouped,
+        reviewRows,
     ] = await Promise.all([
         getUserValidationsForSession(id),
         getSessionsForStage(session.stage_id),
         getStageExploits(session.stage_id),
         getStepTodosForStage(session.stage_id),
+        (async () => {
+            const supabase = await createClient();
+            const { data } = await supabase
+                .from('stage_objective_reviews')
+                .select('pedagogical_content_id, execution_status')
+                .eq('stage_id', session.stage_id);
+            return data;
+        })(),
     ]);
-
-    // Load existing stage objective reviews so the runner shows them pre-filled
-    const supabase = await createClient();
-    const { data: reviewRows } = await supabase
-        .from('stage_objective_reviews')
-        .select('pedagogical_content_id, execution_status')
-        .eq('stage_id', session.stage_id);
 
     const initialReviews: Record<string, StageObjectiveExecutionStatus> = {};
     (reviewRows ?? []).forEach((r) => {

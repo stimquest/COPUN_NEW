@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition, useSyncExternalStore, useRef } from 'react';
+import { useState, useTransition, useSyncExternalStore, useRef, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import clsx from 'clsx';
 import { SessionStep, PedagogicalContent, StepTodo, StageObjectiveExecutionStatus } from '@/types';
@@ -58,6 +58,7 @@ type Props = {
     steps: SessionStep[];
     contentPool: PedagogicalContent[];
     links: { session_step_id: string; pedagogical_content_id: string }[];
+    initialValidations: string[];
     initialReviews: Record<string, StageObjectiveExecutionStatus>;
     sessionId: string;
     stageId: string;
@@ -184,27 +185,47 @@ export default function SessionRunnerClient({
     const isClient = useSyncExternalStore(subscribe, () => true, () => false);
 
     const spotsByDefiId = new Map(clubSpots.map(s => [s.defi_id, s]));
+    const stepIdSet = useMemo(() => new Set(steps.map(s => s.id)), [steps]);
 
-    const getContentForStep = (stepId: string) => {
-        const linkIds = links.filter(l => l.session_step_id === stepId).map(l => l.pedagogical_content_id);
-        return contentPool.filter(c => linkIds.includes(c.id));
-    };
-
-    const handleToggleValidation = async (contentId: string) => {
-        startTransition(async () => {
-            addOptimisticValidation(contentId);
-            setValidatedIds(prev => prev.includes(contentId) ? prev.filter(id => id !== contentId) : [...prev, contentId]);
-            const res = await toggleValidation(contentId, sessionId);
-            if (!res.success) {
-                console.error('[toggleValidation] erreur:', res.error);
-                alert('Erreur validation : ' + res.error);
-                setValidatedIds(prev => prev.includes(contentId) ? prev.filter(id => id !== contentId) : [...prev, contentId]);
+    const contentByStepId = useMemo(() => {
+        const contentMap = new Map<string, PedagogicalContent>();
+        contentPool.forEach(c => contentMap.set(c.id, c));
+        const stepMap = new Map<string, PedagogicalContent[]>();
+        links.forEach(link => {
+            const content = contentMap.get(link.pedagogical_content_id);
+            if (content) {
+                const arr = stepMap.get(link.session_step_id);
+                if (arr) arr.push(content);
+                else stepMap.set(link.session_step_id, [content]);
             }
         });
-    };
+        return stepMap;
+    }, [links, contentPool]);
 
-    const handleSetReview = (contentId: string, status: StageObjectiveExecutionStatus) => {
-        // Toggle off if same status clicked again
+    const sessionContentIds = useMemo(() => {
+        const ids = new Set<string>();
+        links.forEach(l => {
+            if (stepIdSet.has(l.session_step_id)) ids.add(l.pedagogical_content_id);
+        });
+        return ids;
+    }, [links, stepIdSet]);
+
+    const allStepTodos = useMemo(() => steps.flatMap(s => localTodosByStep[s.id] ?? []), [steps, localTodosByStep]);
+
+    const sportFicheIds = useMemo(() => {
+        const ids = new Set<string>();
+        allStepTodos.forEach(t => {
+            if (t.linked_content_id && t.is_content_header) ids.add(t.linked_content_id);
+        });
+        return ids;
+    }, [allStepTodos]);
+
+    const allObjectiveIds = useMemo(() => [...sessionContentIds, ...sportFicheIds], [sessionContentIds, sportFicheIds]);
+    const reviewedCount = useMemo(() => allObjectiveIds.filter(id => localReviews[id] != null).length, [allObjectiveIds, localReviews]);
+    const doneTodosCount = useMemo(() => allStepTodos.filter(t => t.done).length, [allStepTodos]);
+    const completedDefis = useMemo(() => assignedExploits.filter(e => e.status === 'complete').length, [assignedExploits]);
+
+    const handleSetReview = useCallback((contentId: string, status: StageObjectiveExecutionStatus) => {
         const next = localReviews[contentId] === status ? null : status;
         setLocalReviews(prev => {
             const updated = { ...prev };
@@ -217,9 +238,9 @@ export default function SessionRunnerClient({
             await upsertObjectiveReview(stageId, contentId, next);
             setPendingKeys(prev => { const s = new Set(prev); s.delete(`review:${contentId}`); return s; });
         });
-    };
+    }, [localReviews, stageId, startTransition]);
 
-    const handleToggleTodoDone = async (stepId: string, todo: StepTodo) => {
+    const handleToggleTodoDone = useCallback(async (stepId: string, todo: StepTodo) => {
         const next = !todo.done;
         setLocalTodosByStep(prev => ({
             ...prev,
@@ -231,19 +252,19 @@ export default function SessionRunnerClient({
         } finally {
             setPendingKeys(prev => { const s = new Set(prev); s.delete(`todo:${todo.id}`); return s; });
         }
-    };
+    }, [stageId]);
 
     // Défi handlers
-    const handleCompleteDefi = (defiId: string, preuveUrl?: string) => {
+    const handleCompleteDefi = useCallback((defiId: string, preuveUrl?: string) => {
         setPendingKeys(prev => new Set(prev).add(`defi:${defiId}`));
         startTransition(async () => {
             await updateStageExploitStatus(stageId, defiId, 'complete', preuveUrl);
             setPendingKeys(prev => { const s = new Set(prev); s.delete(`defi:${defiId}`); return s; });
             router.refresh();
         });
-    };
+    }, [stageId, startTransition, router]);
 
-    const handleSaisirClick = async (defiId: string, defiDescription: string) => {
+    const handleSaisirClick = useCallback(async (defiId: string, defiDescription: string) => {
         setIsLocating(defiId);
         try {
             const pos = await getCurrentPosition();
@@ -261,22 +282,22 @@ export default function SessionRunnerClient({
         } finally {
             setIsLocating(null);
         }
-    };
+    }, [spotsByDefiId]);
 
-    const handleConfirmSpot = () => {
+    const handleConfirmSpot = useCallback(() => {
         if (!spotGuidance) return;
         const { defiId, defiDescription, isNew, lat, lng } = spotGuidance;
         setSpotGuidance(null);
         setFilRougeForm({ defiId, defiDescription, isFirstSpot: isNew, gpsCoords: { lat, lng } });
-    };
+    }, [spotGuidance]);
 
-    const handleFilRougeSuccess = async () => {
+    const handleFilRougeSuccess = useCallback(async () => {
         if (filRougeForm?.isFirstSpot && filRougeForm.gpsCoords) {
             await saveClubSpot(filRougeForm.defiId, filRougeForm.gpsCoords.lat, filRougeForm.gpsCoords.lng, null);
         }
         setFilRougeForm(null);
         router.refresh();
-    };
+    }, [filRougeForm, router]);
 
     const handlePhotoClick = (defiId: string) => {
         currentDefiIdRef.current = defiId;
@@ -304,26 +325,7 @@ export default function SessionRunnerClient({
         }
     };
 
-    // Totals for badge counts — all evaluatable objectives (éco + sportives)
-    const sessionContentIds = new Set(
-        links.filter(l => steps.some(s => s.id === l.session_step_id)).map(l => l.pedagogical_content_id)
-    );
-    const sessionContent = contentPool.filter(c => sessionContentIds.has(c.id));
 
-    // Include sport fiches (attached via step_todos.linked_content_id)
-    const sportFicheIds = new Set<string>();
-    const allStepTodos = steps.flatMap(s => localTodosByStep[s.id] ?? []);
-    allStepTodos.forEach(t => {
-        if (t.linked_content_id && t.is_content_header) sportFicheIds.add(t.linked_content_id);
-    });
-
-    const allObjectiveIds = [...sessionContentIds, ...sportFicheIds];
-    const reviewedCount = allObjectiveIds.filter(id => localReviews[id] != null).length;
-
-    const allTodos = steps.flatMap(s => localTodosByStep[s.id] ?? []);
-    const doneTodosCount = allTodos.filter(t => t.done).length;
-
-    const completedDefis = assignedExploits.filter(e => e.status === 'complete').length;
 
     if (!isClient) return null;
 
@@ -431,7 +433,7 @@ export default function SessionRunnerClient({
                             Cochez les points réalisés et validez les objectifs travaillés
                         </p>
                         {steps.map((step, idx) => {
-                            const contents = getContentForStep(step.id);
+                            const contents = contentByStepId.get(step.id) ?? [];
                             const todos = localTodosByStep[step.id] ?? [];
                             const isFirst = idx === 0;
                             const isLast = idx === steps.length - 1;
