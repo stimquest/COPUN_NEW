@@ -1,6 +1,8 @@
 import { getSessionFull, getUserValidationsForSession, getSessionsForStage } from '@/services/data-service';
 import { getStageExploits, getClubSpotsForUser, getClubObservationTargets } from '@/actions/defi-actions';
 import { getStepTodosForStage } from '@/actions/stage-actions';
+import { createClient } from '@/lib/supabase/server';
+import { StageObjectiveExecutionStatus } from '@/types';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import SessionRunnerClient from './SessionRunnerClient';
@@ -24,6 +26,20 @@ export default async function SessionRunnerPage({ params }: { params: Promise<{ 
         getStageExploits(session.stage_id),
         getStepTodosForStage(session.stage_id),
     ]);
+
+    // Load existing stage objective reviews so the runner shows them pre-filled
+    const supabase = await createClient();
+    const { data: reviewRows } = await supabase
+        .from('stage_objective_reviews')
+        .select('pedagogical_content_id, execution_status')
+        .eq('stage_id', session.stage_id);
+
+    const initialReviews: Record<string, StageObjectiveExecutionStatus> = {};
+    (reviewRows ?? []).forEach((r) => {
+        if (r.execution_status) {
+            initialReviews[r.pedagogical_content_id] = r.execution_status as StageObjectiveExecutionStatus;
+        }
+    });
 
     const todosByStep: Record<string, import('@/types').StepTodo[]> = {};
     todosGrouped.forEach(({ step_id, todos }) => { todosByStep[step_id] = todos; });
@@ -58,6 +74,7 @@ export default async function SessionRunnerPage({ params }: { params: Promise<{ 
                 contentPool={contentPool}
                 links={links}
                 initialValidations={initialValidations}
+                initialReviews={initialReviews}
                 sessionId={id}
                 stageId={session.stage_id}
                 allSessions={allSessions.map(s => ({ id: s.id, title: s.title, order: s.session_order }))}

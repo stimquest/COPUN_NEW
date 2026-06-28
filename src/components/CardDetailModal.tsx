@@ -1,14 +1,11 @@
 'use client';
 
 import { PedagogicalContent } from '@/types';
+import { VOILE_THEMES } from '@/data/voile-themes';
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
 import { createPortal } from 'react-dom';
-import { useSyncExternalStore, useState, useEffect } from 'react';
-import GameCard from './games/GameCard';
-import { GameCardDB } from './games/types';
-// Server Actions
-import { getGameCardsForContent } from '@/actions/game-actions';
+import { useSyncExternalStore } from 'react';
 
 type CardDetailModalProps = {
     isOpen: boolean;
@@ -22,42 +19,6 @@ function subscribe() {
 
 export default function CardDetailModal({ isOpen, onClose, content }: CardDetailModalProps) {
     const isClient = useSyncExternalStore(subscribe, () => true, () => false);
-
-    // Dynamic Data State
-    const [games, setGames] = useState<GameCardDB[]>([]);
-    const [loading, setLoading] = useState(false);
-
-    useEffect(() => {
-        let ignore = false;
-
-        async function loadContentData() {
-            if (!isOpen || !content) return;
-
-            // Avoid setting state immediately if it causes synchronous re-render loops
-            // Using a microtask or just relying on the async flow
-            setLoading(true);
-
-            try {
-                const fetchedGames = await getGameCardsForContent(content.id);
-
-                if (!ignore) {
-                    setGames(fetchedGames as GameCardDB[]);
-                }
-            } catch (err) {
-                console.error("Error fetching detail data:", err);
-            } finally {
-                if (!ignore) {
-                    setLoading(false);
-                }
-            }
-        }
-
-        loadContentData();
-
-        return () => {
-            ignore = true;
-        };
-    }, [isOpen, content]);
 
     if (!isClient) return null;
 
@@ -80,7 +41,7 @@ export default function CardDetailModal({ isOpen, onClose, content }: CardDetail
                         animate={{ scale: 1, opacity: 1, y: 0 }}
                         exit={{ scale: 0.95, opacity: 0, y: 20 }}
                         className={clsx(
-                            "relative w-full max-w-3xl bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]",
+                            "relative w-full max-w-xl bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]",
                             "border-4",
                             content.dimension === 'COMPRENDRE' ? "border-amber-100" :
                                 content.dimension === 'OBSERVER' ? "border-blue-100" :
@@ -118,134 +79,115 @@ export default function CardDetailModal({ isOpen, onClose, content }: CardDetail
                         </div>
 
                         {/* Scrollable Body */}
-                        <div className="p-8 overflow-y-auto custom-scrollbar">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                                {/* LEFT COLUMN: Basic Info */}
-                                <div className="space-y-8">
-                                    <div>
-                                        <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Objectif</h3>
-                                        <p className="text-lg font-medium text-slate-700 leading-relaxed">
-                                            {content.objectif}
-                                        </p>
-                                    </div>
-
-                                    {content.tip && (
-                                        <div className="bg-indigo-50 rounded-2xl p-6 border border-indigo-100">
-                                            <div className="flex items-center gap-2 mb-3">
-                                                <span className="material-symbols-outlined text-indigo-500">lightbulb</span>
-                                                <h3 className="text-xs font-black text-indigo-800 uppercase tracking-widest">Le Conseil du Coach</h3>
-                                            </div>
-                                            <p className="text-sm font-medium text-indigo-900 leading-relaxed">
-                                                {content.tip}
-                                            </p>
-                                        </div>
-                                    )}
-
-                                    <div className="space-y-4 pt-4 border-t border-slate-100">
-                                        {content.tags_theme?.length > 0 && (
-                                            <div>
-                                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Thèmes</span>
-                                                <div className="flex flex-wrap gap-2">
-                                                    {content.tags_theme.map(tag => (
-                                                        <span key={`theme-${tag}`} className="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 text-xs font-bold uppercase tracking-wide">
-                                                            {tag}
-                                                        </span>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        )}
-                                        {content.tags_filtre?.length > 0 && (
-                                            <div>
-                                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Mots-clés</span>
-                                                <div className="flex flex-wrap gap-2">
-                                                    {content.tags_filtre.map(tag => (
-                                                        <span key={`filtre-${tag}`} className="px-3 py-1.5 rounded-lg border border-slate-200 text-slate-500 text-[10px] font-bold uppercase tracking-wide">
-                                                            #{tag}
-                                                        </span>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-
-
-                                {/* RIGHT COLUMN: Jeux & Ressources */}
-                                <div className="space-y-10">
-                                    {/* JEUX SECTION */}
-                                    <section>
-                                        <div className="flex items-center gap-2 mb-4">
-                                            <div className="size-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center">
-                                                <span className="material-symbols-outlined text-lg">videogame_asset</span>
-                                            </div>
-                                            <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Jeux associés</h3>
-                                        </div>
-
-                                        {loading ? (
-                                            <div className="p-4 text-center text-slate-400 text-xs italic">Chargement des jeux...</div>
-                                        ) : games.length > 0 ? (
-                                            <div className="space-y-4">
-                                                {games.map(game => (
-                                                    <GameCard key={game.id} game={game} />
-                                                ))}
-                                            </div>
-                                        ) : (
-                                            <div className="p-10 rounded-2xl border-2 border-dashed border-slate-100 flex flex-col items-center justify-center text-center bg-slate-50/50">
-                                                <div className="size-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-300 mb-3">
-                                                    <span className="material-symbols-outlined">extension_off</span>
-                                                </div>
-                                                <p className="text-xs text-slate-400 font-bold italic max-w-[150px]">
-                                                    Pas de jeu spécifique pour cette fiche.
-                                                </p>
-                                            </div>
-                                        )}
-                                    </section>
-
-                                    {/* RESSOURCES SECTION */}
-                                    {content.ressources && content.ressources.length > 0 && (
-                                        <section>
-                                            <div className="flex items-center gap-2 mb-4">
-                                                <div className="size-8 rounded-lg bg-teal-600 text-white flex items-center justify-center">
-                                                    <span className="material-symbols-outlined text-lg">menu_book</span>
-                                                </div>
-                                                <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Ressources</h3>
-                                            </div>
-                                            <div className="space-y-2">
-                                                {content.ressources.map((r, idx) => (
-                                                    r.type === 'url' ? (
-                                                        <a
-                                                            key={idx}
-                                                            href={r.url}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className="flex items-center gap-3 px-4 py-3 bg-blue-50 border border-blue-100 rounded-xl hover:bg-blue-100 transition group"
-                                                        >
-                                                            <span className="material-symbols-outlined text-blue-500 text-base shrink-0">link</span>
-                                                            <span className="text-sm font-semibold text-blue-800 flex-1 truncate">{r.label}</span>
-                                                            <span className="material-symbols-outlined text-blue-300 text-sm group-hover:translate-x-0.5 transition-transform">open_in_new</span>
-                                                        </a>
-                                                    ) : (
-                                                        <a
-                                                            key={idx}
-                                                            href={`/ressources/${r.fiche_memo_id}`}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className="flex items-center gap-3 px-4 py-3 bg-teal-50 border border-teal-100 rounded-xl hover:bg-teal-100 transition group"
-                                                        >
-                                                            <span className="material-symbols-outlined text-teal-500 text-base shrink-0">article</span>
-                                                            <span className="text-sm font-semibold text-teal-800 flex-1 truncate">{r.label}</span>
-                                                            <span className="material-symbols-outlined text-teal-300 text-sm group-hover:translate-x-0.5 transition-transform">open_in_new</span>
-                                                        </a>
-                                                    )
-                                                ))}
-                                            </div>
-                                        </section>
-                                    )}
-                                </div>
+                        <div className="p-8 overflow-y-auto custom-scrollbar space-y-8">
+                            {/* Objectif */}
+                            <div>
+                                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Objectif</h3>
+                                <p className="text-lg font-medium text-slate-700 leading-relaxed">
+                                    {content.objectif}
+                                </p>
                             </div>
+
+                            {/* Conseil du coach */}
+                            {content.tip && (
+                                <div className="bg-indigo-50 rounded-2xl p-6 border border-indigo-100">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <span className="material-symbols-outlined text-indigo-500">lightbulb</span>
+                                        <h3 className="text-xs font-black text-indigo-800 uppercase tracking-widest">Le Conseil du Coach</h3>
+                                    </div>
+                                    <p className="text-sm font-medium text-indigo-900 leading-relaxed">
+                                        {content.tip}
+                                    </p>
+                                </div>
+                            )}
+
+{/* Tags */}
+                             <div className="space-y-4 pt-4 border-t border-slate-100">
+                                {content.source === 'custom' && content.tags_theme?.length > 0 && (
+                                    <div>
+                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Thématique voile</span>
+                                        <div className="flex flex-wrap gap-2">
+                                            {content.tags_theme?.map(tag => {
+                                                const theme = VOILE_THEMES.find(t => t.id === tag);
+                                                return (
+                                                    <span key={`theme-${tag}`} className="px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-700 text-xs font-bold uppercase tracking-wide inline-flex items-center gap-1">
+                                                        {theme && <span className="material-symbols-outlined text-[14px]">{theme.icon}</span>}
+                                                        {theme?.label || tag}
+                                                    </span>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
+                                {content.source !== 'custom' && content.tags_theme?.length > 0 && (
+                                    <div>
+                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Thèmes environnementaux</span>
+                                        <div className="flex flex-wrap gap-2">
+                                            {content.tags_theme?.map(tag => (
+                                                <span key={`theme-${tag}`} className="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 text-xs font-bold uppercase tracking-wide">
+                                                    {tag}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                                {content.tags_filtre?.length > 0 && (
+                                    <div>
+                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Mots-clés</span>
+                                        <div className="flex flex-wrap gap-2">
+                                            {content.tags_filtre.map(tag => (
+                                                <span key={`filtre-${tag}`} className="px-3 py-1.5 rounded-lg border border-slate-200 text-slate-500 text-[10px] font-bold uppercase tracking-wide">
+                                                    #{tag}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Ressources */}
+                            {content.ressources && content.ressources.length > 0 && (
+                                <div>
+                                    <div className="flex items-center gap-2 mb-4">
+                                        <div className="size-8 rounded-lg bg-teal-600 text-white flex items-center justify-center">
+                                            <span className="material-symbols-outlined text-lg">menu_book</span>
+                                        </div>
+                                        <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Ressources</h3>
+                                    </div>
+                                    <div className="space-y-2">
+                                        {content.ressources.map((r, idx) => (
+                                            r.type === 'url' ? (
+                                                <a
+                                                    key={idx}
+                                                    href={r.url}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="flex items-center gap-3 px-4 py-3 bg-blue-50 border border-blue-100 rounded-xl hover:bg-blue-100 transition group"
+                                                >
+                                                    <span className="material-symbols-outlined text-blue-500 text-base shrink-0">link</span>
+                                                    <span className="text-sm font-semibold text-blue-800 flex-1 truncate">{r.label}</span>
+                                                    <span className="material-symbols-outlined text-blue-300 text-sm group-hover:translate-x-0.5 transition-transform">open_in_new</span>
+                                                </a>
+                                            ) : (
+                                                <a
+                                                    key={idx}
+                                                    href={`/ressources/${r.fiche_memo_id}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="flex items-center gap-3 px-4 py-3 bg-teal-50 border border-teal-100 rounded-xl hover:bg-teal-100 transition group"
+                                                >
+                                                    <span className="material-symbols-outlined text-teal-500 text-base shrink-0">article</span>
+                                                    <span className="text-sm font-semibold text-teal-800 flex-1 truncate">{r.label}</span>
+                                                    <span className="material-symbols-outlined text-teal-300 text-sm group-hover:translate-x-0.5 transition-transform">open_in_new</span>
+                                                </a>
+                                            )
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
-                        {/* Footer (Actions) */}
+                        {/* Footer */}
                         <div className="p-6 bg-slate-50 border-t border-slate-100 flex justify-end">
                             <button
                                 onClick={onClose}

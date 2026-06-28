@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { ContentTodo, PedagogicalContent } from '@/types';
 import { createCustomContent, updateCustomContent } from '@/actions/custom-content-actions';
+import { VOILE_THEMES } from '@/data/voile-themes';
 
 type FicheWithTodos = PedagogicalContent & { todos: ContentTodo[] };
 
@@ -36,6 +37,7 @@ export function CustomContentDrawer({ open, initialData, onClose, onSaved }: Pro
     const [tip, setTip] = useState('');
     const [ffvLevel, setFfvLevel] = useState<number | null>(null);
     const [supports, setSupports] = useState<string[]>([]);
+    const [voileTheme, setVoileTheme] = useState<string | null>(null);
     const [todos, setTodos] = useState<TodoDraft[]>([]);
     const [newTodo, setNewTodo] = useState('');
     const [saving, setSaving] = useState(false);
@@ -63,6 +65,15 @@ export function CustomContentDrawer({ open, initialData, onClose, onSaved }: Pro
             }
             setNewTodo('');
             setError(null);
+        }
+    }, [open, initialData]);
+
+    useEffect(() => {
+        if (open && initialData) {
+            const theme = (initialData.tags_theme || []).find(t => VOILE_THEMES.some(v => v.id === t));
+            setVoileTheme(theme ?? null);
+        } else if (open && !initialData) {
+            setVoileTheme(null);
         }
     }, [open, initialData]);
 
@@ -106,6 +117,7 @@ export function CustomContentDrawer({ open, initialData, onClose, onSaved }: Pro
             tip: tip.trim() || undefined,
             ffv_level: ffvLevel,
             supports,
+            tags_theme: voileTheme ? [voileTheme] : [],
             todos,
         };
 
@@ -249,6 +261,29 @@ export function CustomContentDrawer({ open, initialData, onClose, onSaved }: Pro
                                         }`}
                                 >
                                     {s}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Thématique voile */}
+                    <div>
+                        <label className="block text-xs font-black uppercase tracking-[0.15em] text-slate-400 mb-2">
+                            Thématique voile <span className="text-slate-300 font-semibold normal-case tracking-normal">optionnel</span>
+                        </label>
+                        <div className="flex flex-wrap gap-1.5">
+                            {VOILE_THEMES.map(theme => (
+                                <button
+                                    key={theme.id}
+                                    type="button"
+                                    onClick={() => setVoileTheme(prev => prev === theme.id ? null : theme.id)}
+                                    className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] font-bold transition ${voileTheme === theme.id
+                                        ? 'bg-indigo-600 text-white'
+                                        : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200'
+                                        }`}
+                                >
+                                    <span className="material-symbols-outlined text-[14px]">{theme.icon}</span>
+                                    {theme.label}
                                 </button>
                             ))}
                         </div>

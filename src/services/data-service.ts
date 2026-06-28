@@ -672,14 +672,27 @@ export async function getSessionFull(sessionId: string) {
         .in('session_step_id', stepIds);
 
     // 3. Get Content Details
-    const contentIds = links?.map(l => l.pedagogical_content_id) || [];
+    const contentIds = new Set(links?.map(l => l.pedagogical_content_id) || []);
+
+    // Fiches sportives are attached to step todos via linked_content_id, not the
+    // session_step_pedagogical_links table. Pull them in so the runner can open
+    // their detail and show their evaluation status.
+    const { data: todosWithContent } = await supabase
+        .from('step_todos')
+        .select('linked_content_id')
+        .in('session_step_id', stepIds)
+        .not('linked_content_id', 'is', null);
+    (todosWithContent ?? []).forEach((t) => {
+        if (t.linked_content_id) contentIds.add(t.linked_content_id);
+    });
+
     let contentMap: PedagogicalContent[] = [];
 
-    if (contentIds.length > 0) {
+    if (contentIds.size > 0) {
         const { data: content } = await supabase
             .from('pedagogical_content')
             .select('*')
-            .in('id', contentIds);
+            .in('id', Array.from(contentIds));
         contentMap = (content as PedagogicalContent[]) || [];
     }
 

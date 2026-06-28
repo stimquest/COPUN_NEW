@@ -10,6 +10,7 @@ export type CustomContentInput = {
     tip?: string;
     ffv_level?: number | null;
     supports?: string[];
+    tags_theme?: string[];
     todos: { text: string; todo_order: number }[];
 };
 
@@ -40,7 +41,7 @@ export async function createCustomContent(input: CustomContentInput): Promise<Cu
             tip: input.tip ?? '',
             niveau: 1,
             dimension: 'COMPRENDRE',
-            tags_theme: [],
+            tags_theme: input.tags_theme ?? [],
             tags_filtre: [],
             source: 'custom',
             owner_id: user.id,
@@ -80,6 +81,7 @@ export async function updateCustomContent(
             tip: input.tip ?? '',
             ffv_level: input.ffv_level ?? null,
             supports: input.supports ?? [],
+            tags_theme: input.tags_theme ?? [],
         })
         .eq('id', contentId)
         .eq('owner_id', user.id)

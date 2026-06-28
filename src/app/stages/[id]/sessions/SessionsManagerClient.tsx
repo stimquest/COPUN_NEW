@@ -9,6 +9,7 @@ import { Stage, Session, PedagogicalContent, SessionStep } from '@/types';
 import { useRouter } from 'next/navigation';
 import { SESSION_TEMPLATES, SessionTemplate } from '@/data/session-templates';
 import CardDetailModal from '@/components/CardDetailModal';
+import { VOILE_THEMES } from '@/data/voile-themes';
 import { StepContentList } from '@/components/StepContentList';
 import { StepTodo } from '@/types';
 
@@ -187,36 +188,42 @@ export default function SessionsManagerClient({
                                         </div>
                                     </div>
 
-                                    {linkedCards.length > 0 && (
-                                        <div className="flex flex-wrap gap-2 pt-1 pl-7">
-                                            {linkedCards.map((card) => (
-                                                <div
-                                                    key={card.id}
-                                                    onClick={() => setSelectedCardForDetail(card)}
-                                                    className="bg-white border border-slate-200 pl-3 pr-1 py-1 rounded-lg flex items-center justify-between gap-3 shadow-sm hover:border-indigo-100 hover:bg-slate-50 transition-all cursor-pointer group active:scale-95 w-full max-w-70 md:max-w-sm"
-                                                >
-                                                    <div className="flex items-center gap-2 overflow-hidden flex-1">
-                                                        <span className={clsx("size-2 rounded-full shrink-0",
-                                                            card.source === 'custom' ? "bg-indigo-400" :
-                                                            card.dimension === 'COMPRENDRE' ? "bg-amber-400" :
-                                                                card.dimension === 'OBSERVER' ? "bg-blue-400" : "bg-emerald-400"
-                                                        )}></span>
-                                                        <span className="text-[11px] font-bold text-slate-700 truncate block" title={card.question}>{card.question}</span>
-                                                    </div>
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            handleToggleLink(step.id, card.id);
-                                                        }}
-                                                        className="size-6 rounded-md flex items-center justify-center shrink-0 text-slate-300 hover:bg-red-50 hover:text-red-500 transition-colors"
-                                                        title="Retirer la notion"
-                                                    >
-                                                        <span className="material-symbols-outlined text-[16px]">close</span>
-                                                    </button>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
+{linkedCards.length > 0 && (
+                                         <div className="flex flex-wrap gap-2 pt-1 pl-7">
+                                             {linkedCards.map((card) => {
+                                                 const voileTheme = (card.tags_theme || [])[0] ? VOILE_THEMES.find(t => t.id === (card.tags_theme || [])[0]) : null;
+                                                 return (
+                                                     <div
+                                                         key={card.id}
+                                                         onClick={() => setSelectedCardForDetail(card)}
+                                                         className="bg-white border border-slate-200 pl-3 pr-1 py-1 rounded-lg flex items-center justify-between gap-3 shadow-sm hover:border-indigo-100 hover:bg-slate-50 transition-all cursor-pointer group active:scale-95 w-full max-w-70 md:max-w-sm"
+                                                     >
+                                                         <div className="flex items-center gap-2 overflow-hidden flex-1">
+                                                             <span className={clsx("size-2 rounded-full shrink-0",
+                                                                 card.source === 'custom' ? "bg-indigo-400" :
+                                                                 card.dimension === 'COMPRENDRE' ? "bg-amber-400" :
+                                                                     card.dimension === 'OBSERVER' ? "bg-blue-400" : "bg-emerald-400"
+                                                             )}></span>
+                                                             {card.source === 'custom' && voileTheme && (
+                                                                 <span className="material-symbols-outlined text-[14px] text-indigo-600">{voileTheme.icon}</span>
+                                                             )}
+                                                             <span className="text-[11px] font-bold text-slate-700 truncate block" title={card.question}>{card.question}</span>
+                                                         </div>
+                                                         <button
+                                                             onClick={(e) => {
+                                                                 e.stopPropagation();
+                                                                 handleToggleLink(step.id, card.id);
+                                                             }}
+                                                             className="size-6 rounded-md flex items-center justify-center shrink-0 text-slate-300 hover:bg-red-50 hover:text-red-500 transition-colors"
+                                                             title="Retirer la notion"
+                                                         >
+                                                             <span className="material-symbols-outlined text-[16px]">close</span>
+                                                         </button>
+                                                     </div>
+                                                 );
+                                             })}
+                                         </div>
+                                     )}
 
                                     {/* Todo list — plan de cours */}
                                     <div className="pl-7 pt-2 border-t border-slate-50 mt-1">

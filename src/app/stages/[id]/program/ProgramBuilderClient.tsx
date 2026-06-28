@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Stage, PedagogicalContent } from '@/types';
 import { PILLARS, THEMES_BY_PILLAR } from '@/data/etages';
+import { VOILE_THEMES } from '@/data/voile-themes';
 import { updateStagePool } from '@/actions/stage-actions';
 import clsx from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -477,8 +478,8 @@ export default function ProgramBuilderClient({ stage, copunPool, customPool }: {
                                                                         </span>
                                                                     )}
                                                                 </div>
-                                                                <button onClick={() => setSelectedCardForDetail(card)} className={clsx("shrink-0 material-symbols-outlined text-base transition-colors", isSelected ? "text-white/30 hover:text-white/60" : "text-slate-300 hover:text-slate-500")}>
-                                                                    info
+                                                                <button onClick={() => setSelectedCardForDetail(card)} className={clsx("shrink-0 size-7 rounded-lg bg-white/5 flex items-center justify-center transition-colors hover:bg-white/10", isSelected ? "text-white/30 hover:text-white/60" : "text-slate-300 hover:text-slate-500")}>
+                                                                    <span className="material-symbols-outlined text-base">info</span>
                                                                 </button>
                                                             </div>
 
@@ -519,7 +520,7 @@ export default function ProgramBuilderClient({ stage, copunPool, customPool }: {
                             <section className="space-y-3 pt-2">
                                 <div className="flex items-center gap-3 px-1">
                                     <div className="size-6 rounded-lg bg-indigo-500 flex items-center justify-center shrink-0">
-                                        <span className="material-symbols-outlined text-white text-sm">sports</span>
+                                        <span className="material-symbols-outlined text-white text-sm">exercise</span>
                                     </div>
                                     <p className="text-[10px] font-black uppercase tracking-[0.18em] text-indigo-600">Mes fiches sportives</p>
                                     <span className="text-[10px] font-bold text-slate-400 bg-white px-2 py-0.5 rounded-full">{customPool.length}</span>
@@ -546,9 +547,20 @@ export default function ProgramBuilderClient({ stage, copunPool, customPool }: {
                                                                     {s}
                                                                 </span>
                                                             ))}
+                                                            {((card.tags_theme || [])[0]) && (
+                                                                (() => {
+                                                                    const theme = VOILE_THEMES.find(t => t.id === (card.tags_theme || [])[0]);
+                                                                    return theme ? (
+                                                                        <span className={clsx("text-[9px] font-bold px-1.5 py-0.5 rounded-md inline-flex items-center gap-1", isSelected ? "bg-white/10 text-white/50" : "bg-slate-100 text-slate-500")}>
+                                                                            <span className="material-symbols-outlined text-[12px]">{theme.icon}</span>
+                                                                            {theme.label}
+                                                                        </span>
+                                                                    ) : null;
+                                                                })()
+                                                            )}
                                                         </div>
-                                                        <button onClick={() => setSelectedCardForDetail(card)} className={clsx("shrink-0 material-symbols-outlined text-base transition-colors", isSelected ? "text-white/30 hover:text-white/60" : "text-slate-300 hover:text-slate-500")}>
-                                                            info
+                                                        <button onClick={() => setSelectedCardForDetail(card)} className={clsx("shrink-0 size-7 rounded-lg bg-white/5 flex items-center justify-center transition-colors hover:bg-white/10", isSelected ? "text-white/30 hover:text-white/60" : "text-slate-300 hover:text-slate-500")}>
+                                                            <span className="material-symbols-outlined text-base">info</span>
                                                         </button>
                                                     </div>
                                                     <p className={clsx("text-[13px] font-black leading-snug flex-1 mb-3", isSelected ? "text-white" : "text-slate-900")}>
@@ -639,7 +651,7 @@ export default function ProgramBuilderClient({ stage, copunPool, customPool }: {
                                         <section className="space-y-3">
                                             <div className="flex items-center gap-2 px-1">
                                                 <div className="size-5 rounded-md bg-indigo-500 flex items-center justify-center shrink-0">
-                                                    <span className="material-symbols-outlined text-white text-[11px]">sports</span>
+                                                    <span className="material-symbols-outlined text-white text-[11px]">exercise</span>
                                                 </div>
                                                 <p className="text-[10px] font-black uppercase tracking-[0.15em] text-indigo-600">Mes fiches sportives</p>
                                                 <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{sportCards.length}</span>
@@ -660,6 +672,17 @@ export default function ProgramBuilderClient({ stage, copunPool, customPool }: {
                                                                         {s}
                                                                     </span>
                                                                 ))}
+                                                                {((card.tags_theme || [])[0]) && (
+                                                                    (() => {
+                                                                        const theme = VOILE_THEMES.find(t => t.id === (card.tags_theme || [])[0]);
+                                                                        return theme ? (
+                                                                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md inline-flex items-center gap-1 bg-slate-100 text-slate-500">
+                                                                                <span className="material-symbols-outlined text-[12px]">{theme.icon}</span>
+                                                                                {theme.label}
+                                                                            </span>
+                                                                        ) : null;
+                                                                    })()
+                                                                )}
                                                             </div>
                                                             <p className="text-[13px] font-black text-slate-900 leading-snug flex-1 mb-2">{card.question}</p>
                                                             <p className="text-[10px] text-slate-400 leading-relaxed mb-3">{card.objectif}</p>

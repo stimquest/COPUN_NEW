@@ -4,7 +4,48 @@ import { createClient } from '@/lib/supabase/server';
 import { isStageObjectiveExecutionStatus, isStageObjectiveImpactLevel } from '@/lib/stage-objective-review';
 import { revalidatePath } from 'next/cache';
 import { SESSION_TEMPLATES } from '@/data/session-templates';
-import { StageObjectiveReviewDraft } from '@/types';
+import { StageObjectiveReviewDraft, StageObjectiveExecutionStatus } from '@/types';
+
+/**
+ * Upserts the execution_status of a stage objective review from a session.
+ * Called live from the session runner — no impactLevel or note here.
+ */
+export async function upsertObjectiveReview(
+    stageId: string,
+    contentId: string,
+    executionStatus: StageObjectiveExecutionStatus | null,
+) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, error: 'Non autorisé' };
+
+    if (executionStatus === null) {
+        // If null, remove the draft review
+        const { error } = await supabase
+            .from('stage_objective_reviews')
+            .delete()
+            .eq('stage_id', stageId)
+            .eq('pedagogical_content_id', contentId);
+        if (error) return { success: false, error: error.message };
+    } else {
+        const { error } = await supabase
+            .from('stage_objective_reviews')
+            .upsert(
+                {
+                    stage_id: stageId,
+                    pedagogical_content_id: contentId,
+                    execution_status: executionStatus,
+                    impact_level: executionStatus === 'not_done' ? null : undefined,
+                },
+                { onConflict: 'stage_id,pedagogical_content_id', ignoreDuplicates: false }
+            );
+        if (error) return { success: false, error: error.message };
+    }
+
+    revalidatePath(`/stages/${stageId}/bilan`);
+    return { success: true };
+}
+
 
 /**
  * Persists the selected pedagogical pool for a stage.

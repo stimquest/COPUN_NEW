@@ -7,7 +7,7 @@ import clsx from 'clsx';
 const baseNavItems = [
     { name: 'Accueil', href: '/stages', icon: 'dashboard', fill: true },
     { name: 'Ressources', href: '/ressources', icon: 'menu_book', fill: false },
-    { name: 'Fiches', href: '/fiches', icon: 'sports', fill: false },
+    { name: 'Fiches', href: '/fiches', icon: 'sailing', fill: false },
     { name: 'Stats', href: '/stats', icon: 'leaderboard', fill: false },
     { name: 'Profil', href: '/profil', icon: 'person', fill: false },
 ];

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
 import { StepTodo, PedagogicalContent, ContentTodo } from '@/types';
@@ -41,6 +42,8 @@ export function StepContentList({ stepId, stageId, initialTodos, pastSuggestions
     const [selectedCardForDetail, setSelectedCardForDetail] = useState<PedagogicalContent | null>(null);
     
     const inputRef = useRef<HTMLInputElement>(null);
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => { setMounted(true); }, []);
 
     // Keep state in sync with props
     useEffect(() => {
@@ -343,9 +346,7 @@ export function StepContentList({ stepId, stageId, initialTodos, pastSuggestions
                                         className="flex items-center gap-2 cursor-pointer min-w-0 flex-1"
                                         onClick={() => { if (block.card) setSelectedCardForDetail(block.card); }}
                                     >
-                                        <div className="size-6 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
-                                            <span className="material-symbols-outlined text-sm font-bold">sports</span>
-                                        </div>
+                                        <div className="size-1.5 rounded-full bg-indigo-400 shrink-0 mt-1" />
                                         <span className="text-[12px] font-black text-slate-800 leading-tight italic hover:text-indigo-600 transition-colors truncate">
                                             {block.headerTodo.text}
                                         </span>
@@ -415,16 +416,6 @@ export function StepContentList({ stepId, stageId, initialTodos, pastSuggestions
             )}
 
             {/* Empty state when no content and not adding */}
-            {!hasContent && !addMode && !showAddSelector && (
-                <button
-                    onClick={() => setShowAddSelector(true)}
-                    className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-all text-[11px] font-semibold group"
-                >
-                    <span className="material-symbols-outlined text-base text-slate-300 group-hover:text-slate-500">checklist</span>
-                    Ajouter du contenu (todos, fiche sportive)…
-                </button>
-            )}
-
             {/* Add Content Selector & Inputs */}
             <div className="pt-1">
                 {addMode === 'text' ? (
@@ -493,7 +484,6 @@ export function StepContentList({ stepId, stageId, initialTodos, pastSuggestions
                             onClick={() => { setShowCardDrawer(true); setShowAddSelector(false); }}
                             className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-indigo-600 hover:bg-white hover:text-indigo-800 rounded-lg transition-all shadow-sm"
                         >
-                            <span className="material-symbols-outlined text-sm">sports</span>
                             Fiche sportive
                         </button>
                         <button
@@ -510,7 +500,7 @@ export function StepContentList({ stepId, stageId, initialTodos, pastSuggestions
                             <span className="material-symbols-outlined text-sm">close</span>
                         </button>
                     </motion.div>
-                ) : (
+                ) : hasContent ? (
                     <button
                         onClick={() => setShowAddSelector(true)}
                         className="flex items-center gap-1.5 px-2 py-1 text-[11px] font-bold text-slate-300 hover:text-slate-500 transition-colors"
@@ -518,10 +508,20 @@ export function StepContentList({ stepId, stageId, initialTodos, pastSuggestions
                         <span className="material-symbols-outlined text-[14px]">add</span>
                         Ajouter
                     </button>
+                ) : (
+                    <button
+                        onClick={() => setShowAddSelector(true)}
+                        className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-all text-[11px] font-semibold group"
+                    >
+                        <span className="material-symbols-outlined text-base text-slate-300 group-hover:text-slate-500">checklist</span>
+                        Ajouter du contenu (todos, fiche sportive)…
+                    </button>
                 )}
             </div>
 
             {/* Bottom drawer for Selecting Custom/Sport cards */}
+            {/* Rendered via portal so it escapes any transformed/overflow-hidden ancestor */}
+            {mounted && createPortal(
             <AnimatePresence>
                 {showCardDrawer && (
                     <>
@@ -600,12 +600,6 @@ export function StepContentList({ stepId, stageId, initialTodos, pastSuggestions
                                                     )}
                                                 >
                                                     <div className="flex gap-4 items-center flex-1 min-w-0">
-                                                        <div className={clsx(
-                                                            "size-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm",
-                                                            isLinked ? "bg-slate-200 text-slate-400" : "bg-indigo-100 text-indigo-600"
-                                                        )}>
-                                                            <span className="material-symbols-outlined text-xl">sports</span>
-                                                        </div>
                                                         <div className="space-y-0.5 min-w-0 flex-1">
                                                             <h4 className="text-sm font-black text-slate-900 leading-tight truncate">{card.question}</h4>
                                                             <p className="text-[11px] text-slate-400 truncate leading-snug">{card.objectif}</p>
@@ -625,8 +619,16 @@ export function StepContentList({ stepId, stageId, initialTodos, pastSuggestions
                                                         </div>
                                                     </div>
                                                     {!isLinked && (
-                                                        <div className="size-8 rounded-full bg-slate-50 text-slate-400 group-hover:bg-indigo-500 group-hover:text-white flex items-center justify-center transition-colors shrink-0">
-                                                            <span className="material-symbols-outlined text-[18px] font-bold">add</span>
+                                                        <div className="flex items-center gap-1.5 shrink-0">
+                                                            <button
+                                                                onClick={(e) => { e.stopPropagation(); setSelectedCardForDetail(card); }}
+                                                                className="size-8 rounded-full bg-slate-50 text-slate-400 hover:bg-indigo-50 hover:text-indigo-500 flex items-center justify-center transition-colors"
+                                                            >
+                                                                <span className="material-symbols-outlined text-[16px]">info</span>
+                                                            </button>
+                                                            <div className="size-8 rounded-full bg-slate-50 text-slate-400 hover:bg-indigo-500 hover:text-white flex items-center justify-center transition-colors">
+                                                                <span className="material-symbols-outlined text-[18px] font-bold">add</span>
+                                                            </div>
                                                         </div>
                                                     )}
                                                 </div>
@@ -640,6 +642,7 @@ export function StepContentList({ stepId, stageId, initialTodos, pastSuggestions
                     </>
                 )}
             </AnimatePresence>
+            , document.body)}
 
             {/* Fiche Detail Modal */}
             <CardDetailModal

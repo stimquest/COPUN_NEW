@@ -5,6 +5,7 @@ import { ContentTodo, PedagogicalContent } from '@/types';
 import { deleteCustomContent } from '@/actions/custom-content-actions';
 import { CustomContentDrawer } from '@/components/CustomContentDrawer';
 import Link from 'next/link';
+import { VOILE_THEMES } from '@/data/voile-themes';
 
 type FicheWithTodos = PedagogicalContent & { todos: ContentTodo[] };
 
@@ -58,6 +59,17 @@ function FicheCard({
                                 {s}
                             </span>
                         ))}
+                        {((fiche.tags_theme || [])[0]) && (
+                            (() => {
+                                const theme = VOILE_THEMES.find(t => t.id === (fiche.tags_theme || [])[0]);
+                                return theme ? (
+                                    <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-bold text-slate-600 gap-1">
+                                        <span className="material-symbols-outlined text-[14px]">{theme.icon}</span>
+                                        {theme.label}
+                                    </span>
+                                ) : null;
+                            })()
+                        )}
                     </div>
                     <h3 className="text-base font-black leading-tight text-slate-900">{fiche.question}</h3>
                     <p className="mt-1 text-sm leading-relaxed text-slate-500">{fiche.objectif}</p>
