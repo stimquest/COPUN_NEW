@@ -1,43 +1,15 @@
-import { getStageById, getSessionsForStage, getStageCockpitStats, getStageObjectiveReviewItems } from '@/services/data-service';
+import { unstable_noStore as noStore } from 'next/cache';
+import { getStageById, getStageCockpitStats, getStageObjectiveReviewItems } from '@/services/data-service';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { DeleteStageButton } from '@/components/DeleteStageButton';
-import { SaveTemplateButton } from '@/components/SaveTemplateButton';
-import { StageObjectiveReviewList } from '@/components/StageObjectiveReviewList';
 import { ReopenConfirmSheet } from '@/components/ReopenConfirmSheet';
-import {
-    StageClosingNotes,
-    StageReviewHighlights,
-    formatStageClosedAt,
-} from '@/components/StageReviewBlocks';
+import { StageObjectiveReviewList } from '@/components/StageObjectiveReviewList';
 
-const MONTHS_FR: Record<string, number> = {
-    janvier:1, février:2, mars:3, avril:4, mai:5, juin:6,
-    juillet:7, août:8, septembre:9, octobre:10, novembre:11, décembre:12,
-};
-
-function getStageStatus(dates: string, hasSessions: boolean, closedAt?: string | null): 'prep' | 'cours' | 'termine' {
-    if (closedAt) return 'termine';
-    if (!hasSessions) return 'prep';
-    const lower = dates.toLowerCase();
-    const re = new RegExp(`(\\d{1,2})\\s*(${Object.keys(MONTHS_FR).join('|')})`, 'g');
-    const matches = [...lower.matchAll(re)];
-    if (matches.length === 0) return 'cours';
-    const last = matches[matches.length - 1];
-    const yearMatch = lower.match(/20\\d{2}/g);
-    const year = yearMatch ? parseInt(yearMatch[yearMatch.length - 1]) : new Date().getFullYear();
-    const end = new Date(year, MONTHS_FR[last[2]] - 1, parseInt(last[1]), 23, 59, 59);
-    return end.getTime() < Date.now() ? 'termine' : 'cours';
-}
-
-function pluralize(value: number, singular: string, plural?: string) {
-    return `${value} ${value > 1 ? (plural ?? `${singular}s`) : singular}`;
-}
-
-export default async function StageCockpitPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function StagePage({ params }: { params: Promise<{ id: string }> }) {
+    noStore();
     const { id } = await params;
     const stage = await getStageById(id);
-    const sessions = await getSessionsForStage(id);
 
     if (!stage) return notFound();
 
@@ -45,338 +17,141 @@ export default async function StageCockpitPage({ params }: { params: Promise<{ i
         getStageCockpitStats(id),
         getStageObjectiveReviewItems(id),
     ]);
-    const firstSessionId = sessions && sessions.length > 0 ? sessions[0].id : null;
 
-    const status = getStageStatus(stage.dates, (sessions?.length ?? 0) > 0, stage.closed_at);
     const isClosed = !!stage.closed_at;
-
-    const statusMeta = {
-        prep:    { label: 'En préparation', dot: 'bg-amber-500',   cls: 'bg-amber-50 text-amber-600 border-amber-200' },
-        cours:   { label: 'En cours',       dot: 'bg-emerald-500', cls: 'bg-emerald-50 text-emerald-600 border-emerald-200' },
-        termine: { label: 'Terminé',        dot: 'bg-slate-400',   cls: 'bg-slate-100 text-slate-500 border-slate-200' },
-    }[status];
-
-    const prevu = stats?.contentCount ?? 0;
-    const place = stats?.placedCount ?? 0;
-    const fait = stats?.validatedCount ?? 0;
-    const pct = (n: number) => (prevu > 0 ? Math.round((n / prevu) * 100) : 0);
-    const aPlacer = prevu - place;
+    const prevu = objectiveItems.length;
+    const fait = objectiveItems.filter(i => i.review?.executionStatus === 'done' || i.review?.executionStatus === 'partial').length;
+    const pct = prevu > 0 ? Math.round((fait / prevu) * 100) : 0;
     const defisTotal = stats?.defisTotal ?? 0;
     const defisDone = stats?.defisDone ?? 0;
-    const closedAtLabel = formatStageClosedAt(stage.closed_at);
-
-    const COMPLETE_BAR = 'bg-emerald-400';
-
-    const steps: {
-        href: string; n: number; title: string; desc: string; icon: string;
-        cls: { icon: string; accent: string; hover: string };
-        done: boolean;
-        metric: { current: number; total: number; barPct?: number; barColor?: string; barOverlayPct?: number };
-        metricLabel: string;
-        note?: { text: string; tone: 'todo' | 'warn' | 'ok' };
-    }[] = [
-        {
-            href: `/stages/${id}/program`, n: 1, title: 'Les Objectifs',
-            desc: 'Choisir les fiches pédago de la semaine',
-            icon: 'track_changes',
-            cls: { icon: 'bg-sky-100 text-sky-600', accent: 'text-sky-600', hover: 'hover:border-sky-300' },
-            done: prevu > 0,
-            metric: { current: prevu, total: prevu },
-            metricLabel: prevu > 0 ? 'fiches choisies' : 'aucune fiche',
-            note: prevu === 0 ? { text: 'À démarrer', tone: 'todo' } : undefined,
-        },
-        {
-            href: `/stages/${id}/sessions`, n: 2, title: 'Le Planning',
-            desc: 'Placer les fiches dans les séances, puis les réaliser',
-            icon: 'flag',
-            cls: { icon: 'bg-amber-100 text-amber-600', accent: 'text-amber-600', hover: 'hover:border-amber-300' },
-            done: prevu > 0 && place >= prevu && fait >= prevu,
-            metric: {
-                current: fait, total: prevu,
-                barPct: pct(place),
-                barColor: place >= prevu ? 'bg-emerald-200' : 'bg-amber-300',
-                barOverlayPct: pct(fait),
-            },
-            metricLabel: 'fiches réalisées',
-            note: prevu === 0
-                ? { text: 'En attente des objectifs', tone: 'todo' }
-                : aPlacer > 0
-                    ? { text: `${aPlacer} à placer`, tone: 'warn' }
-                    : fait < prevu
-                        ? { text: `${place} placées · ${fait} faites`, tone: 'ok' }
-                        : { text: 'Tout réalisé', tone: 'ok' },
-        },
-        {
-            href: `/stages/${id}/defis`, n: 3, title: 'Les Défis',
-            desc: 'Choisir les défis terrain éco',
-            icon: 'eco',
-            cls: { icon: 'bg-emerald-100 text-emerald-600', accent: 'text-emerald-600', hover: 'hover:border-emerald-300' },
-            done: defisTotal > 0 && defisDone >= defisTotal,
-            metric: {
-                current: defisDone, total: defisTotal,
-                barPct: defisTotal > 0 ? Math.round((defisDone / defisTotal) * 100) : 0,
-                barColor: defisTotal > 0 && defisDone >= defisTotal ? COMPLETE_BAR : 'bg-emerald-300',
-            },
-            metricLabel: 'défis validés',
-            note: defisTotal === 0
-                ? { text: 'Aucun défi choisi', tone: 'todo' }
-                : defisDone >= defisTotal
-                    ? { text: 'Tous validés', tone: 'ok' }
-                    : undefined,
-        },
-        {
-            href: `/stages/${id}/quiz`, n: 4, title: 'Le Quiz',
-            desc: 'Valider la transmission, gagner des points',
-            icon: 'quiz',
-            cls: { icon: 'bg-violet-100 text-violet-600', accent: 'text-violet-600', hover: 'hover:border-violet-300' },
-            done: !!stats?.quizDone,
-            metric: stats?.quizDone
-                ? { current: stats.quizScore ?? 0, total: stats.quizTotal ?? 0 }
-                : { current: 0, total: 0 },
-            metricLabel: stats?.quizDone ? 'bonnes réponses' : 'pas encore lancé',
-            note: stats?.quizDone
-                ? { text: `+${stats.quizPoints} pts`, tone: 'ok' }
-                : { text: 'À lancer', tone: 'warn' },
-        },
-    ];
-
-    const noteCls = {
-        todo: 'bg-slate-100 text-slate-500',
-        warn: 'bg-amber-100 text-amber-700',
-        ok:   'bg-emerald-100 text-emerald-700',
-    };
-
-    const stepCards = (
-        <div className="space-y-3">
-            {steps.map(step => (
-                <Link
-                    key={step.n}
-                    href={step.href}
-                    className={`group flex items-center gap-4 bg-white rounded-2xl border border-slate-100 ${step.cls.hover} shadow-sm hover:shadow-md transition-all active:scale-[0.99] p-4 sm:p-5`}
-                >
-                    <div className="shrink-0 relative">
-                        <span className={`size-14 rounded-2xl ${step.cls.icon} flex items-center justify-center`}>
-                            <span className="material-symbols-outlined text-[28px]">{step.icon}</span>
-                        </span>
-                        {step.done && (
-                            <span className="absolute -top-1.5 -right-1.5 size-6 rounded-full bg-emerald-500 text-white flex items-center justify-center ring-2 ring-white">
-                                <span className="material-symbols-outlined text-[15px]">check</span>
-                            </span>
-                        )}
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-0.5">Étape {step.n}</p>
-                        <h4 className="text-lg font-black text-slate-900 leading-tight">{step.title}</h4>
-                        <p className="text-xs text-slate-500 font-medium leading-snug mt-0.5">{step.desc}</p>
-                    </div>
-
-                    <div className="shrink-0 w-28 sm:w-32 text-right">
-                        {step.metric.total > 0 || step.metric.current > 0 ? (
-                            <p className="text-2xl font-black text-slate-900 leading-none">
-                                {step.metric.current}
-                                {step.metric.total > 0 && <span className="text-base text-slate-300">/{step.metric.total}</span>}
-                            </p>
-                        ) : (
-                            <p className="text-2xl font-black text-slate-200 leading-none">—</p>
-                        )}
-                        <p className="text-[10px] font-medium text-slate-400 mt-0.5 truncate">{step.metricLabel}</p>
-
-                        {step.metric.barPct !== undefined && step.metric.total > 0 && (
-                            <div className="relative h-1.5 w-full bg-slate-100 rounded-full overflow-hidden mt-1.5">
-                                <div className={`absolute inset-y-0 left-0 ${step.metric.barColor} rounded-full transition-all duration-700`} style={{ width: `${step.metric.barPct}%` }} />
-                                {step.metric.barOverlayPct !== undefined && (
-                                    <div className="absolute inset-y-0 left-0 bg-emerald-500 rounded-full transition-all duration-700" style={{ width: `${step.metric.barOverlayPct}%` }} />
-                                )}
-                            </div>
-                        )}
-
-                        {step.note && (
-                            <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full mt-1.5 ${noteCls[step.note.tone]}`}>
-                                {step.note.text}
-                            </span>
-                        )}
-                    </div>
-                </Link>
-            ))}
-        </div>
-    );
+    const quizDone = stats?.quizDone ?? false;
 
     return (
-        <div className="flex flex-col min-h-screen bg-slate-50">
+        <div className="min-h-screen bg-slate-50 pb-32">
 
-            {/* ── Header minimal : navigation seulement ── */}
-            <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200">
-                <div className="max-w-3xl mx-auto w-full px-4 sm:px-6 py-3 flex items-center gap-3">
-                    <Link href="/stages" className="size-9 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 active:scale-95 transition-all shrink-0">
+            {/* Header */}
+            <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm border-b border-slate-100">
+                <div className="flex items-center gap-3 px-4 py-3 max-w-2xl mx-auto">
+                    <Link href="/stages" className="size-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-slate-200 transition active:scale-95 shrink-0">
                         <span className="material-symbols-outlined text-[20px]">arrow_back</span>
                     </Link>
-                    <p className="flex-1 text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Pilotage du stage</p>
-                    <SaveTemplateButton stageId={stage.id} stageTitle={stage.title} />
-                    <DeleteStageButton stageId={stage.id} />
+                    <div className="flex-1 min-w-0">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Fiche stage</p>
+                        <p className="text-sm font-bold text-slate-900 truncate">{stage.title}</p>
+                    </div>
+                    {isClosed ? (
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-[10px] font-black text-slate-500 shrink-0">
+                            <span className="size-1.5 rounded-full bg-slate-400" />
+                            Archivé
+                        </span>
+                    ) : (
+                        <DeleteStageButton stageId={stage.id} />
+                    )}
                 </div>
             </header>
 
-            <main className="flex-1 px-4 sm:px-6 py-6 pb-8 max-w-3xl mx-auto w-full">
+            <main className="max-w-2xl mx-auto px-4 pt-5 space-y-5">
 
-                {/* Titre du stage mis en avant + statut */}
-                <div className="mb-5">
-                    <div className="flex items-center justify-between gap-3 mb-3">
-                        <h1 className="text-3xl sm:text-4xl font-black text-slate-900 italic tracking-tight leading-none min-w-0">{stage.title}</h1>
-                        <span className={`inline-flex items-center gap-1.5 text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest border shrink-0 ${statusMeta.cls}`}>
-                            <span className={`size-1.5 rounded-full ${statusMeta.dot} ${status === 'cours' ? 'animate-pulse' : ''}`} />
-                            {statusMeta.label}
+                {/* Infos stage */}
+                <section className="bg-white rounded-2xl border border-slate-200 px-4 py-4">
+                    <h1 className="text-2xl font-black text-slate-900 leading-tight">{stage.title}</h1>
+                    <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs text-slate-500 font-medium">
+                        <span className="flex items-center gap-1">
+                            <span className="material-symbols-outlined text-[14px] text-slate-300">sailing</span>
+                            {stage.activity}
                         </span>
+                        <span className="flex items-center gap-1">
+                            <span className="material-symbols-outlined text-[14px] text-slate-300">calendar_month</span>
+                            {stage.dates}
+                        </span>
+                        <span className="flex items-center gap-1">
+                            <span className="material-symbols-outlined text-[14px] text-slate-300">school</span>
+                            {stage.level}
+                        </span>
+                        {stage.nb_stagiaires && (
+                            <span className="flex items-center gap-1">
+                                <span className="material-symbols-outlined text-[14px] text-slate-300">group</span>
+                                {stage.nb_stagiaires} stagiaires
+                            </span>
+                        )}
                     </div>
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-slate-500 text-sm font-medium">
-                        <span className="flex items-center gap-1.5"><span className="material-symbols-outlined text-[16px] text-slate-400">sailing</span>{stage.activity}</span>
-                        <span className="flex items-center gap-1.5"><span className="material-symbols-outlined text-[16px] text-slate-400">calendar_month</span>{stage.dates}</span>
-                        <span className="flex items-center gap-1.5"><span className="material-symbols-outlined text-[16px] text-slate-400">school</span>{stage.level}</span>
-                        {stage.nb_stagiaires ? <span className="flex items-center gap-1.5"><span className="material-symbols-outlined text-[16px] text-slate-400">groups</span>{pluralize(stage.nb_stagiaires, 'stagiaire')}</span> : null}
-                    </div>
+
+                    {/* Barre de progression */}
+                    {prevu > 0 && (
+                        <div className="mt-4 flex items-center gap-3">
+                            <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                <div
+                                    className="h-full bg-emerald-500 rounded-full transition-all duration-700"
+                                    style={{ width: `${pct}%` }}
+                                />
+                            </div>
+                            <span className="text-[10px] font-bold text-slate-400 shrink-0">{fait}/{prevu} travaillés</span>
+                        </div>
+                    )}
+                </section>
+
+                {/* Actions rapides */}
+                <div className="grid grid-cols-3 gap-2">
+                    <Link href={`/stages/${id}/program`} className="bg-white rounded-2xl border border-slate-200 p-3 flex flex-col items-center text-center hover:bg-slate-50 transition active:scale-95">
+                        <span className="material-symbols-outlined text-xl text-sky-500 mb-1">track_changes</span>
+                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-700">Objectifs</span>
+                        <span className="text-[10px] text-slate-400 mt-0.5">{prevu} fiches</span>
+                    </Link>
+                    <Link href={`/stages/${id}/defis`} className="bg-white rounded-2xl border border-slate-200 p-3 flex flex-col items-center text-center hover:bg-slate-50 transition active:scale-95">
+                        <span className="material-symbols-outlined text-xl text-emerald-500 mb-1">eco</span>
+                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-700">Défis</span>
+                        <span className="text-[10px] text-slate-400 mt-0.5">{defisDone}/{defisTotal} validés</span>
+                    </Link>
+                    <Link href={`/stages/${id}/quiz`} className="bg-white rounded-2xl border border-slate-200 p-3 flex flex-col items-center text-center hover:bg-slate-50 transition active:scale-95">
+                        <span className="material-symbols-outlined text-xl text-violet-500 mb-1">quiz</span>
+                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-700">Quiz</span>
+                        <span className="text-[10px] text-slate-400 mt-0.5">{quizDone ? 'Terminé ✓' : 'À faire'}</span>
+                    </Link>
                 </div>
 
+                {/* CTA Bilan */}
                 {!isClosed && (
-                    <>
-                        <Link
-                            href={firstSessionId ? `/session/${firstSessionId}` : `/stages/${id}/sessions`}
-                            className="flex items-center justify-between bg-[#1f2249] hover:bg-indigo-900 text-white active:scale-[0.99] transition-all px-4 py-3.5 rounded-2xl group mb-8"
-                        >
-                            <div className="flex items-center gap-3">
-                                <span className="size-9 rounded-xl bg-indigo-500 flex items-center justify-center">
-                                    <span className="material-symbols-outlined text-xl">play_arrow</span>
-                                </span>
-                                <div>
-                                    <p className="text-[9px] font-black uppercase tracking-widest text-indigo-300 leading-none mb-0.5">{firstSessionId ? 'En direct' : 'À organiser'}</p>
-                                    <p className="text-sm font-bold leading-none">{firstSessionId ? 'Lancer la séance du jour' : 'Planifier les séances'}</p>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                {firstSessionId && <span className="animate-pulse flex h-2 w-2 rounded-full bg-emerald-400" />}
-                                <span className="material-symbols-outlined text-indigo-300 group-hover:translate-x-1 transition-transform">arrow_forward</span>
-                            </div>
-                        </Link>
-
-                        <div className="mb-4 flex items-center gap-2">
-                            <span className="text-xs font-black uppercase tracking-widest text-slate-400">Le déroulé du stage</span>
-                            <div className="flex-1 h-px bg-slate-200" />
+                    <Link
+                        href={`/stages/${id}/bilan`}
+                        className="flex items-center justify-between bg-slate-900 text-white rounded-2xl px-4 py-4 hover:bg-slate-800 transition active:scale-95"
+                    >
+                        <div>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-white/50 mb-0.5">Bilan de la semaine</p>
+                            <p className="text-sm font-bold">Clôturer le stage</p>
                         </div>
+                        <span className="material-symbols-outlined text-2xl text-white/60">arrow_forward</span>
+                    </Link>
+                )}
 
-                        {stepCards}
+                {/* Objectifs */}
+                <section>
+                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400 mb-3">Objectifs de la semaine</p>
+                    <StageObjectiveReviewList items={objectiveItems} />
+                </section>
 
-                        {stats?.quizDone && (
-                            <section className="mt-8 rounded-[2rem] bg-gradient-to-br from-slate-900 via-slate-900 to-indigo-950 px-6 py-6 text-white sm:px-8 sm:py-7">
-                                <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-                                    <div className="max-w-2xl">
-                                        <p className="text-[11px] font-black uppercase tracking-[0.18em] text-indigo-300">Après le quiz</p>
-                                        <h2 className="mt-2 text-2xl font-black tracking-tight">Faire le bilan et clôturer le stage</h2>
-                                        <p className="mt-2 text-sm leading-relaxed text-slate-300">
-                                            Le quiz est terminé : c’est maintenant le bon moment pour relire ce que le groupe a vécu,
-                                            formaliser vos apprentissages de moniteur et figer le bilan du stage.
-                                        </p>
-                                    </div>
-
-                                    <Link
-                                        href={`/stages/${id}/bilan`}
-                                        className="inline-flex h-12 items-center justify-center rounded-2xl bg-white px-5 text-sm font-black text-slate-900 transition hover:bg-slate-100"
-                                    >
-                                        Ouvrir le bilan du stage
-                                    </Link>
-                                </div>
-
-                                <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                                    <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Transmission</p>
-                                        <p className="mt-1 text-xl font-black">{fait}/{prevu}</p>
-                                        <p className="text-xs text-slate-300">fiches réalisées</p>
-                                    </div>
-                                    <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Défis</p>
-                                        <p className="mt-1 text-xl font-black">{defisDone}/{defisTotal}</p>
-                                        <p className="text-xs text-slate-300">défis validés</p>
-                                    </div>
-                                    <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Points du stage</p>
-                                        <p className="mt-1 text-xl font-black">+{stats.stageTotalPoints ?? 0}</p>
-                                        <p className="text-xs text-slate-300">cumulés dans votre banque</p>
-                                    </div>
+                {/* Mémo + actions si clôturé */}
+                {isClosed && (
+                    <>
+                        {stage.closing_notes?.trim() && (
+                            <section>
+                                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400 mb-3">Mémo moniteur</p>
+                                <div className="bg-white rounded-2xl border border-slate-200 px-4 py-4">
+                                    <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">{stage.closing_notes}</p>
                                 </div>
                             </section>
                         )}
-                    </>
-                )}
 
-                {isClosed && (
-                    <>
-                        <section className="rounded-[2rem] border border-orange-100 bg-gradient-to-br from-white via-amber-50 to-sky-50 px-6 py-7 text-slate-950 shadow-sm sm:px-8 sm:py-8">
-                            <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-                                <div className="max-w-2xl">
-                                    <p className="text-[11px] font-black uppercase tracking-[0.18em] text-orange-500">Carnet archivé</p>
-                                    <h2 className="mt-2 text-3xl font-black tracking-tight">La trace du stage est conservée</h2>
-                                    <p className="mt-2 text-sm font-medium text-slate-600 sm:text-base">Objectifs, mémo et points restent disponibles à tout moment.</p>
-                                </div>
-
-                                <div className="flex flex-wrap items-center gap-3">
-                                    {closedAtLabel && (
-                                        <span className="inline-flex items-center gap-2 rounded-full border border-emerald-100 bg-emerald-50 px-4 py-2 text-xs font-bold text-emerald-700">
-                                            <span className="material-symbols-outlined text-[16px]">event_available</span>
-                                            Clôturé le {closedAtLabel}
-                                        </span>
-                                    )}
-                                    <Link
-                                        href={`/stages/${id}/bilan`}
-                                        className="inline-flex h-11 items-center justify-center rounded-2xl bg-slate-950 px-5 text-sm font-black text-white transition hover:bg-slate-800"
-                                    >
-                                        Ouvrir le carnet
-                                    </Link>
-                                </div>
-                            </div>
-                        </section>
-
-                        <div className="mt-8 mb-4 flex items-center gap-2">
-                            <span className="text-xs font-black uppercase tracking-widest text-slate-400">Carnet de stage</span>
-                            <div className="flex-1 h-px bg-slate-200" />
-                        </div>
-
-                        <div className="mt-4">
-                            <StageObjectiveReviewList
-                                items={objectiveItems}
-                                title="Objectifs"
-                                intro="La trace objectif par objectif : ce qui a été mené, amorcé ou écarté pendant le stage."
-                            />
-                        </div>
-
-                        <div className="mt-4">
-                            <StageReviewHighlights stats={stats} closedAt={stage.closed_at} />
-                        </div>
-
-                        {stage.closing_notes
-                            ? <StageClosingNotes notes={stage.closing_notes} title="Mémo moniteur" className="mt-4" />
-                            : (
-                                <div className="mt-4 rounded-3xl border border-dashed border-slate-300 bg-white p-6 text-sm leading-relaxed text-slate-600">
-                                    Aucune note personnelle n’a été enregistrée lors de la clôture de ce stage.
-                                </div>
-                            )}
-
-                        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
+                        <div className="flex gap-3">
                             <Link
                                 href={`/stages/${id}/bilan`}
-                                className="inline-flex h-12 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                                className="flex-1 h-11 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 flex items-center justify-center hover:bg-slate-50 transition"
                             >
-                                Ouvrir la fiche bilan complète
+                                Voir le bilan complet
                             </Link>
                             <ReopenConfirmSheet stageId={stage.id} />
                         </div>
-
-                        <div className="mt-8 mb-4 flex items-center gap-2">
-                            <span className="text-xs font-black uppercase tracking-widest text-slate-400">Explorer le contenu du stage</span>
-                            <div className="flex-1 h-px bg-slate-200" />
-                        </div>
-
-                        {stepCards}
                     </>
                 )}
-
             </main>
         </div>
     );

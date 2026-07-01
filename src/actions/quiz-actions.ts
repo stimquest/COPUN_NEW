@@ -1,10 +1,10 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
+import { requireAuth } from '@/lib/auth';
 import { computeQuizPoints } from '@/lib/quiz-points';
 import { revalidatePath } from 'next/cache';
 
-// Mapping dimension pédagogique → thèmes de game_cards (thèmes réels de la base)
 const DIMENSION_TO_THEMES: Record<string, string[]> = {
     COMPRENDRE: ['Les Marées', 'Météo & Marées', 'Repères spatio-temporels', 'Toutes les notions - comprendre', 'Interactions des éléments climatiques', 'Général'],
     OBSERVER: ['Observation Sensorielle', 'Toutes les notions - observer', 'Caractéristiques du littoral', 'Général'],
@@ -21,12 +21,6 @@ export type StageQuiz = {
     completed_at: string | null;
 };
 
-/**
- * Génère un quiz en piochant dans game_cards (type quizz).
- * - Si forceTheme est fourni, filtre par ce thème.
- * - Sinon, filtre automatiquement par les thèmes liés aux dimensions des fiches du stage.
- * Crée un game dans la table games et le lie au stage dans stage_quizzes.
- */
 export async function generateStageQuiz(
     stageId: string,
     questionCount: number = 5,
@@ -34,60 +28,36 @@ export async function generateStageQuiz(
 ): Promise<{ success: boolean; gameId?: string; error?: string }> {
     const supabase = await createClient();
 
-    // Récupère les infos du stage
     const { data: stage } = await supabase
-        .from('stages')
-        .select('selected_content, title')
-        .eq('id', stageId)
-        .single();
+        .from('stages').select('selected_content, title').eq('id', stageId).single();
 
     const selectedContent: string[] = stage?.selected_content ?? [];
-
     let quizzCards: Record<string, unknown>[] | null = null;
     let targetThemes: string[] = [];
 
     if (forceTheme) {
-        // Thème forcé : pioche uniquement dans ce thème
         targetThemes = [forceTheme];
         const { data } = await supabase
-            .from('game_cards')
-            .select('*')
-            .eq('type', 'quizz')
-            .in('theme', targetThemes);
+            .from('game_cards').select('*').eq('type', 'quizz').in('theme', targetThemes);
         quizzCards = data;
     } else if (selectedContent.length) {
-        // Mode auto, priorité 1 : questions DIRECTEMENT liées aux fiches du stage.
-        // C'est ce qui valide vraiment la transmission.
         const { data: linkedCards } = await supabase
-            .from('game_cards')
-            .select('*')
-            .eq('type', 'quizz')
-            .in('related_objective_id', selectedContent);
-
+            .from('game_cards').select('*').eq('type', 'quizz').in('related_objective_id', selectedContent);
         quizzCards = linkedCards ?? null;
 
-        // Priorité 2 : si pas assez de questions liées, complète par les thèmes des dimensions.
         if (!quizzCards || quizzCards.length < questionCount) {
             const { data: selectedCards } = await supabase
-                .from('pedagogical_content')
-                .select('dimension')
-                .in('id', selectedContent);
+                .from('pedagogical_content').select('dimension').in('id', selectedContent);
 
             const dimensions = [...new Set((selectedCards ?? []).map(c => c.dimension).filter(Boolean))];
             const themeSet = new Set<string>();
-            dimensions.forEach(dim => {
-                (DIMENSION_TO_THEMES[dim] ?? ['Général']).forEach(t => themeSet.add(t));
-            });
+            dimensions.forEach(dim => (DIMENSION_TO_THEMES[dim] ?? ['Général']).forEach(t => themeSet.add(t)));
             targetThemes = Array.from(themeSet);
 
             if (targetThemes.length > 0) {
                 const { data: themeCards } = await supabase
-                    .from('game_cards')
-                    .select('*')
-                    .eq('type', 'quizz')
-                    .in('theme', targetThemes);
+                    .from('game_cards').select('*').eq('type', 'quizz').in('theme', targetThemes);
 
-                // Fusionne sans doublons (par id)
                 const seen = new Set((quizzCards ?? []).map((c: Record<string, unknown>) => c.id));
                 const merged = [...(quizzCards ?? [])];
                 (themeCards ?? []).forEach((c: Record<string, unknown>) => {
@@ -98,171 +68,102 @@ export async function generateStageQuiz(
         }
     }
 
-    // Fallback ultime : toutes les cartes quizz si rien trouvé
     if (!quizzCards?.length) {
-        const { data: allQuizz } = await supabase
-            .from('game_cards')
-            .select('*')
-            .eq('type', 'quizz');
-
-        if (!allQuizz?.length) {
-            return { success: false, error: 'Aucune carte quiz disponible dans la base de données. Exécutez le seed game_cards.' };
-        }
+        const { data: allQuizz } = await supabase.from('game_cards').select('*').eq('type', 'quizz');
+        if (!allQuizz?.length) return { success: false, error: 'Aucune carte quiz disponible.' };
         quizzCards = allQuizz;
     }
 
-    // Sélectionne N cartes au hasard
     const count = Math.min(questionCount, quizzCards.length);
     const shuffled = [...quizzCards].sort(() => Math.random() - 0.5).slice(0, count);
-
     const quizzItems = shuffled.map(card => card.data);
 
-    // Supprime l'ancien game lié à ce stage (évite l'accumulation dans /jeux)
     const { data: existingQuiz } = await supabase
-        .from('stage_quizzes')
-        .select('game_id')
-        .eq('stage_id', stageId)
-        .single();
-
+        .from('stage_quizzes').select('game_id').eq('stage_id', stageId).single();
     if (existingQuiz?.game_id) {
         await supabase.from('games').delete().eq('id', existingQuiz.game_id);
     }
 
-    // Crée le nouveau game
     const { data: game, error: gameError } = await supabase
         .from('games')
         .insert({
             title: `Quiz — ${stage?.title ?? 'Stage'}`,
             theme: forceTheme ?? targetThemes[0] ?? 'Général',
             stage_id: stageId,
-            game_data: {
-                leGrandQuizz: {
-                    title: 'Quiz de fin de stage',
-                    instruction: 'Posez ces questions à votre groupe pour valider la transmission.',
-                    items: quizzItems,
-                },
-            },
+            game_data: { leGrandQuizz: { title: 'Quiz de fin de stage', instruction: 'Posez ces questions à votre groupe pour valider la transmission.', items: quizzItems } },
         })
         .select()
         .single();
 
-    if (gameError || !game) {
-        return { success: false, error: gameError?.message ?? 'Erreur création du jeu' };
-    }
+    if (gameError || !game) return { success: false, error: gameError?.message ?? 'Erreur création du jeu' };
 
-    // Met à jour le lien — remet completed_at à null si on regénère
-    await supabase
-        .from('stage_quizzes')
-        .upsert({
-            stage_id: stageId,
-            game_id: game.id,
-            score_correct: null,
-            score_total: null,
-            points_awarded: null,
-            completed_at: null,
-        }, { onConflict: 'stage_id' });
+    await supabase.from('stage_quizzes').upsert(
+        { stage_id: stageId, game_id: game.id, score_correct: null, score_total: null, points_awarded: null, completed_at: null },
+        { onConflict: 'stage_id' },
+    );
 
     return { success: true, gameId: game.id };
 }
 
-/**
- * Appelé depuis PlayClient après avoir terminé un jeu lié à un stage.
- * Calcule les points quiz et les insère dans leaderboard_points.
- * Idempotent : si les points ont déjà été accordés, retourne le résultat existant.
- */
 export async function awardStageQuizPoints(
     stageId: string,
     gameId: string,
     scoreCorrect: number,
     scoreTotal: number,
 ): Promise<{ success: boolean; points_awarded?: number; error?: string }> {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { success: false, error: 'Non authentifié' };
+    const ctx = await requireAuth();
+    if (!ctx) return { success: false, error: 'Non authentifié' };
 
-    // Idempotence : vérifie dans leaderboard_points (résiste à la regénération du quiz)
-    const { data: existingPoints } = await supabase
+    const { data: existingPoints } = await ctx.supabase
         .from('leaderboard_points')
         .select('points')
-        .eq('monitor_id', user.id)
+        .eq('monitor_id', ctx.user.id)
         .eq('stage_id', stageId)
         .not('reason', 'like', '%Défi%')
         .maybeSingle();
 
-    if (existingPoints) {
-        return { success: true, points_awarded: existingPoints.points };
-    }
+    if (existingPoints) return { success: true, points_awarded: existingPoints.points };
 
     const score_pct = scoreTotal > 0 ? Math.round((scoreCorrect / scoreTotal) * 100) : 0;
-
-    // 2 pts par bonne réponse (+ bonus sans-faute sur quiz complet) — voir computeQuizPoints.
     const points_awarded = computeQuizPoints(scoreCorrect, scoreTotal);
 
-    // Met à jour stage_quizzes avec les résultats
-    await supabase
-        .from('stage_quizzes')
-        .upsert({
-            stage_id: stageId,
-            game_id: gameId,
-            score_correct: scoreCorrect,
-            score_total: scoreTotal,
-            points_awarded,
-            completed_at: new Date().toISOString(),
-        }, { onConflict: 'stage_id' });
+    const { data: stageData } = await ctx.supabase
+        .from('stages').select('club_id').eq('id', stageId).single();
 
-    // Récupère le club du stage
-    const { data: stageData } = await supabase
-        .from('stages')
-        .select('club_id')
-        .eq('id', stageId)
-        .single();
-
-    // Insère dans leaderboard_points
-    await supabase
-        .from('leaderboard_points')
-        .insert({
-            monitor_id: user.id,
+    await Promise.all([
+        ctx.supabase.from('stage_quizzes').upsert(
+            { stage_id: stageId, game_id: gameId, score_correct: scoreCorrect, score_total: scoreTotal, points_awarded, completed_at: new Date().toISOString() },
+            { onConflict: 'stage_id' },
+        ),
+        ctx.supabase.from('leaderboard_points').insert({
+            monitor_id: ctx.user.id,
             club_id: stageData?.club_id ?? null,
             stage_id: stageId,
             defi_id: null,
             points: points_awarded,
             reason: `Quiz de fin de stage — ${scoreCorrect}/${scoreTotal} (${score_pct}%)`,
-        });
+        }),
+    ]);
 
     revalidatePath(`/stages/${stageId}`);
-    revalidatePath(`/classement`);
-    revalidatePath(`/profil`);
+    revalidatePath('/classement');
+    revalidatePath('/profil');
 
     return { success: true, points_awarded };
 }
 
-/**
- * Récupère le quiz existant d'un stage (s'il a déjà été créé).
- */
 export async function getStageQuiz(stageId: string): Promise<StageQuiz | null> {
     const supabase = await createClient();
     const { data, error } = await supabase
-        .from('stage_quizzes')
-        .select('*')
-        .eq('stage_id', stageId)
-        .single();
-
+        .from('stage_quizzes').select('*').eq('stage_id', stageId).single();
     if (error || !data) return null;
     return data as StageQuiz;
 }
 
-/**
- * Total de points d'un moniteur connecté.
- */
 export async function getMyTotalPoints(): Promise<number> {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return 0;
-
-    const { data } = await supabase
-        .from('leaderboard_points')
-        .select('points')
-        .eq('monitor_id', user.id);
-
+    const ctx = await requireAuth();
+    if (!ctx) return 0;
+    const { data } = await ctx.supabase
+        .from('leaderboard_points').select('points').eq('monitor_id', ctx.user.id);
     return (data ?? []).reduce((sum, r) => sum + r.points, 0);
 }

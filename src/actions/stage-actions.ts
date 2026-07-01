@@ -1,9 +1,9 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
+import { requireAuth } from '@/lib/auth';
 import { isStageObjectiveExecutionStatus, isStageObjectiveImpactLevel } from '@/lib/stage-objective-review';
 import { revalidatePath } from 'next/cache';
-import { SESSION_TEMPLATES } from '@/data/session-templates';
 import { StageObjectiveReviewDraft } from '@/types';
 
 /**
@@ -24,87 +24,14 @@ export async function updateStagePool(stageId: string, contentIds: string[]) {
 
     revalidatePath(`/stages/${stageId}`);
     revalidatePath(`/stages/${stageId}/program`);
-    revalidatePath(`/stages/${stageId}/sessions`);
-    return { success: true };
-}
-
-/**
- * Persists links between a session step and a pedagogical card.
- * Layer 2: Tactics
- */
-export async function linkCardToStep(stepId: string, cardId: string) {
-    const supabase = await createClient();
-    const { error } = await supabase
-        .from('session_step_pedagogical_links')
-        .insert({ session_step_id: stepId, pedagogical_content_id: cardId });
-
-    if (error) {
-        console.error('Error linking card:', error);
-        return { success: false, error: error.message };
-    }
-
-    // If the card is custom, copy its content_todos as step_todos for this step
-    const { data: card } = await supabase
-        .from('pedagogical_content')
-        .select('source')
-        .eq('id', cardId)
-        .single();
-
-    if (card?.source === 'custom') {
-        const { data: contentTodos } = await supabase
-            .from('content_todos')
-            .select('text, todo_order')
-            .eq('content_id', cardId)
-            .order('todo_order');
-
-        if (contentTodos && contentTodos.length > 0) {
-            const { data: existing } = await supabase
-                .from('step_todos')
-                .select('todo_order')
-                .eq('session_step_id', stepId)
-                .order('todo_order', { ascending: false })
-                .limit(1);
-
-            const baseOrder = existing?.[0]?.todo_order ?? -1;
-
-            await supabase.from('step_todos').insert(
-                contentTodos.map((t, i) => ({
-                    session_step_id: stepId,
-                    text: t.text,
-                    todo_order: baseOrder + 1 + i,
-                    done: false,
-                }))
-            );
-        }
-    }
-
-    return { success: true };
-}
-
-export async function unlinkCardFromStep(stepId: string, cardId: string) {
-    const supabase = await createClient();
-    const { error } = await supabase
-        .from('session_step_pedagogical_links')
-        .delete()
-        .match({ session_step_id: stepId, pedagogical_content_id: cardId });
-
-    if (error) {
-        console.error('Error unlinking card:', error);
-        return { success: false, error: error.message };
-    }
-
     return { success: true };
 }
 
 export async function createStage(data: { title: string, activity: string, level: string, dates: string, nb_stagiaires?: number, suggested_thematics?: string[] }) {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const ctx = await requireAuth();
+    if (!ctx) return { success: false, error: 'Vous devez être connecté pour créer un stage.' };
 
-    if (!user) {
-        return { success: false, error: "Vous devez être connecté pour créer un stage." };
-    }
-
-    const { data: created, error } = await supabase
+    const { data: created, error } = await ctx.supabase
         .from('stages')
         .insert([
             {
@@ -115,26 +42,26 @@ export async function createStage(data: { title: string, activity: string, level
                 nb_stagiaires: data.nb_stagiaires ?? null,
                 selected_content: [],
                 suggested_thematics: data.suggested_thematics ?? [],
-                owner_id: user.id
+                owner_id: ctx.user.id
             }
         ])
         .select('id')
         .single();
 
     if (error) {
-        console.error('Error creating stage:', error);
+        console.error('[createStage]', error.message);
         return { success: false, error: error.message };
     }
 
     // Auto-assigner le défi fil rouge du moniteur si défini
-    const { data: profile } = await supabase
+    const { data: profile } = await ctx.supabase
         .from('profiles')
         .select('defi_fil_rouge_id')
-        .eq('id', user.id)
+        .eq('id', ctx.user.id)
         .single();
 
     if (profile?.defi_fil_rouge_id) {
-        await supabase.from('stage_exploits').insert({
+        await ctx.supabase.from('stage_exploits').insert({
             stage_id: created.id,
             exploit_id: profile.defi_fil_rouge_id,
             status: 'en_cours',
@@ -143,179 +70,6 @@ export async function createStage(data: { title: string, activity: string, level
 
     revalidatePath('/stages');
     return { success: true, stageId: created.id };
-}
-
-/**
- * Initializes a default week of sessions for a new stage.
- * Now creates 5 empty sessions (Mon-Fri) without steps.
- */
-export async function initializeStageSessions(stageId: string) {
-    const supabase = await createClient();
-    const days = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi'];
-
-    for (let i = 0; i < days.length; i++) {
-        const { error: sError } = await supabase
-            .from('sessions')
-            .insert({
-                stage_id: stageId,
-                title: `${days[i]}`,
-                session_order: i + 1
-            });
-
-        if (sError) return { success: false, error: sError.message };
-    }
-
-    revalidatePath(`/stages/${stageId}/sessions`);
-    return { success: true };
-}
-
-/**
- * Applies a specific template to an existing session.
- * Replaces any existing steps with steps from the template.
- */
-export async function applyTemplateToSession(sessionId: string, stageId: string, templateId: string) {
-    const supabase = await createClient();
-    const template = SESSION_TEMPLATES.find(t => t.id === templateId) || SESSION_TEMPLATES[0];
-
-    // 1. Delete existing steps for this session to avoid mixing
-    const { error: deleteError } = await supabase
-        .from('session_structure')
-        .delete()
-        .eq('session_id', sessionId);
-
-    if (deleteError) return { success: false, error: deleteError.message };
-
-    // 2. Create steps from template
-    const stepsToInsert = template.steps.map((s, idx) => ({
-        session_id: sessionId,
-        step_title: s.title,
-        step_duration_minutes: s.duration,
-        step_order: idx + 1
-    }));
-
-    const { error: stepsError } = await supabase
-        .from('session_structure')
-        .insert(stepsToInsert);
-
-    if (stepsError) return { success: false, error: stepsError.message };
-
-    revalidatePath(`/stages/${stageId}/sessions`);
-    return { success: true };
-}
-
-export async function createSession(stageId: string, templateId: string, order: number, title?: string) {
-    const supabase = await createClient();
-    const template = SESSION_TEMPLATES.find(t => t.id === templateId) || SESSION_TEMPLATES[0];
-
-    const { data: session, error: sError } = await supabase
-        .from('sessions')
-        .insert({
-            stage_id: stageId,
-            title: title || `Session ${order} : ${template.label}`,
-            session_order: order
-        })
-        .select()
-        .single();
-
-    if (sError) return { success: false, error: sError.message };
-
-    const stepsToInsert = template.steps.map((s, idx) => ({
-        session_id: session.id,
-        step_title: s.title,
-        step_duration_minutes: s.duration,
-        step_order: idx + 1
-    }));
-
-    const { error: stepsError } = await supabase
-        .from('session_structure')
-        .insert(stepsToInsert);
-
-    if (stepsError) return { success: false, error: stepsError.message };
-
-    revalidatePath(`/stages/${stageId}/sessions`);
-    return { success: true };
-}
-
-export async function updateSession(sessionId: string, stageId: string, updates: { title?: string }) {
-    const supabase = await createClient();
-    const { error } = await supabase
-        .from('sessions')
-        .update(updates)
-        .eq('id', sessionId);
-
-    if (error) return { success: false, error: error.message };
-    revalidatePath(`/stages/${stageId}/sessions`);
-    return { success: true };
-}
-
-export async function updateStep(stepId: string, stageId: string, updates: { step_title?: string, step_duration_minutes?: number }) {
-    const supabase = await createClient();
-    const { error } = await supabase
-        .from('session_structure')
-        .update(updates)
-        .eq('id', stepId);
-
-    if (error) return { success: false, error: error.message };
-    revalidatePath(`/stages/${stageId}/sessions`);
-    return { success: true };
-}
-
-export async function addStep(sessionId: string, stageId: string, order: number) {
-    const supabase = await createClient();
-    // 1. Shift existing steps
-    const { error: shiftError } = await supabase
-        .rpc('shift_session_structure', {
-            p_session_id: sessionId,
-            p_min_order: order
-        });
-
-    // Fallback if RPC doesn't exist yet (manual shift)
-    if (shiftError) {
-        const { data: steps } = await supabase
-            .from('session_structure')
-            .select('id, step_order')
-            .eq('session_id', sessionId)
-            .gte('step_order', order);
-
-        if (steps && steps.length > 0) {
-            for (const s of steps) {
-                await supabase
-                    .from('session_structure')
-                    .update({ step_order: s.step_order + 1 })
-                    .eq('id', s.id);
-            }
-        }
-    }
-
-    // 2. Insert new step
-    const { error } = await supabase
-        .from('session_structure')
-        .insert({
-            session_id: sessionId,
-            step_title: 'Nouvelle Étape',
-            step_duration_minutes: 10,
-            step_order: order
-        });
-
-    if (error) return { success: false, error: error.message };
-    revalidatePath(`/stages/${stageId}/sessions`);
-    return { success: true };
-}
-
-export async function deleteStep(stepId: string, stageId: string) {
-    const supabase = await createClient();
-    const { error } = await supabase
-        .from('session_structure')
-        .delete()
-        .eq('id', stepId);
-
-    if (error) {
-        console.error('Error deleting step:', error);
-        return { success: false, error: error.message };
-    }
-
-    revalidatePath(`/stages/${stageId}/sessions`);
-    return { success: true };
 }
 
 export async function deleteStage(stageId: string) {
@@ -330,190 +84,6 @@ export async function deleteStage(stageId: string) {
     return { success: true };
 }
 
-// ─── Step Todos ───────────────────────────────────────────────────────────────
-
-export async function addStepTodo(stepId: string, stageId: string, text: string, order: number) {
-    const supabase = await createClient();
-    const { data, error } = await supabase
-        .from('step_todos')
-        .insert({ session_step_id: stepId, text, todo_order: order })
-        .select()
-        .single();
-
-    if (error) return { success: false, error: error.message };
-    revalidatePath(`/stages/${stageId}/sessions`);
-    return { success: true, todo: data };
-}
-
-export async function updateStepTodo(todoId: string, stageId: string, patch: { text?: string; done?: boolean; todo_order?: number }) {
-    const supabase = await createClient();
-    const { error } = await supabase
-        .from('step_todos')
-        .update(patch)
-        .eq('id', todoId);
-
-    if (error) return { success: false, error: error.message };
-    revalidatePath(`/stages/${stageId}/sessions`);
-    return { success: true };
-}
-
-export async function deleteStepTodo(todoId: string, stageId: string) {
-    const supabase = await createClient();
-
-    // Check if this todo has a linked_content_id and is the header
-    const { data: todo } = await supabase
-        .from('step_todos')
-        .select('session_step_id, linked_content_id, is_content_header')
-        .eq('id', todoId)
-        .single();
-
-    if (todo && todo.linked_content_id && todo.is_content_header) {
-        // Delete all todos for this step with this linked_content_id
-        const { error } = await supabase
-            .from('step_todos')
-            .delete()
-            .eq('session_step_id', todo.session_step_id)
-            .eq('linked_content_id', todo.linked_content_id);
-
-        if (error) return { success: false, error: error.message };
-    } else {
-        // Regular delete
-        const { error } = await supabase
-            .from('step_todos')
-            .delete()
-            .eq('id', todoId);
-
-        if (error) return { success: false, error: error.message };
-    }
-
-    revalidatePath(`/stages/${stageId}/sessions`);
-    return { success: true };
-}
-
-export async function addStepPedagogicalCard(stepId: string, stageId: string, cardId: string, startOrder: number) {
-    const supabase = await createClient();
-
-    // 1. Get the pedagogical content info (the question)
-    const { data: card, error: cardError } = await supabase
-        .from('pedagogical_content')
-        .select('question')
-        .eq('id', cardId)
-        .single();
-
-    if (cardError || !card) {
-        console.error('Error fetching pedagogical card:', cardError);
-        return { success: false, error: cardError?.message || 'Fiche introuvable' };
-    }
-
-    // 2. Get its content_todos
-    const { data: contentTodos } = await supabase
-        .from('content_todos')
-        .select('text, todo_order')
-        .eq('content_id', cardId)
-        .order('todo_order');
-
-    // 3. Insert the header
-    const { data: headerData, error: headerError } = await supabase
-        .from('step_todos')
-        .insert({
-            session_step_id: stepId,
-            text: card.question,
-            linked_content_id: cardId,
-            is_content_header: true,
-            done: false,
-            todo_order: startOrder,
-        })
-        .select()
-        .single();
-
-    if (headerError) {
-        console.error('Error inserting card header:', headerError);
-        return { success: false, error: headerError.message };
-    }
-
-    // 4. Insert sub-todos
-    if (contentTodos && contentTodos.length > 0) {
-        const subTodosToInsert = contentTodos.map((t, i) => ({
-            session_step_id: stepId,
-            text: t.text,
-            linked_content_id: cardId,
-            is_content_header: false,
-            done: false,
-            todo_order: startOrder + 1 + i,
-        }));
-
-        const { error: subError } = await supabase
-            .from('step_todos')
-            .insert(subTodosToInsert);
-
-        if (subError) {
-            console.error('Error inserting card sub-todos:', subError);
-        }
-    }
-
-    revalidatePath(`/stages/${stageId}/sessions`);
-    return { success: true };
-}
-
-
-export async function getStepTodosForStage(stageId: string): Promise<{ step_id: string; todos: import('@/types').StepTodo[] }[]> {
-    const supabase = await createClient();
-    const { data, error } = await supabase
-        .from('step_todos')
-        .select(`
-            *,
-            session_structure!inner(
-                id,
-                sessions!inner(
-                    stage_id
-                )
-            )
-        `)
-        .eq('session_structure.sessions.stage_id', stageId)
-        .order('todo_order');
-
-    if (error || !data) return [];
-
-    const grouped: Record<string, import('@/types').StepTodo[]> = {};
-    data.forEach((row: Record<string, unknown>) => {
-        const stepId = row.session_step_id as string;
-        if (!grouped[stepId]) grouped[stepId] = [];
-        grouped[stepId].push(row as import('@/types').StepTodo);
-    });
-
-    return Object.entries(grouped).map(([step_id, todos]) => ({ step_id, todos }));
-}
-
-export async function getPastTodosForUser(stageId: string): Promise<string[]> {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return [];
-
-    const { data, error } = await supabase
-        .from('step_todos')
-        .select(`
-            text,
-            session_structure!inner(
-                sessions!inner(
-                    stages!inner(owner_id)
-                )
-            )
-        `)
-        .eq('session_structure.sessions.stages.owner_id', user.id)
-        .neq('session_structure.sessions.stage_id', stageId)
-        .order('created_at', { ascending: false })
-        .limit(200);
-
-    if (error || !data) return [];
-
-    const seen = new Set<string>();
-    const texts: string[] = [];
-    data.forEach((row: Record<string, unknown>) => {
-        const t = (row.text as string).trim();
-        if (!seen.has(t)) { seen.add(t); texts.push(t); }
-    });
-    return texts;
-}
 
 /* ─── CLÔTURE DE STAGE ─────────────────────────────────────────────── */
 
@@ -523,12 +93,10 @@ type CloseStageInput = {
 };
 
 export async function closeStage(stageId: string, input: CloseStageInput) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { success: false, error: 'Non autorisé' };
-  }
+  const ctx = await requireAuth();
+  if (!ctx) return { success: false, error: 'Non autorisé' };
+  const supabase = ctx.supabase;
+  const user = ctx.user;
 
   const { data: stage, error: stageError } = await supabase
     .from('stages')
@@ -560,10 +128,6 @@ export async function closeStage(stageId: string, input: CloseStageInput) {
         : (review.impactLevel && isStageObjectiveImpactLevel(review.impactLevel) ? review.impactLevel : null),
       note: typeof review.note === 'string' ? review.note.trim() : '',
     };
-
-    if (normalizedReview.executionStatus !== 'not_done' && !normalizedReview.impactLevel) {
-      return { success: false, error: 'Renseignez aussi la qualité ressentie pour chaque objectif mené.' };
-    }
 
     reviewByContentId.set(normalizedReview.pedagogicalContentId, normalizedReview);
   }
@@ -619,23 +183,19 @@ export async function closeStage(stageId: string, input: CloseStageInput) {
 }
 
 export async function reopenStage(stageId: string) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const ctx = await requireAuth();
+  if (!ctx) return { success: false, error: 'Non autorisé' };
 
-  if (!user) {
-    return { success: false, error: 'Non autorisé' };
-  }
-
-  const { error } = await supabase
+  const { error } = await ctx.supabase
     .from('stages')
     .update({
       closed_at: null,
     })
     .eq('id', stageId)
-    .eq('owner_id', user.id);
+    .eq('owner_id', ctx.user.id);
 
   if (error) {
-    console.error('Error reopening stage:', error);
+    console.error('[reopenStage]', error.message);
     return { success: false, error: error.message };
   }
 
@@ -647,24 +207,51 @@ export async function reopenStage(stageId: string) {
 }
 
 export async function updateClosingNotes(stageId: string, closingNotes: string) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const ctx = await requireAuth();
+  if (!ctx) return { success: false, error: 'Non autorisé' };
 
-  if (!user) {
-    return { success: false, error: 'Non autorisé' };
-  }
-
-  const { error } = await supabase
+  const { error } = await ctx.supabase
     .from('stages')
     .update({ closing_notes: closingNotes || null })
     .eq('id', stageId)
-    .eq('owner_id', user.id);
+    .eq('owner_id', ctx.user.id);
 
   if (error) {
-    console.error('Error updating closing notes:', error);
+    console.error('[updateClosingNotes]', error.message);
     return { success: false, error: error.message };
   }
 
+  revalidatePath(`/stages/${stageId}`);
+  revalidatePath(`/stages/${stageId}/bilan`);
+  return { success: true };
+}
+
+export async function saveObjectiveStatus(
+  stageId: string,
+  contentId: string,
+  executionStatus: import('@/types').StageObjectiveExecutionStatus,
+) {
+  const ctx = await requireAuth();
+  if (!ctx) return { success: false, error: 'Non autorisé' };
+
+  const { error } = await ctx.supabase
+    .from('stage_objective_reviews')
+    .upsert(
+      {
+        stage_id: stageId,
+        pedagogical_content_id: contentId,
+        execution_status: executionStatus,
+        impact_level: null,
+      },
+      { onConflict: 'stage_id,pedagogical_content_id', ignoreDuplicates: false }
+    );
+
+  if (error) {
+    console.error('[saveObjectiveStatus] error:', error.message, error.details);
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath('/stages');
   revalidatePath(`/stages/${stageId}`);
   revalidatePath(`/stages/${stageId}/bilan`);
   return { success: true };

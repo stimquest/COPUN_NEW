@@ -8,7 +8,6 @@ import { PILLARS, THEMES_BY_PILLAR } from '@/data/etages';
 import { updateStagePool } from '@/actions/stage-actions';
 import clsx from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
-import CardCreatorModal from '@/components/CardCreatorModal';
 import CardDetailModal from '@/components/CardDetailModal';
 
 const OBJECTIFS = [
@@ -41,7 +40,7 @@ function ObjectifDropdown({ intention, setIntention }: { intention: string | nul
         <section className="bg-white rounded-3xl border-2 border-slate-100 p-6 space-y-3">
             <div>
                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Mon objectif pour ce stage</p>
-                <p className="text-xs text-slate-500 mt-1">Les questions ★ recommandées s'ajusteront à votre choix.</p>
+                <p className="text-xs text-slate-500 mt-1">Les objectifs ★ recommandés s'ajusteront à votre choix.</p>
             </div>
             <div ref={ref} className="relative">
                 {/* Trigger */}
@@ -150,7 +149,6 @@ export default function ProgramBuilderClient({ stage, copunPool, customPool }: {
     const [intention, setIntention] = useState<string | null>(null);
     const [isSaving, setIsSaving] = useState(false);
     const [isSaved, setIsSaved] = useState(false);
-    const [isCreatorOpen, setIsCreatorOpen] = useState(false);
     const [selectedCardForDetail, setSelectedCardForDetail] = useState<PedagogicalContent | null>(null);
 
     // Filter COPUN cards by level (custom cards have their own section)
@@ -257,16 +255,11 @@ export default function ProgramBuilderClient({ stage, copunPool, customPool }: {
                                 <span className="material-symbols-outlined text-4xl">check_circle</span>
                             </div>
                             <h3 className="text-xl font-black text-slate-900 mb-1 uppercase tracking-tight">Sauvegardé</h3>
-                            <p className="text-xs text-slate-400 mb-6">{programIds.length} questions dans votre réservoir.</p>
-                            <div className="space-y-2">
-                                <button onClick={() => router.push(`/stages/${stage.id}/sessions`)} className="w-full bg-slate-900 text-white h-12 rounded-2xl font-bold text-xs tracking-widest uppercase flex items-center justify-center gap-2">
-                                    Aller aux Séances
-                                    <span className="material-symbols-outlined text-base">arrow_forward</span>
-                                </button>
-                                <button onClick={() => router.push(`/stages/${stage.id}`)} className="w-full text-slate-400 h-10 rounded-xl font-bold text-xs hover:text-slate-700 transition-colors">
-                                    Retour au pilotage
-                                </button>
-                            </div>
+                            <p className="text-xs text-slate-400 mb-6">{programIds.length} objectif{programIds.length > 1 ? 's' : ''} pour la semaine.</p>
+                            <button onClick={() => router.push('/stages')} className="w-full bg-slate-900 text-white h-12 rounded-2xl font-bold text-xs tracking-widest uppercase flex items-center justify-center gap-2">
+                                Retour à la semaine
+                                <span className="material-symbols-outlined text-base">arrow_forward</span>
+                            </button>
                         </motion.div>
                     </motion.div>
                 )}
@@ -282,9 +275,9 @@ export default function ProgramBuilderClient({ stage, copunPool, customPool }: {
                     <path d="M0,40 C80,10 160,50 240,30 C320,10 360,40 400,20 L400,60 L0,60 Z" fill="white"/>
                 </svg>
                 <div className="md:max-w-5xl md:mx-auto relative">
-                    <Link href={`/stages/${stage.id}`} className="text-white/50 inline-flex items-center gap-1 text-xs font-bold mb-5 hover:text-white/80 transition-colors uppercase tracking-widest">
+                    <Link href="/stages" className="text-white/50 inline-flex items-center gap-1 text-xs font-bold mb-5 hover:text-white/80 transition-colors uppercase tracking-widest">
                         <span className="material-symbols-outlined text-base">arrow_back_ios</span>
-                        Pilotage
+                        Cette semaine
                     </Link>
                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 mb-1">Programme environnemental</p>
                     <h1 className="text-4xl font-black text-white uppercase tracking-tight leading-none">{stage.title}</h1>
@@ -406,10 +399,10 @@ export default function ProgramBuilderClient({ stage, copunPool, customPool }: {
                                 </div>
                             )}
 
-                            <button onClick={() => setIsCreatorOpen(true)} className="w-full py-2.5 rounded-xl border-2 border-dashed border-slate-200 text-slate-400 font-bold text-[11px] hover:border-indigo-300 hover:text-indigo-500 transition-all flex items-center justify-center gap-2">
-                                <span className="material-symbols-outlined text-base">add_circle</span>
-                                Créer une fiche perso
-                            </button>
+                            <Link href="/fiches" className="w-full py-2.5 rounded-xl border-2 border-dashed border-slate-200 text-slate-400 font-bold text-[11px] hover:border-indigo-300 hover:text-indigo-500 transition-all flex items-center justify-center gap-2">
+                                <span className="material-symbols-outlined text-base">sailing</span>
+                                Créer fiche voile (dans /fiches)
+                            </Link>
                         </section>
 
                         {/* CARDS GROUPED BY DIMENSION */}
@@ -425,7 +418,7 @@ export default function ProgramBuilderClient({ stage, copunPool, customPool }: {
                             <div className="text-center py-16 text-slate-400">
                                 <span className="material-symbols-outlined text-5xl mb-3">search_off</span>
                                 <p className="text-sm font-black uppercase tracking-wide">Aucun résultat</p>
-                                <p className="text-xs mt-1 text-slate-400">Modifiez vos filtres pour voir des questions.</p>
+                                <p className="text-xs mt-1 text-slate-400">Modifiez vos filtres pour voir des objectifs.</p>
                             </div>
                         ) : (
                             <div className="space-y-6">
@@ -514,68 +507,6 @@ export default function ProgramBuilderClient({ stage, copunPool, customPool }: {
                                 ))}
                             </div>
                         )}
-                        {/* MES FICHES SPORTIVES */}
-                        {customPool.length > 0 && (
-                            <section className="space-y-3 pt-2">
-                                <div className="flex items-center gap-3 px-1">
-                                    <div className="size-6 rounded-lg bg-indigo-500 flex items-center justify-center shrink-0">
-                                        <span className="material-symbols-outlined text-white text-sm">sports</span>
-                                    </div>
-                                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-indigo-600">Mes fiches sportives</p>
-                                    <span className="text-[10px] font-bold text-slate-400 bg-white px-2 py-0.5 rounded-full">{customPool.length}</span>
-                                </div>
-                                <div className="space-y-2 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-3 md:space-y-0">
-                                    {customPool.map(card => {
-                                        const isSelected = programIds.includes(card.id);
-                                        return (
-                                            <div key={card.id} className={clsx(
-                                                "rounded-2xl transition-all flex flex-col relative overflow-hidden",
-                                                isSelected ? "bg-slate-900 shadow-lg" : "bg-white shadow-sm"
-                                            )}>
-                                                <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl bg-indigo-500" />
-                                                <div className="pl-5 pr-4 pt-4 pb-3 flex flex-col flex-1">
-                                                    <div className="flex items-start justify-between gap-2 mb-2">
-                                                        <div className="flex flex-wrap gap-1.5">
-                                                            {card.ffv_level && (
-                                                                <span className={clsx("text-[9px] font-black uppercase tracking-widest", isSelected ? "text-white/50" : "text-indigo-500")}>
-                                                                    N{card.ffv_level} FFVoile
-                                                                </span>
-                                                            )}
-                                                            {(card.supports ?? []).slice(0, 2).map(s => (
-                                                                <span key={s} className={clsx("text-[9px] font-bold px-1.5 py-0.5 rounded-md", isSelected ? "bg-white/10 text-white/50" : "bg-slate-100 text-slate-500")}>
-                                                                    {s}
-                                                                </span>
-                                                            ))}
-                                                        </div>
-                                                        <button onClick={() => setSelectedCardForDetail(card)} className={clsx("shrink-0 material-symbols-outlined text-base transition-colors", isSelected ? "text-white/30 hover:text-white/60" : "text-slate-300 hover:text-slate-500")}>
-                                                            info
-                                                        </button>
-                                                    </div>
-                                                    <p className={clsx("text-[13px] font-black leading-snug flex-1 mb-3", isSelected ? "text-white" : "text-slate-900")}>
-                                                        {card.question}
-                                                    </p>
-                                                    <p className={clsx("text-[10px] leading-relaxed mb-3", isSelected ? "text-white/40" : "text-slate-400")}>
-                                                        {card.objectif}
-                                                    </p>
-                                                    <button
-                                                        onClick={() => toggleCard(card.id)}
-                                                        className={clsx(
-                                                            "self-end flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase transition-all",
-                                                            isSelected
-                                                                ? "bg-white/10 text-white hover:bg-red-500"
-                                                                : "bg-indigo-600 text-white hover:bg-indigo-700"
-                                                        )}
-                                                    >
-                                                        <span className="material-symbols-outlined text-sm">{isSelected ? 'check' : 'add'}</span>
-                                                        {isSelected ? 'Ajouté' : 'Ajouter'}
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </section>
-                        )}
                     </>
                 )}
 
@@ -586,11 +517,11 @@ export default function ProgramBuilderClient({ stage, copunPool, customPool }: {
                             <div className="text-center py-20 text-slate-400">
                                 <span className="material-symbols-outlined text-5xl mb-3">inbox</span>
                                 <p className="text-sm font-black uppercase tracking-wide">Réservoir vide</p>
-                                <p className="text-xs mt-1">Ajoutez des questions depuis Explorer.</p>
+                                <p className="text-xs mt-1">Ajoutez des objectifs depuis Explorer.</p>
                             </div>
                         ) : (
                             <>
-                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">{programCards.length} question{programCards.length > 1 ? 's' : ''} sélectionnée{programCards.length > 1 ? 's' : ''}</p>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">{programCards.length} objectif{programCards.length > 1 ? 's' : ''} sélectionné{programCards.length > 1 ? 's' : ''}</p>
 
                                 {/* COPUN environmental cards */}
                                 {(() => {
@@ -630,50 +561,6 @@ export default function ProgramBuilderClient({ stage, copunPool, customPool }: {
                                         </section>
                                     );
                                 })()}
-
-                                {/* Custom sports cards */}
-                                {(() => {
-                                    const sportCards = programCards.filter(c => c.source === 'custom');
-                                    if (sportCards.length === 0) return null;
-                                    return (
-                                        <section className="space-y-3">
-                                            <div className="flex items-center gap-2 px-1">
-                                                <div className="size-5 rounded-md bg-indigo-500 flex items-center justify-center shrink-0">
-                                                    <span className="material-symbols-outlined text-white text-[11px]">sports</span>
-                                                </div>
-                                                <p className="text-[10px] font-black uppercase tracking-[0.15em] text-indigo-600">Mes fiches sportives</p>
-                                                <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{sportCards.length}</span>
-                                            </div>
-                                            <div className="space-y-2 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-3 md:space-y-0">
-                                                {sportCards.map(card => (
-                                                    <div key={card.id} className="bg-white rounded-2xl overflow-hidden shadow-sm relative flex flex-col">
-                                                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500" />
-                                                        <div className="pl-5 pr-4 pt-4 pb-3 flex flex-col flex-1">
-                                                            <div className="flex flex-wrap gap-1.5 mb-2">
-                                                                {card.ffv_level && (
-                                                                    <span className="text-[9px] font-black uppercase tracking-widest text-indigo-500">
-                                                                        N{card.ffv_level} FFVoile
-                                                                    </span>
-                                                                )}
-                                                                {(card.supports ?? []).slice(0, 2).map(s => (
-                                                                    <span key={s} className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-500">
-                                                                        {s}
-                                                                    </span>
-                                                                ))}
-                                                            </div>
-                                                            <p className="text-[13px] font-black text-slate-900 leading-snug flex-1 mb-2">{card.question}</p>
-                                                            <p className="text-[10px] text-slate-400 leading-relaxed mb-3">{card.objectif}</p>
-                                                            <button onClick={() => toggleCard(card.id)} className="self-end flex items-center gap-1 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase bg-red-50 text-red-400 hover:bg-red-100 transition-all">
-                                                                <span className="material-symbols-outlined text-sm">remove</span>
-                                                                Retirer
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </section>
-                                    );
-                                })()}
                             </>
                         )}
                     </div>
@@ -688,14 +575,17 @@ export default function ProgramBuilderClient({ stage, copunPool, customPool }: {
                     ) : (
                         <>
                             <span className="material-symbols-outlined text-lg">save</span>
-                            ENREGISTRER — {programIds.length} QUESTION{programIds.length > 1 ? 'S' : ''}
+                            ENREGISTRER — {programIds.length} OBJECTIF{programIds.length > 1 ? 'S' : ''}
                         </>
                     )}
                 </button>
             </div>
 
-            <CardCreatorModal isOpen={isCreatorOpen} onClose={() => setIsCreatorOpen(false)} onCreated={() => router.refresh()} />
-            <CardDetailModal isOpen={!!selectedCardForDetail} onClose={() => setSelectedCardForDetail(null)} content={selectedCardForDetail} />
+            <CardDetailModal
+                isOpen={!!selectedCardForDetail}
+                onClose={() => setSelectedCardForDetail(null)}
+                content={selectedCardForDetail}
+            />
         </div>
     );
 }

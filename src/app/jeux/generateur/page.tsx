@@ -16,7 +16,7 @@ export default async function GenerateurPage() {
                 </p>
             </header>
 
-            <GeneratorClient initialCards={cards as any} />
+            <GeneratorClient initialCards={cards} />
         </div>
     );
 }

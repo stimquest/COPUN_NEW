@@ -159,65 +159,57 @@ export default function DefisTab({ stageId, availableDefis, assignedExploits, su
 
             {/* Assigned Defis */}
             <section>
-                <h3 className="text-lg font-bold text-slate-900 mb-1 flex items-center gap-2">
-                    <span className="material-symbols-outlined text-indigo-600">checklist</span>
-                    Défis Assignés ({assignedExploits.length})
+                <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3 flex items-center gap-2">
+                    <span className="material-symbols-outlined text-base">checklist</span>
+                    Défis assignés ({assignedExploits.length})
                 </h3>
-                <p className="text-xs text-slate-400 mb-4">La validation se fait sur le terrain via <strong>En Action</strong>.</p>
 
                 {assignedExploits.length === 0 ? (
-                    <div className="p-6 bg-slate-50 rounded-xl text-center text-slate-500">
-                        <span className="material-symbols-outlined text-4xl mb-2 text-slate-300">flag</span>
-                        <p>Aucun défi assigné à ce stage</p>
+                    <div className="p-6 bg-slate-50 rounded-2xl text-center text-slate-400">
+                        <span className="material-symbols-outlined text-3xl mb-2 text-slate-300 block">flag</span>
+                        <p className="text-sm font-semibold">Aucun défi assigné</p>
+                        <p className="text-xs mt-1">Ajoutez des défis depuis la liste ci-dessous.</p>
                     </div>
                 ) : (
-                    <div className="space-y-3">
-                        {assignedExploits.map(exploit => (
-                            <div key={exploit.id} className={clsx(
-                                'p-4 rounded-xl border-2 transition-all',
-                                exploit.status === 'complete' ? 'border-emerald-200 bg-emerald-50' : 'border-slate-200 bg-white'
-                            )}>
-                                <div className="flex items-start gap-3">
+                    <div className="space-y-2">
+                        {assignedExploits.map(exploit => {
+                            const done = exploit.status === 'complete';
+                            return (
+                                <div key={exploit.id} className={clsx(
+                                    'rounded-2xl border-2 flex items-center gap-3 px-4 py-3 transition-all',
+                                    done ? 'border-emerald-200 bg-emerald-50' : 'border-slate-200 bg-white'
+                                )}>
                                     <div className={clsx(
-                                        'size-10 rounded-full flex items-center justify-center shrink-0',
-                                        exploit.status === 'complete' ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-600'
+                                        'size-9 rounded-xl flex items-center justify-center shrink-0',
+                                        done ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-500'
                                     )}>
-                                        <span className="material-symbols-outlined text-sm">
-                                            {exploit.status === 'complete' ? 'check' : exploit.defis.icon}
+                                        <span className="material-symbols-outlined text-[18px]">
+                                            {done ? 'check' : exploit.defis.icon}
                                         </span>
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
-                                            <h4 className="font-bold text-slate-900 text-sm">{exploit.defis.description}</h4>
-                                            <TerrainBadge tempsReel={exploit.defis.terrain_temps_reel} />
-                                            {exploit.defis.spot_fixe && (
-                                                <span className="text-[10px] font-black text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded flex items-center gap-0.5">
-                                                    <span className="material-symbols-outlined text-xs">location_on</span>Spot
-                                                </span>
-                                            )}
+                                        <p className={clsx('text-sm font-bold leading-tight', done ? 'text-emerald-900' : 'text-slate-900')}>
+                                            {exploit.defis.description}
+                                        </p>
+                                        <div className="flex items-center gap-1.5 mt-0.5">
                                             <span className={clsx("text-[10px] font-black px-1.5 py-0.5 rounded", pointsBadgeColor(exploit.defis.points))}>
                                                 {exploit.defis.points} pts
                                             </span>
-                                            {exploit.status === 'complete' && (
-                                                <span className="text-[10px] font-black text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded">Validé</span>
+                                            {done && (
+                                                <span className="text-[10px] text-emerald-600 font-semibold">✓ Validé</span>
                                             )}
                                         </div>
-                                        {exploit.status === 'complete' && exploit.completed_at && (
-                                            <p className="text-xs text-emerald-600 font-medium">
-                                                ✓ {new Date(exploit.completed_at).toLocaleDateString('fr-FR')}
-                                            </p>
-                                        )}
                                     </div>
                                     <button
                                         onClick={() => handleRemove(exploit.exploit_id)}
                                         disabled={isPending}
-                                        className="text-slate-300 hover:text-red-400 transition disabled:opacity-50 shrink-0"
+                                        className="size-7 rounded-lg flex items-center justify-center text-slate-300 hover:text-red-400 hover:bg-red-50 transition disabled:opacity-50 shrink-0"
                                     >
-                                        <span className="material-symbols-outlined text-lg">close</span>
+                                        <span className="material-symbols-outlined text-[16px]">close</span>
                                     </button>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 )}
             </section>

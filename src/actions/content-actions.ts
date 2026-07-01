@@ -1,35 +1,40 @@
 'use server';
 
-import { createClient } from '@/lib/supabase/server';
-import { PedagogicalContent } from '@/types';
 import { revalidatePath } from 'next/cache';
+import { requireAuth } from '@/lib/auth';
+import { PedagogicalContent } from '@/types';
 
 export async function getAllPedagogicalContent(): Promise<PedagogicalContent[]> {
-    const supabase = await createClient();
-    const { data, error } = await supabase
+    const ctx = await requireAuth();
+    if (!ctx) return [];
+
+    const { data, error } = await ctx.supabase
         .from('pedagogical_content')
         .select('*')
         .order('dimension', { ascending: true })
         .order('niveau', { ascending: true });
 
     if (error) {
-        console.error('Error fetching all pedagogical content:', error.message);
+        console.error('[getAllPedagogicalContent]', error.message);
         return [];
     }
     return data as PedagogicalContent[];
 }
 
-async function requireAdminForContent() {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return null;
-    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+async function requireAdmin() {
+    const ctx = await requireAuth();
+    if (!ctx) return null;
+    const { data: profile } = await ctx.supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', ctx.user.id)
+        .single();
     if (profile?.role !== 'admin') return null;
-    return { user, supabase };
+    return ctx;
 }
 
 export async function updatePedagogicalContent(id: string, data: Partial<PedagogicalContent>) {
-    const ctx = await requireAdminForContent();
+    const ctx = await requireAdmin();
     if (!ctx) return { success: false, error: 'Accès refusé.' };
 
     const { error } = await ctx.supabase
@@ -38,7 +43,7 @@ export async function updatePedagogicalContent(id: string, data: Partial<Pedagog
         .eq('id', id);
 
     if (error) {
-        console.error('Error updating pedagogical content:', error.message);
+        console.error('[updatePedagogicalContent]', error.message);
         return { success: false, error: error.message };
     }
 
@@ -48,7 +53,7 @@ export async function updatePedagogicalContent(id: string, data: Partial<Pedagog
 }
 
 export async function deletePedagogicalContent(id: string) {
-    const ctx = await requireAdminForContent();
+    const ctx = await requireAdmin();
     if (!ctx) return { success: false, error: 'Accès refusé.' };
 
     const { error } = await ctx.supabase
@@ -57,7 +62,7 @@ export async function deletePedagogicalContent(id: string) {
         .eq('id', id);
 
     if (error) {
-        console.error('Error deleting pedagogical content:', error.message);
+        console.error('[deletePedagogicalContent]', error.message);
         return { success: false, error: error.message };
     }
 
@@ -67,15 +72,9 @@ export async function deletePedagogicalContent(id: string) {
 }
 
 export async function createPedagogicalContent(data: Partial<PedagogicalContent>) {
-    // Get current user
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const ctx = await requireAuth();
+    if (!ctx) return { success: false, error: 'Vous devez être connecté pour créer une fiche.' };
 
-    if (!user) {
-        return { success: false, error: "Vous devez être connecté pour créer une fiche." };
-    }
-
-    // Prepare data
     const newContent = {
         question: data.question,
         objectif: data.objectif,
@@ -84,41 +83,37 @@ export async function createPedagogicalContent(data: Partial<PedagogicalContent>
         dimension: data.dimension || 'COMPRENDRE',
         tags_theme: data.tags_theme || [],
         tags_filtre: [...(data.tags_filtre || []).filter(t => t !== 'Personnel'), 'Personnel'],
-        owner_id: user.id,
-        is_public: false, // Default to private
-        // Club ID can be added later if we fetch user's club
+        owner_id: ctx.user.id,
+        is_public: false,
     };
 
-    const { data: inserted, error } = await supabase
+    const { data: inserted, error } = await ctx.supabase
         .from('pedagogical_content')
         .insert(newContent)
         .select()
         .single();
 
     if (error) {
-        console.error('Error creating content:', error);
+        console.error('[createPedagogicalContent]', error.message);
         return { success: false, error: error.message };
     }
 
-    revalidatePath('/stages'); // Revalidate potential paths
+    revalidatePath('/stages');
     return { success: true, data: inserted };
 }
 
 export async function getUserContent() {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const ctx = await requireAuth();
+    if (!ctx) return [];
 
-    if (!user) return [];
-
-    const { data, error } = await supabase
+    const { data, error } = await ctx.supabase
         .from('pedagogical_content')
         .select('*')
-        .eq('owner_id', user.id);
+        .eq('owner_id', ctx.user.id);
 
     if (error) {
-        console.error('Error fetching user content:', error);
+        console.error('[getUserContent]', error.message);
         return [];
     }
-
     return data as PedagogicalContent[];
 }

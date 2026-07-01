@@ -46,6 +46,19 @@ export type PedagogicalRessource =
 
 export type ContentSource = 'copun' | 'custom';
 
+export type ObservationPillar = 'COMPRENDRE' | 'OBSERVER' | 'PROTÉGER';
+
+export type PedagogicalAction = 'expliquer' | 'montrer' | 'questionner' | 'laisser_decouvrir';
+
+export type WeekObservation = {
+  id: string;
+  stage_id: string;
+  text: string;
+  pedagogical_action: PedagogicalAction | null;
+  linked_thematic: string | null;
+  created_at: string;
+};
+
 export type PedagogicalContent = {
   id: string;
   question: string;
@@ -84,10 +97,6 @@ export type StageObjectiveReviewDraft = {
 
 export type StageObjectiveReviewItem = {
   pedagogicalContent: PedagogicalContent;
-  placedSessions: Pick<Session, 'id' | 'title'>[];
-  validatedSessions: Pick<Session, 'id' | 'title'>[];
-  isPlaced: boolean;
-  isValidated: boolean;
   review: {
     executionStatus: StageObjectiveExecutionStatus;
     impactLevel: StageObjectiveImpactLevel | null;

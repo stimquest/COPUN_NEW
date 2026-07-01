@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { ContentTodo, PedagogicalContent } from '@/types';
+import { requireAuth } from '@/lib/auth';
 
 export type CustomContentInput = {
     question: string;
@@ -18,20 +19,19 @@ export type CustomContentResult =
     | { success: false; error: string };
 
 export async function createCustomContent(input: CustomContentInput): Promise<CustomContentResult> {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { success: false, error: 'Non authentifié' };
+    const ctx = await requireAuth();
+    if (!ctx) return { success: false, error: 'Non authentifié' };
 
-    const { data: profile } = await supabase
+    const { data: profile } = await ctx.supabase
         .from('profiles')
         .select('club_id')
-        .eq('id', user.id)
+        .eq('id', ctx.user.id)
         .single();
 
     // Generate a unique ID for custom content
-    const id = `custom_${user.id.slice(0, 8)}_${Date.now()}`;
+    const id = `custom_${ctx.user.id.slice(0, 8)}_${Date.now()}`;
 
-    const { error: insertError } = await supabase
+    const { error: insertError } = await ctx.supabase
         .from('pedagogical_content')
         .insert({
             id,
@@ -43,7 +43,7 @@ export async function createCustomContent(input: CustomContentInput): Promise<Cu
             tags_theme: [],
             tags_filtre: [],
             source: 'custom',
-            owner_id: user.id,
+            owner_id: ctx.user.id,
             club_id: profile?.club_id ?? null,
             is_public: false,
             ffv_level: input.ffv_level ?? null,
@@ -53,7 +53,7 @@ export async function createCustomContent(input: CustomContentInput): Promise<Cu
     if (insertError) return { success: false, error: insertError.message };
 
     if (input.todos.length > 0) {
-        const { error: todosError } = await supabase
+        const { error: todosError } = await ctx.supabase
             .from('content_todos')
             .insert(input.todos.map(t => ({ content_id: id, text: t.text, todo_order: t.todo_order })));
 
@@ -68,11 +68,10 @@ export async function updateCustomContent(
     contentId: string,
     input: CustomContentInput,
 ): Promise<{ success: boolean; error?: string }> {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { success: false, error: 'Non authentifié' };
+    const ctx = await requireAuth();
+    if (!ctx) return { success: false, error: 'Non authentifié' };
 
-    const { error: updateError } = await supabase
+    const { error: updateError } = await ctx.supabase
         .from('pedagogical_content')
         .update({
             question: input.question,
@@ -82,16 +81,16 @@ export async function updateCustomContent(
             supports: input.supports ?? [],
         })
         .eq('id', contentId)
-        .eq('owner_id', user.id)
+        .eq('owner_id', ctx.user.id)
         .eq('source', 'custom');
 
     if (updateError) return { success: false, error: updateError.message };
 
     // Replace all todos: delete then re-insert
-    await supabase.from('content_todos').delete().eq('content_id', contentId);
+    await ctx.supabase.from('content_todos').delete().eq('content_id', contentId);
 
     if (input.todos.length > 0) {
-        const { error: todosError } = await supabase
+        const { error: todosError } = await ctx.supabase
             .from('content_todos')
             .insert(input.todos.map(t => ({ content_id: contentId, text: t.text, todo_order: t.todo_order })));
 
@@ -105,15 +104,14 @@ export async function updateCustomContent(
 export async function deleteCustomContent(
     contentId: string,
 ): Promise<{ success: boolean; error?: string }> {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { success: false, error: 'Non authentifié' };
+    const ctx = await requireAuth();
+    if (!ctx) return { success: false, error: 'Non authentifié' };
 
-    const { error } = await supabase
+    const { error } = await ctx.supabase
         .from('pedagogical_content')
         .delete()
         .eq('id', contentId)
-        .eq('owner_id', user.id)
+        .eq('owner_id', ctx.user.id)
         .eq('source', 'custom');
 
     if (error) return { success: false, error: error.message };
@@ -123,15 +121,14 @@ export async function deleteCustomContent(
 }
 
 export async function getMyCustomContent(): Promise<(PedagogicalContent & { todos: ContentTodo[] })[]> {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return [];
+    const ctx = await requireAuth();
+    if (!ctx) return [];
 
-    const { data } = await supabase
+    const { data } = await ctx.supabase
         .from('pedagogical_content')
         .select('*, content_todos(*)')
         .eq('source', 'custom')
-        .eq('owner_id', user.id)
+        .eq('owner_id', ctx.user.id)
         .order('created_at', { ascending: false });
 
     if (!data) return [];

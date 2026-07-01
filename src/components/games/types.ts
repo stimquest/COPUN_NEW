@@ -5,7 +5,7 @@ export interface GameCardDB {
     type: GameType;
     theme: string;
     related_objective_id?: string;
-    data: any;
+    data: unknown;
 }
 
 export interface QuizzData {

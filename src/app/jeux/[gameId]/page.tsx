@@ -10,5 +10,5 @@ export default async function GamePlayPage({ params }: { params: Promise<{ gameI
         notFound();
     }
 
-    return <PlayClient game={game as any} />;
+    return <PlayClient game={game} />;
 }

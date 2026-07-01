@@ -53,20 +53,11 @@ export async function getStages() {
 export async function getDashboardStages() {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-
     if (!user) return [];
 
-    // Fetch stages with their basic info
     const { data: stages, error: stagesError } = await supabase
         .from('stages')
-        .select(`
-            id,
-            title,
-            level,
-            dates,
-            selected_content,
-            created_at
-        `)
+        .select('id, title, level, activity, dates, selected_content, closed_at, closing_notes, created_at')
         .eq('owner_id', user.id)
         .order('created_at', { ascending: false });
 
@@ -75,227 +66,73 @@ export async function getDashboardStages() {
         return [];
     }
 
-    // Now, fetch all exploits for these stages
     const stageIds = stages.map(s => s.id);
+    if (stageIds.length === 0) return [];
 
-    // We get stage exploits for the connected user's stages
-    const { data: exploitsData } = await supabase
-        .from('stage_exploits')
-        .select(`
-            stage_id,
-            status
-        `)
-        .in('stage_id', stageIds);
+    const [{ data: exploitsData }, { data: reviewsData }, { data: quizData }] = await Promise.all([
+        supabase.from('stage_exploits').select('stage_id, status').in('stage_id', stageIds),
+        supabase.from('stage_objective_reviews').select('stage_id, execution_status').in('stage_id', stageIds),
+        supabase.from('stage_quizzes').select('stage_id, completed_at, score_correct, score_total').in('stage_id', stageIds),
+    ]);
 
-    // We get session links (for ordering + session count)
-    const { data: sessionsData } = await supabase
-        .from('sessions')
-        .select(`
-            id,
-            stage_id,
-            session_order
-        `)
-        .in('stage_id', stageIds);
-
-    // Fetch validated content_ids by this user across all stage sessions
-    const sessionIds = sessionsData?.map(s => s.id) || [];
-    const { data: validationsData } = sessionIds.length > 0
-        ? await supabase
-            .from('user_validations')
-            .select('session_id, content_id')
-            .eq('user_id', user.id)
-            .in('session_id', sessionIds)
-        : { data: [] };
-
-    // Get the content pool just to extract themes if possible (optimized)
-    // To limit payload, we only fetch content IDs that are actually selected in stages
-    const allSelectedContentIds = new Set<string>();
-    stages.forEach(s => s.selected_content?.forEach((id: string) => allSelectedContentIds.add(id)));
-
-    const contentThemeMap = new Map<string, string[]>();
-    if (allSelectedContentIds.size > 0) {
-        const { data: contentData } = await supabase
-            .from('pedagogical_content')
-            .select('id, tags_theme')
-            .in('id', Array.from(allSelectedContentIds));
-
-        if (contentData) {
-            contentData.forEach(c => contentThemeMap.set(c.id, c.tags_theme || []));
-        }
-    }
-
-    // Process and merge the data
-    const enrichedStages = stages.map(stage => {
-        const exploits = exploitsData?.filter(e => e.stage_id === stage.id) || [];
-        const completedExploits = exploits.filter(e => e.status === 'complete').length;
-        const totalExploits = exploits.length;
-
-        const stageSessions = sessionsData?.filter(s => s.stage_id === stage.id) || [];
-        const stageSessionIds = new Set(stageSessions.map(s => s.id));
-        const selectedSet = new Set(stage.selected_content ?? []);
-        // Count distinct content_ids that belong to this stage's selected_content
-        const validatedContentIds = new Set(
-            (validationsData ?? [])
-                .filter(v => stageSessionIds.has(v.session_id) && selectedSet.has(v.content_id))
-                .map(v => v.content_id)
-        );
-        const stageValidations = validatedContentIds;
-
-        // First session by order — used by the dashboard "play" shortcut
-        const firstSession = [...stageSessions].sort((a, b) => a.session_order - b.session_order)[0];
-
-        // Extract Top 2 themes
-        const themesCount = new Map<string, number>();
-        stage.selected_content?.forEach((contentId: string) => {
-            const themes = contentThemeMap.get(contentId) || [];
-            themes.forEach(t => {
-                themesCount.set(t, (themesCount.get(t) || 0) + 1);
-            });
-        });
-        const topThemes = Array.from(themesCount.entries())
-            .sort((a, b) => b[1] - a[1])
-            .slice(0, 2)
-            .map(e => e[0]);
+    return stages.map(stage => {
+        const contentCount = stage.selected_content?.length ?? 0;
+        const reviews = (reviewsData ?? []).filter(r => r.stage_id === stage.id);
+        const workedCount = reviews.filter(r => r.execution_status === 'done' || r.execution_status === 'partial').length;
+        const exploits = (exploitsData ?? []).filter(e => e.stage_id === stage.id);
+        const quiz = (quizData ?? []).find(q => q.stage_id === stage.id) ?? null;
 
         return {
-            ...stage,
-            exploitsSummary: { completed: completedExploits, total: totalExploits },
-            validationCount: stageValidations.size,
-            contentCount: stage.selected_content?.length || 0,
-            themes: topThemes,
-            totalSessions: stageSessions.length,
-            firstSessionId: firstSession?.id ?? null
+            id: stage.id,
+            title: stage.title,
+            level: stage.level,
+            activity: stage.activity,
+            dates: stage.dates,
+            closed_at: stage.closed_at,
+            created_at: stage.created_at,
+            contentCount,
+            workedCount,
+            exploitsSummary: {
+                completed: exploits.filter(e => e.status === 'complete').length,
+                total: exploits.length,
+            },
+            quiz: quiz ? {
+                done: !!quiz.completed_at,
+                score: quiz.score_correct ?? 0,
+                total: quiz.score_total ?? 0,
+            } : null,
         };
     });
-
-    return enrichedStages;
-}
-
-export async function getSessionsForStage(stageId: string) {
-    const supabase = await createClient();
-    const { data, error } = await supabase
-        .from('sessions')
-        .select(`
-            *,
-            steps:session_structure(*)
-        `)
-        .eq('stage_id', stageId)
-        .order('session_order', { ascending: true })
-        .order('step_order', { foreignTable: 'session_structure', ascending: true });
-
-    if (error) {
-        console.error('Error fetching sessions:', error);
-        return [];
-    }
-    return data;
 }
 
 /**
  * Statistiques d'avancement d'un stage pour la carte de pilotage.
- * Progression de transmission, défis validés, quiz fait/score, prochaine séance.
+ * Progression de transmission, défis validés, quiz fait/score.
  */
 export async function getStageCockpitStats(stageId: string) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
 
-    const { data: stage } = await supabase
-        .from('stages')
-        .select('selected_content, dates')
-        .eq('id', stageId)
-        .single();
+    const [{ data: stage }, { data: exploits }, { data: quiz }, { data: pointsRows }] = await Promise.all([
+        supabase.from('stages').select('selected_content, dates').eq('id', stageId).single(),
+        supabase.from('stage_exploits').select('status').eq('stage_id', stageId),
+        supabase.from('stage_quizzes').select('completed_at, score_correct, score_total, points_awarded').eq('stage_id', stageId).maybeSingle(),
+        supabase.from('leaderboard_points').select('points').eq('stage_id', stageId),
+    ]);
 
     const selectedContent: string[] = stage?.selected_content ?? [];
     const contentCount = selectedContent.length;
 
-    // Sessions + étapes du stage
-    const { data: sessions } = await supabase
-        .from('sessions')
-        .select('id, title, session_order')
-        .eq('stage_id', stageId)
-        .order('session_order', { ascending: true });
-
-    const sessionIds = (sessions ?? []).map(s => s.id);
-    const selectedSet = new Set(selectedContent);
-
-    // Étapes de ces sessions (pour connaître les fiches "placées")
-    let placedCount = 0;
-    let stepIds: string[] = [];
-    if (sessionIds.length > 0) {
-        const { data: steps } = await supabase
-            .from('session_structure')
-            .select('id')
-            .in('session_id', sessionIds);
-        stepIds = (steps ?? []).map(s => s.id);
-
-        if (stepIds.length > 0) {
-            const { data: links } = await supabase
-                .from('session_step_pedagogical_links')
-                .select('pedagogical_content_id')
-                .in('session_step_id', stepIds);
-
-            // Fiches distinctes placées qui font partie du réservoir prévu
-            const placed = new Set(
-                (links ?? [])
-                    .map(l => l.pedagogical_content_id)
-                    .filter(cid => selectedSet.has(cid))
-            );
-            placedCount = placed.size;
-        }
-    }
-
-    // Notions validées dans ces sessions
-    let validatedCount = 0;
-    if (sessionIds.length > 0 && contentCount > 0) {
-        const { data: validations } = await supabase
-            .from('user_validations')
-            .select('content_id, session_id')
-            .eq('user_id', user.id)
-            .in('session_id', sessionIds);
-
-        const validated = new Set(
-            (validations ?? [])
-                .filter(v => selectedSet.has(v.content_id))
-                .map(v => v.content_id)
-        );
-        validatedCount = validated.size;
-    }
-
-    // Défis
-    const { data: exploits } = await supabase
-        .from('stage_exploits')
-        .select('status')
-        .eq('stage_id', stageId);
-
     const defisTotal = exploits?.length ?? 0;
     const defisDone = (exploits ?? []).filter(e => e.status === 'complete').length;
 
-    // Quiz
-    const { data: quiz } = await supabase
-        .from('stage_quizzes')
-        .select('completed_at, score_correct, score_total, points_awarded')
-        .eq('stage_id', stageId)
-        .maybeSingle();
-
-    // Total points gagnés sur ce stage (quiz + défis)
-    let stageTotalPoints = 0;
-    const { data: pointsRows } = await supabase
-        .from('leaderboard_points')
-        .select('points')
-        .eq('stage_id', stageId);
-
-    if (pointsRows) {
-        stageTotalPoints = pointsRows.reduce((sum: number, r: { points: number }) => sum + r.points, 0);
-    }
+    const stageTotalPoints = (pointsRows ?? []).reduce((sum: number, r: { points: number }) => sum + r.points, 0);
 
     return {
-        contentCount,        // Prévu (réservoir du stage)
-        placedCount,         // Placé (lié à une étape de séance)
-        validatedCount,      // Réalisé (validé sur le terrain)
-        progressPct: contentCount > 0 ? Math.round((validatedCount / contentCount) * 100) : 0,
+        contentCount,
         defisTotal,
         defisDone,
-        sessionsCount: sessions?.length ?? 0,
         quizDone: !!quiz?.completed_at,
         quizScore: quiz?.score_correct ?? null,
         quizTotal: quiz?.score_total ?? null,
@@ -324,47 +161,15 @@ export async function getStageObjectiveReviewItems(stageId: string): Promise<Sta
     const selectedContent: string[] = stage.selected_content ?? [];
     if (selectedContent.length === 0) return [];
 
-    const selectedSet = new Set(selectedContent);
-
-    const [{ data: contentRows }, { data: reviewRows }, { data: sessions }] = await Promise.all([
+    const [{ data: contentRows }, { data: reviewRows }] = await Promise.all([
         supabase.from('pedagogical_content').select('*').in('id', selectedContent),
         supabase
             .from('stage_objective_reviews')
             .select('pedagogical_content_id, execution_status, impact_level, note')
             .eq('stage_id', stageId),
-        supabase.from('sessions').select('id, title, session_order').eq('stage_id', stageId).order('session_order', { ascending: true }),
     ]);
 
     const contentById = new Map((contentRows as PedagogicalContent[] ?? []).map(content => [content.id, content]));
-    const orderedSessions = (sessions ?? []).map(session => ({ id: session.id, title: session.title }));
-    const sessionIds = orderedSessions.map(session => session.id);
-
-    let stepRows: Array<{ id: string; session_id: string }> = [];
-    let linkRows: Array<{ session_step_id: string; pedagogical_content_id: string }> = [];
-    let validationRows: Array<{ content_id: string; session_id: string }> = [];
-
-    if (sessionIds.length > 0) {
-        const [{ data: steps }, { data: validations }] = await Promise.all([
-            supabase.from('session_structure').select('id, session_id').in('session_id', sessionIds),
-            supabase
-                .from('user_validations')
-                .select('content_id, session_id')
-                .eq('user_id', user.id)
-                .in('session_id', sessionIds),
-        ]);
-
-        stepRows = steps ?? [];
-        validationRows = validations ?? [];
-
-        if (stepRows.length > 0) {
-            const { data: links } = await supabase
-                .from('session_step_pedagogical_links')
-                .select('session_step_id, pedagogical_content_id')
-                .in('session_step_id', stepRows.map(step => step.id));
-
-            linkRows = links ?? [];
-        }
-    }
 
     const reviewByContentId = new Map(
         (reviewRows ?? []).map(review => [
@@ -377,45 +182,13 @@ export async function getStageObjectiveReviewItems(stageId: string): Promise<Sta
         ])
     );
 
-    const stepToSessionId = new Map(stepRows.map(step => [step.id, step.session_id]));
-    const placedByContentId = new Map<string, Set<string>>();
-    const validatedByContentId = new Map<string, Set<string>>();
-
-    linkRows.forEach(link => {
-        if (!selectedSet.has(link.pedagogical_content_id)) return;
-        const sessionId = stepToSessionId.get(link.session_step_id);
-        if (!sessionId) return;
-        const bucket = placedByContentId.get(link.pedagogical_content_id) ?? new Set<string>();
-        bucket.add(sessionId);
-        placedByContentId.set(link.pedagogical_content_id, bucket);
-    });
-
-    validationRows.forEach(validation => {
-        if (!selectedSet.has(validation.content_id)) return;
-        const bucket = validatedByContentId.get(validation.content_id) ?? new Set<string>();
-        bucket.add(validation.session_id);
-        validatedByContentId.set(validation.content_id, bucket);
-    });
-
-    const sessionsFromSet = (set?: Set<string>) => {
-        if (!set) return [];
-        return orderedSessions.filter(session => set.has(session.id));
-    };
-
     return selectedContent
         .map(contentId => {
             const pedagogicalContent = contentById.get(contentId);
             if (!pedagogicalContent) return null;
 
-            const placedSessions = sessionsFromSet(placedByContentId.get(contentId));
-            const validatedSessions = sessionsFromSet(validatedByContentId.get(contentId));
-
             return {
                 pedagogicalContent,
-                placedSessions,
-                validatedSessions,
-                isPlaced: placedSessions.length > 0,
-                isValidated: validatedSessions.length > 0,
                 review: reviewByContentId.get(contentId) ?? null,
             } satisfies StageObjectiveReviewItem;
         })

@@ -164,16 +164,109 @@ function getPeriodWeights(periodId: string): ThematicWeights {
     }
 }
 
+export const THEMATIC_LABELS: Record<ThematicTag, { label: string; dimension: 'C' | 'O' | 'P'; icon: string }> = {
+    // COMPRENDRE
+    caracteristiques_littoral:  { label: 'Caractéristiques du littoral',          dimension: 'C', icon: 'landscape' },
+    activites_humaines:         { label: 'Activités humaines',                    dimension: 'C', icon: 'anchor' },
+    biodiversite_saisonnalite:  { label: 'Biodiversité et saisonnalité',          dimension: 'C', icon: 'flutter_dash' },
+    // OBSERVER
+    lecture_paysage:            { label: 'Lecture du paysage',                    dimension: 'O', icon: 'terrain' },
+    reperes_spatio_temporels:   { label: 'Repères spatio-temporels',              dimension: 'O', icon: 'explore' },
+    interactions_climatiques:   { label: 'Interactions des éléments climatiques', dimension: 'O', icon: 'air' },
+    // PROTÉGER
+    impact_presence_humaine:    { label: 'Impact de la présence humaine',         dimension: 'P', icon: 'delete' },
+    cohabitation_vivant:        { label: 'Cohabitation avec le vivant',           dimension: 'P', icon: 'eco' },
+    sciences_participatives:    { label: 'Sciences participatives',               dimension: 'P', icon: 'biotech' },
+};
+
 export function getPeriodForMonth(month: number): SeasonalPeriod {
     return SEASONAL_PERIODS.find(p => p.months.includes(month)) ?? SEASONAL_PERIODS[0];
 }
 
-export function getSuggestedThematics(
-    periodId: string,
-    coeff: CoeffType,
-    meteo: MeteoType,
-    topN = 4
-): ThematicTag[] {
+// Supports nautiques qui amplifient certaines thématiques
+function getActivityWeights(activities: string[]): ThematicWeights {
+    const w: ThematicWeights = {};
+    const add = (tag: ThematicTag, v: number) => { w[tag] = (w[tag] ?? 0) + v; };
+
+    for (const a of activities) {
+        const lower = a.toLowerCase();
+        if (lower.includes('planche') || lower.includes('wing') || lower.includes('kite')) {
+            add('interactions_climatiques', 2);
+            add('reperes_spatio_temporels', 1);
+        }
+        if (lower.includes('catamaran') || lower.includes('dériveur') || lower.includes('optimist')) {
+            add('reperes_spatio_temporels', 2);
+            add('caracteristiques_littoral', 1);
+        }
+        if (lower.includes('kayak') || lower.includes('sup') || lower.includes('paddle')) {
+            add('cohabitation_vivant', 2);
+            add('lecture_paysage', 1);
+            add('biodiversite_saisonnalite', 1);
+        }
+    }
+    return w;
+}
+
+// Le niveau oriente vers plus ou moins de complexité conceptuelle
+function getLevelWeights(level: string): ThematicWeights {
+    const lower = level.toLowerCase();
+    if (lower.includes('1')) {
+        return {
+            reperes_spatio_temporels: 2,
+            caracteristiques_littoral: 1,
+            lecture_paysage: 1,
+        };
+    }
+    if (lower.includes('2')) {
+        return {
+            interactions_climatiques: 1,
+            biodiversite_saisonnalite: 1,
+            cohabitation_vivant: 1,
+        };
+    }
+    if (lower.includes('3')) {
+        return {
+            impact_presence_humaine: 2,
+            sciences_participatives: 2,
+            activites_humaines: 1,
+        };
+    }
+    return {};
+}
+
+// L'intention principale booste ses voisines thématiques sans s'auto-booster
+const THEMATIC_NEIGHBORS: Record<ThematicTag, ThematicTag[]> = {
+    caracteristiques_littoral:  ['reperes_spatio_temporels', 'interactions_climatiques', 'lecture_paysage'],
+    reperes_spatio_temporels:   ['caracteristiques_littoral', 'lecture_paysage', 'interactions_climatiques'],
+    interactions_climatiques:   ['reperes_spatio_temporels', 'caracteristiques_littoral', 'biodiversite_saisonnalite'],
+    biodiversite_saisonnalite:  ['cohabitation_vivant', 'sciences_participatives', 'lecture_paysage'],
+    activites_humaines:         ['impact_presence_humaine', 'cohabitation_vivant', 'reperes_spatio_temporels'],
+    lecture_paysage:            ['caracteristiques_littoral', 'biodiversite_saisonnalite', 'interactions_climatiques'],
+    cohabitation_vivant:        ['biodiversite_saisonnalite', 'impact_presence_humaine', 'lecture_paysage'],
+    impact_presence_humaine:    ['activites_humaines', 'cohabitation_vivant', 'sciences_participatives'],
+    sciences_participatives:    ['biodiversite_saisonnalite', 'impact_presence_humaine', 'cohabitation_vivant'],
+};
+
+function getMainThematicWeights(main: ThematicTag): ThematicWeights {
+    const w: ThematicWeights = {};
+    for (const neighbor of THEMATIC_NEIGHBORS[main]) {
+        w[neighbor] = (w[neighbor] ?? 0) + 2;
+    }
+    return w;
+}
+
+export type SuggestionContext = {
+    periodId: string;
+    coeff: CoeffType;
+    meteo: MeteoType;
+    activities?: string[];
+    level?: string;
+    mainThematic?: ThematicTag | null;
+    topN?: number;
+};
+
+export function getSuggestedThematics(ctx: SuggestionContext): ThematicTag[] {
+    const { periodId, coeff, meteo, activities = [], level = '', mainThematic = null, topN = 4 } = ctx;
     const scores: Partial<Record<ThematicTag, number>> = {};
 
     const addWeights = (weights: ThematicWeights) => {
@@ -185,6 +278,12 @@ export function getSuggestedThematics(
     addWeights(getPeriodWeights(periodId));
     addWeights(getCoeffWeights(coeff));
     addWeights(getMeteoWeights(meteo));
+    addWeights(getActivityWeights(activities));
+    if (level) addWeights(getLevelWeights(level));
+    if (mainThematic) addWeights(getMainThematicWeights(mainThematic));
+
+    // L'intention principale n'entre jamais dans les suggestions (ouvre les options)
+    if (mainThematic) delete scores[mainThematic];
 
     return (Object.entries(scores) as [ThematicTag, number][])
         .sort((a, b) => b[1] - a[1])

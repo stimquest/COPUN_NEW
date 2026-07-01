@@ -1,20 +1,17 @@
 'use server';
 
-import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { requireAuth } from '@/lib/auth';
+import { createClient } from '@/lib/supabase/server';
 import type { ThematicTag } from '@/data/seasonal-context';
 
 async function requireAdminOrModerator() {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return null;
-    const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single();
+    const ctx = await requireAuth();
+    if (!ctx) return null;
+    const { data: profile } = await ctx.supabase
+        .from('profiles').select('role').eq('id', ctx.user.id).single();
     if (!profile || !['admin', 'moderator'].includes(profile.role)) return null;
-    return { user, supabase };
+    return ctx;
 }
 
 export type FicheStatut = 'brouillon' | 'publie';
@@ -49,27 +46,16 @@ export async function getAllFichesMemo(filtreStatut?: FicheStatut): Promise<Fich
         .from('fiches_memo')
         .select('*, auteur:profiles(full_name, email)')
         .order('updated_at', { ascending: false });
-
-    if (filtreStatut) {
-        query = query.eq('statut', filtreStatut);
-    }
-
+    if (filtreStatut) query = query.eq('statut', filtreStatut);
     const { data, error } = await query;
-    if (error) {
-        console.error('Error fetching fiches memo:', error.message);
-        return [];
-    }
+    if (error) { console.error('[getAllFichesMemo]', error.message); return []; }
     return data as FicheMemo[];
 }
 
 export async function getFicheMemoById(id: string): Promise<FicheMemo | null> {
     const supabase = await createClient();
     const { data, error } = await supabase
-        .from('fiches_memo')
-        .select('*, auteur:profiles(full_name, email)')
-        .eq('id', id)
-        .single();
-
+        .from('fiches_memo').select('*, auteur:profiles(full_name, email)').eq('id', id).single();
     if (error) return null;
     return data as FicheMemo;
 }
@@ -77,46 +63,29 @@ export async function getFicheMemoById(id: string): Promise<FicheMemo | null> {
 export async function getFichesMemoByTheme(tag: ThematicTag): Promise<FicheMemo[]> {
     const supabase = await createClient();
     const { data, error } = await supabase
-        .from('fiches_memo')
-        .select('*, auteur:profiles(full_name, email)')
-        .eq('statut', 'publie')
-        .contains('tags_thematiques', [tag])
-        .order('updated_at', { ascending: false });
-
+        .from('fiches_memo').select('*, auteur:profiles(full_name, email)')
+        .eq('statut', 'publie').contains('tags_thematiques', [tag]).order('updated_at', { ascending: false });
     if (error) return [];
     return data as FicheMemo[];
 }
 
-export async function getFichesMemoByFilters(
-    tags_thematiques: ThematicTag[],
-    tags_saisons: string[]
-): Promise<FicheMemo[]> {
+export async function getFichesMemoByFilters(tags_thematiques: ThematicTag[], tags_saisons: string[]): Promise<FicheMemo[]> {
     const supabase = await createClient();
     let query = supabase
-        .from('fiches_memo')
-        .select('*, auteur:profiles(full_name, email)')
-        .eq('statut', 'publie')
-        .order('updated_at', { ascending: false });
-
-    if (tags_thematiques.length > 0) {
-        query = query.overlaps('tags_thematiques', tags_thematiques);
-    }
-    if (tags_saisons.length > 0) {
-        query = query.overlaps('tags_saisons', tags_saisons);
-    }
-
+        .from('fiches_memo').select('*, auteur:profiles(full_name, email)')
+        .eq('statut', 'publie').order('updated_at', { ascending: false });
+    if (tags_thematiques.length > 0) query = query.overlaps('tags_thematiques', tags_thematiques);
+    if (tags_saisons.length > 0) query = query.overlaps('tags_saisons', tags_saisons);
     const { data, error } = await query;
     if (error) return [];
     return data as FicheMemo[];
 }
 
 export async function createFicheMemo(ficheData: CreateFicheData) {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const ctx = await requireAuth();
+    if (!ctx) return { success: false, error: 'Non connecté' };
 
-    if (!user) return { success: false, error: 'Non connecté' };
-
-    const { data, error } = await supabase
+    const { data, error } = await ctx.supabase
         .from('fiches_memo')
         .insert({
             titre: ficheData.titre,
@@ -125,75 +94,42 @@ export async function createFicheMemo(ficheData: CreateFicheData) {
             tags_thematiques: ficheData.tags_thematiques,
             tags_saisons: ficheData.tags_saisons,
             tags: ficheData.tags ?? [],
-            auteur_id: user.id,
+            auteur_id: ctx.user.id,
             statut: 'brouillon',
         })
         .select()
         .single();
 
-    if (error) {
-        console.error('Error creating fiche memo:', error);
-        return { success: false, error: error.message };
-    }
-
+    if (error) { console.error('[createFicheMemo]', error.message); return { success: false, error: error.message }; }
     revalidatePath('/ressources');
     return { success: true, ficheId: data.id };
 }
 
-export async function updateFicheMemo(
-    id: string,
-    ficheData: Partial<CreateFicheData & { statut: FicheStatut }>
-) {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { success: false, error: 'Non connecté' };
+export async function updateFicheMemo(id: string, ficheData: Partial<CreateFicheData & { statut: FicheStatut }>) {
+    const ctx = await requireAuth();
+    if (!ctx) return { success: false, error: 'Non connecté' };
 
-    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-    const role = profile?.role;
-
-    // Auteur ou admin/modérateur
-    if (!['admin', 'moderator'].includes(role)) {
-        const { data: fiche } = await supabase.from('fiches_memo').select('auteur_id').eq('id', id).single();
-        if (fiche?.auteur_id !== user.id) return { success: false, error: 'Accès refusé.' };
+    const { data: profile } = await ctx.supabase.from('profiles').select('role').eq('id', ctx.user.id).single();
+    if (!['admin', 'moderator'].includes(profile?.role)) {
+        const { data: fiche } = await ctx.supabase.from('fiches_memo').select('auteur_id').eq('id', id).single();
+        if (fiche?.auteur_id !== ctx.user.id) return { success: false, error: 'Accès refusé.' };
     }
 
-    const { error } = await supabase
-        .from('fiches_memo')
-        .update(ficheData)
-        .eq('id', id);
-
-    if (error) {
-        console.error('Error updating fiche memo:', error);
-        return { success: false, error: error.message };
-    }
-
+    const { error } = await ctx.supabase.from('fiches_memo').update(ficheData).eq('id', id);
+    if (error) { console.error('[updateFicheMemo]', error.message); return { success: false, error: error.message }; }
     revalidatePath('/ressources');
     revalidatePath(`/ressources/${id}`);
     return { success: true };
 }
 
-export async function publierFicheMemo(id: string) {
-    return updateFicheMemo(id, { statut: 'publie' });
-}
-
-export async function depublierFicheMemo(id: string) {
-    return updateFicheMemo(id, { statut: 'brouillon' });
-}
+export async function publierFicheMemo(id: string) { return updateFicheMemo(id, { statut: 'publie' }); }
+export async function depublierFicheMemo(id: string) { return updateFicheMemo(id, { statut: 'brouillon' }); }
 
 export async function deleteFicheMemo(id: string) {
     const ctx = await requireAdminOrModerator();
     if (!ctx) return { success: false, error: 'Accès refusé.' };
-
-    const { error } = await ctx.supabase
-        .from('fiches_memo')
-        .delete()
-        .eq('id', id);
-
-    if (error) {
-        console.error('Error deleting fiche memo:', error);
-        return { success: false, error: error.message };
-    }
-
+    const { error } = await ctx.supabase.from('fiches_memo').delete().eq('id', id);
+    if (error) { console.error('[deleteFicheMemo]', error.message); return { success: false, error: error.message }; }
     revalidatePath('/ressources');
     return { success: true };
 }
