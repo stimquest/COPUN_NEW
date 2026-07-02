@@ -1,14 +1,16 @@
 import { unstable_noStore as noStore } from 'next/cache';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
-import { clsx } from 'clsx';
 import { DeleteStageButton } from '@/components/DeleteStageButton';
 import { ReopenConfirmSheet } from '@/components/ReopenConfirmSheet';
 import { StageClosureReview } from '@/components/StageClosureReview';
 import { StageObjectiveReviewList } from '@/components/StageObjectiveReviewList';
+import { StageDefisReview, DefiReview } from '@/components/StageDefisReview';
+import { StageObservationsReview } from '@/components/StageObservationsReview';
 import { getStageById, getStageCockpitStats, getStageObjectiveReviewItems } from '@/services/data-service';
 import { getStageExploits } from '@/actions/defi-actions';
 import { getStageQuiz } from '@/actions/quiz-actions';
+import { getObservationsForStage } from '@/actions/observation-actions';
 
 const STATUS_COUNTS = (items: Awaited<ReturnType<typeof getStageObjectiveReviewItems>>) => ({
     done:     items.filter(i => i.review?.executionStatus === 'done').length,
@@ -20,12 +22,13 @@ export default async function StageBilanPage({ params }: { params: Promise<{ id:
     noStore();
     const { id } = await params;
 
-    const [stage, stats, objectiveItems, defisAssigned, quizData] = await Promise.all([
+    const [stage, stats, objectiveItems, defisAssigned, quizData, observations] = await Promise.all([
         getStageById(id),
         getStageCockpitStats(id),
         getStageObjectiveReviewItems(id),
         getStageExploits(id),
         getStageQuiz(id),
+        getObservationsForStage(id),
     ]);
 
     if (!stage) return notFound();
@@ -53,6 +56,16 @@ export default async function StageBilanPage({ params }: { params: Promise<{ id:
         total: quizData.score_total,
     } : null;
 
+    const defiReviews: DefiReview[] = defisAssigned.map(e => ({
+        id: e.exploit_id,
+        description: e.defis.description,
+        status: e.status,
+        points: e.defis.points,
+        terrain_temps_reel: e.defis.terrain_temps_reel,
+        structured_data: e.structured_data ?? null,
+        preuves_url: e.preuves_url ?? [],
+    }));
+
     return (
         <div className="min-h-screen bg-slate-50 pb-32">
 
@@ -75,7 +88,7 @@ export default async function StageBilanPage({ params }: { params: Promise<{ id:
                             Clôturé
                         </span>
                     ) : (
-                        <DeleteStageButton stageId={stage.id} />
+                        <DeleteStageButton stageId={stage.id} redirectTo="/stages" />
                     )}
                 </div>
             </header>
@@ -132,34 +145,18 @@ export default async function StageBilanPage({ params }: { params: Promise<{ id:
                         {defisTotal > 0 && (
                             <section>
                                 <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400 mb-3">Défis terrain</p>
-                                <div className="space-y-2">
-                                    {defisAssigned.map(exploit => (
-                                        <div key={exploit.id} className={clsx(
-                                            'rounded-xl border px-4 py-3 flex items-center gap-3',
-                                            exploit.status === 'complete' ? 'border-emerald-200 bg-emerald-50' : 'border-amber-200 bg-amber-50'
-                                        )}>
-                                            <span className={clsx(
-                                                'material-symbols-outlined text-xl',
-                                                exploit.status === 'complete' ? 'text-emerald-600' : 'text-amber-600'
-                                            )}>
-                                                {exploit.status === 'complete' ? 'check_circle' : 'pending'}
-                                            </span>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-sm font-bold text-slate-900">{exploit.defis.description}</p>
-                                                <p className="text-[10px] text-slate-500">
-                                                    {exploit.defis.terrain_temps_reel && 'Temps réel · '}
-                                                    {exploit.defis.points} points
-                                                </p>
-                                            </div>
-                                            <span className={clsx(
-                                                'text-[10px] font-black px-2 py-1 rounded-full',
-                                                exploit.status === 'complete' ? 'bg-emerald-600 text-white' : 'bg-amber-600 text-white'
-                                            )}>
-                                                {exploit.status === 'complete' ? 'Validé' : 'En cours'}
-                                            </span>
-                                        </div>
-                                    ))}
-                                </div>
+                                <StageDefisReview defis={defiReviews} />
+                            </section>
+                        )}
+
+                        {/* Retours terrain */}
+                        {observations.length > 0 && (
+                            <section>
+                                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400 mb-3">
+                                    Retours terrain
+                                    <span className="ml-2 text-slate-300">{observations.length}</span>
+                                </p>
+                                <StageObservationsReview observations={observations} />
                             </section>
                         )}
 
@@ -208,13 +205,8 @@ export default async function StageBilanPage({ params }: { params: Promise<{ id:
                         stageTitle={stage.title}
                         objectiveItems={objectiveItems}
                         initialClosingNotes={stage.closing_notes}
-                        defisAssigned={defisAssigned.map(e => ({
-                            id: e.exploit_id,
-                            description: e.defis.description,
-                            status: e.status,
-                            points: e.defis.points,
-                            terrain_temps_reel: e.defis.terrain_temps_reel,
-                        }))}
+                        defisAssigned={defiReviews}
+                        observations={observations}
                         quizData={quizReviewData}
                     />
                 )}

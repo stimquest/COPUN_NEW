@@ -3,10 +3,13 @@
 import { useState, useRef } from 'react';
 import clsx from 'clsx';
 import { uploadDefiPhoto, completeFilRougeDefi, saveClubObservationTargets } from '@/actions/defi-actions';
+import {
+    Abundance, Frequency,
+    ABUNDANCE_OPTIONS, INVENTAIRE_GROUPES, LAISSE_CATEGORIES,
+    COVERAGE_OPTIONS, ETAT_OPTIONS, FREQUENCY_OPTIONS, CATEGORIE_OPTIONS,
+} from '@/data/defi-structured-labels';
 
 type ObservationTarget = { id: string; name: string; categorie: string };
-type Abundance = 'absent' | 'quelques' | 'abondant';
-type Frequency = 'habituel' | 'peu_commun' | 'inhabituel' | 'exceptionnel' | '';
 
 type FauneEntry = {
     targetId: string;
@@ -22,52 +25,12 @@ type InventaireGroupe = {
     abundance: Abundance;
 };
 
-const INVENTAIRE_GROUPES: Omit<InventaireGroupe, 'abundance'>[] = [
-    { key: 'algues', label: 'Algues', exemple: 'ulves, fucus, laminaires…' },
-    { key: 'mollusques', label: 'Mollusques', exemple: 'bigorneaux, moules, huîtres, patelles…' },
-    { key: 'crustaces', label: 'Crustacés', exemple: 'crabes, crevettes, balanes…' },
-    { key: 'vers', label: 'Vers / invertébrés', exemple: 'annélides, anémones…' },
-    { key: 'echinodermes', label: 'Échinodermes', exemple: 'oursins, étoiles de mer…' },
-];
-
 type LaisseCategorie = {
     key: string;
     label: string;
     exemple: string;
     abundance: Abundance;
 };
-
-const LAISSE_CATEGORIES: Omit<LaisseCategorie, 'abundance'>[] = [
-    { key: 'dechets_plastiques', label: 'Déchets plastiques', exemple: 'bouteilles, sacs, mégots, fragments, filets…' },
-    { key: 'dechets_autres', label: 'Déchets autres matières', exemple: 'verre, métal, textile, bois traité…' },
-    { key: 'algues', label: 'Algues échouées', exemple: 'laminaires, fucales, algues vertes…' },
-    { key: 'bois_flotte', label: 'Bois flotté / débris végétaux', exemple: 'branches, troncs, feuilles…' },
-    { key: 'coquilles_vides', label: 'Coquilles vides', exemple: 'bivalves, gastéropodes, tests d\'oursins…' },
-    { key: 'faune_vivante', label: 'Faune vivante échouée', exemple: 'puces de mer, crustacés, invertébrés actifs…' },
-    { key: 'indices_ecologiques', label: 'Indices écologiques particuliers', exemple: 'pontes, œufs, méduses, espèce remarquable…' },
-];
-
-const ABUNDANCE_OPTIONS: { value: Abundance; label: string }[] = [
-    { value: 'absent', label: 'Absent' },
-    { value: 'quelques', label: 'Quelques' },
-    { value: 'abondant', label: 'Abondant' },
-];
-
-const COVERAGE_OPTIONS = ['0–25%', '25–50%', '50–75%', '75–100%'];
-const ETAT_OPTIONS = ['bon', 'moyen', 'dégradé'];
-const FREQUENCY_OPTIONS: { value: Frequency; label: string }[] = [
-    { value: 'habituel', label: 'Habituel' },
-    { value: 'peu_commun', label: 'Peu commun' },
-    { value: 'inhabituel', label: 'Inhabituel' },
-    { value: 'exceptionnel', label: 'Exceptionnel' },
-];
-const CATEGORIE_OPTIONS = [
-    { value: 'oiseau', label: 'Oiseau' },
-    { value: 'mammifere_marin', label: 'Mammifère marin' },
-    { value: 'poisson', label: 'Poisson' },
-    { value: 'meduse', label: 'Méduse / invertébré' },
-    { value: 'autre', label: 'Autre' },
-];
 
 type Props = {
     defiId: string;
@@ -106,9 +69,14 @@ export default function FilRougeForm({ defiId, defiDescription, stageId, clubTar
     );
     const [fauneFreeText, setFauneFreeText] = useState('');
 
-    // Config targets
-    const [configMode, setConfigMode] = useState(defiId === 'defi_faune_1' && clubTargets.length === 0);
-    const [newTargets, setNewTargets] = useState([{ name: '', categorie: 'oiseau' }]);
+    // Config targets — pré-rempli avec la liste actuelle du club (par défaut : espèces
+    // courantes du littoral) pour permettre d'ajuster sans repartir de zéro.
+    const [configMode, setConfigMode] = useState(false);
+    const [newTargets, setNewTargets] = useState(
+        clubTargets.length > 0
+            ? clubTargets.map(t => ({ name: t.name, categorie: t.categorie }))
+            : [{ name: '', categorie: 'oiseau' }]
+    );
     const [isSavingTargets, setIsSavingTargets] = useState(false);
 
     const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {

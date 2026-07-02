@@ -1,3 +1,5 @@
+import { CoeffType, MeteoType } from './seasonal-context';
+
 export type ObjectifId =
     | 'conditions'
     | 'marees'
@@ -37,9 +39,34 @@ export function extractIntention(suggestedThematics: string[] | null | undefined
     return OBJECTIFS.some(o => o.id === id) ? (id as ObjectifId) : null;
 }
 
+const COEFF_PREFIX = 'coeff:';
+const METEO_PREFIX = 'meteo:';
+
+/** Encode le coefficient de marée et la tendance météo choisis pour la semaine. */
+export function encodeConditions(coeff: CoeffType | null, meteo: MeteoType | null): string[] {
+    const entries: string[] = [];
+    if (coeff) entries.push(`${COEFF_PREFIX}${coeff}`);
+    if (meteo) entries.push(`${METEO_PREFIX}${meteo}`);
+    return entries;
+}
+
+/** Extrait le coefficient de marée éventuellement mémorisé dans suggested_thematics. */
+export function extractCoeff(suggestedThematics: string[] | null | undefined): CoeffType | null {
+    const entry = (suggestedThematics ?? []).find(t => t.startsWith(COEFF_PREFIX));
+    return entry ? (entry.slice(COEFF_PREFIX.length) as CoeffType) : null;
+}
+
+/** Extrait la tendance météo éventuellement mémorisée dans suggested_thematics. */
+export function extractMeteo(suggestedThematics: string[] | null | undefined): MeteoType | null {
+    const entry = (suggestedThematics ?? []).find(t => t.startsWith(METEO_PREFIX));
+    return entry ? (entry.slice(METEO_PREFIX.length) as MeteoType) : null;
+}
+
 /** Retire l'entrée intention d'un tableau suggested_thematics pour ne garder que les vrais ThematicTag. */
 export function stripIntention(suggestedThematics: string[] | null | undefined): string[] {
-    return (suggestedThematics ?? []).filter(t => !t.startsWith(INTENTION_PREFIX));
+    return (suggestedThematics ?? []).filter(t =>
+        !t.startsWith(INTENTION_PREFIX) && !t.startsWith(COEFF_PREFIX) && !t.startsWith(METEO_PREFIX)
+    );
 }
 
 export const OBJECTIFS: Objectif[] = [

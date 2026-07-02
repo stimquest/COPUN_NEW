@@ -57,7 +57,10 @@ export default function ProgramBuilderClient({ stage, copunPool, customPool }: {
     const router = useRouter();
     const [activeTab, setActiveTab] = useState<'EXPLORER' | 'SELECTION'>('EXPLORER');
     const [selectedLevel, setSelectedLevel] = useState<1 | 2 | 3>(1);
-    const [selectedThemes, setSelectedThemes] = useState<string[]>(stripIntention(stage.suggested_thematics));
+    // Les thématiques suggérées (marée/météo/saison) servent à la fois à présélectionner les filtres
+    // (comme avant) et à marquer/trier les cartes « Suggéré » en croisant aussi l'objectif choisi.
+    const suggestedThemes = useMemo(() => stripIntention(stage.suggested_thematics), [stage.suggested_thematics]);
+    const [selectedThemes, setSelectedThemes] = useState<string[]>(suggestedThemes);
     const [selectedTags, setSelectedTags] = useState<string[]>([]);
     const [tagSearch, setTagSearch] = useState('');
     const [programIds, setProgramIds] = useState<string[]>(stage.selected_content || []);
@@ -73,6 +76,24 @@ export default function ProgramBuilderClient({ stage, copunPool, customPool }: {
             return cardLevel === selectedLevel || (selectedLevel === 3 && cardLevel === 4);
         });
     }, [copunPool, selectedLevel]);
+
+    // Score de recommandation : croise les thématiques suggérées (marée/météo/saison, sur tags_theme)
+    // et les tags de l'objectif choisi (sur tags_filtre). Plus une carte croise de critères, mieux elle
+    // est classée ; toute carte avec un score > 0 porte le badge « Suggéré ».
+    const recommendScore = useMemo(() => {
+        const obj = OBJECTIFS.find(o => o.id === intention);
+        const intentionTags = obj ? obj.tags.map(t => t.toLowerCase()) : [];
+        const suggested = suggestedThemes.map(t => t.toLowerCase());
+        return (card: PedagogicalContent) => {
+            let score = 0;
+            const cardThemes = (Array.isArray(card.tags_theme) ? card.tags_theme : []).map(t => String(t).toLowerCase().trim());
+            score += suggested.filter(t => cardThemes.includes(t)).length;
+            const cardTags = (Array.isArray(card.tags_filtre) ? card.tags_filtre : []).map(t => String(t).toLowerCase().trim());
+            score += intentionTags.filter(t => cardTags.includes(t)).length;
+            return score;
+        };
+    }, [intention, suggestedThemes]);
+    const isRecommended = (card: PedagogicalContent) => recommendScore(card) > 0;
 
     // Group cards by dimension, filtered by selected themes and tags
     const groupedCards = useMemo(() => {
@@ -93,9 +114,12 @@ export default function ProgramBuilderClient({ stage, copunPool, customPool }: {
                 return true;
             });
 
+            // Les cartes qui croisent le mieux les critères (thématiques suggérées + objectif) en premier.
+            cards.sort((a, b) => recommendScore(b) - recommendScore(a));
+
             return { pillar, cards };
         }).filter(g => g.cards.length > 0);
-    }, [poolMatchingLevel, selectedThemes, selectedTags]);
+    }, [poolMatchingLevel, selectedThemes, selectedTags, recommendScore]);
 
     // Available tags based on filtered level
     const availableTags = useMemo(() => {
@@ -146,17 +170,6 @@ export default function ProgramBuilderClient({ stage, copunPool, customPool }: {
     };
 
     const pillarOf = (card: PedagogicalContent) => PILLARS.find(p => p.id === card.dimension);
-
-    const isRecommended = useMemo(() => {
-        if (!intention) return (_card: PedagogicalContent) => false;
-        const obj = OBJECTIFS.find(o => o.id === intention);
-        if (!obj) return (_card: PedagogicalContent) => false;
-        const targetTags = obj.tags.map(t => t.toLowerCase());
-        return (card: PedagogicalContent) => {
-            const cardTags = (Array.isArray(card.tags_filtre) ? card.tags_filtre : []).map(t => String(t).toLowerCase());
-            return targetTags.some(t => cardTags.includes(t));
-        };
-    }, [intention]);
 
     return (
         <div className="flex flex-col min-h-screen bg-[#EBF0F7]">
@@ -357,7 +370,8 @@ export default function ProgramBuilderClient({ stage, copunPool, customPool }: {
                                                 const recommended = isRecommended(card);
                                                 const obj = OBJECTIFS.find(o => o.id === intention);
                                                 const cardTagsTheme = (Array.isArray(card.tags_theme) ? card.tags_theme : []).map((x: string) => String(x).toLowerCase());
-                                                const cardThemeLabel = THEMES_BY_PILLAR[pillar.id]?.find(t => cardTagsTheme.includes(t.id.toLowerCase()));
+                                                const allThemes = Object.values(THEMES_BY_PILLAR).flat();
+                                                const cardThemeLabels = allThemes.filter(t => cardTagsTheme.includes(t.id.toLowerCase()));
                                                 return (
                                                     <div key={card.id} className={clsx(
                                                         "rounded-2xl transition-all flex flex-col relative overflow-hidden",
@@ -374,11 +388,12 @@ export default function ProgramBuilderClient({ stage, copunPool, customPool }: {
                                                             {/* Top row */}
                                                             <div className="flex items-start justify-between gap-2 mb-2">
                                                                 <div className="flex items-center gap-1.5 flex-wrap">
-                                                                    {cardThemeLabel && (
-                                                                        <span className={clsx("text-[9px] font-black uppercase tracking-widest", isSelected ? "text-white/50" : pillar.color)}>
-                                                                            {cardThemeLabel.label}
+                                                                    {cardThemeLabels.map((theme, i) => (
+                                                                        <span key={theme.id} className={clsx("text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5", isSelected ? "text-white/50" : pillar.color)}>
+                                                                            {i > 0 && <span className="opacity-40">·</span>}
+                                                                            {theme.label}
                                                                         </span>
-                                                                    )}
+                                                                    ))}
                                                                     {recommended && !isSelected && (
                                                                         <span className={clsx("text-[10px] font-bold px-2.5 py-0.5 rounded-full", obj ? `${obj.bg} ${obj.color}` : `${pillar.bg} text-white`)}>
                                                                             Suggéré

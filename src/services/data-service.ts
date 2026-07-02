@@ -1,7 +1,9 @@
 import { createClient } from '@/lib/supabase/server';
 import { summarizeObjectiveReviews, type ObjectiveAnalyticsInput, type StageObjectiveAnalyticsSummary } from '@/lib/stage-objective-analytics';
 import { isStageObjectiveExecutionStatus, isStageObjectiveImpactLevel } from '@/lib/stage-objective-review';
-import { PedagogicalContent, StageObjectiveReviewItem, TopicTracking } from '@/types';
+import { PedagogicalContent, StageObjectiveReviewItem } from '@/types';
+import { OBSERVATION_TYPES } from '@/data/observations';
+import { PILLARS, THEMES_BY_PILLAR } from '@/data/etages';
 
 
 export async function getStageById(id: string) {
@@ -115,7 +117,7 @@ export async function getStageCockpitStats(stageId: string) {
     if (!user) return null;
 
     const [{ data: stage }, { data: exploits }, { data: quiz }, { data: pointsRows }] = await Promise.all([
-        supabase.from('stages').select('selected_content, dates').eq('id', stageId).single(),
+        supabase.from('stages').select('selected_content, dates').eq('id', stageId).maybeSingle(),
         supabase.from('stage_exploits').select('status').eq('stage_id', stageId),
         supabase.from('stage_quizzes').select('completed_at, score_correct, score_total, points_awarded').eq('stage_id', stageId).maybeSingle(),
         supabase.from('leaderboard_points').select('points').eq('stage_id', stageId),
@@ -151,12 +153,13 @@ export async function getStageObjectiveReviewItems(stageId: string): Promise<Sta
         .select('selected_content')
         .eq('id', stageId)
         .eq('owner_id', user.id)
-        .single();
+        .maybeSingle(); // null sans erreur si le stage n'existe pas / n'appartient pas au user
 
-    if (stageError || !stage) {
-        console.error('Error fetching stage objective review items:', stageError);
+    if (stageError) {
+        console.error('Error fetching stage objective review items:', stageError.message);
         return [];
     }
+    if (!stage) return [];
 
     const selectedContent: string[] = stage.selected_content ?? [];
     if (selectedContent.length === 0) return [];
@@ -195,6 +198,33 @@ export async function getStageObjectiveReviewItems(stageId: string): Promise<Sta
         .filter((item): item is StageObjectiveReviewItem => item !== null);
 }
 
+export type ThemeTracking = {
+    id: string;
+    label: string;
+    icon: string;
+    occurrences: number;
+    observationCount: number;
+    summary: StageObjectiveAnalyticsSummary;
+    /** Nombre de fiches du catalogue COP'UN taguées sur ce thème. */
+    catalogCount: number;
+    /** Nombre de ces fiches déjà sélectionnées au moins une fois dans une semaine. */
+    selectedCount: number;
+};
+
+export type PillarTracking = {
+    pillarId: string;
+    label: string;
+    summary: StageObjectiveAnalyticsSummary;
+    themes: ThemeTracking[];
+};
+
+export type KeywordTracking = {
+    tag: string;
+    occurrences: number;
+    catalogCount: number;
+    selectedCount: number;
+};
+
 export type StageObjectiveDashboardStats = {
     stagesCount: number;
     summary: StageObjectiveAnalyticsSummary;
@@ -205,22 +235,16 @@ export type StageObjectiveDashboardStats = {
         closedAt: string | null;
         summary: StageObjectiveAnalyticsSummary;
     }>;
-    dimensions: Array<{
-        label: string;
-        summary: StageObjectiveAnalyticsSummary;
-    }>;
-    topicTracking: {
-        established: TopicTracking[];
-        improving: TopicTracking[];
-        fragile: TopicTracking[];
-        emerging: TopicTracking[];
-        dormant: TopicTracking[];
-    };
+    pillars: PillarTracking[];
+    /** Couverture du catalogue COP'UN : fiches déjà sélectionnées au moins une fois vs. total disponible. */
+    catalogCoverage: { selected: number; total: number };
+    /** Suivi précis par mot-clé (tags_filtre, ex: marée, vent, houle…), trié du plus au moins choisi. */
+    keywords: KeywordTracking[];
 };
 
 export async function getStageObjectiveDashboardStats(): Promise<StageObjectiveDashboardStats> {
     const emptySummary = summarizeObjectiveReviews([]);
-    const empty: StageObjectiveDashboardStats = { stagesCount: 0, summary: emptySummary, recentStages: [], dimensions: [], topicTracking: { established: [], improving: [], fragile: [], emerging: [], dormant: [] } };
+    const empty: StageObjectiveDashboardStats = { stagesCount: 0, summary: emptySummary, recentStages: [], pillars: [], catalogCoverage: { selected: 0, total: 0 }, keywords: [] };
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return empty;
@@ -240,15 +264,16 @@ export async function getStageObjectiveDashboardStats(): Promise<StageObjectiveD
         stages.flatMap(stage => (stage.selected_content ?? []) as string[])
     ));
 
-    const [{ data: reviewRows }, { data: contentRows }, { data: allContentRows }] = await Promise.all([
+    const [{ data: reviewRows }, { data: contentRows }, { data: observationRows }, { data: catalogRows }] = await Promise.all([
         supabase
             .from('stage_objective_reviews')
             .select('stage_id, pedagogical_content_id, execution_status, impact_level')
             .in('stage_id', stageIds),
         selectedContentIds.length > 0
-            ? supabase.from('pedagogical_content').select('id, dimension, tags_filtre').in('id', selectedContentIds)
+            ? supabase.from('pedagogical_content').select('id, dimension, tags_theme, tags_filtre, source').in('id', selectedContentIds)
             : Promise.resolve({ data: [] }),
-        supabase.from('pedagogical_content').select('tags_filtre'),
+        supabase.from('week_observations').select('linked_thematic').in('stage_id', stageIds),
+        supabase.from('pedagogical_content').select('id, tags_theme, tags_filtre, source'),
     ]);
 
     const reviewByKey = new Map<string, ObjectiveAnalyticsInput>();
@@ -258,19 +283,58 @@ export async function getStageObjectiveDashboardStats(): Promise<StageObjectiveD
         reviewByKey.set(`${review.stage_id}:${review.pedagogical_content_id}`, { executionStatus, impactLevel });
     });
 
+    // Les fiches sportives créées par le moniteur (source==='custom') ne sont pas des
+    // objectifs environnementaux COP'UN : elles sont exclues de ces statistiques pédagogiques.
+    const envContentIds = new Set((contentRows ?? []).filter(c => c.source !== 'custom').map(c => c.id));
+
+    // Couverture du catalogue : combien de fiches COP'UN (par thème et au global) ont déjà été
+    // sélectionnées au moins une fois, par rapport à l'ensemble des fiches disponibles.
+    const catalogFiches = (catalogRows ?? []).filter(c => c.source !== 'custom');
+    const catalogFicheIdsByTheme = new Map<string, Set<string>>();
+    const catalogFicheIdsByTag = new Map<string, Set<string>>();
+    catalogFiches.forEach(c => {
+        ((c.tags_theme ?? []) as string[]).forEach(themeId => {
+            const set = catalogFicheIdsByTheme.get(themeId) ?? new Set<string>();
+            set.add(c.id);
+            catalogFicheIdsByTheme.set(themeId, set);
+        });
+        ((c.tags_filtre ?? []) as string[]).forEach(tag => {
+            const set = catalogFicheIdsByTag.get(tag) ?? new Set<string>();
+            set.add(c.id);
+            catalogFicheIdsByTag.set(tag, set);
+        });
+    });
+    const catalogCoverage = {
+        selected: envContentIds.size,
+        total: catalogFiches.length,
+    };
+
     const dimensionByContentId = new Map((contentRows ?? []).map(content => [content.id, content.dimension ?? 'Sans dimension']));
-    const contentById = new Map((contentRows ?? []).map(content => [content.id, content]));
+    const themesByContentId = new Map((contentRows ?? []).map(content => [content.id, (content.tags_theme ?? []) as string[]]));
+    const tagsByContentId = new Map((contentRows ?? []).map(content => [content.id, (content.tags_filtre ?? []) as string[]]));
     const allInputs: ObjectiveAnalyticsInput[] = [];
     const dimensionInputs = new Map<string, ObjectiveAnalyticsInput[]>();
+    const themeInputs = new Map<string, ObjectiveAnalyticsInput[]>();
+    const tagInputs = new Map<string, ObjectiveAnalyticsInput[]>();
 
     const recentStages = stages.map(stage => {
-        const stageInputs = ((stage.selected_content ?? []) as string[]).map(contentId => {
-            const input = reviewByKey.get(`${stage.id}:${contentId}`) ?? { executionStatus: null, impactLevel: null };
-            const dimension = dimensionByContentId.get(contentId) ?? 'Sans dimension';
-            allInputs.push(input);
-            dimensionInputs.set(dimension, [...(dimensionInputs.get(dimension) ?? []), input]);
-            return input;
-        });
+        const stageInputs = ((stage.selected_content ?? []) as string[])
+            .filter(contentId => envContentIds.has(contentId))
+            .map(contentId => {
+                const input = reviewByKey.get(`${stage.id}:${contentId}`) ?? { executionStatus: null, impactLevel: null };
+                const dimension = dimensionByContentId.get(contentId) ?? 'Sans dimension';
+                allInputs.push(input);
+                dimensionInputs.set(dimension, [...(dimensionInputs.get(dimension) ?? []), input]);
+                // Une fiche peut être rattachée à un thème hors de son propre pilier (ex: une fiche
+                // COMPRENDRE qui croise aussi un thème OBSERVER) : on l'attribue à chacun de ses thèmes.
+                (themesByContentId.get(contentId) ?? []).forEach(themeId => {
+                    themeInputs.set(themeId, [...(themeInputs.get(themeId) ?? []), input]);
+                });
+                (tagsByContentId.get(contentId) ?? []).forEach(tag => {
+                    tagInputs.set(tag, [...(tagInputs.get(tag) ?? []), input]);
+                });
+                return input;
+            });
 
         return {
             id: stage.id,
@@ -281,96 +345,130 @@ export async function getStageObjectiveDashboardStats(): Promise<StageObjectiveD
         };
     });
 
-    const dimensions = Array.from(dimensionInputs.entries())
-        .map(([label, inputs]) => ({ label, summary: summarizeObjectiveReviews(inputs) }))
-        .sort((a, b) => b.summary.totalObjectives - a.summary.totalObjectives)
-        .slice(0, 6);
-
-    // --- Suivi des sujets ---
-    const allTags = new Set<string>();
-    (allContentRows ?? []).forEach((c: { tags_filtre?: string[] }) => c.tags_filtre?.forEach(tag => allTags.add(tag)));
-
-    const tagOccurrences = new Map<string, Array<{ stageId: string; stageClosedAt: string | null; score: number }>>();
-
-    stages.forEach(stage => {
-        (stage.selected_content ?? []).forEach((contentId: string) => {
-            const review = reviewByKey.get(`${stage.id}:${contentId}`);
-            if (!review?.executionStatus || review.executionStatus === 'not_done') return;
-            const content = contentById.get(contentId) as { tags_filtre?: string[] } | undefined;
-            if (!content?.tags_filtre?.length) return;
-
-            const execScore = review.executionStatus === 'done' ? 2 : 1;
-            const impactScore = review.impactLevel === 'high' ? 2 : review.impactLevel === 'medium' ? 1 : 0;
-            const score = execScore + impactScore;
-
-            content.tags_filtre.forEach(tag => {
-                if (!allTags.has(tag)) return;
-                const list = tagOccurrences.get(tag) ?? [];
-                const existing = list.find(o => o.stageId === stage.id);
-                if (existing) {
-                    if (score > existing.score) existing.score = score;
-                } else {
-                    list.push({ stageId: stage.id, stageClosedAt: stage.closed_at, score });
-                }
-                tagOccurrences.set(tag, list);
-            });
-        });
+    // Retours terrain liés à chaque thématique — linked_thematic partage le même référentiel
+    // que tags_theme (les 9 thèmes des 3 piliers COP'UN), ce qui permet de croiser les deux.
+    const observationCountByTheme = new Map<string, number>();
+    (observationRows ?? []).forEach(o => {
+        if (!o.linked_thematic) return;
+        observationCountByTheme.set(o.linked_thematic, (observationCountByTheme.get(o.linked_thematic) ?? 0) + 1);
     });
 
-    const topicTrackingList: TopicTracking[] = Array.from(allTags).map(tag => {
-        const occurrences = (tagOccurrences.get(tag) ?? []).sort((a, b) => {
-            if (!a.stageClosedAt && !b.stageClosedAt) return 0;
-            if (!a.stageClosedAt) return 1;
-            if (!b.stageClosedAt) return -1;
-            return new Date(b.stageClosedAt).getTime() - new Date(a.stageClosedAt).getTime();
+    // Suivi organisé par pilier COP'UN (Comprendre/Observer/Protéger), puis par thème —
+    // le même référentiel que /program et le bilan, plutôt qu'un nuage de tags libres.
+    const pillars: PillarTracking[] = PILLARS.map(pillar => {
+        const themes: ThemeTracking[] = (THEMES_BY_PILLAR[pillar.id] ?? []).map(theme => {
+            const inputs = themeInputs.get(theme.id) ?? [];
+            const catalogIds = catalogFicheIdsByTheme.get(theme.id) ?? new Set<string>();
+            const selectedIds = Array.from(catalogIds).filter(id => envContentIds.has(id));
+            return {
+                id: theme.id,
+                label: theme.label,
+                icon: theme.icon,
+                occurrences: inputs.filter(i => i.executionStatus).length,
+                observationCount: observationCountByTheme.get(theme.id) ?? 0,
+                summary: summarizeObjectiveReviews(inputs),
+                catalogCount: catalogIds.size,
+                selectedCount: selectedIds.length,
+            };
         });
 
-        const lastScore = occurrences[0]?.score ?? 0;
-        const previousScore = occurrences[1]?.score ?? null;
-        const avg = occurrences.length > 0 ? occurrences.reduce((s, o) => s + o.score, 0) / occurrences.length : 0;
-
-        let category: TopicTracking['category'];
-        if (occurrences.length >= 3) {
-            if (avg >= 3.5) category = 'established';
-            else if (lastScore > (previousScore ?? 0)) category = 'improving';
-            else if (avg < 2.5) category = 'fragile';
-            else category = 'dormant';
-        } else if (occurrences.length === 2) {
-            if (lastScore > previousScore!) category = 'improving';
-            else if (avg >= 3.5) category = 'emerging';
-            else category = 'dormant';
-        } else if (occurrences.length === 1) {
-            if (lastScore >= 4) category = 'emerging';
-            else category = 'dormant';
-        } else {
-            category = 'dormant';
-        }
-
         return {
-            tag,
-            category,
-            occurrences: occurrences.length,
-            lastScore,
-            previousScore,
-            lastClosedAt: occurrences[0]?.stageClosedAt ?? null,
+            pillarId: pillar.id,
+            label: pillar.label,
+            summary: summarizeObjectiveReviews(dimensionInputs.get(pillar.id) ?? []),
+            themes,
         };
     });
 
-    const topicTracking = {
-        established: topicTrackingList.filter(t => t.category === 'established').sort((a, b) => b.occurrences - a.occurrences),
-        improving: topicTrackingList.filter(t => t.category === 'improving').sort((a, b) => b.occurrences - a.occurrences),
-        fragile: topicTrackingList.filter(t => t.category === 'fragile').sort((a, b) => b.occurrences - a.occurrences),
-        emerging: topicTrackingList.filter(t => t.category === 'emerging').sort((a, b) => b.lastScore - a.lastScore),
-        dormant: topicTrackingList.filter(t => t.category === 'dormant').sort((a, b) => a.occurrences - b.occurrences),
-    };
+    // Suivi précis par mot-clé (tags_filtre) — ex: « marée », « vent », « houle » — pour repérer
+    // si le moniteur se concentre toujours sur les mêmes notions sans jamais varier.
+    const keywords: KeywordTracking[] = Array.from(catalogFicheIdsByTag.keys())
+        .map(tag => {
+            const catalogIds = catalogFicheIdsByTag.get(tag) ?? new Set<string>();
+            const selectedIds = Array.from(catalogIds).filter(id => envContentIds.has(id));
+            const inputs = tagInputs.get(tag) ?? [];
+            return {
+                tag,
+                occurrences: inputs.filter(i => i.executionStatus).length,
+                catalogCount: catalogIds.size,
+                selectedCount: selectedIds.length,
+            };
+        })
+        .sort((a, b) => b.occurrences - a.occurrences);
 
     return {
         stagesCount: stages.length,
         summary: summarizeObjectiveReviews(allInputs),
         recentStages: recentStages.slice(0, 5),
-        dimensions,
-        topicTracking,
+        pillars,
+        catalogCoverage,
+        keywords,
     };
+}
+
+export type ObservationsDashboardStats = {
+    totalObservations: number;
+    byType: { type: string; label: string; icon: string; count: number }[];
+    topSpecies: { name: string; count: number; type: string }[];
+};
+
+/**
+ * Agrège les retours terrain (observations naturalistes) de toutes les semaines du moniteur
+ * — y compris les semaines en cours, contrairement au suivi pédagogique qui ne porte que sur
+ * les semaines clôturées, car une observation a une valeur scientifique dès sa saisie.
+ */
+export async function getObservationsDashboardStats(): Promise<ObservationsDashboardStats> {
+    const empty: ObservationsDashboardStats = { totalObservations: 0, byType: [], topSpecies: [] };
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return empty;
+
+    const { data: stages } = await supabase.from('stages').select('id').eq('owner_id', user.id);
+    if (!stages?.length) return empty;
+    const stageIds = stages.map(s => s.id);
+
+    const { data: observations } = await supabase
+        .from('week_observations')
+        .select('observation_type, species_label, species_uncertain, target_id')
+        .in('stage_id', stageIds);
+
+    if (!observations?.length) return empty;
+
+    const targetIds = Array.from(new Set(observations.map(o => o.target_id).filter((id): id is string => Boolean(id))));
+    const targetNames = new Map<string, string>();
+    if (targetIds.length > 0) {
+        const { data: targets } = await supabase.from('club_observation_targets').select('id, name').in('id', targetIds);
+        (targets ?? []).forEach(t => targetNames.set(t.id, t.name));
+    }
+
+    const byTypeCounts = new Map<string, number>();
+    const speciesCounts = new Map<string, { name: string; type: string; count: number }>();
+
+    observations.forEach(o => {
+        if (!o.observation_type) return;
+        byTypeCounts.set(o.observation_type, (byTypeCounts.get(o.observation_type) ?? 0) + 1);
+
+        const name = (o.target_id && targetNames.get(o.target_id))
+            || o.species_label
+            || (o.species_uncertain ? 'Espèce non identifiée' : null);
+        if (!name) return;
+
+        const key = `${o.observation_type}:${name}`;
+        const existing = speciesCounts.get(key) ?? { name, type: o.observation_type, count: 0 };
+        existing.count += 1;
+        speciesCounts.set(key, existing);
+    });
+
+    const byType = OBSERVATION_TYPES
+        .map(t => ({ type: t.value, label: t.label, icon: t.icon, count: byTypeCounts.get(t.value) ?? 0 }))
+        .filter(t => t.count > 0)
+        .sort((a, b) => b.count - a.count);
+
+    const topSpecies = Array.from(speciesCounts.values())
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 8);
+
+    return { totalObservations: observations.length, byType, topSpecies };
 }
 
 export async function getPedagogicalPool() {

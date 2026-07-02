@@ -3,7 +3,10 @@ import { getStages, getPedagogicalPool } from '@/services/data-service';
 import { getProfile } from '@/actions/user-actions';
 import { getObservationsForStage } from '@/actions/observation-actions';
 import { getStageExploits, getClubObservationTargets } from '@/actions/defi-actions';
+import { getUserContent } from '@/actions/content-actions';
+import { getStageQuiz } from '@/actions/quiz-actions';
 import { getPeriodForMonth } from '@/data/seasonal-context';
+import { pickCurrentStage } from '@/lib/stage-dates';
 import { WeekDashboardClient } from './WeekDashboardClient';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
@@ -48,8 +51,12 @@ export default async function StagesPage() {
 
     const firstName = profile?.full_name?.split(' ')[0] ?? 'Moniteur';
 
-    // Stage actif = le premier non clôturé (s'il existe)
-    const activeStage = stages.find(s => !s.closed_at) ?? null;
+    // Semaine active = celle dont l'intervalle de dates couvre aujourd'hui, ou la plus proche
+    // (parmi les non clôturées) — pas simplement la dernière créée, pour ne pas afficher une
+    // semaine préparée à l'avance à la place de la semaine en cours.
+    const openStages = stages.filter(s => !s.closed_at);
+    const activeStage = pickCurrentStage(openStages, now);
+    const upcomingStages = openStages.filter(s => s.id !== activeStage?.id);
     const archivedStages = stages.filter(s => !!s.closed_at);
 
     // Écran vide — aucun stage
@@ -122,18 +129,25 @@ export default async function StagesPage() {
     }
 
     // Stage actif — tableau de bord principal
-    const [copunPool, observations, objectiveStatuses, assignedExploits, clubObservationTargets] = await Promise.all([
+    const [copunPool, observations, objectiveStatuses, assignedExploits, clubObservationTargets, sportFiches, quizData] = await Promise.all([
         getPedagogicalPool(),
         getObservationsForStage(activeStage.id),
         getObjectiveStatusesForStage(activeStage.id),
         getStageExploits(activeStage.id),
         getClubObservationTargets(),
+        getUserContent(),
+        getStageQuiz(activeStage.id),
     ]);
 
     const selectedIds: string[] = activeStage.selected_content ?? [];
-    const objectives = selectedIds
+    const selectedContent = selectedIds
         .map((id: string) => copunPool.find((c: PedagogicalContent) => c.id === id))
         .filter((c): c is PedagogicalContent => Boolean(c));
+
+    // Les fiches créées par le moniteur (sportives/techniques, ex: "Virement de bord") ne sont
+    // pas des objectifs environnementaux COP'UN — on les sépare visuellement sur le dashboard.
+    const objectives = selectedContent.filter(c => c.source !== 'custom');
+    const technicalObjectives = selectedContent.filter(c => c.source === 'custom');
 
     const validatedCount = Object.values(objectiveStatuses).filter(s => s === 'done' || s === 'partial').length;
 
@@ -143,6 +157,8 @@ export default async function StagesPage() {
             stageName={activeStage.title}
             stageDates={activeStage.dates}
             objectives={objectives}
+            technicalObjectives={technicalObjectives}
+            sportFiches={sportFiches}
             initialStatuses={objectiveStatuses}
             initialObservations={observations}
             initialExploits={assignedExploits}
@@ -151,9 +167,12 @@ export default async function StagesPage() {
             firstName={firstName}
             seasonGradient={seasonStyle.gradient}
             seasonIcon={seasonStyle.icon}
-            contentCount={selectedIds.length}
+            contentCount={objectives.length}
             validatedCount={validatedCount}
+            suggestedThematics={activeStage.suggested_thematics ?? []}
+            quizDone={!!quizData?.completed_at}
             archivedStages={archivedStages.map(s => ({ id: s.id, title: s.title, dates: s.dates ?? '' }))}
+            upcomingStages={upcomingStages.map(s => ({ id: s.id, title: s.title, dates: s.dates ?? '' }))}
         />
     );
 }

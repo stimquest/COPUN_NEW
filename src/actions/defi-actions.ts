@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { requireAuth } from '@/lib/auth';
+import { DEFAULT_LITTORAL_SPECIES } from '@/data/littoral-species';
 
 // ==========================================
 // DEFIS (Base défis catalog)
@@ -276,7 +277,19 @@ export async function getClubObservationTargets() {
 
     const { data } = await ctx.supabase
         .from('club_observation_targets').select('*').eq('club_id', profile.club_id).order('sort_order');
-    return data || [];
+
+    // Tant que le club n'a pas personnalisé sa liste, on propose la liste par défaut des
+    // espèces courantes du littoral (faune + flore) sans encore l'écrire en base.
+    if (!data || data.length === 0) {
+        return DEFAULT_LITTORAL_SPECIES.map((s, i) => ({
+            id: `default-${i}`,
+            club_id: profile.club_id,
+            name: s.name,
+            categorie: s.categorie,
+            sort_order: i,
+        }));
+    }
+    return data;
 }
 
 export async function saveClubObservationTargets(targets: { name: string; categorie: string }[]) {

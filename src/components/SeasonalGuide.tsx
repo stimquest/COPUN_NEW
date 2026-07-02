@@ -130,17 +130,19 @@ type Props = {
     activities?: string[];
     level?: string;
     initialIntention?: ObjectifId | null;
-    onSuggestions: (thematics: ThematicTag[], intentionId: ObjectifId | null) => void;
-    onSkip: () => void;
+    initialCoeff?: CoeffType | null;
+    initialMeteo?: MeteoType | null;
+    onSuggestions: (thematics: ThematicTag[], intentionId: ObjectifId | null, coeff: CoeffType | null, meteo: MeteoType | null) => void;
+    onSkip: (intentionId: ObjectifId | null, coeff: CoeffType | null, meteo: MeteoType | null) => void;
     isSaving?: boolean;
 };
 
-export default function SeasonalGuide({ startDate, activities = [], level = '', initialIntention = null, onSuggestions, onSkip, isSaving = false }: Props) {
+export default function SeasonalGuide({ startDate, activities = [], level = '', initialIntention = null, initialCoeff = null, initialMeteo = null, onSuggestions, onSkip, isSaving = false }: Props) {
     const month = startDate ? new Date(startDate).getMonth() + 1 : new Date().getMonth() + 1;
     const period = getPeriodForMonth(month);
 
-    const [coeff, setCoeff] = useState<CoeffType | null>(null);
-    const [meteo, setMeteo] = useState<MeteoType | null>(null);
+    const [coeff, setCoeff] = useState<CoeffType | null>(initialCoeff);
+    const [meteo, setMeteo] = useState<MeteoType | null>(initialMeteo);
     const [intentionId, setIntentionId] = useState<ObjectifId | null>(initialIntention);
 
     const suggestions = coeff && meteo
@@ -148,7 +150,7 @@ export default function SeasonalGuide({ startDate, activities = [], level = '', 
         : null;
 
     const handleValidate = () => {
-        if (suggestions && !isSaving) onSuggestions(suggestions, intentionId);
+        if (suggestions && !isSaving) onSuggestions(suggestions, intentionId, coeff, meteo);
     };
 
     return (
@@ -263,7 +265,7 @@ export default function SeasonalGuide({ startDate, activities = [], level = '', 
             <div className="flex gap-3">
                 <button
                     type="button"
-                    onClick={onSkip}
+                    onClick={() => onSkip(intentionId, coeff, meteo)}
                     disabled={isSaving}
                     className="flex-1 h-12 border-2 border-slate-200 rounded-2xl text-xs font-black text-slate-500 uppercase tracking-wider hover:bg-slate-50 transition-all disabled:opacity-40"
                 >

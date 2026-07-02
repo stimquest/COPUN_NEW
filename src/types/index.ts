@@ -23,12 +23,21 @@ export type ObservationPillar = 'COMPRENDRE' | 'OBSERVER' | 'PROTÉGER';
 
 export type PedagogicalAction = 'expliquer' | 'montrer' | 'questionner' | 'laisser_decouvrir';
 
+export type ObservationType = 'faune' | 'flore' | 'meteo_mer' | 'pollution' | 'activite_humaine' | 'autre';
+
 export type WeekObservation = {
   id: string;
   stage_id: string;
   text: string;
   pedagogical_action: PedagogicalAction | null;
   linked_thematic: string | null;
+  observation_type: ObservationType | null;
+  target_id: string | null;
+  species_label: string | null;
+  species_uncertain: boolean;
+  individual_count: number | null;
+  location_note: string | null;
+  observed_at: string | null;
   created_at: string;
 };
 
@@ -98,13 +107,3 @@ export type Exploit = {
   created_at: string;
 };
 
-export type TopicTrackingCategory = 'established' | 'improving' | 'fragile' | 'emerging' | 'dormant';
-
-export type TopicTracking = {
-  tag: string;
-  category: TopicTrackingCategory;
-  occurrences: number;
-  lastScore: number;
-  previousScore: number | null;
-  lastClosedAt: string | null;
-};

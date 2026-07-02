@@ -6,15 +6,9 @@ import { useState } from 'react';
 import clsx from 'clsx';
 import { closeStage } from '@/actions/stage-actions';
 import { StageObjectiveReviewList } from '@/components/StageObjectiveReviewList';
-import { StageObjectiveReviewDraft, StageObjectiveReviewItem } from '@/types';
-
-type DefiReview = {
-    id: string;
-    description: string;
-    status: 'en_cours' | 'complete';
-    points: number;
-    terrain_temps_reel: boolean;
-};
+import { StageDefisReview, DefiReview } from '@/components/StageDefisReview';
+import { StageObservationsReview } from '@/components/StageObservationsReview';
+import { StageObjectiveReviewDraft, StageObjectiveReviewItem, WeekObservation } from '@/types';
 
 type QuizReview = {
     done: boolean;
@@ -28,6 +22,7 @@ type Props = {
     objectiveItems: StageObjectiveReviewItem[];
     initialClosingNotes?: string | null;
     defisAssigned: DefiReview[];
+    observations: WeekObservation[];
     quizData: QuizReview | null;
 };
 
@@ -48,7 +43,7 @@ function buildDraftMap(items: StageObjectiveReviewItem[]): Record<string, StageO
     );
 }
 
-export function StageClosureReview({ stageId, stageTitle, objectiveItems, initialClosingNotes, defisAssigned, quizData }: Props) {
+export function StageClosureReview({ stageId, stageTitle, objectiveItems, initialClosingNotes, defisAssigned, observations, quizData }: Props) {
     const router = useRouter();
     const [drafts, setDrafts] = useState<Record<string, StageObjectiveReviewDraft>>(() => buildDraftMap(objectiveItems));
     const [closingNote, setClosingNote] = useState(initialClosingNotes ?? '');
@@ -119,34 +114,18 @@ export function StageClosureReview({ stageId, stageTitle, objectiveItems, initia
                     <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400 mb-3">
                         Défis terrain
                     </p>
-                    <div className="space-y-2">
-                        {defisAssigned.map(defi => (
-                            <div key={defi.id} className={clsx(
-                                'rounded-xl border px-4 py-3 flex items-center gap-3',
-                                defi.status === 'complete' ? 'border-emerald-200 bg-emerald-50' : 'border-amber-200 bg-amber-50'
-                            )}>
-                                <span className={clsx(
-                                    'material-symbols-outlined text-xl',
-                                    defi.status === 'complete' ? 'text-emerald-600' : 'text-amber-600'
-                                )}>
-                                    {defi.status === 'complete' ? 'check_circle' : 'pending'}
-                                </span>
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-bold text-slate-900">{defi.description}</p>
-                                    <p className="text-[10px] text-slate-500">
-                                        {defi.terrain_temps_reel && 'Temps réel · '}
-                                        {defi.points} points
-                                    </p>
-                                </div>
-                                <span className={clsx(
-                                    'text-[10px] font-black px-2 py-1 rounded-full',
-                                    defi.status === 'complete' ? 'bg-emerald-600 text-white' : 'bg-amber-600 text-white'
-                                )}>
-                                    {defi.status === 'complete' ? 'Validé' : 'En cours'}
-                                </span>
-                            </div>
-                        ))}
-                    </div>
+                    <StageDefisReview defis={defisAssigned} />
+                </section>
+            )}
+
+            {/* Retours terrain */}
+            {observations.length > 0 && (
+                <section>
+                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400 mb-3">
+                        Retours terrain
+                        <span className="ml-2 text-slate-300">{observations.length}</span>
+                    </p>
+                    <StageObservationsReview observations={observations} />
                 </section>
             )}
 

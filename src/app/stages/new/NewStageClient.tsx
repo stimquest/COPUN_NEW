@@ -7,9 +7,9 @@ import clsx from 'clsx';
 import { createStage, updateStage } from '@/actions/stage-actions';
 import SeasonalGuide from '@/components/SeasonalGuide';
 import DatePicker from '@/components/DatePicker';
-import { ThematicTag } from '@/data/seasonal-context';
+import { ThematicTag, CoeffType, MeteoType } from '@/data/seasonal-context';
 import { ObjectifId } from '@/data/objectifs';
-import { extractIntention, stripIntention } from '@/data/objectifs';
+import { extractIntention, extractCoeff, extractMeteo, stripIntention, encodeConditions } from '@/data/objectifs';
 import { Stage } from '@/types';
 
 const SUPPORTS = [
@@ -62,7 +62,9 @@ type Props = {
 export function NewStageClient({ existingStage }: Props) {
     const router = useRouter();
     const isEditing = !!existingStage;
-    const [step, setStep] = useState<Step>('form');
+    // En édition, la date/le titre/le support sont déjà connus : on saute directement
+    // à l'étape marée/météo/objectif, la seule chose qu'on vient réellement modifier.
+    const [step, setStep] = useState<Step>(isEditing ? 'guide' : 'form');
     const [isSaving, setIsSaving] = useState(false);
 
     const [title, setTitle] = useState(existingStage?.title ?? '');
@@ -109,7 +111,12 @@ export function NewStageClient({ existingStage }: Props) {
         setStep('guide');
     };
 
-    const saveStage = async (thematics: ThematicTag[], intentionId: ObjectifId | null = null) => {
+    const saveStage = async (
+        thematics: ThematicTag[],
+        intentionId: ObjectifId | null = null,
+        coeff: CoeffType | null = null,
+        meteo: MeteoType | null = null,
+    ) => {
         if (isSaving) return;
         setIsSaving(true);
         const activityStr = activities.join(', ');
@@ -123,7 +130,7 @@ export function NewStageClient({ existingStage }: Props) {
             level,
             dates,
             nb_stagiaires: nbStagiaires ? Number(nbStagiaires) : undefined,
-            suggested_thematics: thematics,
+            suggested_thematics: [...thematics, ...encodeConditions(coeff, meteo)] as ThematicTag[],
             intention: intentionId,
         };
 
@@ -369,8 +376,15 @@ export function NewStageClient({ existingStage }: Props) {
                             activities={activities}
                             level={level}
                             initialIntention={isEditing ? extractIntention(existingStage!.suggested_thematics) : null}
+                            initialCoeff={isEditing ? extractCoeff(existingStage!.suggested_thematics) : null}
+                            initialMeteo={isEditing ? extractMeteo(existingStage!.suggested_thematics) : null}
                             onSuggestions={saveStage}
-                            onSkip={() => saveStage(isEditing ? stripIntention(existingStage!.suggested_thematics) as ThematicTag[] : [])}
+                            onSkip={(intentionId, coeff, meteo) => saveStage(
+                                isEditing ? stripIntention(existingStage!.suggested_thematics) as ThematicTag[] : [],
+                                intentionId,
+                                coeff,
+                                meteo,
+                            )}
                             isSaving={isSaving}
                         />
                     </div>

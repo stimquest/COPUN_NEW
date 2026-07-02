@@ -93,6 +93,20 @@ export default async function ProfilPage() {
                 </div>
             </div>
 
+            {/* Carnet de pratique */}
+            <div className="px-5 mt-8 max-w-md mx-auto w-full">
+                <Link href="/profil/carnet" className="flex items-center gap-4 bg-slate-900 rounded-2xl px-5 py-4 hover:shadow-md active:scale-[0.98] transition-all group">
+                    <div className="size-11 rounded-xl bg-white/10 text-indigo-300 flex items-center justify-center shrink-0">
+                        <span className="material-symbols-outlined">auto_stories</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <p className="font-bold text-white text-sm">Mon carnet de pratique</p>
+                        <p className="text-xs text-white/50 mt-0.5">Tes semaines, tes notes, ton évolution</p>
+                    </div>
+                    <span className="material-symbols-outlined text-white/30 group-hover:translate-x-1 transition-transform">arrow_forward_ios</span>
+                </Link>
+            </div>
+
             {/* Défi de saison — fil rouge */}
             <div className="px-5 mt-8 max-w-md mx-auto w-full">
                 <div className="flex items-center gap-2 mb-4">

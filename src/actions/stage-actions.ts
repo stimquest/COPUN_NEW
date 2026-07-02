@@ -135,6 +135,28 @@ export async function updateStage(stageId: string, data: { title: string, activi
 
 export async function deleteStage(stageId: string) {
     const supabase = await createClient();
+
+    // Les lignes liées (exploits, quiz, observations, reviews) partent en CASCADE côté DB,
+    // mais les photos de défis dans Supabase Storage doivent être nettoyées à part.
+    const { data: exploits } = await supabase
+        .from('stage_exploits')
+        .select('preuves_url')
+        .eq('stage_id', stageId);
+
+    const storagePaths = (exploits ?? [])
+        .flatMap(e => e.preuves_url ?? [])
+        .map((url: string) => {
+            const marker = '/defis/';
+            const idx = url.indexOf(marker);
+            return idx === -1 ? null : url.slice(idx + marker.length);
+        })
+        .filter((p): p is string => Boolean(p));
+
+    if (storagePaths.length > 0) {
+        const { error: storageError } = await supabase.storage.from('defis').remove(storagePaths);
+        if (storageError) console.error('[deleteStage] storage cleanup', storageError.message);
+    }
+
     const { error } = await supabase
         .from('stages')
         .delete()
@@ -307,6 +329,27 @@ export async function saveObjectiveStatus(
 
   if (error) {
     console.error('[saveObjectiveStatus] error:', error.message, error.details);
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath('/stages');
+  revalidatePath(`/stages/${stageId}/bilan`);
+  return { success: true };
+}
+
+/** Efface le statut d'exécution d'un objectif pour revenir à l'état neutre (non renseigné). */
+export async function clearObjectiveStatus(stageId: string, contentId: string) {
+  const ctx = await requireAuth();
+  if (!ctx) return { success: false, error: 'Non autorisé' };
+
+  const { error } = await ctx.supabase
+    .from('stage_objective_reviews')
+    .delete()
+    .eq('stage_id', stageId)
+    .eq('pedagogical_content_id', contentId);
+
+  if (error) {
+    console.error('[clearObjectiveStatus] error:', error.message);
     return { success: false, error: error.message };
   }
 

@@ -2,24 +2,40 @@
 
 import { revalidatePath } from 'next/cache';
 import { requireAuth } from '@/lib/auth';
-import { PedagogicalAction, WeekObservation } from '@/types';
+import { ObservationType, PedagogicalAction, WeekObservation } from '@/types';
 
-export async function addObservation(
-    stageId: string,
-    text: string,
-    pedagogicalAction: PedagogicalAction | null,
-    linkedThematic: string | null,
-) {
+export type ObservationInput = {
+    stageId: string;
+    text: string;
+    pedagogicalAction: PedagogicalAction | null;
+    linkedThematic: string | null;
+    observationType: ObservationType | null;
+    targetId: string | null;
+    speciesLabel: string | null;
+    speciesUncertain: boolean;
+    individualCount: number | null;
+    locationNote: string | null;
+    observedAt: string | null;
+};
+
+export async function addObservation(input: ObservationInput) {
     const ctx = await requireAuth();
     if (!ctx) return { success: false, error: 'Non authentifié' };
 
     const { data, error } = await ctx.supabase
         .from('week_observations')
         .insert({
-            stage_id: stageId,
-            text: text.trim(),
-            pedagogical_action: pedagogicalAction,
-            linked_thematic: linkedThematic,
+            stage_id: input.stageId,
+            text: input.text.trim(),
+            pedagogical_action: input.pedagogicalAction,
+            linked_thematic: input.linkedThematic,
+            observation_type: input.observationType,
+            target_id: input.targetId,
+            species_label: input.speciesLabel?.trim() || null,
+            species_uncertain: input.speciesUncertain,
+            individual_count: input.individualCount,
+            location_note: input.locationNote?.trim() || null,
+            observed_at: input.observedAt,
         })
         .select()
         .single();

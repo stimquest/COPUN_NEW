@@ -4,8 +4,8 @@ import { motion } from 'framer-motion';
 import clsx from 'clsx';
 import Link from 'next/link';
 import { useState } from 'react';
-import type { StageObjectiveDashboardStats } from '@/services/data-service';
-import type { TopicTracking } from '@/types';
+import type { StageObjectiveDashboardStats, ObservationsDashboardStats } from '@/services/data-service';
+import { PILLARS } from '@/data/etages';
 
 export type MonitorRow = { monitor_id: string; full_name: string; club_name: string | null; total_points: number };
 export type ClubRow = { club_id: string; club_name: string; total_points: number };
@@ -16,6 +16,7 @@ interface Props {
     currentUserId: string | null;
     myPoints: number;
     objectiveDashboard: StageObjectiveDashboardStats;
+    observationsDashboard: ObservationsDashboardStats;
 }
 
 function initials(name: string) {
@@ -32,35 +33,8 @@ function MetricCard({ label, value, helper, className }: { label: string; value:
     );
 }
 
-function topicBadge(topic: TopicTracking) {
-    const stageLabel = `${topic.occurrences} ${topic.occurrences > 1 ? 'stages' : 'stage'}`;
-    if (topic.occurrences === 0) return stageLabel;
-    if (topic.category === 'improving') return `${stageLabel} ↑`;
-    if (topic.category === 'fragile' || topic.lastScore <= 2) return `${stageLabel} · fragile`;
-    if (topic.lastScore >= 4) return `${stageLabel} · bien`;
-    return `${stageLabel} · à suivre`;
-}
 
-function TopicBlock({ title, color, items }: { title: string; color: string; items: TopicTracking[] }) {
-    if (items.length === 0) return null;
-    return (
-        <div className="rounded-2xl bg-white/80 p-3 border border-white">
-            <p className={clsx('text-[10px] font-black uppercase tracking-widest mb-2', color)}>{title}</p>
-            <ul className="space-y-1">
-                {items.map(t => (
-                    <li key={t.tag} className="text-xs font-bold text-slate-700 flex justify-between items-center">
-                        <span>{t.tag}</span>
-                        <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-full">
-                            {topicBadge(t)}
-                        </span>
-                    </li>
-                ))}
-            </ul>
-        </div>
-    );
-}
-
-export default function StatsClient({ monitors, clubs, currentUserId, myPoints, objectiveDashboard }: Props) {
+export default function StatsClient({ monitors, clubs, currentUserId, myPoints, objectiveDashboard, observationsDashboard }: Props) {
     const [activeTab, setActiveTab] = useState<'CLUBS' | 'MONITEURS'>('MONITEURS');
     const hasObjectiveData = objectiveDashboard.summary.totalObjectives > 0;
 
@@ -75,13 +49,17 @@ export default function StatsClient({ monitors, clubs, currentUserId, myPoints, 
                 isMe: m.monitor_id === currentUserId,
             }));
 
-    const allTopics = Object.values(objectiveDashboard.topicTracking).flat();
-    const workedTopics = allTopics
-        .filter(topic => topic.occurrences > 0)
-        .sort((a, b) => b.occurrences - a.occurrences || b.lastScore - a.lastScore || a.tag.localeCompare(b.tag));
-    const topicsToStabilize = objectiveDashboard.topicTracking.dormant
-        .filter(topic => topic.occurrences >= 2)
-        .sort((a, b) => b.occurrences - a.occurrences || a.lastScore - b.lastScore);
+    const allThemes = objectiveDashboard.pillars.flatMap(p => p.themes);
+    const workedThemesCount = allThemes.filter(t => t.occurrences > 0).length;
+
+    // Répartition précise des choix par mot-clé (ex: marée, vent, houle…) — révèle si le
+    // moniteur se concentre toujours sur les mêmes notions sans jamais explorer les autres.
+    const keywords = objectiveDashboard.keywords;
+    const totalKeywordOccurrences = keywords.reduce((sum, k) => sum + k.occurrences, 0);
+    const keywordsByFocus = [...keywords].sort((a, b) => b.occurrences - a.occurrences);
+    const neverExploredKeywords = keywordsByFocus.filter(k => k.occurrences === 0);
+    const topKeyword = keywordsByFocus[0];
+    const topKeywordShare = topKeyword && totalKeywordOccurrences > 0 ? Math.round((topKeyword.occurrences / totalKeywordOccurrences) * 100) : 0;
 
     return (
         <div className="min-h-screen bg-slate-50 pb-32">
@@ -112,60 +90,142 @@ export default function StatsClient({ monitors, clubs, currentUserId, myPoints, 
                         <div className="mt-5 space-y-5">
                             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                                 <MetricCard
-                                    label="Réalisation"
-                                    value={`${objectiveDashboard.summary.completionRate}%`}
-                                    helper="Objectifs faits ou partiellement menés"
+                                    label="Fiches travaillées"
+                                    value={`${objectiveDashboard.summary.doneCount + objectiveDashboard.summary.partialCount}/${objectiveDashboard.summary.totalObjectives}`}
+                                    helper="Faites ou effleurées, sur les fiches sélectionnées"
                                     className="bg-emerald-100 text-emerald-950"
                                 />
                                 <MetricCard
-                                    label="Score pédagogique"
-                                    value={`${objectiveDashboard.summary.pedagogicalScore}%`}
-                                    helper="Réalisation × effet observé"
+                                    label="Impact fort"
+                                    value={`${objectiveDashboard.summary.wellTransmittedCount}`}
+                                    helper="Fiches faites où le groupe a vraiment accroché"
                                     className="bg-violet-100 text-violet-950"
                                 />
                                 <MetricCard
-                                    label="Bien transmis"
-                                    value={`${objectiveDashboard.summary.wellTransmittedCount}`}
-                                    helper="Objectifs faits et bien intégrés par le groupe"
+                                    label="Thèmes abordés"
+                                    value={`${workedThemesCount}/${allThemes.length}`}
+                                    helper="Sur les 9 thèmes COP'UN (3 par pilier)"
                                     className="bg-sky-100 text-sky-950"
                                 />
                                 <MetricCard
-                                    label="Sujets travaillés"
-                                    value={`${workedTopics.length}`}
-                                    helper="Sujets abordés au moins une fois"
+                                    label="Catalogue exploré"
+                                    value={`${objectiveDashboard.catalogCoverage.selected}/${objectiveDashboard.catalogCoverage.total}`}
+                                    helper="Fiches déjà choisies, sur l'ensemble disponible"
                                     className="bg-amber-100 text-amber-950"
                                 />
                             </div>
 
-                            <div className="rounded-3xl border border-white bg-white/80 p-4">
-                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Suivi des sujets</p>
-                                <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    <TopicBlock title="Sujets travaillés" color="text-slate-700" items={workedTopics.slice(0, 8)} />
-                                    <TopicBlock title="Bien installés" color="text-emerald-500" items={objectiveDashboard.topicTracking.established} />
-                                    <TopicBlock title="Bien amorcés" color="text-violet-500" items={objectiveDashboard.topicTracking.emerging} />
-                                    <TopicBlock title="Reprises en progrès" color="text-sky-500" items={objectiveDashboard.topicTracking.improving} />
-                                    <TopicBlock title="À stabiliser" color="text-orange-500" items={topicsToStabilize.slice(0, 5)} />
-                                    <TopicBlock title="À reprendre autrement" color="text-amber-500" items={objectiveDashboard.topicTracking.fragile} />
-                                    <TopicBlock title="Angles à ouvrir" color="text-slate-400" items={objectiveDashboard.topicTracking.dormant.filter(t => t.occurrences === 0).slice(0, 5)} />
-                                </div>
-                            </div>
+                            {totalKeywordOccurrences > 0 && (
+                                <div className="rounded-3xl border border-white bg-white/80 p-4 space-y-3">
+                                    <div>
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Vos orientations</p>
+                                        <p className="text-xs text-slate-500 mt-0.5">Répartition précise de vos choix par notion — reste-t-on toujours sur les mêmes sujets (marée, vent…) ?</p>
+                                    </div>
 
-                            {objectiveDashboard.dimensions.length > 0 && (
-                                <div className="rounded-3xl border border-white bg-white/80 p-4">
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Par dimension</p>
-                                    <div className="mt-3 space-y-3">
-                                        {objectiveDashboard.dimensions.map(dimension => (
-                                            <div key={dimension.label}>
-                                                <div className="mb-1 flex items-center justify-between gap-3 text-xs font-bold text-slate-600">
-                                                    <span className="truncate">{dimension.label}</span>
-                                                    <span>{dimension.summary.pedagogicalScore}%</span>
+                                    {topKeywordShare >= 30 && (
+                                        <div className="rounded-2xl bg-amber-50 border border-amber-200 px-3 py-2.5 flex items-start gap-2">
+                                            <span className="material-symbols-outlined text-amber-500 text-base shrink-0 mt-0.5">warning</span>
+                                            <p className="text-xs font-semibold text-amber-800 leading-snug">
+                                                {topKeywordShare}% de vos choix portent sur « {topKeyword.tag} ». Pensez à varier vers d&apos;autres notions.
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    <div className="space-y-2.5">
+                                        {keywordsByFocus.filter(k => k.occurrences > 0).map(keyword => {
+                                            const share = Math.round((keyword.occurrences / totalKeywordOccurrences) * 100);
+                                            return (
+                                                <div key={keyword.tag}>
+                                                    <div className="flex items-center justify-between gap-2 text-xs font-bold text-slate-700 mb-1">
+                                                        <span className="truncate capitalize">{keyword.tag}</span>
+                                                        <span className="shrink-0 text-slate-500">{keyword.occurrences}× · {share}%</span>
+                                                    </div>
+                                                    <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                                                        <div className="h-full rounded-full bg-indigo-500" style={{ width: `${share}%` }} />
+                                                    </div>
                                                 </div>
-                                                <div className="h-2 overflow-hidden rounded-full bg-slate-100">
-                                                    <div className="h-full rounded-full bg-slate-900" style={{ width: `${dimension.summary.pedagogicalScore}%` }} />
+                                            );
+                                        })}
+                                    </div>
+
+                                    {neverExploredKeywords.length > 0 && (
+                                        <div className="pt-1">
+                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1.5">
+                                                Jamais explorés ({neverExploredKeywords.length})
+                                            </p>
+                                            <div className="flex flex-wrap gap-1.5">
+                                                {neverExploredKeywords.map(keyword => (
+                                                    <span key={keyword.tag} className="inline-flex items-center text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded-full capitalize">
+                                                        {keyword.tag}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {objectiveDashboard.pillars.length > 0 && (
+                                <div className="rounded-3xl border border-white bg-white/80 p-4 space-y-5">
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Suivi par pilier</p>
+                                    {objectiveDashboard.pillars.map(pillarStat => {
+                                        const pillar = PILLARS.find(p => p.id === pillarStat.pillarId);
+                                        if (!pillar) return null;
+                                        const pillarWorked = pillarStat.summary.doneCount + pillarStat.summary.partialCount;
+                                        const pillarTotal = pillarStat.summary.totalObjectives;
+                                        const pillarPct = pillarTotal > 0 ? Math.round((pillarWorked / pillarTotal) * 100) : 0;
+                                        return (
+                                            <div key={pillarStat.pillarId} className="space-y-2">
+                                                <div className="flex items-center gap-2">
+                                                    <div className={clsx('size-6 rounded-lg flex items-center justify-center shrink-0', pillar.bg)}>
+                                                        <span className="material-symbols-outlined text-white text-sm">{pillar.icon}</span>
+                                                    </div>
+                                                    <p className={clsx('text-xs font-black uppercase tracking-tight flex-1', pillar.color)}>{pillar.label}</p>
+                                                    <span className="text-xs font-bold text-slate-500">
+                                                        {pillarTotal > 0 ? `${pillarWorked}/${pillarTotal} travaillées` : 'Aucune fiche sélectionnée'}
+                                                    </span>
+                                                </div>
+                                                <div className="h-1.5 overflow-hidden rounded-full bg-slate-100">
+                                                    <div className={clsx('h-full rounded-full', pillar.bg)} style={{ width: `${pillarPct}%` }} />
+                                                </div>
+                                                <div className="space-y-1.5 pt-1">
+                                                    {pillarStat.themes.map(theme => (
+                                                        <div
+                                                            key={theme.id}
+                                                            className={clsx(
+                                                                'rounded-xl border px-3 py-2.5',
+                                                                theme.occurrences === 0 ? 'border-dashed border-slate-200 bg-slate-50/50' : 'border-white bg-white'
+                                                            )}
+                                                        >
+                                                            <div className="flex items-start gap-2">
+                                                                <span className="material-symbols-outlined text-base text-slate-400 shrink-0 mt-0.5">{theme.icon}</span>
+                                                                <p className="text-xs font-bold text-slate-700 leading-snug flex-1">{theme.label}</p>
+                                                            </div>
+                                                            <div className="mt-1.5 pl-6.5 flex items-center gap-1.5 flex-wrap">
+                                                                {theme.occurrences === 0 ? (
+                                                                    <span className="text-[10px] font-semibold text-slate-400">Jamais abordé</span>
+                                                                ) : (
+                                                                    <>
+                                                                        <span className="text-[10px] font-black text-white bg-slate-900 px-1.5 py-0.5 rounded-full">
+                                                                            {theme.summary.doneCount + theme.summary.partialCount}/{theme.summary.totalObjectives} travaillées
+                                                                        </span>
+                                                                        {theme.observationCount > 0 && (
+                                                                            <span className="text-[10px] font-bold text-emerald-600">+{theme.observationCount} retour{theme.observationCount > 1 ? 's' : ''} terrain</span>
+                                                                        )}
+                                                                    </>
+                                                                )}
+                                                                {theme.catalogCount > 0 && (
+                                                                    <span className="text-[10px] font-bold text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded-full">
+                                                                        {theme.selectedCount}/{theme.catalogCount} fiches explorées
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    ))}
                                                 </div>
                                             </div>
-                                        ))}
-                                    </div>
+                                        );
+                                    })}
                                 </div>
                             )}
 
@@ -175,7 +235,9 @@ export default function StatsClient({ monitors, clubs, currentUserId, myPoints, 
                                     {objectiveDashboard.recentStages.map(stage => (
                                         <Link key={stage.id} href={`/stages/${stage.id}/bilan`} className="flex items-center justify-between gap-3 rounded-2xl bg-white/80 px-4 py-3 text-sm font-bold text-slate-700 ring-1 ring-white transition hover:bg-white">
                                             <span className="min-w-0 truncate">{stage.title}</span>
-                                            <span className="shrink-0 text-slate-950">{stage.summary.pedagogicalScore}%</span>
+                                            <span className="shrink-0 text-slate-950 text-xs">
+                                                {stage.summary.doneCount + stage.summary.partialCount}/{stage.summary.totalObjectives} travaillées
+                                            </span>
                                         </Link>
                                     ))}
                                 </div>
@@ -184,6 +246,53 @@ export default function StatsClient({ monitors, clubs, currentUserId, myPoints, 
                     ) : (
                         <div className="mt-5 rounded-3xl border border-dashed border-orange-200 bg-white/70 p-5 text-sm font-semibold text-slate-600">
                             Les premiers carnets clôturés alimenteront ici le suivi stage après stage.
+                        </div>
+                    )}
+                </section>
+
+                {/* Retours terrain */}
+                <section className="rounded-[2rem] border border-emerald-100 bg-gradient-to-br from-white via-emerald-50 to-sky-50 p-5 shadow-xl shadow-slate-200/70">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                        <div>
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500">Sciences participatives</p>
+                            <h3 className="mt-1 text-2xl font-black tracking-tight text-slate-950">Retours terrain</h3>
+                        </div>
+                        <p className="text-xs font-bold text-slate-500">
+                            {observationsDashboard.totalObservations} observation{observationsDashboard.totalObservations > 1 ? 's' : ''}
+                        </p>
+                    </div>
+
+                    {observationsDashboard.totalObservations > 0 ? (
+                        <div className="mt-5 space-y-5">
+                            {observationsDashboard.byType.length > 0 && (
+                                <div className="flex flex-wrap gap-2">
+                                    {observationsDashboard.byType.map(t => (
+                                        <span key={t.type} className="inline-flex items-center gap-1.5 rounded-full bg-white/80 border border-white px-3 py-1.5 text-xs font-bold text-slate-700">
+                                            <span className="material-symbols-outlined text-sm text-emerald-600">{t.icon}</span>
+                                            {t.label}
+                                            <span className="text-[10px] font-black text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-full">{t.count}</span>
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
+
+                            {observationsDashboard.topSpecies.length > 0 && (
+                                <div className="rounded-3xl border border-white bg-white/80 p-4">
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Espèces / éléments les plus observés</p>
+                                    <ul className="space-y-1.5">
+                                        {observationsDashboard.topSpecies.map(s => (
+                                            <li key={`${s.type}-${s.name}`} className="text-xs font-bold text-slate-700 flex justify-between items-center">
+                                                <span className="truncate">{s.name}</span>
+                                                <span className="text-[10px] font-black text-white bg-emerald-600 px-2 py-0.5 rounded-full shrink-0 ml-2">×{s.count}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
+                        </div>
+                    ) : (
+                        <div className="mt-5 rounded-3xl border border-dashed border-emerald-200 bg-white/70 p-5 text-sm font-semibold text-slate-600">
+                            Les retours terrain enregistrés depuis l&apos;accueil des semaines alimenteront ici un suivi des observations.
                         </div>
                     )}
                 </section>

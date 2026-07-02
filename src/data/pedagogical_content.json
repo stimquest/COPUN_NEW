@@ -25,7 +25,6 @@
       "caracteristiques_littoral"
     ],
     "tags_filtre": [
-      "outils",
       "marée"
     ]
   },
@@ -86,7 +85,6 @@
       "caracteristiques_littoral"
     ],
     "tags_filtre": [
-      "outils",
       "marée"
     ]
   },
@@ -609,8 +607,7 @@
     ],
     "tags_filtre": [
       "météo",
-      "sécurité",
-      "outils"
+      "sécurité"
     ]
   },
   {
@@ -1205,8 +1202,7 @@
       "sciences_participatives"
     ],
     "tags_filtre": [
-      "action citoyenne",
-      "outils"
+      "action citoyenne"
     ]
   },
   {
@@ -1703,7 +1699,6 @@
       "reperes_spatio_temporels"
     ],
     "tags_filtre": [
-      "outils",
       "courant",
       "coefficient",
       "vocabulaire",

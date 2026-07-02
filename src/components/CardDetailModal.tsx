@@ -4,11 +4,7 @@ import { PedagogicalContent } from '@/types';
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
 import { createPortal } from 'react-dom';
-import { useSyncExternalStore, useState, useEffect } from 'react';
-import GameCard from './games/GameCard';
-import { GameCardDB } from './games/types';
-// Server Actions
-import { getGameCardsForContent } from '@/actions/game-actions';
+import { useSyncExternalStore } from 'react';
 
 type CardDetailModalProps = {
     isOpen: boolean;
@@ -22,42 +18,6 @@ function subscribe() {
 
 export default function CardDetailModal({ isOpen, onClose, content }: CardDetailModalProps) {
     const isClient = useSyncExternalStore(subscribe, () => true, () => false);
-
-    // Dynamic Data State
-    const [games, setGames] = useState<GameCardDB[]>([]);
-    const [loading, setLoading] = useState(false);
-
-    useEffect(() => {
-        let ignore = false;
-
-        async function loadContentData() {
-            if (!isOpen || !content) return;
-
-            // Avoid setting state immediately if it causes synchronous re-render loops
-            // Using a microtask or just relying on the async flow
-            setLoading(true);
-
-            try {
-                const fetchedGames = await getGameCardsForContent(content.id);
-
-                if (!ignore) {
-                    setGames(fetchedGames as GameCardDB[]);
-                }
-            } catch (err) {
-                console.error("Error fetching detail data:", err);
-            } finally {
-                if (!ignore) {
-                    setLoading(false);
-                }
-            }
-        }
-
-        loadContentData();
-
-        return () => {
-            ignore = true;
-        };
-    }, [isOpen, content]);
 
     if (!isClient) return null;
 
@@ -170,37 +130,8 @@ export default function CardDetailModal({ isOpen, onClose, content }: CardDetail
                                 </div>
 
 
-                                {/* RIGHT COLUMN: Jeux & Ressources */}
+                                {/* RIGHT COLUMN: Ressources */}
                                 <div className="space-y-10">
-                                    {/* JEUX SECTION */}
-                                    <section>
-                                        <div className="flex items-center gap-2 mb-4">
-                                            <div className="size-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center">
-                                                <span className="material-symbols-outlined text-lg">videogame_asset</span>
-                                            </div>
-                                            <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Jeux associés</h3>
-                                        </div>
-
-                                        {loading ? (
-                                            <div className="p-4 text-center text-slate-400 text-xs italic">Chargement des jeux...</div>
-                                        ) : games.length > 0 ? (
-                                            <div className="space-y-4">
-                                                {games.map(game => (
-                                                    <GameCard key={game.id} game={game} />
-                                                ))}
-                                            </div>
-                                        ) : (
-                                            <div className="p-10 rounded-2xl border-2 border-dashed border-slate-100 flex flex-col items-center justify-center text-center bg-slate-50/50">
-                                                <div className="size-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-300 mb-3">
-                                                    <span className="material-symbols-outlined">extension_off</span>
-                                                </div>
-                                                <p className="text-xs text-slate-400 font-bold italic max-w-[150px]">
-                                                    Pas de jeu spécifique pour cette fiche.
-                                                </p>
-                                            </div>
-                                        )}
-                                    </section>
-
                                     {/* RESSOURCES SECTION */}
                                     {content.ressources && content.ressources.length > 0 && (
                                         <section>
