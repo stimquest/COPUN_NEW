@@ -2,7 +2,7 @@ import { unstable_noStore as noStore } from 'next/cache';
 import { getStages, getPedagogicalPool } from '@/services/data-service';
 import { getProfile } from '@/actions/user-actions';
 import { getObservationsForStage } from '@/actions/observation-actions';
-import { getStageExploits } from '@/actions/defi-actions';
+import { getStageExploits, getClubObservationTargets } from '@/actions/defi-actions';
 import { getPeriodForMonth } from '@/data/seasonal-context';
 import { WeekDashboardClient } from './WeekDashboardClient';
 import Link from 'next/link';
@@ -122,11 +122,12 @@ export default async function StagesPage() {
     }
 
     // Stage actif — tableau de bord principal
-    const [copunPool, observations, objectiveStatuses, assignedExploits] = await Promise.all([
+    const [copunPool, observations, objectiveStatuses, assignedExploits, clubObservationTargets] = await Promise.all([
         getPedagogicalPool(),
         getObservationsForStage(activeStage.id),
         getObjectiveStatusesForStage(activeStage.id),
         getStageExploits(activeStage.id),
+        getClubObservationTargets(),
     ]);
 
     const selectedIds: string[] = activeStage.selected_content ?? [];
@@ -145,6 +146,7 @@ export default async function StagesPage() {
             initialStatuses={objectiveStatuses}
             initialObservations={observations}
             initialExploits={assignedExploits}
+            clubObservationTargets={clubObservationTargets}
             greeting={greeting}
             firstName={firstName}
             seasonGradient={seasonStyle.gradient}

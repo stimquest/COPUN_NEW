@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
     getPeriodForMonth,
     getSuggestedThematics,
@@ -9,7 +9,9 @@ import {
     MeteoType,
     ThematicTag,
 } from '@/data/seasonal-context';
-import { ThematicSelect } from '@/components/ThematicSelect';
+import { OBJECTIFS, ObjectifId } from '@/data/objectifs';
+import clsx from 'clsx';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const COEFF_OPTIONS: { value: CoeffType; label: string; icon: string }[] = [
     { value: 'morte_eau', label: 'Morte-eau', icon: 'water' },
@@ -36,29 +38,117 @@ const DIMENSION_COLORS: Record<'C' | 'O' | 'P', string> = {
     P: 'text-emerald-500',
 };
 
+function IntentionDropdown({ intentionId, setIntentionId }: { intentionId: ObjectifId | null, setIntentionId: (v: ObjectifId | null) => void }) {
+    const [open, setOpen] = useState(false);
+    const ref = useRef<HTMLDivElement>(null);
+    const selected = OBJECTIFS.find(o => o.id === intentionId);
+
+    useEffect(() => {
+        const handler = (e: MouseEvent) => {
+            if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+        };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, []);
+
+    return (
+        <div ref={ref} className="relative">
+            <button
+                type="button"
+                onClick={() => setOpen(v => !v)}
+                className={clsx(
+                    "w-full flex items-center gap-3 px-4 h-14 rounded-2xl border-2 text-left transition-all",
+                    selected ? `${selected.border} ${selected.bg}` : "border-slate-100 bg-slate-50 hover:border-slate-200"
+                )}
+            >
+                <span className={clsx("material-symbols-outlined text-lg shrink-0", selected ? selected.color : "text-slate-300")}>
+                    {selected ? selected.icon : 'flag'}
+                </span>
+                <span className={clsx("text-xs font-bold flex-1", selected ? selected.color : "text-slate-400")}>
+                    {selected ? selected.label : 'Choisir un objectif…'}
+                </span>
+                <motion.span
+                    animate={{ rotate: open ? 180 : 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="material-symbols-outlined text-slate-400 text-lg shrink-0"
+                >
+                    expand_more
+                </motion.span>
+            </button>
+
+            <AnimatePresence>
+                {open && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -8, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -8, scale: 0.98 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute left-0 right-0 top-[calc(100%+8px)] z-50 bg-white rounded-2xl border-2 border-slate-100 shadow-2xl overflow-hidden"
+                    >
+                        {selected && (
+                            <button
+                                type="button"
+                                onClick={() => { setIntentionId(null); setOpen(false); }}
+                                className="w-full flex items-center gap-3 px-4 py-3 text-left text-slate-400 hover:bg-slate-50 border-b border-slate-100 transition-colors"
+                            >
+                                <span className="material-symbols-outlined text-base">close</span>
+                                <span className="text-xs font-bold">Aucun objectif</span>
+                            </button>
+                        )}
+                        {OBJECTIFS.map(obj => {
+                            const isActive = intentionId === obj.id;
+                            return (
+                                <button
+                                    key={obj.id}
+                                    type="button"
+                                    onClick={() => { setIntentionId(obj.id); setOpen(false); }}
+                                    className={clsx(
+                                        "w-full flex items-center gap-3 px-4 py-3 text-left transition-colors",
+                                        isActive ? `${obj.bg}` : "hover:bg-slate-50"
+                                    )}
+                                >
+                                    <div className={clsx("size-8 rounded-full flex items-center justify-center shrink-0", isActive ? obj.activeBg : "bg-slate-100")}>
+                                        <span className={clsx("material-symbols-outlined text-sm", isActive ? "text-white" : "text-slate-400")}>{obj.icon}</span>
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className={clsx("text-xs font-black leading-snug", isActive ? obj.color : "text-slate-700")}>{obj.label}</p>
+                                        <p className="text-[10px] text-slate-400 mt-0.5">{obj.description}</p>
+                                    </div>
+                                    {isActive && <span className={clsx("material-symbols-outlined text-base shrink-0", obj.color)}>check</span>}
+                                </button>
+                            );
+                        })}
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
+    );
+}
+
 type Props = {
     startDate: string;
     activities?: string[];
     level?: string;
-    onSuggestions: (thematics: ThematicTag[]) => void;
+    initialIntention?: ObjectifId | null;
+    onSuggestions: (thematics: ThematicTag[], intentionId: ObjectifId | null) => void;
     onSkip: () => void;
     isSaving?: boolean;
 };
 
-export default function SeasonalGuide({ startDate, activities = [], level = '', onSuggestions, onSkip, isSaving = false }: Props) {
+export default function SeasonalGuide({ startDate, activities = [], level = '', initialIntention = null, onSuggestions, onSkip, isSaving = false }: Props) {
     const month = startDate ? new Date(startDate).getMonth() + 1 : new Date().getMonth() + 1;
     const period = getPeriodForMonth(month);
 
     const [coeff, setCoeff] = useState<CoeffType | null>(null);
     const [meteo, setMeteo] = useState<MeteoType | null>(null);
-    const [mainThematic, setMainThematic] = useState<ThematicTag | null>(null);
+    const [intentionId, setIntentionId] = useState<ObjectifId | null>(initialIntention);
 
     const suggestions = coeff && meteo
-        ? getSuggestedThematics({ periodId: period.id, coeff, meteo, activities, level, mainThematic })
+        ? getSuggestedThematics({ periodId: period.id, coeff, meteo, activities, level })
         : null;
 
     const handleValidate = () => {
-        if (suggestions && !isSaving) onSuggestions(suggestions);
+        if (suggestions && !isSaving) onSuggestions(suggestions, intentionId);
     };
 
     return (
@@ -127,20 +217,16 @@ export default function SeasonalGuide({ startDate, activities = [], level = '', 
                 </div>
             </div>
 
-            {/* Intention principale */}
+            {/* Intention / objectif de la semaine */}
             <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">
-                    Intention principale de la semaine
+                    Mon objectif pour cette semaine
                     <span className="font-semibold normal-case tracking-normal text-slate-300 ml-1">— optionnel</span>
                 </label>
-                <ThematicSelect
-                    value={mainThematic}
-                    onChange={setMainThematic}
-                    placeholder="— Aucune intention —"
-                />
-                {mainThematic && (
+                <IntentionDropdown intentionId={intentionId} setIntentionId={setIntentionId} />
+                {intentionId && (
                     <p className="text-[10px] text-slate-400 px-1">
-                        L'intention choisie oriente les suggestions vers des thématiques complémentaires.
+                        Les fiches correspondantes seront marquées ★ dans le programme.
                     </p>
                 )}
             </div>

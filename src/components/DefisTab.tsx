@@ -127,7 +127,7 @@ export default function DefisTab({ stageId, availableDefis, assignedExploits, su
                                     <div className="flex items-center gap-1.5 flex-wrap mb-1">
                                         <h4 className="font-black text-slate-900 text-sm">{filRougeExploit.defis.description}</h4>
                                         {filRougeExploit.status === 'complete'
-                                            ? <span className="text-[10px] font-black text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded">Validé ce stage ✓</span>
+                                            ? <span className="text-[10px] font-black text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded">Validé cette semaine ✓</span>
                                             : <span className="text-[10px] font-black text-teal-700 bg-teal-100 px-1.5 py-0.5 rounded">À réaliser</span>
                                         }
                                     </div>
@@ -136,14 +136,14 @@ export default function DefisTab({ stageId, availableDefis, assignedExploits, su
                             </div>
                         </div>
                     ) : filRougeDefi ? (
-                        /* Fil rouge défini mais pas encore assigné à ce stage — cas impossible normalement grâce à l'auto-assign, mais sécurité */
+                        /* Fil rouge défini mais pas encore assigné à cette semaine — cas impossible normalement grâce à l'auto-assign, mais sécurité */
                         <div className="p-4 rounded-2xl border-2 border-dashed border-emerald-200 bg-emerald-50 flex items-center gap-3">
                             <div className="size-11 rounded-xl bg-emerald-100 text-emerald-500 flex items-center justify-center shrink-0">
                                 <span className="material-symbols-outlined">{filRougeDefi.icon}</span>
                             </div>
                             <div className="flex-1 min-w-0">
                                 <p className="font-bold text-slate-900 text-sm">{filRougeDefi.description}</p>
-                                <p className="text-xs text-slate-500 mt-0.5">Non assigné à ce stage</p>
+                                <p className="text-xs text-slate-500 mt-0.5">Non assigné à cette semaine</p>
                             </div>
                             <button
                                 onClick={() => handleAssign(filRougeDefi.id)}

@@ -8,11 +8,27 @@ import { closeStage } from '@/actions/stage-actions';
 import { StageObjectiveReviewList } from '@/components/StageObjectiveReviewList';
 import { StageObjectiveReviewDraft, StageObjectiveReviewItem } from '@/types';
 
+type DefiReview = {
+    id: string;
+    description: string;
+    status: 'en_cours' | 'complete';
+    points: number;
+    terrain_temps_reel: boolean;
+};
+
+type QuizReview = {
+    done: boolean;
+    score: number | null;
+    total: number | null;
+};
+
 type Props = {
     stageId: string;
     stageTitle: string;
     objectiveItems: StageObjectiveReviewItem[];
     initialClosingNotes?: string | null;
+    defisAssigned: DefiReview[];
+    quizData: QuizReview | null;
 };
 
 function buildDraftMap(items: StageObjectiveReviewItem[]): Record<string, StageObjectiveReviewDraft> {
@@ -32,7 +48,7 @@ function buildDraftMap(items: StageObjectiveReviewItem[]): Record<string, StageO
     );
 }
 
-export function StageClosureReview({ stageId, stageTitle, objectiveItems, initialClosingNotes }: Props) {
+export function StageClosureReview({ stageId, stageTitle, objectiveItems, initialClosingNotes, defisAssigned, quizData }: Props) {
     const router = useRouter();
     const [drafts, setDrafts] = useState<Record<string, StageObjectiveReviewDraft>>(() => buildDraftMap(objectiveItems));
     const [closingNote, setClosingNote] = useState(initialClosingNotes ?? '');
@@ -40,6 +56,12 @@ export function StageClosureReview({ stageId, stageTitle, objectiveItems, initia
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const unset = objectiveItems.filter(item => !drafts[item.pedagogicalContent.id]?.executionStatus).length;
+
+    const defisDone = defisAssigned.filter(d => d.status === 'complete').length;
+    const defisTotal = defisAssigned.length;
+    const quizDone = quizData?.done ?? false;
+
+    const canClose = unset === 0 && quizDone;
 
     const handleDraftChange = (contentId: string, patch: Partial<StageObjectiveReviewDraft>) => {
         setDrafts(prev => ({
@@ -71,10 +93,10 @@ export function StageClosureReview({ stageId, stageTitle, objectiveItems, initia
 
             {/* Intro */}
             <div className="rounded-2xl bg-amber-50 border border-amber-200 px-4 py-4">
-                <p className="text-xs font-black uppercase tracking-widest text-amber-600 mb-1">Clôture du stage</p>
+                <p className="text-xs font-black uppercase tracking-widest text-amber-600 mb-1">Clôture de la semaine</p>
                 <p className="text-sm font-semibold text-amber-900">{stageTitle}</p>
                 <p className="mt-1 text-xs text-amber-700 leading-relaxed">
-                    Les statuts sont pré-remplis depuis l'accueil et vos séances. Vérifiez, ajustez si besoin, puis clôturez.
+                    Vérifiez les objectifs, défis et quiz avant de clôturer. Tout est pré-rempli depuis l'accueil.
                 </p>
             </div>
 
@@ -90,6 +112,77 @@ export function StageClosureReview({ stageId, stageTitle, objectiveItems, initia
                     onChangeDraft={handleDraftChange}
                 />
             </section>
+
+            {/* Défis Terrain */}
+            {defisTotal > 0 && (
+                <section>
+                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400 mb-3">
+                        Défis terrain
+                    </p>
+                    <div className="space-y-2">
+                        {defisAssigned.map(defi => (
+                            <div key={defi.id} className={clsx(
+                                'rounded-xl border px-4 py-3 flex items-center gap-3',
+                                defi.status === 'complete' ? 'border-emerald-200 bg-emerald-50' : 'border-amber-200 bg-amber-50'
+                            )}>
+                                <span className={clsx(
+                                    'material-symbols-outlined text-xl',
+                                    defi.status === 'complete' ? 'text-emerald-600' : 'text-amber-600'
+                                )}>
+                                    {defi.status === 'complete' ? 'check_circle' : 'pending'}
+                                </span>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-bold text-slate-900">{defi.description}</p>
+                                    <p className="text-[10px] text-slate-500">
+                                        {defi.terrain_temps_reel && 'Temps réel · '}
+                                        {defi.points} points
+                                    </p>
+                                </div>
+                                <span className={clsx(
+                                    'text-[10px] font-black px-2 py-1 rounded-full',
+                                    defi.status === 'complete' ? 'bg-emerald-600 text-white' : 'bg-amber-600 text-white'
+                                )}>
+                                    {defi.status === 'complete' ? 'Validé' : 'En cours'}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            )}
+
+            {/* Quiz de fin de semaine */}
+            {quizData && (
+                <section>
+                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400 mb-3">
+                        Quiz de fin de semaine
+                    </p>
+                    <div className={clsx(
+                        'rounded-xl border px-4 py-3 flex items-center gap-3',
+                        quizDone ? 'border-violet-200 bg-violet-50' : 'border-amber-200 bg-amber-50'
+                    )}>
+                        <span className={clsx(
+                            'material-symbols-outlined text-xl',
+                            quizDone ? 'text-violet-600' : 'text-amber-600'
+                        )}>
+                            {quizDone ? 'check_circle' : 'quiz'}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-sm font-bold text-slate-900">Quiz validé</p>
+                            {quizDone && quizData.score !== null && quizData.total !== null && (
+                                <p className="text-[10px] text-slate-500">
+                                    Score : {quizData.score}/{quizData.total}
+                                </p>
+                            )}
+                        </div>
+                        <span className={clsx(
+                            'text-[10px] font-black px-2 py-1 rounded-full',
+                            quizDone ? 'bg-violet-600 text-white' : 'bg-amber-600 text-white'
+                        )}>
+                            {quizDone ? 'Terminé' : 'À faire'}
+                        </span>
+                    </div>
+                </section>
+            )}
 
             {/* Mémo libre */}
             <section>
@@ -122,22 +215,24 @@ export function StageClosureReview({ stageId, stageTitle, objectiveItems, initia
                             <p className="text-xs font-semibold text-amber-600">
                                 {unset} objectif{unset > 1 ? 's' : ''} sans statut
                             </p>
+                        ) : !quizDone ? (
+                            <p className="text-xs font-semibold text-amber-600">Quiz non terminé</p>
                         ) : (
-                            <p className="text-xs font-semibold text-emerald-600">Tous les objectifs sont renseignés</p>
+                            <p className="text-xs font-semibold text-emerald-600">Tous les éléments sont renseignés</p>
                         )}
                     </div>
                     <Link
-                        href={`/stages/${stageId}`}
+                        href="/stages"
                         className="h-11 px-4 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 flex items-center hover:bg-slate-50 transition"
                     >
                         Annuler
                     </Link>
                     <button
                         onClick={handleClose}
-                        disabled={isSubmitting || unset > 0}
+                        disabled={isSubmitting || !canClose}
                         className={clsx(
                             'h-11 px-5 rounded-xl text-sm font-black text-white transition',
-                            unset > 0 || isSubmitting
+                            !canClose || isSubmitting
                                 ? 'bg-slate-300 cursor-not-allowed'
                                 : 'bg-slate-900 hover:bg-slate-700 active:scale-95'
                         )}

@@ -87,10 +87,10 @@ export async function generateStageQuiz(
     const { data: game, error: gameError } = await supabase
         .from('games')
         .insert({
-            title: `Quiz — ${stage?.title ?? 'Stage'}`,
+            title: `Quiz — ${stage?.title ?? 'Semaine'}`,
             theme: forceTheme ?? targetThemes[0] ?? 'Général',
             stage_id: stageId,
-            game_data: { leGrandQuizz: { title: 'Quiz de fin de stage', instruction: 'Posez ces questions à votre groupe pour valider la transmission.', items: quizzItems } },
+            game_data: { leGrandQuizz: { title: 'Quiz de fin de semaine', instruction: 'Posez ces questions à votre groupe pour valider la transmission.', items: quizzItems } },
         })
         .select()
         .single();
@@ -141,11 +141,11 @@ export async function awardStageQuizPoints(
             stage_id: stageId,
             defi_id: null,
             points: points_awarded,
-            reason: `Quiz de fin de stage — ${scoreCorrect}/${scoreTotal} (${score_pct}%)`,
+            reason: `Quiz de fin de semaine — ${scoreCorrect}/${scoreTotal} (${score_pct}%)`,
         }),
     ]);
 
-    revalidatePath(`/stages/${stageId}`);
+    revalidatePath(`/stages/${stageId}/bilan`);
     revalidatePath('/classement');
     revalidatePath('/profil');
 

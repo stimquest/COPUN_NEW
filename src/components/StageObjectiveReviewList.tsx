@@ -14,6 +14,12 @@ const STATUS_META = {
     not_done: { label: 'Non abordé',  icon: 'remove_circle',   bg: 'bg-slate-400',   text: 'text-slate-500',   light: 'bg-slate-50 border-slate-200' },
 } as const;
 
+const NOTE_PLACEHOLDER: Record<string, string> = {
+    done: 'Ce qui a bien marché, une idée à garder…',
+    partial: 'Pourquoi seulement effleuré ? Ce qui a bloqué…',
+    not_done: 'Pourquoi pas abordé ? Un obstacle rencontré…',
+};
+
 const IMPACT_META = {
     high:   { label: 'Impact fort',   color: 'text-violet-700 bg-violet-50 border-violet-200' },
     medium: { label: 'Impact moyen',  color: 'text-sky-700 bg-sky-50 border-sky-200' },
@@ -32,7 +38,7 @@ export function StageObjectiveReviewList({ items, editable = false, drafts, onCh
         return (
             <div className="rounded-2xl border-2 border-dashed border-slate-200 bg-white p-8 text-center">
                 <span className="material-symbols-outlined text-3xl text-slate-300">assignment</span>
-                <p className="mt-2 text-sm font-semibold text-slate-400">Aucun objectif sélectionné pour ce stage</p>
+                <p className="mt-2 text-sm font-semibold text-slate-400">Aucun objectif sélectionné pour cette semaine</p>
             </div>
         );
     }
@@ -92,6 +98,14 @@ export function StageObjectiveReviewList({ items, editable = false, drafts, onCh
                 const impactOptions = getStageObjectiveImpactOptions(draft.executionStatus);
                 const themes = (item.pedagogicalContent.tags_theme ?? []).slice(0, 3);
                 const isNotDone = draft.executionStatus === 'not_done';
+
+                const noteLabel = draft.executionStatus === 'done'
+                    ? 'Ce qui a bien marché'
+                    : draft.executionStatus === 'partial'
+                        ? 'Pourquoi effleuré ?'
+                        : 'Pourquoi non abordé ?';
+
+                const notePlaceholder = draft.executionStatus ? NOTE_PLACEHOLDER[draft.executionStatus] ?? 'Ajoutez un commentaire…' : 'Sélectionnez d\'abord un statut…';
 
                 return (
                     <article
@@ -198,15 +212,15 @@ export function StageObjectiveReviewList({ items, editable = false, drafts, onCh
                                     </div>
                                 )}
 
-                                {/* Note libre */}
+                                {/* Note contextuelle selon statut */}
                                 <div>
                                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 block">
-                                        Note <span className="font-semibold normal-case tracking-normal text-slate-300">— optionnelle</span>
+                                        {noteLabel} <span className="font-semibold normal-case tracking-normal text-slate-300">— optionnel</span>
                                     </label>
                                     <textarea
                                         value={draft.note}
                                         onChange={e => onChangeDraft?.(item.pedagogicalContent.id, { note: e.target.value })}
-                                        placeholder="Ce qui explique le résultat, une idée à garder…"
+                                        placeholder={notePlaceholder}
                                         rows={2}
                                         className="w-full resize-none rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 placeholder:text-slate-300 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-100"
                                     />

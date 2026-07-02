@@ -141,39 +141,3 @@ export async function getMyCustomContent(): Promise<(PedagogicalContent & { todo
     }));
 }
 
-// Called when a custom card is linked to a session step:
-// copies the card's content_todos as step_todos for this specific stage instance
-export async function copyContentTodosToStep(
-    contentId: string,
-    stepId: string,
-    stageId: string,
-): Promise<void> {
-    const supabase = await createClient();
-
-    const { data: contentTodos } = await supabase
-        .from('content_todos')
-        .select('text, todo_order')
-        .eq('content_id', contentId)
-        .order('todo_order');
-
-    if (!contentTodos || contentTodos.length === 0) return;
-
-    // Get current max todo_order for this step to append after existing todos
-    const { data: existing } = await supabase
-        .from('step_todos')
-        .select('todo_order')
-        .eq('session_step_id', stepId)
-        .order('todo_order', { ascending: false })
-        .limit(1);
-
-    const baseOrder = existing?.[0]?.todo_order ?? -1;
-
-    await supabase.from('step_todos').insert(
-        contentTodos.map((t, i) => ({
-            session_step_id: stepId,
-            text: t.text,
-            todo_order: baseOrder + 1 + i,
-            done: false,
-        }))
-    );
-}

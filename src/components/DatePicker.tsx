@@ -76,7 +76,7 @@ export default function DatePicker({ value, onChange, placeholder = 'Choisir une
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 8, scale: 0.98 }}
                         transition={{ duration: 0.15 }}
-                        className="absolute z-50 bottom-full mb-2 left-0 right-0 bg-white rounded-3xl shadow-2xl border border-slate-100 p-4"
+                        className="absolute z-50 top-full mt-2 left-0 right-0 bg-white rounded-3xl shadow-2xl border border-slate-100 p-4"
                     >
                         {/* En-tête mois */}
                         <div className="flex items-center justify-between mb-3">

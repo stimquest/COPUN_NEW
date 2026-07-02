@@ -45,7 +45,7 @@ export function ReopenConfirmSheet({ stageId }: ReopenConfirmSheetProps) {
               </div>
               <div>
                 <SheetTitle className="text-lg font-bold text-slate-900">
-                  Réouvrir le stage ?
+                  Réouvrir la semaine ?
                 </SheetTitle>
                 <SheetDescription className="text-sm text-slate-500 mt-0.5">
                   Le contenu restera tel quel. Les notes et l’analyse par objectif seront conservées.

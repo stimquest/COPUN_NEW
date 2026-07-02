@@ -46,7 +46,7 @@ export function DeleteStageButton({ stageId }: { stageId: string }) {
         <button
             onClick={() => setConfirm(true)}
             className="size-10 rounded-full bg-red-50 flex items-center justify-center text-red-300 hover:bg-red-100 hover:text-red-500 transition-colors"
-            title="Supprimer ce stage"
+            title="Supprimer cette semaine"
         >
             <span className="material-symbols-outlined text-[20px]">delete</span>
         </button>

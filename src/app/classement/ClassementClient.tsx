@@ -73,7 +73,7 @@ export default function ClassementClient({ monitors, clubs, myPoints }: Props) {
                         <div className="bg-white rounded-2xl border border-slate-100 p-8 text-center">
                             <span className="material-symbols-outlined text-4xl text-slate-200 mb-2 block">leaderboard</span>
                             <p className="text-sm text-slate-400">Aucun point encore enregistré.</p>
-                            <p className="text-xs text-slate-400 mt-1">Complétez votre premier quiz de fin de stage pour apparaître ici.</p>
+                            <p className="text-xs text-slate-400 mt-1">Complétez votre premier quiz de fin de semaine pour apparaître ici.</p>
                         </div>
                     ) : (
                         monitors.map((entry, i) => (

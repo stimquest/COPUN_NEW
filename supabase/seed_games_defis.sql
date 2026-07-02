@@ -1,6 +1,8 @@
 -- Seed Data — Défis COPUN
 
 -- Remove défis no longer in the library
+-- (defi_jeu_1, defi_dechets_1, defi_collectif_5 sont désactivés via `actif`, pas supprimés,
+-- pour préserver l'historique lié : points gagnés, défis déjà validés dans des semaines passées)
 DELETE FROM defis WHERE id NOT IN (
     'defi_bio_2', 'defi_laisse_1', 'defi_erosion_1', 'defi_faune_1',
     'defi_bio_3', 'defi_bio_4', 'defi_dechets_1', 'defi_collectif_5',
@@ -94,4 +96,18 @@ UPDATE defis SET spot_fixe = false WHERE id NOT IN (
     'defi_laisse_1',
     'defi_erosion_1',
     'defi_faune_1'
+);
+
+-- Défis retirés de la sélection courante (doublon avec le quiz de fin de semaine,
+-- ou redondants avec d'autres défis) : désactivés, pas supprimés, pour garder l'historique.
+UPDATE defis SET actif = false WHERE id IN (
+    'defi_jeu_1',
+    'defi_dechets_1',
+    'defi_collectif_5'
+);
+
+UPDATE defis SET actif = true WHERE id NOT IN (
+    'defi_jeu_1',
+    'defi_dechets_1',
+    'defi_collectif_5'
 );

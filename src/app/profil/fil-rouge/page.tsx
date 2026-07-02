@@ -58,7 +58,7 @@ export default async function FilRougePage() {
                             </div>
                             <div className="bg-white rounded-2xl p-4 text-center shadow-sm border border-slate-100">
                                 <p className="text-3xl font-black text-slate-900">{total}</p>
-                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Stages</p>
+                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Semaines</p>
                             </div>
                             <div className="bg-white rounded-2xl p-4 text-center shadow-sm border border-slate-100">
                                 <p className="text-3xl font-black text-amber-500">{streak}</p>
@@ -79,7 +79,7 @@ export default async function FilRougePage() {
                                         style={{ width: `${(validated.length / total) * 100}%` }}
                                     />
                                 </div>
-                                <p className="text-xs text-slate-400 mt-2">{validated.length} validation{validated.length > 1 ? 's' : ''} sur {total} stage{total > 1 ? 's' : ''}</p>
+                                <p className="text-xs text-slate-400 mt-2">{validated.length} validation{validated.length > 1 ? 's' : ''} sur {total} semaine{total > 1 ? 's' : ''}</p>
                             </div>
                         )}
 
@@ -87,8 +87,8 @@ export default async function FilRougePage() {
                         {entries.length === 0 ? (
                             <div className="text-center py-12 space-y-2">
                                 <span className="material-symbols-outlined text-4xl text-slate-200">history</span>
-                                <p className="text-sm text-slate-400 font-semibold">Aucun stage avec ce défi pour l&apos;instant.</p>
-                                <p className="text-xs text-slate-400">Le défi sera automatiquement assigné à votre prochain stage.</p>
+                                <p className="text-sm text-slate-400 font-semibold">Aucune semaine avec ce défi pour l&apos;instant.</p>
+                                <p className="text-xs text-slate-400">Le défi sera automatiquement assigné à votre prochaine semaine.</p>
                             </div>
                         ) : (
                             <section>

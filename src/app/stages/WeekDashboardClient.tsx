@@ -10,6 +10,7 @@ import { ThematicSelect } from '@/components/ThematicSelect';
 import { addObservation, deleteObservation } from '@/actions/observation-actions';
 import { saveObjectiveStatus } from '@/actions/stage-actions';
 import { updateStageExploitStatus, uploadDefiPhoto } from '@/actions/defi-actions';
+import FilRougeForm from '@/components/defis/FilRougeForm';
 
 type DefiInfo = {
     id: string;
@@ -31,16 +32,23 @@ type StageExploit = {
     defis: DefiInfo;
 };
 
+type ObservationTarget = { id: string; name: string; categorie: string };
+
+// Défis nécessitant une saisie structurée (catégorisation/comptage) plutôt qu'une simple photo
+const STRUCTURED_DEFI_IDS = new Set(['defi_bio_2', 'defi_laisse_1', 'defi_erosion_1', 'defi_faune_1']);
+
 // ── Exploit card (validation inline) ──────────────────────────────────────────
 
-function ExploitCard({ exploit, stageId }: { exploit: StageExploit; stageId: string }) {
+function ExploitCard({ exploit, stageId, clubObservationTargets }: { exploit: StageExploit; stageId: string; clubObservationTargets: ObservationTarget[] }) {
     const [isPending, startTransition] = useTransition();
     const [localStatus, setLocalStatus] = useState(exploit.status);
     const [localPhotos, setLocalPhotos] = useState<string[]>(exploit.preuves_url ?? []);
     const [uploading, setUploading] = useState(false);
+    const [showStructuredForm, setShowStructuredForm] = useState(false);
     const fileRef = useRef<HTMLInputElement>(null);
     const defi = exploit.defis;
     const done = localStatus === 'complete';
+    const isStructured = STRUCTURED_DEFI_IDS.has(exploit.exploit_id);
 
     const validate = () => {
         setLocalStatus('complete');
@@ -109,7 +117,24 @@ function ExploitCard({ exploit, stageId }: { exploit: StageExploit; stageId: str
 
                     {/* Actions selon type_preuve */}
                     <div className="mt-2.5 flex items-center gap-2 flex-wrap">
-                        {defi.type_preuve === 'photo' ? (
+                        {isStructured ? (
+                            <>
+                                <button
+                                    onClick={() => setShowStructuredForm(true)}
+                                    disabled={isPending}
+                                    className="flex items-center gap-1.5 h-8 px-3 rounded-xl bg-slate-900 text-white text-xs font-black hover:bg-slate-700 transition active:scale-95 disabled:opacity-50"
+                                >
+                                    <span className="material-symbols-outlined text-[14px]">edit_note</span>
+                                    {done ? 'Modifier le relevé' : 'Faire le relevé'}
+                                </button>
+                                {done && (
+                                    <span className="flex items-center gap-1 h-8 px-3 rounded-xl bg-emerald-100 text-emerald-700 text-xs font-black">
+                                        <span className="material-symbols-outlined text-[14px]">check</span>
+                                        Validé
+                                    </span>
+                                )}
+                            </>
+                        ) : defi.type_preuve === 'photo' ? (
                             <>
                                 <input
                                     ref={fileRef}
@@ -164,6 +189,20 @@ function ExploitCard({ exploit, stageId }: { exploit: StageExploit; stageId: str
                     </div>
                 </div>
             </div>
+
+            {showStructuredForm && (
+                <FilRougeForm
+                    defiId={exploit.exploit_id}
+                    defiDescription={defi.description}
+                    stageId={stageId}
+                    clubTargets={clubObservationTargets}
+                    onClose={() => setShowStructuredForm(false)}
+                    onSuccess={() => {
+                        setLocalStatus('complete');
+                        setShowStructuredForm(false);
+                    }}
+                />
+            )}
         </div>
     );
 }
@@ -325,6 +364,7 @@ type Props = {
     initialStatuses: Record<string, StageObjectiveExecutionStatus>;
     initialObservations: WeekObservation[];
     initialExploits: StageExploit[];
+    clubObservationTargets: ObservationTarget[];
     greeting: string;
     firstName: string;
     seasonGradient: string;
@@ -336,7 +376,7 @@ type Props = {
 
 export function WeekDashboardClient({
     stageId, stageName, stageDates, objectives,
-    initialStatuses, initialObservations, initialExploits,
+    initialStatuses, initialObservations, initialExploits, clubObservationTargets,
     greeting, firstName, seasonGradient, seasonIcon,
     contentCount, validatedCount: initialValidatedCount, archivedStages,
 }: Props) {
@@ -468,7 +508,7 @@ export function WeekDashboardClient({
                         </div>
                         <div className="space-y-2">
                             {initialExploits.map(exploit => (
-                                <ExploitCard key={exploit.id} exploit={exploit} stageId={stageId} />
+                                <ExploitCard key={exploit.id} exploit={exploit} stageId={stageId} clubObservationTargets={clubObservationTargets} />
                             ))}
                         </div>
                     </section>

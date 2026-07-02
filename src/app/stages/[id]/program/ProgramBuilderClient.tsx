@@ -1,138 +1,53 @@
 'use client';
 
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Stage, PedagogicalContent } from '@/types';
 import { PILLARS, THEMES_BY_PILLAR } from '@/data/etages';
+import { OBJECTIFS, extractIntention, stripIntention } from '@/data/objectifs';
 import { updateStagePool } from '@/actions/stage-actions';
 import clsx from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
 import CardDetailModal from '@/components/CardDetailModal';
 
-const OBJECTIFS = [
-    { id: 'conditions', label: 'Lire les conditions avant de naviguer', description: 'Marées, courants, vent — comprendre pour naviguer en sécurité', tags: ['marée', 'courant', 'vent', 'coefficient', 'sécurité'], icon: 'navigation', color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200', activeBg: 'bg-blue-600' },
-    { id: 'marees', label: 'Comprendre les rythmes de la marée', description: 'Cycles, coefficients, flot et jusant', tags: ['marée', 'coefficient', 'courant', 'vocabulaire'], icon: 'waves', color: 'text-cyan-600', bg: 'bg-cyan-50', border: 'border-cyan-200', activeBg: 'bg-cyan-600' },
-    { id: 'meteo', label: 'Décrypter la météo marine', description: 'Vent, nuages, houle et thermiques', tags: ['météo', 'vent', 'nuage', 'thermique', 'houle', 'vague'], icon: 'partly_cloudy_day', color: 'text-sky-600', bg: 'bg-sky-50', border: 'border-sky-200', activeBg: 'bg-sky-600' },
-    { id: 'paysage', label: 'Observer et décrire le paysage littoral', description: 'Lecture du terrain, dunes, repères visuels', tags: ['repères visuels', 'dune', 'vague', 'érosion', 'observation'], icon: 'landscape', color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200', activeBg: 'bg-amber-600' },
-    { id: 'biodiversite', label: 'Découvrir la biodiversité du site', description: 'Faune, flore, laisse de mer et écosystème', tags: ['faune', 'écosystème', 'laisse de mer', 'zone sensible', 'flore'], icon: 'flutter_dash', color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200', activeBg: 'bg-emerald-600' },
-    { id: 'vivant', label: 'Comprendre les interactions du vivant', description: 'Cycles biologiques, adaptation, migration', tags: ['écosystème', 'adaptation', 'reproduction', 'migration'], icon: 'account_tree', color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-200', activeBg: 'bg-green-600' },
-    { id: 'cohabitation', label: 'Apprendre à cohabiter avec la faune', description: 'Dérangement, zones sensibles, discrétion', tags: ['faune', 'zone sensible'], icon: 'diversity_3', color: 'text-teal-600', bg: 'bg-teal-50', border: 'border-teal-200', activeBg: 'bg-teal-600' },
-    { id: 'pollution', label: 'Agir contre la pollution', description: 'Déchets, laisse de mer, gestes concrets', tags: ['pollution', 'laisse de mer', 'éco-geste'], icon: 'delete_sweep', color: 'text-orange-600', bg: 'bg-orange-50', border: 'border-orange-200', activeBg: 'bg-orange-600' },
-    { id: 'protection', label: 'Devenir acteur de la protection du site', description: 'Sciences participatives, signalement, engagement', tags: ['action citoyenne', 'éco-geste', 'zone sensible'], icon: 'shield', color: 'text-rose-600', bg: 'bg-rose-50', border: 'border-rose-200', activeBg: 'bg-rose-600' },
-    { id: 'responsable', label: 'Adopter des comportements responsables', description: 'Gestes en navigation, adaptation, respect du milieu', tags: ['sécurité', 'adaptation', 'zone sensible', 'éco-geste'], icon: 'self_improvement', color: 'text-violet-600', bg: 'bg-violet-50', border: 'border-violet-200', activeBg: 'bg-violet-600' },
-];
+function IntentionBanner({ intention, stageId }: { intention: string | null | undefined; stageId: string }) {
+    const obj = OBJECTIFS.find(o => o.id === intention);
+    const editHref = `/stages/new?edit=${stageId}`;
 
-function ObjectifDropdown({ intention, setIntention }: { intention: string | null, setIntention: (v: string | null) => void }) {
-    const [open, setOpen] = useState(false);
-    const ref = useRef<HTMLDivElement>(null);
-    const selected = OBJECTIFS.find(o => o.id === intention);
-
-    useEffect(() => {
-        const handler = (e: MouseEvent) => {
-            if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-        };
-        document.addEventListener('mousedown', handler);
-        return () => document.removeEventListener('mousedown', handler);
-    }, []);
+    if (!obj) {
+        return (
+            <section className="bg-white rounded-3xl border-2 border-slate-100 p-6 space-y-2">
+                <div className="flex items-center justify-between">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Mon objectif pour cette semaine</p>
+                    <Link href={editHref} className="text-[10px] font-bold text-indigo-500 hover:text-indigo-700 transition-colors shrink-0">
+                        Renseigner
+                    </Link>
+                </div>
+                <p className="text-xs text-slate-400">
+                    Aucun objectif choisi — les conditions (marée, météo) ont peut-être changé depuis la préparation de la semaine.
+                </p>
+            </section>
+        );
+    }
 
     return (
-        <section className="bg-white rounded-3xl border-2 border-slate-100 p-6 space-y-3">
-            <div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Mon objectif pour ce stage</p>
-                <p className="text-xs text-slate-500 mt-1">Les objectifs ★ recommandés s'ajusteront à votre choix.</p>
+        <section className={clsx("rounded-3xl border-2 p-6 space-y-3", obj.border, obj.bg)}>
+            <div className="flex items-center justify-between">
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Mon objectif pour cette semaine</p>
+                <Link href={editHref} className="text-[10px] font-bold text-indigo-500 hover:text-indigo-700 transition-colors shrink-0">
+                    Modifier
+                </Link>
             </div>
-            <div ref={ref} className="relative">
-                {/* Trigger */}
-                <button
-                    type="button"
-                    onClick={() => setOpen(v => !v)}
-                    className={clsx(
-                        "w-full flex items-center gap-3 px-4 h-14 rounded-2xl border-2 text-left transition-all",
-                        selected ? `${selected.border} ${selected.bg}` : "border-slate-200 bg-slate-50 hover:border-slate-300"
-                    )}
-                >
-                    <span className={clsx("material-symbols-outlined text-lg shrink-0", selected ? selected.color : "text-slate-300")}>
-                        {selected ? selected.icon : 'flag'}
-                    </span>
-                    <span className={clsx("text-xs font-bold flex-1", selected ? selected.color : "text-slate-400")}>
-                        {selected ? selected.label : 'Choisir un objectif…'}
-                    </span>
-                    <motion.span
-                        animate={{ rotate: open ? 180 : 0 }}
-                        transition={{ duration: 0.2 }}
-                        className="material-symbols-outlined text-slate-400 text-lg shrink-0"
-                    >
-                        expand_more
-                    </motion.span>
-                </button>
-
-                {/* Dropdown panel */}
-                <AnimatePresence>
-                    {open && (
-                        <motion.div
-                            initial={{ opacity: 0, y: -8, scale: 0.98 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: -8, scale: 0.98 }}
-                            transition={{ duration: 0.15 }}
-                            className="absolute left-0 right-0 top-[calc(100%+8px)] z-50 bg-white rounded-2xl border-2 border-slate-100 shadow-2xl overflow-hidden"
-                        >
-                            {/* Clear option */}
-                            {selected && (
-                                <button
-                                    type="button"
-                                    onClick={() => { setIntention(null); setOpen(false); }}
-                                    className="w-full flex items-center gap-3 px-4 py-3 text-left text-slate-400 hover:bg-slate-50 border-b border-slate-100 transition-colors"
-                                >
-                                    <span className="material-symbols-outlined text-base">close</span>
-                                    <span className="text-xs font-bold">Aucun objectif</span>
-                                </button>
-                            )}
-                            {OBJECTIFS.map(obj => {
-                                const isActive = intention === obj.id;
-                                return (
-                                    <button
-                                        key={obj.id}
-                                        type="button"
-                                        onClick={() => { setIntention(obj.id); setOpen(false); }}
-                                        className={clsx(
-                                            "w-full flex items-center gap-3 px-4 py-3 text-left transition-colors",
-                                            isActive ? `${obj.bg}` : "hover:bg-slate-50"
-                                        )}
-                                    >
-                                        <div className={clsx("size-8 rounded-full flex items-center justify-center shrink-0", isActive ? obj.activeBg : "bg-slate-100")}>
-                                            <span className={clsx("material-symbols-outlined text-sm", isActive ? "text-white" : "text-slate-400")}>{obj.icon}</span>
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className={clsx("text-xs font-black leading-snug", isActive ? obj.color : "text-slate-700")}>{obj.label}</p>
-                                            <p className="text-[10px] text-slate-400 mt-0.5">{obj.description}</p>
-                                        </div>
-                                        {isActive && <span className={clsx("material-symbols-outlined text-base shrink-0", obj.color)}>check</span>}
-                                    </button>
-                                );
-                            })}
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+            <div className="flex items-center gap-3">
+                <div className={clsx("size-10 rounded-full flex items-center justify-center shrink-0", obj.activeBg)}>
+                    <span className="material-symbols-outlined text-lg text-white">{obj.icon}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                    <p className={clsx("text-sm font-black leading-snug", obj.color)}>{obj.label}</p>
+                    <p className="text-[11px] text-slate-500 mt-0.5">{obj.description} — les cartes correspondantes sont marquées ★.</p>
+                </div>
             </div>
-
-            {/* Feedback */}
-            <AnimatePresence mode="wait">
-                {selected && (
-                    <motion.div
-                        key={selected.id}
-                        initial={{ opacity: 0, y: -4 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -4 }}
-                        className={clsx("flex items-center gap-2 px-3 py-2 rounded-xl border", selected.border, selected.bg)}
-                    >
-                        <span className={clsx("material-symbols-outlined text-base shrink-0", selected.color)}>star</span>
-                        <p className={clsx("text-[11px] font-bold", selected.color)}>
-                            {selected.description} — les cartes correspondantes sont marquées ★.
-                        </p>
-                    </motion.div>
-                )}
-            </AnimatePresence>
         </section>
     );
 }
@@ -142,11 +57,11 @@ export default function ProgramBuilderClient({ stage, copunPool, customPool }: {
     const router = useRouter();
     const [activeTab, setActiveTab] = useState<'EXPLORER' | 'SELECTION'>('EXPLORER');
     const [selectedLevel, setSelectedLevel] = useState<1 | 2 | 3>(1);
-    const [selectedThemes, setSelectedThemes] = useState<string[]>(stage.suggested_thematics ?? []);
+    const [selectedThemes, setSelectedThemes] = useState<string[]>(stripIntention(stage.suggested_thematics));
     const [selectedTags, setSelectedTags] = useState<string[]>([]);
     const [tagSearch, setTagSearch] = useState('');
     const [programIds, setProgramIds] = useState<string[]>(stage.selected_content || []);
-    const [intention, setIntention] = useState<string | null>(null);
+    const intention = extractIntention(stage.suggested_thematics);
     const [isSaving, setIsSaving] = useState(false);
     const [isSaved, setIsSaved] = useState(false);
     const [selectedCardForDetail, setSelectedCardForDetail] = useState<PedagogicalContent | null>(null);
@@ -310,7 +225,7 @@ export default function ProgramBuilderClient({ stage, copunPool, customPool }: {
                 {activeTab === 'EXPLORER' && (
                     <>
                         {/* OBJECTIF */}
-                        <ObjectifDropdown intention={intention} setIntention={setIntention} />
+                        <IntentionBanner intention={intention} stageId={stage.id} />
 
                         {/* FILTERS */}
                         <section className="bg-white rounded-2xl p-5 space-y-5 shadow-sm">

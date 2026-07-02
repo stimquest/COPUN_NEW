@@ -13,33 +13,6 @@ export type Stage = {
   closing_notes?: string | null;
 };
 
-export type Session = {
-  id: string;
-  stage_id: string;
-  title: string;
-  session_order: number;
-};
-
-export type SessionStep = {
-  id: string;
-  session_id: string;
-  step_title: string;
-  step_duration_minutes: number;
-  step_description: string;
-  step_order: number;
-};
-
-export type StepTodo = {
-  id: string;
-  session_step_id: string;
-  text: string;
-  done: boolean;
-  todo_order: number;
-  created_at: string;
-  linked_content_id?: string | null;
-  is_content_header?: boolean;
-};
-
 export type PedagogicalRessource =
     | { type: 'fiche_memo'; label: string; fiche_memo_id: string }
     | { type: 'url'; label: string; url: string };

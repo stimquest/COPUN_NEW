@@ -35,7 +35,7 @@ const dimensions = [
 ];
 
 const defisExemples = [
-    { icon: 'grid_view', label: 'Inventaire du m²', type: 'Fil rouge', desc: "Même carré d'estran à chaque stage — suivi biodiversité longitudinal." },
+    { icon: 'grid_view', label: 'Inventaire du m²', type: 'Fil rouge', desc: "Même carré d'estran à chaque semaine — suivi biodiversité longitudinal." },
     { icon: 'water', label: 'Laisse du jour', type: 'Fil rouge', desc: 'Catégorisation plastique / déchets / naturel sur 10 m.' },
     { icon: 'photo_camera', label: 'Espèce invasive', type: 'Aventure', desc: 'Trouver crépidule, spartine ou crabe vert sur le terrain.' },
     { icon: 'quiz', label: 'Dilemme du marin', type: 'Confiance', desc: "Débat collectif sur un choix éthique lié à l'environnement." },
@@ -125,7 +125,7 @@ export default function AboutPage() {
                 <section className="space-y-6">
                     <div>
                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Comment ça marche</p>
-                        <h2 className="text-2xl font-black text-slate-900">4 étapes, un stage complet</h2>
+                        <h2 className="text-2xl font-black text-slate-900">4 étapes, une semaine complète</h2>
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
@@ -206,10 +206,10 @@ export default function AboutPage() {
 
                 {/* CTA */}
                 <section className="bg-[#1f2249] rounded-2xl p-6 text-white text-center space-y-4">
-                    <p className="text-sm text-slate-300">Prêt à préparer votre prochain stage ?</p>
+                    <p className="text-sm text-slate-300">Prêt à préparer votre prochaine semaine ?</p>
                     <Link href="/stages" className="inline-flex items-center gap-2 bg-indigo-500 hover:bg-indigo-400 active:scale-95 transition-all font-bold px-6 py-3 rounded-2xl text-sm">
                         <span className="material-symbols-outlined text-lg">sailing</span>
-                        Mes stages
+                        Mes semaines
                     </Link>
                 </section>
 

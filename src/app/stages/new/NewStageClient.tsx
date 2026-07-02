@@ -4,10 +4,13 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import clsx from 'clsx';
-import { createStage } from '@/actions/stage-actions';
+import { createStage, updateStage } from '@/actions/stage-actions';
 import SeasonalGuide from '@/components/SeasonalGuide';
 import DatePicker from '@/components/DatePicker';
 import { ThematicTag } from '@/data/seasonal-context';
+import { ObjectifId } from '@/data/objectifs';
+import { extractIntention, stripIntention } from '@/data/objectifs';
+import { Stage } from '@/types';
 
 const SUPPORTS = [
     'Catamaran', 'Optimist', 'Planche à voile', 'Wing Foil',
@@ -30,22 +33,66 @@ function formatDateRange(start: string, end: string) {
     return `${new Date(start + 'T12:00:00').toLocaleDateString('fr-FR', opts)} - ${new Date(end + 'T12:00:00').toLocaleDateString('fr-FR', opts)}`;
 }
 
-export function NewStageClient() {
+const MONTH_LABELS = [
+    'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+    'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre',
+];
+
+/** Numéro de la semaine calendaire (lundi-dimanche) dans le mois de la date donnée. */
+function weekOfMonth(date: Date): number {
+    const firstOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
+    const firstWeekday = (firstOfMonth.getDay() + 6) % 7; // 0 = lundi
+    return Math.ceil((date.getDate() + firstWeekday) / 7);
+}
+
+function computeAutoTitle(startDate: string): string {
+    if (!startDate) return '';
+    const d = new Date(startDate + 'T12:00:00');
+    return `${MONTH_LABELS[d.getMonth()]} — Semaine ${weekOfMonth(d)}`;
+}
+
+function todayISO() {
+    return new Date().toISOString().slice(0, 10);
+}
+
+type Props = {
+    existingStage?: Stage;
+};
+
+export function NewStageClient({ existingStage }: Props) {
     const router = useRouter();
+    const isEditing = !!existingStage;
     const [step, setStep] = useState<Step>('form');
     const [isSaving, setIsSaving] = useState(false);
 
-    const [title, setTitle] = useState('');
-    const [activities, setActivities] = useState<string[]>([]);
-    const [level, setLevel] = useState('Niveau 1');
+    const [title, setTitle] = useState(existingStage?.title ?? '');
+    const [titleEditedManually, setTitleEditedManually] = useState(isEditing);
+    const [activities, setActivities] = useState<string[]>(
+        existingStage?.activity ? existingStage.activity.split(', ').filter(Boolean) : []
+    );
+    const [level, setLevel] = useState(existingStage?.level ?? 'Niveau 1');
 
     const toggleActivity = (s: string) =>
         setActivities(prev =>
             prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]
         );
-    const [nbStagiaires, setNbStagiaires] = useState('');
-    const [startDate, setStartDate] = useState('');
+    const [nbStagiaires, setNbStagiaires] = useState(existingStage?.nb_stagiaires ? String(existingStage.nb_stagiaires) : '');
+    // En édition, on pré-remplit avec la date du jour pour accéder directement à l'étape saisonnière
+    // sans forcer le moniteur à re-choisir une date s'il veut juste ajuster son objectif.
+    const [startDate, setStartDate] = useState(isEditing ? todayISO() : '');
+    const [dateEditedManually, setDateEditedManually] = useState(false);
     const [durationDays, setDurationDays] = useState(5);
+
+    const handleStartDateChange = (value: string) => {
+        setStartDate(value);
+        setDateEditedManually(true);
+        if (!titleEditedManually) setTitle(computeAutoTitle(value));
+    };
+
+    const handleTitleChange = (value: string) => {
+        setTitle(value);
+        setTitleEditedManually(true);
+    };
 
     const endDate = (() => {
         if (!startDate) return '';
@@ -62,18 +109,28 @@ export function NewStageClient() {
         setStep('guide');
     };
 
-    const saveStage = async (thematics: ThematicTag[]) => {
+    const saveStage = async (thematics: ThematicTag[], intentionId: ObjectifId | null = null) => {
         if (isSaving) return;
         setIsSaving(true);
         const activityStr = activities.join(', ');
-        const res = await createStage({
+        const dates = isEditing && !dateEditedManually
+            ? existingStage!.dates
+            : formatDateRange(startDate, endDate || startDate);
+
+        const payload = {
             title: title.trim(),
             activity: activityStr,
             level,
-            dates: formatDateRange(startDate, endDate || startDate),
+            dates,
             nb_stagiaires: nbStagiaires ? Number(nbStagiaires) : undefined,
             suggested_thematics: thematics,
-        });
+            intention: intentionId,
+        };
+
+        const res = isEditing
+            ? await updateStage(existingStage!.id, payload)
+            : await createStage(payload);
+
         if (res.success && res.stageId) {
             router.push(`/stages/${res.stageId}/program`);
         } else {
@@ -88,7 +145,7 @@ export function NewStageClient() {
                 <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center">
                     <div className="bg-white rounded-2xl px-8 py-6 shadow-2xl flex flex-col items-center gap-3">
                         <span className="animate-spin material-symbols-outlined text-3xl text-slate-700">progress_activity</span>
-                        <p className="text-sm font-bold text-slate-700">Création en cours…</p>
+                        <p className="text-sm font-bold text-slate-700">{isEditing ? 'Mise à jour en cours…' : 'Création en cours…'}</p>
                     </div>
                 </div>
             )}
@@ -104,7 +161,7 @@ export function NewStageClient() {
                             <span className="material-symbols-outlined text-[20px]">arrow_back</span>
                         </button>
                     ) : (
-                        <Link href="/stages" className="size-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-slate-200 transition active:scale-95 shrink-0">
+                        <Link href={isEditing ? `/stages/${existingStage!.id}/program` : '/stages'} className="size-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-slate-200 transition active:scale-95 shrink-0">
                             <span className="material-symbols-outlined text-[20px]">arrow_back</span>
                         </Link>
                     )}
@@ -113,7 +170,9 @@ export function NewStageClient() {
                             {step === 'form' ? 'Étape 1/2' : 'Étape 2/2'}
                         </p>
                         <p className="text-sm font-bold text-slate-900">
-                            {step === 'form' ? 'Nouvelle semaine' : 'Contexte saisonnier'}
+                            {step === 'form'
+                                ? (isEditing ? 'Modifier la semaine' : 'Nouvelle semaine')
+                                : 'Contexte saisonnier'}
                         </p>
                     </div>
                     {/* Indicateur étapes */}
@@ -129,18 +188,86 @@ export function NewStageClient() {
                 {step === 'form' && (
                     <form onSubmit={handleFormSubmit} className="space-y-5">
 
-                        {/* Nom */}
+                        {/* Dates */}
                         <div>
-                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 block">Nom de la semaine</label>
-                            <input
-                                required
-                                type="text"
-                                placeholder="ex : PAV Ados Juillet"
-                                value={title}
-                                onChange={e => setTitle(e.target.value)}
-                                className="w-full h-12 bg-white border border-slate-200 rounded-xl px-4 text-sm font-bold text-slate-900 placeholder:text-slate-300 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-100 transition"
-                            />
+                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 block">Début de la semaine</label>
+                            <DatePicker value={startDate} onChange={handleStartDateChange} placeholder="Choisir la date de début" />
+                            {isEditing && !dateEditedManually && (
+                                <p className="text-[10px] text-slate-400 mt-1.5">
+                                    Dates actuelles : {existingStage!.dates}. Choisissez une nouvelle date pour les modifier.
+                                </p>
+                            )}
                         </div>
+
+                        {/* Durée */}
+                        {(!isEditing || dateEditedManually) && (
+                            <div>
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 block">Durée</label>
+                                <div className="flex gap-2">
+                                    {DUREES.map(d => (
+                                        <button
+                                            key={d.days}
+                                            type="button"
+                                            onClick={() => setDurationDays(d.days)}
+                                            className={clsx(
+                                                'flex-1 py-2.5 rounded-xl border text-xs font-bold transition active:scale-95',
+                                                durationDays === d.days
+                                                    ? 'bg-slate-900 border-slate-900 text-white'
+                                                    : 'bg-white border-slate-200 text-slate-600 hover:border-slate-400'
+                                            )}
+                                        >
+                                            {d.label}
+                                        </button>
+                                    ))}
+                                </div>
+                                {/* Ajustement fin */}
+                                <div className="flex items-center justify-center gap-4 mt-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => setDurationDays(d => Math.max(1, d - 1))}
+                                        className="size-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 active:scale-90 transition"
+                                    >
+                                        <span className="material-symbols-outlined text-sm">remove</span>
+                                    </button>
+                                    <span className="text-sm font-bold text-slate-700 w-24 text-center">{durationDays} jour{durationDays > 1 ? 's' : ''}</span>
+                                    <button
+                                        type="button"
+                                        onClick={() => setDurationDays(d => Math.min(60, d + 1))}
+                                        className="size-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 active:scale-90 transition"
+                                    >
+                                        <span className="material-symbols-outlined text-sm">add</span>
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Récap dates */}
+                        {startDate && endDate && (!isEditing || dateEditedManually) && (
+                            <div className="flex items-center gap-3 bg-slate-900 text-white rounded-xl px-4 py-3">
+                                <span className="material-symbols-outlined text-white/60">calendar_month</span>
+                                <div>
+                                    <p className="text-sm font-black">{formatDateRange(startDate, endDate)}</p>
+                                    <p className="text-[10px] text-white/50">{durationDays} jour{durationDays > 1 ? 's' : ''}</p>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Nom (auto-généré depuis la date, modifiable) */}
+                        {startDate && (
+                            <div>
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 block">
+                                    Nom de la semaine
+                                    <span className="font-semibold normal-case tracking-normal text-slate-300 ml-1">— généré automatiquement, modifiable</span>
+                                </label>
+                                <input
+                                    required
+                                    type="text"
+                                    value={title}
+                                    onChange={e => handleTitleChange(e.target.value)}
+                                    className="w-full h-12 bg-white border border-slate-200 rounded-xl px-4 text-sm font-bold text-slate-900 placeholder:text-slate-300 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-100 transition"
+                                />
+                            </div>
+                        )}
 
                         {/* Support */}
                         <div>
@@ -209,63 +336,6 @@ export function NewStageClient() {
                             />
                         </div>
 
-                        {/* Dates */}
-                        <div>
-                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 block">Début du stage</label>
-                            <DatePicker value={startDate} onChange={setStartDate} placeholder="Choisir la date de début" />
-                        </div>
-
-                        {/* Durée */}
-                        <div>
-                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 block">Durée</label>
-                            <div className="flex gap-2">
-                                {DUREES.map(d => (
-                                    <button
-                                        key={d.days}
-                                        type="button"
-                                        onClick={() => setDurationDays(d.days)}
-                                        className={clsx(
-                                            'flex-1 py-2.5 rounded-xl border text-xs font-bold transition active:scale-95',
-                                            durationDays === d.days
-                                                ? 'bg-slate-900 border-slate-900 text-white'
-                                                : 'bg-white border-slate-200 text-slate-600 hover:border-slate-400'
-                                        )}
-                                    >
-                                        {d.label}
-                                    </button>
-                                ))}
-                            </div>
-                            {/* Ajustement fin */}
-                            <div className="flex items-center justify-center gap-4 mt-3">
-                                <button
-                                    type="button"
-                                    onClick={() => setDurationDays(d => Math.max(1, d - 1))}
-                                    className="size-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 active:scale-90 transition"
-                                >
-                                    <span className="material-symbols-outlined text-sm">remove</span>
-                                </button>
-                                <span className="text-sm font-bold text-slate-700 w-24 text-center">{durationDays} jour{durationDays > 1 ? 's' : ''}</span>
-                                <button
-                                    type="button"
-                                    onClick={() => setDurationDays(d => Math.min(60, d + 1))}
-                                    className="size-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 active:scale-90 transition"
-                                >
-                                    <span className="material-symbols-outlined text-sm">add</span>
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Récap dates */}
-                        {startDate && endDate && (
-                            <div className="flex items-center gap-3 bg-slate-900 text-white rounded-xl px-4 py-3">
-                                <span className="material-symbols-outlined text-white/60">calendar_month</span>
-                                <div>
-                                    <p className="text-sm font-black">{formatDateRange(startDate, endDate)}</p>
-                                    <p className="text-[10px] text-white/50">{durationDays} jour{durationDays > 1 ? 's' : ''}</p>
-                                </div>
-                            </div>
-                        )}
-
                         {/* Submit */}
                         <button
                             type="submit"
@@ -287,7 +357,9 @@ export function NewStageClient() {
                         <div className="bg-white rounded-2xl border border-slate-200 px-4 py-3 flex items-center gap-3">
                             <div className="flex-1 min-w-0">
                                 <p className="text-sm font-bold text-slate-900 truncate">{title}</p>
-                                <p className="text-xs text-slate-400">{activities.join(', ')} · {level} · {formatDateRange(startDate, endDate || startDate)}</p>
+                                <p className="text-xs text-slate-400">
+                                    {activities.join(', ')} · {level} · {(!isEditing || dateEditedManually) ? formatDateRange(startDate, endDate || startDate) : existingStage!.dates}
+                                </p>
                             </div>
                             <button onClick={() => setStep('form')} className="text-xs text-slate-400 hover:text-slate-600 transition shrink-0">Modifier</button>
                         </div>
@@ -296,8 +368,9 @@ export function NewStageClient() {
                             startDate={startDate}
                             activities={activities}
                             level={level}
+                            initialIntention={isEditing ? extractIntention(existingStage!.suggested_thematics) : null}
                             onSuggestions={saveStage}
-                            onSkip={() => saveStage([])}
+                            onSkip={() => saveStage(isEditing ? stripIntention(existingStage!.suggested_thematics) as ThematicTag[] : [])}
                             isSaving={isSaving}
                         />
                     </div>

@@ -26,7 +26,7 @@ export default function LandingPage() {
                 <div className="flex flex-wrap justify-center gap-2 mb-12 max-w-sm">
                     {[
                         { icon: 'menu_book', label: 'Fiches pédagogiques' },
-                        { icon: 'flag', label: 'Planning de stage' },
+                        { icon: 'flag', label: 'Planning de semaine' },
                         { icon: 'eco', label: 'Défis terrain' },
                         { icon: 'task_alt', label: 'Bilan de séance' },
                     ].map(f => (

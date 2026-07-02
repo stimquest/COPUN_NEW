@@ -151,12 +151,12 @@ export default function PlayClient({ game }: { game: Game }) {
                             ? 'Ensemble, vous avez retenu l\'essentiel de la semaine. Votre groupe est prêt à devenir ambassadeur du littoral !'
                             : isGood
                                 ? 'Votre équipe a bien assimilé les notions essentielles. Continuez ainsi, vous êtes sur la bonne vague !'
-                                : 'Certaines notions méritent d\'être revues ensemble. Chaque stage est un pas de plus vers la conscience du littoral.'}
+                                : 'Certaines notions méritent d\'être revues ensemble. Chaque semaine est un pas de plus vers la conscience du littoral.'}
                     </p>
 
-                    {/* Points de stage */}
+                    {/* Points de la semaine */}
                     <div className="bg-indigo-600/20 border border-indigo-500/30 rounded-2xl px-8 py-5 flex flex-col items-center gap-1 mb-8 w-full max-w-xs">
-                        <p className="text-[10px] font-black text-indigo-300 uppercase tracking-widest">Points gagnés pour ce stage</p>
+                        <p className="text-[10px] font-black text-indigo-300 uppercase tracking-widest">Points gagnés pour cette semaine</p>
                         <span className="text-5xl font-black text-white">+{pointsAwarded}</span>
                         <p className="text-xs text-indigo-400 font-medium">ajoutés à votre banque de points moniteur</p>
                     </div>
@@ -165,7 +165,7 @@ export default function PlayClient({ game }: { game: Game }) {
                         onClick={() => router.push(`/stages/${game.stage_id}/bilan`)}
                         className="w-full max-w-xs px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black text-sm uppercase tracking-widest active:scale-95 transition-transform"
                     >
-                        Passer au bilan du stage
+                        Passer au bilan de la semaine
                     </button>
                 </div>
             );
@@ -197,7 +197,7 @@ export default function PlayClient({ game }: { game: Game }) {
                         </button>
                         {game.stage_id && (
                             <button
-                                onClick={() => router.push(`/stages/${game.stage_id}`)}
+                                onClick={() => router.push('/stages')}
                                 className="w-full px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition"
                             >
                                 Retour au Stage

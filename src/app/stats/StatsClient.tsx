@@ -96,15 +96,15 @@ export default function StatsClient({ monitors, clubs, currentUserId, myPoints, 
 
             <main className="px-6 -mt-12 relative z-20 space-y-8">
 
-                {/* Carnets de stage */}
+                {/* Carnets de semaine */}
                 <section className="rounded-[2rem] border border-orange-100 bg-gradient-to-br from-white via-amber-50 to-sky-50 p-5 shadow-xl shadow-slate-200/70">
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                         <div>
-                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-500">Carnets de stage</p>
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-500">Carnets de semaine</p>
                             <h3 className="mt-1 text-2xl font-black tracking-tight text-slate-950">Progression pédagogique</h3>
                         </div>
                         <p className="text-xs font-bold text-slate-500">
-                            {objectiveDashboard.stagesCount} stage{objectiveDashboard.stagesCount > 1 ? 's' : ''} clôturé{objectiveDashboard.stagesCount > 1 ? 's' : ''}
+                            {objectiveDashboard.stagesCount} semaine{objectiveDashboard.stagesCount > 1 ? 's' : ''} clôturée{objectiveDashboard.stagesCount > 1 ? 's' : ''}
                         </p>
                     </div>
 
@@ -273,7 +273,7 @@ export default function StatsClient({ monitors, clubs, currentUserId, myPoints, 
                     <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
                     <span className="material-symbols-outlined text-4xl mb-4">campaign</span>
                     <h3 className="text-xl font-black uppercase mb-2">Votre score : {myPoints} pts</h3>
-                    <p className="text-sm font-medium opacity-80 mb-6 leading-relaxed">Chaque défi validé et chaque quiz de fin de stage rapportent des points à votre club. Continuez à transmettre !</p>
+                    <p className="text-sm font-medium opacity-80 mb-6 leading-relaxed">Chaque défi validé et chaque quiz de fin de semaine rapportent des points à votre club. Continuez à transmettre !</p>
                     <Link href="/classement" className="w-full h-14 bg-white text-indigo-600 rounded-2xl font-black text-xs tracking-widest uppercase flex items-center justify-center">
                         Voir le barème détaillé
                     </Link>

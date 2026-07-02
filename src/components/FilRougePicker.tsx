@@ -45,7 +45,7 @@ export function FilRougePicker({ defis, currentId }: { defis: FilRougeDefi[]; cu
                     <div className="flex-1 min-w-0">
                         <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600 mb-0.5">Défi de saison actif</p>
                         <p className="font-bold text-emerald-900 text-sm truncate">{current.description}</p>
-                        <p className="text-xs text-emerald-600 mt-0.5">Assigné automatiquement à chaque nouveau stage</p>
+                        <p className="text-xs text-emerald-600 mt-0.5">Assigné automatiquement à chaque nouvelle semaine</p>
                     </div>
                 </div>
             ) : (

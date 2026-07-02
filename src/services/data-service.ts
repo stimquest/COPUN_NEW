@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { summarizeObjectiveReviews, type ObjectiveAnalyticsInput, type StageObjectiveAnalyticsSummary } from '@/lib/stage-objective-analytics';
 import { isStageObjectiveExecutionStatus, isStageObjectiveImpactLevel } from '@/lib/stage-objective-review';
-import { Session, SessionStep, PedagogicalContent, StageObjectiveReviewItem, TopicTracking } from '@/types';
+import { PedagogicalContent, StageObjectiveReviewItem, TopicTracking } from '@/types';
 
 
 export async function getStageById(id: string) {
@@ -401,85 +401,3 @@ export async function getPedagogicalContentByIds(ids: string[]) {
     return data;
 }
 
-export async function getSessionStepLinks(stepIds: string[]) {
-    if (!stepIds || stepIds.length === 0) return [];
-
-    const supabase = await createClient();
-    const { data, error } = await supabase
-        .from('session_step_pedagogical_links')
-        .select('*')
-        .in('session_step_id', stepIds);
-
-    if (error) {
-        console.error('Error fetching links:', error);
-        return [];
-    }
-    return data;
-}
-
-export async function getSessionFull(sessionId: string) {
-    const supabase = await createClient();
-
-    // 1. Get Session & Steps
-    const { data: sessionData, error: sessionError } = await supabase
-        .from('sessions')
-        .select(`
-            *,
-            steps:session_structure(*)
-        `)
-        .eq('id', sessionId)
-        .single();
-
-    if (sessionError || !sessionData) return null;
-
-    const session = sessionData as Session & { steps: SessionStep[] };
-
-    // Sort steps
-    session.steps.sort((a, b) => a.step_order - b.step_order);
-
-    // 2. Get Links for these steps
-    const stepIds = session.steps.map(s => s.id);
-    const { data: links } = await supabase
-        .from('session_step_pedagogical_links')
-        .select('session_step_id, pedagogical_content_id')
-        .in('session_step_id', stepIds);
-
-    // 3. Get Content Details
-    const contentIds = links?.map(l => l.pedagogical_content_id) || [];
-    let contentMap: PedagogicalContent[] = [];
-
-    if (contentIds.length > 0) {
-        const { data: content } = await supabase
-            .from('pedagogical_content')
-            .select('*')
-            .in('id', contentIds);
-        contentMap = (content as PedagogicalContent[]) || [];
-    }
-
-    return {
-        session,
-        steps: session.steps,
-        links: links || [],
-        contentPool: contentMap
-    };
-}
-
-export async function getUserValidationsForSession(sessionId: string) {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) return [];
-
-    const { data, error } = await supabase
-        .from('user_validations')
-        .select('content_id')
-        .eq('user_id', user.id)
-        .eq('session_id', sessionId);
-
-    if (error) {
-        console.error('Error fetching validations:', error);
-        return [];
-    }
-
-    return data.map(v => v.content_id);
-}

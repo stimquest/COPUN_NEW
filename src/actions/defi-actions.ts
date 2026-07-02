@@ -10,16 +10,8 @@ import { requireAuth } from '@/lib/auth';
 
 export async function getDefis() {
     const supabase = await createClient();
-    const { data, error } = await supabase.from('defis').select('*').order('id');
+    const { data, error } = await supabase.from('defis').select('*').eq('actif', true).order('id');
     if (error) { console.error('[getDefis]', error.message); return []; }
-    return data;
-}
-
-export async function getDefisForStageType(stageType: string) {
-    const supabase = await createClient();
-    const { data, error } = await supabase
-        .from('defis').select('*').contains('stage_type', [stageType]).order('id');
-    if (error) { console.error('[getDefisForStageType]', error.message); return []; }
     return data;
 }
 
@@ -43,33 +35,6 @@ export async function uploadDefiPhoto(formData: FormData) {
     return { success: true, url: publicUrl };
 }
 
-export async function validateDefi(defiId: string, proofUrl?: string) {
-    const ctx = await requireAuth();
-    if (!ctx) return { success: false, error: 'Non authentifié' };
-
-    const { error } = await ctx.supabase
-        .from('user_defi_validations')
-        .insert({ user_id: ctx.user.id, defi_id: defiId, proof_url: proofUrl });
-
-    if (error) {
-        if (error.code === '23505') return { success: true, message: 'Already validated' };
-        console.error('[validateDefi]', error.message);
-        return { success: false, error: error.message };
-    }
-
-    revalidatePath('/session/[id]');
-    return { success: true };
-}
-
-export async function getUserDefiValidations() {
-    const ctx = await requireAuth();
-    if (!ctx) return [];
-    const { data, error } = await ctx.supabase
-        .from('user_defi_validations').select('defi_id').eq('user_id', ctx.user.id);
-    if (error) return [];
-    return data.map(v => v.defi_id);
-}
-
 // ==========================================
 // STAGE EXPLOITS (Assigned défis to stages)
 // ==========================================
@@ -85,7 +50,7 @@ export async function addStageExploit(stageId: string, defiId: string) {
         return { success: false, error: error.message };
     }
 
-    revalidatePath(`/stages/${stageId}`);
+    revalidatePath('/stages');
     revalidatePath(`/stages/${stageId}/defis`);
     return { success: true };
 }
@@ -124,7 +89,7 @@ export async function updateStageExploitStatus(
         await awardPointsForDefiInternal(supabase, stageId, defiId, points);
     }
 
-    revalidatePath(`/stages/${stageId}`);
+    revalidatePath('/stages');
     revalidatePath(`/stages/${stageId}/defis`);
     return { success: true };
 }
@@ -160,8 +125,8 @@ export async function removeDefiPhoto(
 
     if (error) return { success: false, error: error.message };
 
-    revalidatePath(`/session/${stageId}`);
-    revalidatePath(`/stages/${stageId}`);
+    revalidatePath(`/stages/${stageId}/defis`);
+    revalidatePath('/stages');
     return { success: true };
 }
 
@@ -170,7 +135,7 @@ export async function removeStageExploit(stageId: string, defiId: string) {
     const { error } = await supabase
         .from('stage_exploits').delete().eq('stage_id', stageId).eq('exploit_id', defiId);
     if (error) { console.error('[removeStageExploit]', error.message); return { success: false, error: error.message }; }
-    revalidatePath(`/stages/${stageId}`);
+    revalidatePath('/stages');
     revalidatePath(`/stages/${stageId}/defis`);
     return { success: true };
 }

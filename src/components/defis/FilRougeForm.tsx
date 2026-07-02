@@ -30,6 +30,23 @@ const INVENTAIRE_GROUPES: Omit<InventaireGroupe, 'abundance'>[] = [
     { key: 'echinodermes', label: 'Échinodermes', exemple: 'oursins, étoiles de mer…' },
 ];
 
+type LaisseCategorie = {
+    key: string;
+    label: string;
+    exemple: string;
+    abundance: Abundance;
+};
+
+const LAISSE_CATEGORIES: Omit<LaisseCategorie, 'abundance'>[] = [
+    { key: 'dechets_plastiques', label: 'Déchets plastiques', exemple: 'bouteilles, sacs, mégots, fragments, filets…' },
+    { key: 'dechets_autres', label: 'Déchets autres matières', exemple: 'verre, métal, textile, bois traité…' },
+    { key: 'algues', label: 'Algues échouées', exemple: 'laminaires, fucales, algues vertes…' },
+    { key: 'bois_flotte', label: 'Bois flotté / débris végétaux', exemple: 'branches, troncs, feuilles…' },
+    { key: 'coquilles_vides', label: 'Coquilles vides', exemple: 'bivalves, gastéropodes, tests d\'oursins…' },
+    { key: 'faune_vivante', label: 'Faune vivante échouée', exemple: 'puces de mer, crustacés, invertébrés actifs…' },
+    { key: 'indices_ecologiques', label: 'Indices écologiques particuliers', exemple: 'pontes, œufs, méduses, espèce remarquable…' },
+];
+
 const ABUNDANCE_OPTIONS: { value: Abundance; label: string }[] = [
     { value: 'absent', label: 'Absent' },
     { value: 'quelques', label: 'Quelques' },
@@ -75,9 +92,9 @@ export default function FilRougeForm({ defiId, defiDescription, stageId, clubTar
     const [etat, setEtat] = useState('');
 
     // Laisse du jour
-    const [debrisCategories, setDebrisCategories] = useState<Record<string, string>>({
-        plastique: '', filet_cordage: '', metal: '', verre: '', polystyrene: '', autre: '',
-    });
+    const [laisseCategories, setLaisseCategories] = useState<LaisseCategorie[]>(
+        LAISSE_CATEGORIES.map(c => ({ ...c, abundance: 'absent' }))
+    );
 
     // Évolution de la côte
     const [changeVisible, setChangeVisible] = useState<boolean | null>(null);
@@ -123,8 +140,7 @@ export default function FilRougeForm({ defiId, defiDescription, stageId, clubTar
     const canSubmit = () => {
         if (defiId === 'defi_bio_2') return !!photoUrl && !!coverage && !!etat;
         if (defiId === 'defi_laisse_1') {
-            const total = Object.values(debrisCategories).reduce((s, v) => s + (parseInt(v) || 0), 0);
-            return !!photoUrl && total > 0;
+            return !!photoUrl && laisseCategories.some(c => c.abundance !== 'absent');
         }
         if (defiId === 'defi_erosion_1') return !!photoUrl && changeVisible !== null;
         if (defiId === 'defi_faune_1') return fauneEntries.some(e => e.count !== '') || !!fauneFreeText.trim();
@@ -142,10 +158,9 @@ export default function FilRougeForm({ defiId, defiDescription, stageId, clubTar
             groupes.forEach(g => { groupesData[g.key] = g.abundance; });
             structuredData = { coverage, etat, groupes: groupesData };
         } else if (defiId === 'defi_laisse_1') {
-            const categories: Record<string, number> = {};
-            Object.entries(debrisCategories).forEach(([k, v]) => { if (v !== '') categories[k] = parseInt(v) || 0; });
-            const total = Object.values(categories).reduce((s, v) => s + v, 0);
-            structuredData = { categories, total };
+            const categories: Record<string, Abundance> = {};
+            laisseCategories.forEach(c => { categories[c.key] = c.abundance; });
+            structuredData = { categories };
         } else if (defiId === 'defi_erosion_1') {
             structuredData = { change_visible: changeVisible, notes: erosionNotes || null };
         } else if (defiId === 'defi_faune_1') {
@@ -273,44 +288,32 @@ export default function FilRougeForm({ defiId, defiDescription, stageId, clubTar
             )}
 
             {/* Laisse du jour */}
-            {defiId === 'defi_laisse_1' && (() => {
-                const total = Object.values(debrisCategories).reduce((s, v) => s + (parseInt(v) || 0), 0);
-                const CATEGORIES = [
-                    { key: 'plastique', label: 'Plastique', exemple: 'bouteilles, emballages, sacs…' },
-                    { key: 'filet_cordage', label: 'Filet / cordage', exemple: 'engins de pêche, cordes…' },
-                    { key: 'metal', label: 'Métal', exemple: 'canettes, câbles, capsules…' },
-                    { key: 'verre', label: 'Verre', exemple: 'bouteilles, tessons…' },
-                    { key: 'polystyrene', label: 'Polystyrène', exemple: 'emballages, billes…' },
-                    { key: 'autre', label: 'Autre', exemple: 'tissu, caoutchouc, bois travaillé…' },
-                ];
-                return (
-                    <div className="space-y-4">
-                        <PhotoField photoUrl={photoUrl} isUploading={isUploading} onCapture={() => fileInputRef.current?.click()} required />
-                        <div>
-                            <div className="flex items-center justify-between mb-2">
-                                <p className="text-sm font-bold text-slate-700">Déchets par catégorie</p>
-                                {total > 0 && <span className="text-sm font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">Total : {total}</span>}
-                            </div>
-                            <div className="space-y-2">
-                                {CATEGORIES.map(cat => (
-                                    <div key={cat.key} className="p-3 bg-slate-50 rounded-xl flex items-center gap-3">
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-bold text-slate-800">{cat.label}</p>
-                                            <p className="text-xs text-slate-400">{cat.exemple}</p>
-                                        </div>
-                                        <input
-                                            type="number" min="0" placeholder="0"
-                                            value={debrisCategories[cat.key]}
-                                            onChange={e => setDebrisCategories(p => ({ ...p, [cat.key]: e.target.value }))}
-                                            className="w-20 px-3 py-1.5 border border-slate-200 rounded-lg text-sm text-center"
-                                        />
+            {defiId === 'defi_laisse_1' && (
+                <div className="space-y-4">
+                    <PhotoField photoUrl={photoUrl} isUploading={isUploading} onCapture={() => fileInputRef.current?.click()} required />
+                    <div>
+                        <p className="text-sm font-bold text-slate-700 mb-2">Ce que vous trouvez</p>
+                        <div className="space-y-2">
+                            {laisseCategories.map((cat, i) => (
+                                <div key={cat.key} className="p-3 bg-slate-50 rounded-xl">
+                                    <p className="text-sm font-bold text-slate-800 mb-0.5">{cat.label}</p>
+                                    <p className="text-xs text-slate-400 mb-2">{cat.exemple}</p>
+                                    <div className="grid grid-cols-3 gap-1.5">
+                                        {ABUNDANCE_OPTIONS.map(opt => (
+                                            <button key={opt.value} onClick={() => setLaisseCategories(p => p.map((x, j) => j === i ? { ...x, abundance: opt.value } : x))}
+                                                className={clsx("py-1.5 rounded-lg text-xs font-bold border-2 transition",
+                                                    cat.abundance === opt.value ? "border-slate-900 bg-slate-900 text-white" : "border-slate-200 text-slate-500"
+                                                )}>
+                                                {opt.label}
+                                            </button>
+                                        ))}
                                     </div>
-                                ))}
-                            </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
-                );
-            })()}
+                </div>
+            )}
 
             {/* Évolution de la côte */}
             {defiId === 'defi_erosion_1' && (

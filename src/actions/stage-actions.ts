@@ -5,6 +5,7 @@ import { requireAuth } from '@/lib/auth';
 import { isStageObjectiveExecutionStatus, isStageObjectiveImpactLevel } from '@/lib/stage-objective-review';
 import { revalidatePath } from 'next/cache';
 import { StageObjectiveReviewDraft } from '@/types';
+import { encodeIntention, ObjectifId } from '@/data/objectifs';
 
 /**
  * Persists the selected pedagogical pool for a stage.
@@ -22,14 +23,44 @@ export async function updateStagePool(stageId: string, contentIds: string[]) {
         return { success: false, error: error.message };
     }
 
-    revalidatePath(`/stages/${stageId}`);
+    revalidatePath('/stages');
     revalidatePath(`/stages/${stageId}/program`);
     return { success: true };
 }
 
-export async function createStage(data: { title: string, activity: string, level: string, dates: string, nb_stagiaires?: number, suggested_thematics?: string[] }) {
+/**
+ * Met à jour le contexte saisonnier (thématiques suggérées + intention) d'un stage existant,
+ * permettant au moniteur d'ajuster les conditions si elles ont changé depuis la création.
+ */
+export async function updateStageConditions(stageId: string, suggestedThematics: string[], intentionId: ObjectifId | null) {
     const ctx = await requireAuth();
-    if (!ctx) return { success: false, error: 'Vous devez être connecté pour créer un stage.' };
+    if (!ctx) return { success: false, error: 'Non autorisé' };
+
+    const suggested = [...suggestedThematics];
+    if (intentionId) suggested.push(encodeIntention(intentionId));
+
+    const { error } = await ctx.supabase
+        .from('stages')
+        .update({ suggested_thematics: suggested })
+        .eq('id', stageId)
+        .eq('owner_id', ctx.user.id);
+
+    if (error) {
+        console.error('[updateStageConditions]', error.message);
+        return { success: false, error: error.message };
+    }
+
+    revalidatePath('/stages');
+    revalidatePath(`/stages/${stageId}/program`);
+    return { success: true };
+}
+
+export async function createStage(data: { title: string, activity: string, level: string, dates: string, nb_stagiaires?: number, suggested_thematics?: string[], intention?: ObjectifId | null }) {
+    const ctx = await requireAuth();
+    if (!ctx) return { success: false, error: 'Vous devez être connecté pour créer une semaine.' };
+
+    const suggestedThematics = [...(data.suggested_thematics ?? [])];
+    if (data.intention) suggestedThematics.push(encodeIntention(data.intention));
 
     const { data: created, error } = await ctx.supabase
         .from('stages')
@@ -41,7 +72,7 @@ export async function createStage(data: { title: string, activity: string, level
                 dates: data.dates,
                 nb_stagiaires: data.nb_stagiaires ?? null,
                 selected_content: [],
-                suggested_thematics: data.suggested_thematics ?? [],
+                suggested_thematics: suggestedThematics,
                 owner_id: ctx.user.id
             }
         ])
@@ -70,6 +101,36 @@ export async function createStage(data: { title: string, activity: string, level
 
     revalidatePath('/stages');
     return { success: true, stageId: created.id };
+}
+
+export async function updateStage(stageId: string, data: { title: string, activity: string, level: string, dates: string, nb_stagiaires?: number, suggested_thematics?: string[], intention?: ObjectifId | null }) {
+    const ctx = await requireAuth();
+    if (!ctx) return { success: false, error: 'Non autorisé' };
+
+    const suggestedThematics = [...(data.suggested_thematics ?? [])];
+    if (data.intention) suggestedThematics.push(encodeIntention(data.intention));
+
+    const { error } = await ctx.supabase
+        .from('stages')
+        .update({
+            title: data.title,
+            activity: data.activity,
+            level: data.level,
+            dates: data.dates,
+            nb_stagiaires: data.nb_stagiaires ?? null,
+            suggested_thematics: suggestedThematics,
+        })
+        .eq('id', stageId)
+        .eq('owner_id', ctx.user.id);
+
+    if (error) {
+        console.error('[updateStage]', error.message);
+        return { success: false, error: error.message };
+    }
+
+    revalidatePath('/stages');
+    revalidatePath(`/stages/${stageId}/program`);
+    return { success: true, stageId };
 }
 
 export async function deleteStage(stageId: string) {
@@ -107,7 +168,7 @@ export async function closeStage(stageId: string, input: CloseStageInput) {
 
   if (stageError || !stage) {
     console.error('Error fetching stage before closing:', stageError);
-    return { success: false, error: stageError?.message || 'Stage introuvable' };
+    return { success: false, error: stageError?.message || 'Semaine introuvable' };
   }
 
   const selectedContent: string[] = stage.selected_content ?? [];
@@ -135,7 +196,7 @@ export async function closeStage(stageId: string, input: CloseStageInput) {
   if (selectedContent.length > 0) {
     const missingReviews = selectedContent.filter(contentId => !reviewByContentId.has(contentId));
     if (missingReviews.length > 0) {
-      return { success: false, error: 'Complétez l’analyse de chaque objectif avant de clôturer le stage.' };
+      return { success: false, error: 'Complétez l’analyse de chaque objectif avant de clôturer la semaine.' };
     }
 
     const { error: reviewError } = await supabase
@@ -175,9 +236,8 @@ export async function closeStage(stageId: string, input: CloseStageInput) {
     return { success: false, error: error.message };
   }
 
-  revalidatePath(`/stages/${stageId}`);
-  revalidatePath(`/stages/${stageId}/bilan`);
   revalidatePath('/stages');
+  revalidatePath(`/stages/${stageId}/bilan`);
 
   return { success: true, stage: data };
 }
@@ -199,9 +259,8 @@ export async function reopenStage(stageId: string) {
     return { success: false, error: error.message };
   }
 
-  revalidatePath(`/stages/${stageId}`);
-  revalidatePath(`/stages/${stageId}/bilan`);
   revalidatePath('/stages');
+  revalidatePath(`/stages/${stageId}/bilan`);
 
   return { success: true };
 }
@@ -221,7 +280,7 @@ export async function updateClosingNotes(stageId: string, closingNotes: string) 
     return { success: false, error: error.message };
   }
 
-  revalidatePath(`/stages/${stageId}`);
+  revalidatePath('/stages');
   revalidatePath(`/stages/${stageId}/bilan`);
   return { success: true };
 }
@@ -252,7 +311,6 @@ export async function saveObjectiveStatus(
   }
 
   revalidatePath('/stages');
-  revalidatePath(`/stages/${stageId}`);
   revalidatePath(`/stages/${stageId}/bilan`);
   return { success: true };
 }

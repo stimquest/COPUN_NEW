@@ -1,10 +1,14 @@
 import { unstable_noStore as noStore } from 'next/cache';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
+import { clsx } from 'clsx';
+import { DeleteStageButton } from '@/components/DeleteStageButton';
 import { ReopenConfirmSheet } from '@/components/ReopenConfirmSheet';
 import { StageClosureReview } from '@/components/StageClosureReview';
 import { StageObjectiveReviewList } from '@/components/StageObjectiveReviewList';
 import { getStageById, getStageCockpitStats, getStageObjectiveReviewItems } from '@/services/data-service';
+import { getStageExploits } from '@/actions/defi-actions';
+import { getStageQuiz } from '@/actions/quiz-actions';
 
 const STATUS_COUNTS = (items: Awaited<ReturnType<typeof getStageObjectiveReviewItems>>) => ({
     done:     items.filter(i => i.review?.executionStatus === 'done').length,
@@ -16,10 +20,12 @@ export default async function StageBilanPage({ params }: { params: Promise<{ id:
     noStore();
     const { id } = await params;
 
-    const [stage, stats, objectiveItems] = await Promise.all([
+    const [stage, stats, objectiveItems, defisAssigned, quizData] = await Promise.all([
         getStageById(id),
         getStageCockpitStats(id),
         getStageObjectiveReviewItems(id),
+        getStageExploits(id),
+        getStageQuiz(id),
     ]);
 
     if (!stage) return notFound();
@@ -27,7 +33,7 @@ export default async function StageBilanPage({ params }: { params: Promise<{ id:
     const isClosed = !!stage.closed_at;
 
     if (!isClosed && !stats?.quizDone) {
-        redirect(`/stages/${id}`);
+        redirect('/stages');
     }
 
     const counts = STATUS_COUNTS(objectiveItems);
@@ -41,6 +47,12 @@ export default async function StageBilanPage({ params }: { params: Promise<{ id:
         ? new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long' }).format(new Date(stage.closed_at))
         : null;
 
+    const quizReviewData = quizData ? {
+        done: !!quizData.completed_at,
+        score: quizData.score_correct,
+        total: quizData.score_total,
+    } : null;
+
     return (
         <div className="min-h-screen bg-slate-50 pb-32">
 
@@ -48,7 +60,7 @@ export default async function StageBilanPage({ params }: { params: Promise<{ id:
             <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm border-b border-slate-100">
                 <div className="flex items-center gap-3 px-4 py-3 max-w-2xl mx-auto">
                     <Link
-                        href={`/stages/${id}`}
+                        href="/stages"
                         className="size-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-slate-200 transition active:scale-95 shrink-0"
                     >
                         <span className="material-symbols-outlined text-[20px]">arrow_back</span>
@@ -57,11 +69,13 @@ export default async function StageBilanPage({ params }: { params: Promise<{ id:
                         <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Bilan</p>
                         <p className="text-sm font-bold text-slate-900 truncate">{stage.title}</p>
                     </div>
-                    {isClosed && (
+                    {isClosed ? (
                         <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1 text-[10px] font-black text-emerald-700 shrink-0">
                             <span className="size-1.5 rounded-full bg-emerald-500" />
                             Clôturé
                         </span>
+                    ) : (
+                        <DeleteStageButton stageId={stage.id} />
                     )}
                 </div>
             </header>
@@ -72,7 +86,7 @@ export default async function StageBilanPage({ params }: { params: Promise<{ id:
                     <>
                         {/* Hero clôturé */}
                         <section className="rounded-2xl bg-linear-to-br from-slate-900 to-slate-800 p-5 text-white">
-                            <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-1">Stage archivé</p>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-1">Semaine archivée</p>
                             <h1 className="text-xl font-black leading-tight">{stage.title}</h1>
                             <p className="text-sm text-white/50 mt-0.5">{stage.dates}</p>
 
@@ -114,6 +128,58 @@ export default async function StageBilanPage({ params }: { params: Promise<{ id:
                             <StageObjectiveReviewList items={objectiveItems} />
                         </section>
 
+                        {/* Défis terrain */}
+                        {defisTotal > 0 && (
+                            <section>
+                                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400 mb-3">Défis terrain</p>
+                                <div className="space-y-2">
+                                    {defisAssigned.map(exploit => (
+                                        <div key={exploit.id} className={clsx(
+                                            'rounded-xl border px-4 py-3 flex items-center gap-3',
+                                            exploit.status === 'complete' ? 'border-emerald-200 bg-emerald-50' : 'border-amber-200 bg-amber-50'
+                                        )}>
+                                            <span className={clsx(
+                                                'material-symbols-outlined text-xl',
+                                                exploit.status === 'complete' ? 'text-emerald-600' : 'text-amber-600'
+                                            )}>
+                                                {exploit.status === 'complete' ? 'check_circle' : 'pending'}
+                                            </span>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-bold text-slate-900">{exploit.defis.description}</p>
+                                                <p className="text-[10px] text-slate-500">
+                                                    {exploit.defis.terrain_temps_reel && 'Temps réel · '}
+                                                    {exploit.defis.points} points
+                                                </p>
+                                            </div>
+                                            <span className={clsx(
+                                                'text-[10px] font-black px-2 py-1 rounded-full',
+                                                exploit.status === 'complete' ? 'bg-emerald-600 text-white' : 'bg-amber-600 text-white'
+                                            )}>
+                                                {exploit.status === 'complete' ? 'Validé' : 'En cours'}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </section>
+                        )}
+
+                        {/* Quiz de fin de semaine */}
+                        {quizTotal > 0 && (
+                            <section>
+                                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400 mb-3">Quiz de fin de semaine</p>
+                                <div className="rounded-xl border border-violet-200 bg-violet-50 px-4 py-3 flex items-center gap-3">
+                                    <span className="material-symbols-outlined text-xl text-violet-600">check_circle</span>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-bold text-slate-900">Quiz validé</p>
+                                        <p className="text-[10px] text-slate-500">Score : {quizScore}/{quizTotal}</p>
+                                    </div>
+                                    <span className="text-[10px] font-black px-2 py-1 rounded-full bg-violet-600 text-white">
+                                        Terminé
+                                    </span>
+                                </div>
+                            </section>
+                        )}
+
                         {/* Mémo moniteur */}
                         {stage.closing_notes?.trim() && (
                             <section>
@@ -127,7 +193,7 @@ export default async function StageBilanPage({ params }: { params: Promise<{ id:
                         {/* Actions */}
                         <div className="flex gap-3 pt-2">
                             <Link
-                                href={`/stages/${id}`}
+                                href="/stages"
                                 className="flex-1 h-11 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 flex items-center justify-center hover:bg-slate-50 transition"
                             >
                                 Retour
@@ -142,6 +208,14 @@ export default async function StageBilanPage({ params }: { params: Promise<{ id:
                         stageTitle={stage.title}
                         objectiveItems={objectiveItems}
                         initialClosingNotes={stage.closing_notes}
+                        defisAssigned={defisAssigned.map(e => ({
+                            id: e.exploit_id,
+                            description: e.defis.description,
+                            status: e.status,
+                            points: e.defis.points,
+                            terrain_temps_reel: e.defis.terrain_temps_reel,
+                        }))}
+                        quizData={quizReviewData}
                     />
                 )}
             </main>

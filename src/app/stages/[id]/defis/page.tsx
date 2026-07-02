@@ -39,7 +39,7 @@ export default async function DefisPage({ params }: { params: Promise<{ id: stri
         <div className="flex flex-col min-h-screen bg-slate-50">
             {/* Header */}
             <header className="sticky top-0 z-50 bg-white border-b border-slate-200 px-6 py-4 flex items-center gap-4">
-                <Link href={`/stages/${id}`} className="size-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 active:scale-95 transition-transform">
+                <Link href="/stages" className="size-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 active:scale-95 transition-transform">
                     <span className="material-symbols-outlined">arrow_back</span>
                 </Link>
                 <div className="flex-1">

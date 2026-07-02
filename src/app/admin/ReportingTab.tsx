@@ -42,7 +42,7 @@ export function ReportingTab({ userRole }: { userRole?: string | null }) {
     const exportCSV = () => {
         if (!data) return;
         const rows = [
-            ['Club', 'Stages', 'Stagiaires', 'Moniteurs', 'Défis validés', 'Score quiz moyen'],
+            ['Club', 'Semaines', 'Stagiaires', 'Moniteurs', 'Défis validés', 'Score quiz moyen'],
             ...data.par_club.map(c => [
                 c.club_name, c.nb_stages, c.nb_stagiaires,
                 c.nb_moniteurs, c.nb_defis,
@@ -128,8 +128,8 @@ export function ReportingTab({ userRole }: { userRole?: string | null }) {
                             {isGlobalAdmin ? `Vue nationale — ${annee}` : `Mon club — ${annee}`}
                         </p>
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                            <StatCard icon="flag" label="Stages réalisés" value={data.nb_stages} />
-                            <StatCard icon="group" label="Stagiaires sensibilisés" value={data.nb_stagiaires_total || '—'} sub={data.nb_stagiaires_total === 0 ? 'Champ à renseigner sur chaque stage' : undefined} />
+                            <StatCard icon="flag" label="Semaines réalisées" value={data.nb_stages} />
+                            <StatCard icon="group" label="Stagiaires sensibilisés" value={data.nb_stagiaires_total || '—'} sub={data.nb_stagiaires_total === 0 ? 'Champ à renseigner sur chaque semaine' : undefined} />
                             <StatCard icon="person" label="Moniteurs actifs" value={data.nb_moniteurs_actifs} />
                             {isGlobalAdmin && <StatCard icon="anchor" label="Clubs actifs" value={data.nb_clubs_actifs} />}
                             <StatCard icon="eco" label="Défis validés" value={data.nb_defis_valides} />
@@ -172,7 +172,7 @@ export function ReportingTab({ userRole }: { userRole?: string | null }) {
                                 <thead>
                                     <tr className="border-b border-slate-100 text-[10px] font-black uppercase tracking-widest text-slate-400">
                                         <th className="text-left px-4 py-3">Club</th>
-                                        <th className="text-center px-3 py-3">Stages</th>
+                                        <th className="text-center px-3 py-3">Semaines</th>
                                         <th className="text-center px-3 py-3">Stagiaires</th>
                                         <th className="text-center px-3 py-3">Défis</th>
                                         <th className="text-center px-3 py-3">Quiz</th>

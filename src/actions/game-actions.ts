@@ -70,7 +70,7 @@ export async function createGame(title: string, theme: string, stageId: string |
 
     if (error) { console.error('[createGame]', error.message); return { success: false, error: error.message }; }
 
-    if (stageId) revalidatePath(`/stages/${stageId}`);
+    if (stageId) revalidatePath('/stages');
     revalidatePath('/jeux');
     revalidatePath('/ressources/jeux');
     return { success: true, gameId: data.id };
@@ -134,7 +134,7 @@ export async function saveStageGameResult(stageId: string, gameId: string, score
         percentage: Math.round((score / total) * 100), results,
     });
     if (error) { console.error('[saveStageGameResult]', error.message); return { success: false, error: error.message }; }
-    revalidatePath(`/stages/${stageId}`);
+    revalidatePath('/stages');
     return { success: true };
 }
 
@@ -152,6 +152,5 @@ export async function submitGameResult(gameCardId: string, result: unknown) {
     const { error } = await ctx.supabase
         .from('user_game_progress').insert({ user_id: ctx.user.id, game_card_id: gameCardId, result });
     if (error) { console.error('[submitGameResult]', error.message); return { success: false, error: error.message }; }
-    revalidatePath('/session/[id]');
     return { success: true };
 }
