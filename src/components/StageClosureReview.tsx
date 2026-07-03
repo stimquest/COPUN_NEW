@@ -26,6 +26,9 @@ type Props = {
     quizData: QuizReview | null;
 };
 
+// "Non abordé" n'a de sens qu'a posteriori — un objectif sans statut à la clôture n'a
+// simplement pas été fait de la semaine. On le pré-remplit automatiquement plutôt que
+// de forcer le moniteur à cliquer "non abordé" à la main pour chaque fiche non touchée.
 function buildDraftMap(items: StageObjectiveReviewItem[]): Record<string, StageObjectiveReviewDraft> {
     return Object.fromEntries(
         items.map(item => {
@@ -34,8 +37,9 @@ function buildDraftMap(items: StageObjectiveReviewItem[]): Record<string, StageO
                 item.pedagogicalContent.id,
                 {
                     pedagogicalContentId: item.pedagogicalContent.id,
-                    executionStatus: existing ? existing.executionStatus : null,
+                    executionStatus: existing ? existing.executionStatus : 'not_done',
                     impactLevel: existing ? existing.impactLevel : null,
+                    reasons: existing?.reasons ?? [],
                     note: existing?.note ?? '',
                 } satisfies StageObjectiveReviewDraft,
             ];
@@ -50,13 +54,11 @@ export function StageClosureReview({ stageId, stageTitle, objectiveItems, initia
     const [error, setError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const unset = objectiveItems.filter(item => !drafts[item.pedagogicalContent.id]?.executionStatus).length;
-
     const defisDone = defisAssigned.filter(d => d.status === 'complete').length;
     const defisTotal = defisAssigned.length;
     const quizDone = quizData?.done ?? false;
 
-    const canClose = unset === 0 && quizDone;
+    const canClose = quizDone;
 
     const handleDraftChange = (contentId: string, patch: Partial<StageObjectiveReviewDraft>) => {
         setDrafts(prev => ({
@@ -91,7 +93,7 @@ export function StageClosureReview({ stageId, stageTitle, objectiveItems, initia
                 <p className="text-xs font-black uppercase tracking-widest text-amber-600 mb-1">Clôture de la semaine</p>
                 <p className="text-sm font-semibold text-amber-900">{stageTitle}</p>
                 <p className="mt-1 text-xs text-amber-700 leading-relaxed">
-                    Vérifiez les objectifs, défis et quiz avant de clôturer. Tout est pré-rempli depuis l'accueil.
+                    Vos notes prises depuis l&apos;accueil sont reprises ici. Les objectifs restés sans note sont marqués « Non abordé » — corrigez-les si besoin avant de clôturer.
                 </p>
             </div>
 
@@ -199,11 +201,7 @@ export function StageClosureReview({ stageId, stageTitle, objectiveItems, initia
             <div className="sticky bottom-4 z-30">
                 <div className="rounded-2xl border border-slate-200 bg-white/95 backdrop-blur-sm shadow-xl shadow-slate-200/60 p-3 flex items-center gap-3">
                     <div className="flex-1">
-                        {unset > 0 ? (
-                            <p className="text-xs font-semibold text-amber-600">
-                                {unset} objectif{unset > 1 ? 's' : ''} sans statut
-                            </p>
-                        ) : !quizDone ? (
+                        {!quizDone ? (
                             <p className="text-xs font-semibold text-amber-600">Quiz non terminé</p>
                         ) : (
                             <p className="text-xs font-semibold text-emerald-600">Tous les éléments sont renseignés</p>

@@ -168,7 +168,7 @@ export async function getStageObjectiveReviewItems(stageId: string): Promise<Sta
         supabase.from('pedagogical_content').select('*').in('id', selectedContent),
         supabase
             .from('stage_objective_reviews')
-            .select('pedagogical_content_id, execution_status, impact_level, note')
+            .select('pedagogical_content_id, execution_status, impact_level, reasons, note')
             .eq('stage_id', stageId),
     ]);
 
@@ -180,6 +180,7 @@ export async function getStageObjectiveReviewItems(stageId: string): Promise<Sta
             {
                 executionStatus: review.execution_status,
                 impactLevel: review.impact_level,
+                reasons: review.reasons ?? [],
                 note: review.note,
             },
         ])

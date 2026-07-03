@@ -75,6 +75,9 @@ export type StageObjectiveReviewDraft = {
   pedagogicalContentId: string;
   executionStatus: StageObjectiveExecutionStatus | null;
   impactLevel: StageObjectiveImpactLevel | null;
+  // Raisons cochées parmi une liste prédéfinie (dépend du statut + du niveau d'impact) —
+  // mesurable et agrégeable, contrairement au texte libre seul.
+  reasons: string[];
   note: string;
 };
 
@@ -83,6 +86,7 @@ export type StageObjectiveReviewItem = {
   review: {
     executionStatus: StageObjectiveExecutionStatus;
     impactLevel: StageObjectiveImpactLevel | null;
+    reasons: string[] | null;
     note: string | null;
   } | null;
 };

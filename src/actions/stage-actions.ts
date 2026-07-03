@@ -209,6 +209,7 @@ export async function closeStage(stageId: string, input: CloseStageInput) {
       impactLevel: review.executionStatus === 'not_done'
         ? null
         : (review.impactLevel && isStageObjectiveImpactLevel(review.impactLevel) ? review.impactLevel : null),
+      reasons: Array.isArray(review.reasons) ? review.reasons.filter((r): r is string => typeof r === 'string') : [],
       note: typeof review.note === 'string' ? review.note.trim() : '',
     };
 
@@ -229,6 +230,7 @@ export async function closeStage(stageId: string, input: CloseStageInput) {
           pedagogical_content_id: review.pedagogicalContentId,
           execution_status: review.executionStatus,
           impact_level: review.executionStatus === 'not_done' ? null : review.impactLevel,
+          reasons: review.reasons,
           note: review.note || null,
         })),
         { onConflict: 'stage_id,pedagogical_content_id' }

@@ -250,8 +250,10 @@ const PEDAGOGICAL_ACTIONS: { value: PedagogicalAction; label: string; icon: stri
     { value: 'laisser_decouvrir', label: 'Laisser découvrir',  icon: 'explore' },
 ];
 
+// "Non abordé" n'a de sens qu'en fin de semaine (voir bilan) — sur l'accueil, pendant
+// la semaine, un objectif pas encore statué n'est pas "non abordé", juste pas encore
+// fait. On ne propose donc ici que le mémo à chaud, à poser juste après l'activité.
 const EXECUTION_OPTIONS: { value: StageObjectiveExecutionStatus; label: string; icon: string; active: string }[] = [
-    { value: 'not_done', label: 'Non abordé', icon: 'remove_circle',  active: 'bg-slate-100 text-slate-600 border-slate-300' },
     { value: 'partial',  label: 'Effleuré',   icon: 'timelapse',      active: 'bg-amber-100 text-amber-700 border-amber-300' },
     { value: 'done',     label: 'Travaillé',  icon: 'check_circle',   active: 'bg-emerald-100 text-emerald-700 border-emerald-300' },
 ];
@@ -430,12 +432,18 @@ function ObjectiveRow({
                     </span>
                 </button>
                 <div className="flex items-center gap-1 shrink-0">
-                    {statusMeta && (
+                    {statusMeta ? (
                         <span className={clsx(
                             "text-[10px] font-black px-2 py-0.5 rounded-full border",
                             statusMeta.active
                         )}>
                             {statusMeta.label}
+                        </span>
+                    ) : status === 'not_done' && (
+                        // Statut posé depuis le bilan d'une clôture précédente (semaine rouverte) —
+                        // pas de bouton pour le fixer ici, juste un rappel visuel neutre.
+                        <span className="text-[10px] font-black px-2 py-0.5 rounded-full border bg-slate-100 text-slate-500 border-slate-200">
+                            Non abordé
                         </span>
                     )}
                     {/* Pense-bête : ouvre la fiche complète (objectif détaillé, conseil, fiches mémo liées) */}
@@ -480,7 +488,8 @@ function ObjectiveRow({
                                 </div>
                             )}
 
-                            {/* Statut */}
+                            {/* Statut — mémo à chaud, optionnel ; le bilan de fin de semaine reste
+                                l'endroit où tout se confirme (et où "non abordé" se marque) */}
                             <div>
                                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Comment ça s&apos;est passé ?</p>
                                 <div className="flex gap-2">
