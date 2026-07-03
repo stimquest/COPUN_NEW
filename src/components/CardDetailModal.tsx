@@ -5,8 +5,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
 import { createPortal } from 'react-dom';
 import { useSyncExternalStore, useEffect, useState } from 'react';
-import { getFichesMemoForCard } from '@/actions/fiche-memo-actions';
+import { getFichesMemoForCard, getFicheMemoById } from '@/actions/fiche-memo-actions';
 import type { FicheMemo } from '@/actions/fiche-memo-actions';
+import { THEMATIC_TAG_LABELS, SAISON_LABELS } from '@/components/fiches/fiche-constants';
+import FicheContent from '@/components/fiches/FicheContent';
 
 type CardDetailModalProps = {
     isOpen: boolean;
@@ -21,6 +23,12 @@ function subscribe() {
 export default function CardDetailModal({ isOpen, onClose, content }: CardDetailModalProps) {
     const isClient = useSyncExternalStore(subscribe, () => true, () => false);
     const [relatedFiches, setRelatedFiches] = useState<FicheMemo[]>([]);
+    // Fiche wiki actuellement ouverte à l'intérieur du modal — reste dans le même
+    // contexte plutôt que de naviguer ou d'ouvrir un nouvel onglet, pour ne pas
+    // faire perdre le fil de l'accueil.
+    const [viewingFicheId, setViewingFicheId] = useState<string | null>(null);
+    const [viewingFiche, setViewingFiche] = useState<FicheMemo | null>(null);
+    const [loadingFiche, setLoadingFiche] = useState(false);
 
     useEffect(() => {
         if (!isOpen || !content) { setRelatedFiches([]); return; }
@@ -29,6 +37,21 @@ export default function CardDetailModal({ isOpen, onClose, content }: CardDetail
             if (!cancelled) setRelatedFiches(fiches);
         });
         return () => { cancelled = true; };
+    }, [isOpen, content]);
+
+    useEffect(() => {
+        if (!viewingFicheId) { setViewingFiche(null); return; }
+        let cancelled = false;
+        setLoadingFiche(true);
+        getFicheMemoById(viewingFicheId).then(fiche => {
+            if (!cancelled) { setViewingFiche(fiche); setLoadingFiche(false); }
+        });
+        return () => { cancelled = true; };
+    }, [viewingFicheId]);
+
+    // Réinitialise la vue fiche quand le modal se ferme ou change de carte
+    useEffect(() => {
+        if (!isOpen) setViewingFicheId(null);
     }, [isOpen, content]);
 
     if (!isClient) return null;
@@ -60,37 +83,94 @@ export default function CardDetailModal({ isOpen, onClose, content }: CardDetail
                         )}
                     >
                         {/* Header */}
-                        <div className={clsx(
-                            "px-8 py-6 border-b",
-                            content.dimension === 'COMPRENDRE' ? "bg-amber-50 border-amber-100" :
-                                content.dimension === 'OBSERVER' ? "bg-blue-50 border-blue-100" :
-                                    "bg-emerald-50 border-emerald-100"
-                        )}>
-                            <div className="flex items-start justify-between gap-4">
-                                <div>
-                                    <span className={clsx(
-                                        "inline-block px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mb-3",
-                                        content.dimension === 'COMPRENDRE' ? "bg-amber-100 text-amber-700" :
-                                            content.dimension === 'OBSERVER' ? "bg-blue-100 text-blue-700" :
-                                                "bg-emerald-100 text-emerald-700"
-                                    )}>
-                                        {content.dimension}
-                                    </span>
-                                    <h2 className="text-2xl font-black text-slate-900 leading-tight italic">
-                                        {content.question}
-                                    </h2>
+                        {viewingFicheId ? (
+                            <div className="px-6 sm:px-8 py-5 border-b border-indigo-100 bg-indigo-50">
+                                <div className="flex items-center justify-between gap-3 mb-3">
+                                    <button
+                                        onClick={() => setViewingFicheId(null)}
+                                        className="flex items-center gap-1.5 text-indigo-600 font-bold text-xs uppercase tracking-widest hover:text-indigo-800 transition-colors shrink-0"
+                                    >
+                                        <span className="material-symbols-outlined text-base">arrow_back</span>
+                                        Retour à la fiche
+                                    </button>
+                                    <button
+                                        onClick={onClose}
+                                        className="size-9 rounded-full bg-white/60 hover:bg-white flex items-center justify-center text-indigo-400 hover:text-indigo-900 transition-colors shrink-0"
+                                    >
+                                        <span className="material-symbols-outlined text-[20px]">close</span>
+                                    </button>
                                 </div>
-                                <button
-                                    onClick={onClose}
-                                    className="size-10 rounded-full bg-white/50 hover:bg-white flex items-center justify-center text-slate-400 hover:text-slate-900 transition-colors"
-                                >
-                                    <span className="material-symbols-outlined">close</span>
-                                </button>
+                                <h2 className="text-xl sm:text-2xl font-black text-indigo-950 leading-tight">
+                                    {loadingFiche ? 'Chargement…' : (viewingFiche?.titre ?? 'Fiche introuvable')}
+                                </h2>
                             </div>
-                        </div>
+                        ) : (
+                            <div className={clsx(
+                                "px-8 py-6 border-b",
+                                content.dimension === 'COMPRENDRE' ? "bg-amber-50 border-amber-100" :
+                                    content.dimension === 'OBSERVER' ? "bg-blue-50 border-blue-100" :
+                                        "bg-emerald-50 border-emerald-100"
+                            )}>
+                                <div className="flex items-start justify-between gap-4">
+                                    <div>
+                                        <span className={clsx(
+                                            "inline-block px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mb-3",
+                                            content.dimension === 'COMPRENDRE' ? "bg-amber-100 text-amber-700" :
+                                                content.dimension === 'OBSERVER' ? "bg-blue-100 text-blue-700" :
+                                                    "bg-emerald-100 text-emerald-700"
+                                        )}>
+                                            {content.dimension}
+                                        </span>
+                                        <h2 className="text-2xl font-black text-slate-900 leading-tight italic">
+                                            {content.question}
+                                        </h2>
+                                    </div>
+                                    <button
+                                        onClick={onClose}
+                                        className="size-10 rounded-full bg-white/50 hover:bg-white flex items-center justify-center text-slate-400 hover:text-slate-900 transition-colors"
+                                    >
+                                        <span className="material-symbols-outlined">close</span>
+                                    </button>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Scrollable Body */}
                         <div className="p-8 overflow-y-auto custom-scrollbar">
+                            {viewingFicheId ? (
+                                loadingFiche ? (
+                                    <div className="flex items-center justify-center py-20">
+                                        <span className="animate-spin material-symbols-outlined text-3xl text-indigo-300">progress_activity</span>
+                                    </div>
+                                ) : viewingFiche ? (
+                                    <div className="max-w-2xl mx-auto space-y-6">
+                                        {(viewingFiche.tags_thematiques.length > 0 || viewingFiche.tags_saisons.length > 0) && (
+                                            <div className="flex flex-wrap gap-2">
+                                                {viewingFiche.tags_thematiques.map(tag => (
+                                                    <span key={tag} className="px-3 py-1 bg-teal-50 text-teal-700 text-xs font-semibold rounded-full border border-teal-100">
+                                                        {THEMATIC_TAG_LABELS[tag] ?? tag}
+                                                    </span>
+                                                ))}
+                                                {viewingFiche.tags_saisons.map(saison => (
+                                                    <span key={saison} className="px-3 py-1 bg-sky-50 text-sky-700 text-xs font-semibold rounded-full border border-sky-100">
+                                                        {SAISON_LABELS[saison] ?? saison}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
+                                        {viewingFiche.resume && (
+                                            <p className="text-base font-semibold text-slate-600 leading-relaxed border-l-4 border-indigo-200 pl-4">
+                                                {viewingFiche.resume}
+                                            </p>
+                                        )}
+                                        <div className="pt-2 border-t border-slate-100">
+                                            <FicheContent html={viewingFiche.contenu} />
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <p className="text-center text-sm text-slate-400 py-20">Fiche introuvable.</p>
+                                )
+                            ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                                 {/* LEFT COLUMN: Basic Info */}
                                 <div className="space-y-6">
@@ -174,17 +254,15 @@ export default function CardDetailModal({ isOpen, onClose, content }: CardDetail
                                                             <span className="material-symbols-outlined text-blue-300 text-sm group-hover:translate-x-0.5 transition-transform">open_in_new</span>
                                                         </a>
                                                     ) : (
-                                                        <a
+                                                        <button
                                                             key={idx}
-                                                            href={`/ressources/${r.fiche_memo_id}`}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className="flex items-center gap-3 px-4 py-3 bg-teal-50 border border-teal-100 rounded-xl hover:bg-teal-100 transition group"
+                                                            onClick={() => setViewingFicheId(r.fiche_memo_id)}
+                                                            className="w-full flex items-center gap-3 px-4 py-3 bg-teal-50 border border-teal-100 rounded-xl hover:bg-teal-100 transition group text-left"
                                                         >
                                                             <span className="material-symbols-outlined text-teal-500 text-base shrink-0">article</span>
-                                                            <span className="text-sm font-semibold text-teal-800 flex-1 truncate">{r.label}</span>
-                                                            <span className="material-symbols-outlined text-teal-300 text-sm group-hover:translate-x-0.5 transition-transform">open_in_new</span>
-                                                        </a>
+                                                            <span className="text-sm font-semibold text-teal-800 flex-1 min-w-0 leading-snug">{r.label}</span>
+                                                            <span className="material-symbols-outlined text-teal-300 text-sm shrink-0 group-hover:translate-x-0.5 transition-transform">chevron_right</span>
+                                                        </button>
                                                     )
                                                 ))}
                                             </div>
@@ -202,23 +280,22 @@ export default function CardDetailModal({ isOpen, onClose, content }: CardDetail
                                             </div>
                                             <div className="space-y-2">
                                                 {relatedFiches.map(fiche => (
-                                                    <a
+                                                    <button
                                                         key={fiche.id}
-                                                        href={`/ressources/${fiche.id}`}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="flex items-center gap-3 px-4 py-3 bg-indigo-50 border border-indigo-100 rounded-xl hover:bg-indigo-100 transition group"
+                                                        onClick={() => setViewingFicheId(fiche.id)}
+                                                        className="w-full flex items-center gap-3 px-4 py-3 bg-indigo-50 border border-indigo-100 rounded-xl hover:bg-indigo-100 transition group text-left"
                                                     >
                                                         <span className="material-symbols-outlined text-indigo-500 text-base shrink-0">article</span>
-                                                        <span className="text-sm font-semibold text-indigo-800 flex-1 truncate">{fiche.titre}</span>
-                                                        <span className="material-symbols-outlined text-indigo-300 text-sm group-hover:translate-x-0.5 transition-transform">open_in_new</span>
-                                                    </a>
+                                                        <span className="text-sm font-semibold text-indigo-800 flex-1 min-w-0 leading-snug">{fiche.titre}</span>
+                                                        <span className="material-symbols-outlined text-indigo-300 text-sm shrink-0 group-hover:translate-x-0.5 transition-transform">chevron_right</span>
+                                                    </button>
                                                 ))}
                                             </div>
                                         </section>
                                     )}
                                 </div>
                             </div>
+                            )}
                         </div>
 
                         {/* Footer (Actions) */}

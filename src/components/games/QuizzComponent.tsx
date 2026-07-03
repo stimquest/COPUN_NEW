@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import clsx from 'clsx';
 import { QuizzData } from './types';
 
@@ -14,29 +14,46 @@ export default function QuizzComponent({ data, onComplete, isCompleted }: Props)
     const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
     const [submitted, setSubmitted] = useState(false);
 
+    // Mélange l'ordre des réponses à l'affichage — certaines données historiques
+    // plaçaient systématiquement la bonne réponse en 2e position. Mélange stable pour
+    // la durée de vie de la question.
+    const { answers, correctAnswerIndex } = useMemo(() => {
+        if (!data?.answers) return { answers: [], correctAnswerIndex: -1 };
+        const order = data.answers.map((_, i) => i);
+        for (let i = order.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [order[i], order[j]] = [order[j], order[i]];
+        }
+        return {
+            answers: order.map(i => data.answers[i]),
+            correctAnswerIndex: order.indexOf(data.correctAnswerIndex),
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [data?.question]);
+
     // Safety check for data
     if (!data || !data.answers) return <div className="text-red-500">Erreur de données pour ce quiz</div>;
 
     const handleSubmit = () => {
         if (selectedAnswer === null) return;
         setSubmitted(true);
-        const isCorrect = selectedAnswer === data.correctAnswerIndex;
+        const isCorrect = selectedAnswer === correctAnswerIndex;
         if (isCorrect && !isCompleted) {
             onComplete({ success: true, attempts: 1 });
         }
     };
 
-    const isCorrect = submitted && selectedAnswer === data.correctAnswerIndex;
+    const isCorrect = submitted && selectedAnswer === correctAnswerIndex;
 
     return (
         <div className="space-y-4">
             <h3 className="font-bold text-slate-900 text-lg">{data.question}</h3>
 
             <div className="space-y-2">
-                {data.answers.map((answer, idx) => {
+                {answers.map((answer, idx) => {
                     let stateClass = "border-slate-200 hover:bg-slate-50";
                     if (submitted) {
-                        if (idx === data.correctAnswerIndex) stateClass = "bg-emerald-50 border-emerald-500 text-emerald-700 font-bold";
+                        if (idx === correctAnswerIndex) stateClass = "bg-emerald-50 border-emerald-500 text-emerald-700 font-bold";
                         else if (idx === selectedAnswer) stateClass = "bg-red-50 border-red-200 text-red-700";
                         else stateClass = "opacity-50";
                     } else if (selectedAnswer === idx) {

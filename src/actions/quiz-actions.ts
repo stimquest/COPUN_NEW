@@ -90,7 +90,7 @@ export async function generateStageQuiz(
             title: `Quiz — ${stage?.title ?? 'Semaine'}`,
             theme: forceTheme ?? targetThemes[0] ?? 'Général',
             stage_id: stageId,
-            game_data: { leGrandQuizz: { title: 'Quiz de fin de semaine', instruction: 'Posez ces questions à votre groupe pour valider la transmission.', items: quizzItems } },
+            game_data: { leGrandQuizz: { title: 'Quiz de fin de semaine', instruction: 'Pose ces questions à tes stagiaires pour valider la transmission.', items: quizzItems } },
         })
         .select()
         .single();

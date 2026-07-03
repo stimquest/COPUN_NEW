@@ -10,10 +10,13 @@ type Props = {
     stageTitle: string;
 };
 
-const QUESTION_OPTIONS = [3, 5, 7, 10];
+const QUESTION_OPTIONS = [5, 7, 10];
 
+// Quiz thématiques : option secondaire, repliée par défaut. C'est le même quiz de fin
+// de semaine (un seul par stage, il remplace toute génération précédente) — seule la
+// sélection des questions change. Le choix "Quiz de la semaine" (auto, basé sur les
+// cartes objectifs sélectionnées) reste le seul mis en avant.
 const THEME_OPTIONS = [
-    { value: 'auto', label: 'Automatique', description: 'Basé sur les thèmes de vos fiches pédagogiques', icon: 'auto_awesome' },
     { value: 'Les Marées', label: 'Les Marées', description: 'Flot, jusant, coefficients, étale…', icon: 'waves' },
     { value: 'Météo & Marées', label: 'Météo & Marées', description: 'Vent, nuages, brise thermique…', icon: 'cloud' },
     { value: 'Caractéristiques du littoral', label: 'Littoral', description: 'Estran, dunes, laisse de mer…', icon: 'beach_access' },
@@ -26,6 +29,7 @@ export default function QuizLaunchClient({ stageId, stageTitle }: Props) {
     const [isPending, startTransition] = useTransition();
     const [questionCount, setQuestionCount] = useState(5);
     const [selectedTheme, setSelectedTheme] = useState('auto');
+    const [showThemeQuiz, setShowThemeQuiz] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     const handleLaunch = () => {
@@ -50,8 +54,8 @@ export default function QuizLaunchClient({ stageId, stageTitle }: Props) {
                 </div>
                 <h2 className="text-2xl font-black text-white mb-2">Quiz de fin de stage</h2>
                 <p className="text-slate-400 text-sm leading-relaxed">
-                    Posez ces questions à votre groupe pour valider ce qu&apos;ils ont retenu.
-                    Les réponses des enfants valident vos points de moniteur.
+                    Posez ces questions à tes stagiaires pour valider ce qu&apos;ils ont retenu.
+                    Leurs réponses valident tes points de moniteur.
                 </p>
             </div>
 
@@ -60,13 +64,13 @@ export default function QuizLaunchClient({ stageId, stageTitle }: Props) {
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">
                     Nombre de questions
                 </p>
-                <div className="grid grid-cols-4 gap-2">
+                <div className="flex justify-center gap-2">
                     {QUESTION_OPTIONS.map(n => (
                         <button
                             key={n}
                             onClick={() => setQuestionCount(n)}
                             className={clsx(
-                                'py-4 rounded-2xl font-black text-xl transition-all active:scale-95',
+                                'w-20 py-4 rounded-2xl font-black text-xl transition-all active:scale-95',
                                 questionCount === n
                                     ? 'bg-violet-600 text-white shadow-lg shadow-violet-600/30'
                                     : 'bg-white/5 text-slate-400 border border-white/10 hover:border-white/20'
@@ -78,39 +82,69 @@ export default function QuizLaunchClient({ stageId, stageTitle }: Props) {
                 </div>
             </section>
 
-            {/* Thème */}
+            {/* Quiz de la semaine — seule option mise en avant, celle qui valide les points */}
             <section>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">
-                    Thème des questions
-                </p>
-                <div className="space-y-2">
-                    {THEME_OPTIONS.map(opt => (
-                        <button
-                            key={opt.value}
-                            onClick={() => setSelectedTheme(opt.value)}
-                            className={clsx(
-                                'w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl text-left transition-all active:scale-[0.98] border-2',
-                                selectedTheme === opt.value
-                                    ? 'bg-violet-600/20 border-violet-500 text-white'
-                                    : 'bg-white/5 border-white/10 text-slate-300 hover:border-white/20'
-                            )}
-                        >
-                            <span className={clsx(
-                                'size-9 rounded-xl flex items-center justify-center shrink-0',
-                                selectedTheme === opt.value ? 'bg-violet-500/30' : 'bg-white/10'
-                            )}>
-                                <span className="material-symbols-outlined text-[18px]">{opt.icon}</span>
-                            </span>
-                            <div className="flex-1 min-w-0">
-                                <p className="font-bold text-sm">{opt.label}</p>
-                                <p className="text-[11px] text-slate-400 truncate">{opt.description}</p>
-                            </div>
-                            {selectedTheme === opt.value && (
-                                <span className="material-symbols-outlined text-violet-400 shrink-0">check_circle</span>
-                            )}
-                        </button>
-                    ))}
-                </div>
+                <button
+                    onClick={() => setSelectedTheme('auto')}
+                    className={clsx(
+                        'w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-left transition-all active:scale-[0.98] border-2',
+                        selectedTheme === 'auto'
+                            ? 'bg-violet-600/20 border-violet-500 text-white'
+                            : 'bg-white/5 border-white/10 text-slate-300 hover:border-white/20'
+                    )}
+                >
+                    <span className={clsx(
+                        'size-11 rounded-xl flex items-center justify-center shrink-0',
+                        selectedTheme === 'auto' ? 'bg-violet-500/30' : 'bg-white/10'
+                    )}>
+                        <span className="material-symbols-outlined text-[22px]">auto_awesome</span>
+                    </span>
+                    <div className="flex-1 min-w-0">
+                        <p className="font-black text-sm">Quiz de la semaine</p>
+                        <p className="text-[11px] text-slate-400 leading-snug mt-0.5">Basé sur les objectifs choisis cette semaine</p>
+                    </div>
+                    {selectedTheme === 'auto' && (
+                        <span className="material-symbols-outlined text-violet-400 shrink-0">check_circle</span>
+                    )}
+                </button>
+            </section>
+
+            {/* Quiz thématiques — repliés, pour un entraînement libre, sans lien avec les points */}
+            <section>
+                <button
+                    onClick={() => setShowThemeQuiz(v => !v)}
+                    className="flex items-center gap-1.5 text-[11px] font-bold text-slate-500 hover:text-slate-300 transition-colors"
+                >
+                    Choisir un thème précis à la place
+                    <span className={clsx('material-symbols-outlined text-sm transition-transform', showThemeQuiz && 'rotate-180')}>expand_more</span>
+                </button>
+                {showThemeQuiz && (
+                    <div className="space-y-2 mt-3">
+                        {THEME_OPTIONS.map(opt => (
+                            <button
+                                key={opt.value}
+                                onClick={() => setSelectedTheme(opt.value)}
+                                className={clsx(
+                                    'w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-left transition-all active:scale-[0.98] border',
+                                    selectedTheme === opt.value
+                                        ? 'bg-white/10 border-white/30 text-white'
+                                        : 'bg-white/5 border-white/10 text-slate-400 hover:border-white/20'
+                                )}
+                            >
+                                <span className="size-8 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
+                                    <span className="material-symbols-outlined text-[16px]">{opt.icon}</span>
+                                </span>
+                                <div className="flex-1 min-w-0">
+                                    <p className="font-bold text-xs">{opt.label}</p>
+                                    <p className="text-[10px] text-slate-500 truncate">{opt.description}</p>
+                                </div>
+                                {selectedTheme === opt.value && (
+                                    <span className="material-symbols-outlined text-slate-300 text-base shrink-0">check_circle</span>
+                                )}
+                            </button>
+                        ))}
+                    </div>
+                )}
             </section>
 
             {/* Erreur */}

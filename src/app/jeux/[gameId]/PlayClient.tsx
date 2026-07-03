@@ -139,7 +139,7 @@ export default function PlayClient({ game }: { game: Game }) {
                         'text-3xl font-black uppercase tracking-tight mb-2',
                         isExcellent ? 'text-amber-400' : isGood ? 'text-emerald-400' : 'text-slate-300'
                     )}>
-                        {isExcellent ? 'Votre équipe est composée de vraies sentinelles de l\'Océan !' : isGood ? 'Votre équipe a brillamment joué !' : 'Votre équipe a bien progressé !'}
+                        {isExcellent ? 'Tes stagiaires sont de vraies sentinelles de l\'Océan !' : isGood ? 'Tes stagiaires ont brillamment joué !' : 'Tes stagiaires ont bien progressé !'}
                     </h2>
                     <p className="text-slate-400 font-medium mb-2">
                         Vous avez obtenu {finalScore} bonne{finalScore > 1 ? 's' : ''} réponse{finalScore > 1 ? 's' : ''} sur {totalCards}
@@ -148,9 +148,9 @@ export default function PlayClient({ game }: { game: Game }) {
                     {/* Message adapté */}
                     <p className="text-slate-500 text-sm max-w-xs leading-relaxed mb-10">
                         {isExcellent
-                            ? 'Ensemble, vous avez retenu l\'essentiel de la semaine. Votre groupe est prêt à devenir ambassadeur du littoral !'
+                            ? 'Ensemble, vous avez retenu l\'essentiel de la semaine. Tes stagiaires sont prêts à devenir ambassadeurs du littoral !'
                             : isGood
-                                ? 'Votre équipe a bien assimilé les notions essentielles. Continuez ainsi, vous êtes sur la bonne vague !'
+                                ? 'Tes stagiaires ont bien assimilé les notions essentielles. Continuez ainsi, vous êtes sur la bonne vague !'
                                 : 'Certaines notions méritent d\'être revues ensemble. Chaque semaine est un pas de plus vers la conscience du littoral.'}
                     </p>
 
@@ -346,9 +346,24 @@ function QuizzCard({ data, onAnswer, showFeedback }: {
 }) {
     const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
 
-    // Support both field naming conventions
-    const answerOptions = data.answers || data.options || [];
-    const correctIndex = data.correctAnswerIndex ?? data.correctAnswer ?? 0;
+    // Mélange l'ordre des réponses à l'affichage, indépendamment de l'ordre en base —
+    // certaines données historiques plaçaient systématiquement la bonne réponse en 2e
+    // position. Mélange stable pour la durée de vie de la question (recalculé seulement
+    // si la question elle-même change), pour ne pas rebattre les cartes à chaque re-render.
+    const { answerOptions, correctIndex } = useMemo(() => {
+        const rawAnswers = data.answers || data.options || [];
+        const rawCorrectIndex = data.correctAnswerIndex ?? data.correctAnswer ?? 0;
+        const order = rawAnswers.map((_, i) => i);
+        for (let i = order.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [order[i], order[j]] = [order[j], order[i]];
+        }
+        return {
+            answerOptions: order.map(i => rawAnswers[i]),
+            correctIndex: order.indexOf(rawCorrectIndex),
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [data.question]);
 
     const handleSelect = (index: number) => {
         if (showFeedback) return;
