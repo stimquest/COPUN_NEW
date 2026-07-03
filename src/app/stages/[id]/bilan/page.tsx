@@ -1,6 +1,6 @@
 import { unstable_noStore as noStore } from 'next/cache';
 import Link from 'next/link';
-import { notFound, redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import { DeleteStageButton } from '@/components/DeleteStageButton';
 import { ReopenConfirmSheet } from '@/components/ReopenConfirmSheet';
 import { StageClosureReview } from '@/components/StageClosureReview';
@@ -34,10 +34,6 @@ export default async function StageBilanPage({ params }: { params: Promise<{ id:
     if (!stage) return notFound();
 
     const isClosed = !!stage.closed_at;
-
-    if (!isClosed && !stats?.quizDone) {
-        redirect('/stages');
-    }
 
     const counts = STATUS_COUNTS(objectiveItems);
     const totalPts = stats?.stageTotalPoints ?? 0;

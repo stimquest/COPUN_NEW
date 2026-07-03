@@ -146,19 +146,28 @@ export function StageClosureReview({ stageId, stageTitle, objectiveItems, initia
                             {quizDone ? 'check_circle' : 'quiz'}
                         </span>
                         <div className="flex-1 min-w-0">
-                            <p className="text-sm font-bold text-slate-900">Quiz validé</p>
+                            <p className="text-sm font-bold text-slate-900">{quizDone ? 'Quiz validé' : 'Quiz pas encore fait'}</p>
                             {quizDone && quizData.score !== null && quizData.total !== null && (
                                 <p className="text-[10px] text-slate-500">
                                     Score : {quizData.score}/{quizData.total}
                                 </p>
                             )}
+                            {!quizDone && (
+                                <p className="text-[10px] text-slate-500">À faire avec le groupe avant de clôturer</p>
+                            )}
                         </div>
-                        <span className={clsx(
-                            'text-[10px] font-black px-2 py-1 rounded-full',
-                            quizDone ? 'bg-violet-600 text-white' : 'bg-amber-600 text-white'
-                        )}>
-                            {quizDone ? 'Terminé' : 'À faire'}
-                        </span>
+                        {quizDone ? (
+                            <span className="text-[10px] font-black px-2 py-1 rounded-full bg-violet-600 text-white">
+                                Terminé
+                            </span>
+                        ) : (
+                            <Link
+                                href={`/stages/${stageId}/quiz`}
+                                className="text-[10px] font-black px-3 py-1.5 rounded-full bg-amber-600 text-white active:scale-95 transition shrink-0"
+                            >
+                                Faire le quiz
+                            </Link>
+                        )}
                     </div>
                 </section>
             )}

@@ -10,6 +10,7 @@ import { DEFAULT_WASTE_TYPES } from '@/data/littoral-species';
 import { OBSERVATION_TYPES, SPECIES_CATEGORY_LABELS, SPECIES_CATEGORY_ORDER } from '@/data/observations';
 import { PILLARS } from '@/data/etages';
 import { OBJECTIFS, extractIntention, extractCoeff, extractMeteo } from '@/data/objectifs';
+import { parseStageDateRange } from '@/lib/stage-dates';
 import { addObservation, deleteObservation } from '@/actions/observation-actions';
 import { saveObjectiveStatus, clearObjectiveStatus, updateStagePool } from '@/actions/stage-actions';
 import { updateStageExploitStatus, uploadDefiPhoto } from '@/actions/defi-actions';
@@ -571,6 +572,35 @@ export function WeekDashboardClient({
     const weekMeteoId = extractMeteo(suggestedThematics);
     const weekMeteo = weekMeteoId ? METEO_LABELS[weekMeteoId] ?? null : null;
     const defisDone = initialExploits.filter(e => e.status === 'complete').length;
+    // Position dans la semaine : "Jour 2/5" si aujourd'hui est dans l'intervalle du stage.
+    const now = new Date();
+    const DAY_MS = 86_400_000;
+    const weekRange = parseStageDateRange(stageDates, now);
+    let dayIndex: number | null = null;
+    let dayTotal: number | null = null;
+    let weekOver = false;
+    if (weekRange) {
+        const startDay = new Date(weekRange.start);
+        startDay.setHours(0, 0, 0, 0);
+        dayTotal = Math.round((weekRange.end.getTime() - weekRange.start.getTime()) / DAY_MS) + 1;
+        const diff = Math.floor((now.getTime() - startDay.getTime()) / DAY_MS);
+        if (diff >= 0 && diff < dayTotal) dayIndex = diff + 1;
+        weekOver = diff >= dayTotal;
+    }
+
+    // Sur les deux derniers jours de la semaine, le header rappelle le quiz puis le bilan.
+    // Le reste du temps il reste compact : les objectifs sont juste en dessous.
+    const isLateWeek = dayIndex !== null && dayTotal !== null && dayIndex >= dayTotal - 1;
+    const todayCard: { kind: 'quiz' | 'bilan' } | null =
+        (isLateWeek || weekOver) && !quizDone
+            ? { kind: 'quiz' }
+        : weekOver || (isLateWeek && quizDone)
+            ? { kind: 'bilan' }
+            : null;
+
+    // Rappel du défi de la semaine : libellé si unique, fraction sinon.
+    const defiSingle = initialExploits.length === 1 ? initialExploits[0] : null;
+    const allDefisDone = initialExploits.length > 0 && defisDone === initialExploits.length;
 
     const resetObsForm = () => {
         setObsText('');
@@ -650,59 +680,114 @@ export function WeekDashboardClient({
 
                 <div className="relative z-10 mx-4 mb-5">
                     <div className="bg-white/15 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-                        <div className="flex items-start justify-between gap-3">
-                            <div className="min-w-0">
-                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/50 mb-0.5">Cette semaine</p>
-                                <p className="text-lg font-black text-white leading-tight truncate">{stageName}</p>
-                                <p className="text-xs text-white/50 mt-0.5">{stageDates}</p>
-                            </div>
-                            {/* Conditions de la semaine, cliquables pour les modifier */}
-                            {(weekCoeff || weekMeteo || weekIntention) && (
-                                <Link href={`/stages/new?edit=${stageId}`} className="flex flex-col items-end gap-1 shrink-0">
-                                    {weekIntention && (
-                                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-white bg-white/20 px-2 py-0.5 rounded-full max-w-40">
-                                            <span className="material-symbols-outlined text-[12px]">{weekIntention.icon}</span>
-                                            <span className="truncate">{weekIntention.label}</span>
-                                        </span>
-                                    )}
-                                    <span className="flex items-center gap-1">
-                                        {weekCoeff && (
-                                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-white/80 bg-white/10 px-2 py-0.5 rounded-full">
-                                                <span className="material-symbols-outlined text-[12px]">{weekCoeff.icon}</span>
-                                                {weekCoeff.label}
-                                            </span>
-                                        )}
-                                        {weekMeteo && (
-                                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-white/80 bg-white/10 px-2 py-0.5 rounded-full">
-                                                <span className="material-symbols-outlined text-[12px]">{weekMeteo.icon}</span>
-                                                {weekMeteo.label}
-                                            </span>
-                                        )}
-                                    </span>
-                                </Link>
+                        <div className="flex items-center justify-between gap-3 mb-0.5">
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/50">Cette semaine</p>
+                            {dayIndex !== null && (
+                                <span className="text-[10px] font-black text-white/80 bg-white/15 px-2 py-0.5 rounded-full shrink-0">
+                                    Jour {dayIndex}/{dayTotal}
+                                </span>
                             )}
                         </div>
+                        <p className="text-lg font-black text-white leading-tight">{stageName}</p>
+                        <p className="text-xs text-white/50 mt-0.5">{stageDates}</p>
 
-                        {/* Mini-cockpit : l'état de la semaine en un coup d'œil */}
-                        <div className="mt-3 grid grid-cols-4 gap-1.5">
-                            <div className="rounded-xl bg-white/10 px-2 py-2 text-center">
-                                <p className="text-base font-black text-white leading-none">{validatedCount}<span className="text-white/40 text-xs font-bold">/{contentCount}</span></p>
-                                <p className="text-[9px] font-bold text-white/50 uppercase tracking-wide mt-1">Objectifs</p>
-                            </div>
-                            <div className="rounded-xl bg-white/10 px-2 py-2 text-center">
-                                <p className="text-base font-black text-white leading-none">{defisDone}<span className="text-white/40 text-xs font-bold">/{initialExploits.length}</span></p>
-                                <p className="text-[9px] font-bold text-white/50 uppercase tracking-wide mt-1">Défis</p>
-                            </div>
-                            <div className="rounded-xl bg-white/10 px-2 py-2 text-center">
-                                <p className="text-base font-black text-white leading-none">{observations.length}</p>
-                                <p className="text-[9px] font-bold text-white/50 uppercase tracking-wide mt-1">Retours</p>
-                            </div>
-                            <Link href={`/stages/${stageId}/quiz`} className="rounded-xl bg-white/10 px-2 py-2 text-center active:scale-95 transition">
-                                <p className="text-base font-black text-white leading-none">
-                                    <span className="material-symbols-outlined text-base align-middle">{quizDone ? 'check_circle' : 'radio_button_unchecked'}</span>
-                                </p>
-                                <p className="text-[9px] font-bold text-white/50 uppercase tracking-wide mt-1">Quiz</p>
+                        {/* Conditions de la semaine — libellés complets, cliquables pour les modifier */}
+                        {(weekCoeff || weekMeteo || weekIntention) && (
+                            <Link href={`/stages/new?edit=${stageId}`} className="mt-2.5 flex flex-wrap items-center gap-1.5">
+                                {weekIntention && (
+                                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-white bg-white/20 px-2 py-1 rounded-full">
+                                        <span className="material-symbols-outlined text-[12px]">{weekIntention.icon}</span>
+                                        {weekIntention.label}
+                                    </span>
+                                )}
+                                {weekCoeff && (
+                                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-white/80 bg-white/10 px-2 py-1 rounded-full">
+                                        <span className="material-symbols-outlined text-[12px]">{weekCoeff.icon}</span>
+                                        {weekCoeff.label}
+                                    </span>
+                                )}
+                                {weekMeteo && (
+                                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-white/80 bg-white/10 px-2 py-1 rounded-full">
+                                        <span className="material-symbols-outlined text-[12px]">{weekMeteo.icon}</span>
+                                        {weekMeteo.label}
+                                    </span>
+                                )}
                             </Link>
+                        )}
+
+                        {/* Fin de semaine : rappel quiz puis bilan — rien le reste du temps */}
+                        {todayCard?.kind === 'quiz' && (
+                            <Link
+                                href={`/stages/${stageId}/quiz`}
+                                className="mt-3.5 flex items-center gap-3 bg-white rounded-xl px-3.5 py-3 shadow-sm active:scale-[0.98] transition"
+                            >
+                                <span className="size-9 rounded-full bg-violet-600 text-white flex items-center justify-center shrink-0">
+                                    <span className="material-symbols-outlined text-[18px]">quiz</span>
+                                </span>
+                                <span className="flex-1 min-w-0">
+                                    <span className="block text-[9px] font-black uppercase tracking-widest text-slate-400">Fin de semaine</span>
+                                    <span className="block text-sm font-black text-slate-900 leading-snug">Fais le quiz avec ton groupe</span>
+                                </span>
+                                <span className="material-symbols-outlined text-slate-300 shrink-0">arrow_forward</span>
+                            </Link>
+                        )}
+                        {todayCard?.kind === 'bilan' && (
+                            <Link
+                                href={`/stages/${stageId}/bilan`}
+                                className="mt-3.5 flex items-center gap-3 bg-white rounded-xl px-3.5 py-3 shadow-sm active:scale-[0.98] transition"
+                            >
+                                <span className="size-9 rounded-full bg-slate-900 text-white flex items-center justify-center shrink-0">
+                                    <span className="material-symbols-outlined text-[18px]">article</span>
+                                </span>
+                                <span className="flex-1 min-w-0">
+                                    <span className="block text-[9px] font-black uppercase tracking-widest text-slate-400">Fin de semaine</span>
+                                    <span className="block text-sm font-black text-slate-900 leading-snug">Fais le bilan de ta semaine</span>
+                                </span>
+                                <span className="material-symbols-outlined text-slate-300 shrink-0">arrow_forward</span>
+                            </Link>
+                        )}
+
+                        {/* Où on en est : objectifs faits / restants (une pastille par fiche) + rappel défi */}
+                        <div className="mt-3 space-y-1.5">
+                            {contentCount > 0 && (
+                                <a href="#objectifs" className="flex items-center gap-2.5 bg-white/10 rounded-xl px-3 py-2 active:scale-[0.98] transition">
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-white/50 shrink-0">Objectifs</span>
+                                    <span className="flex items-center gap-1.5">
+                                        {objectives.map(o => {
+                                            const s = statuses[o.id];
+                                            return (
+                                                <span
+                                                    key={o.id}
+                                                    className={clsx(
+                                                        'size-2.5 rounded-full',
+                                                        s === 'done' ? 'bg-emerald-300' :
+                                                        s === 'partial' ? 'bg-amber-300' :
+                                                        'bg-white/25'
+                                                    )}
+                                                />
+                                            );
+                                        })}
+                                    </span>
+                                    <span className="ml-auto text-[11px] font-black text-white shrink-0">
+                                        {validatedCount}/{contentCount}
+                                        <span className="text-white/50 font-bold"> fait{validatedCount > 1 ? 's' : ''}</span>
+                                    </span>
+                                </a>
+                            )}
+                            {initialExploits.length > 0 && (
+                                <a href="#defis" className="flex items-center gap-2.5 bg-white/10 rounded-xl px-3 py-2 active:scale-[0.98] transition">
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-white/50 shrink-0">Défi</span>
+                                    <span className="flex-1 min-w-0 text-[11px] font-bold text-white truncate">
+                                        {defiSingle ? defiSingle.defis.description : `${defisDone}/${initialExploits.length} validés`}
+                                    </span>
+                                    <span className={clsx(
+                                        'text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full shrink-0',
+                                        allDefisDone ? 'bg-emerald-400/90 text-emerald-950' : 'bg-white/20 text-white/80'
+                                    )}>
+                                        {allDefisDone ? 'Validé' : 'En cours'}
+                                    </span>
+                                </a>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -715,7 +800,7 @@ export function WeekDashboardClient({
             <main className="flex-1 px-4 pt-5 space-y-6 max-w-2xl mx-auto w-full">
 
                 {/* Objectifs de la semaine */}
-                <section>
+                <section id="objectifs" className="scroll-mt-4">
                     <div className="flex items-center justify-between mb-3">
                         <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Objectifs de la semaine</p>
                         <Link href={`/stages/${stageId}/program`} className="text-[10px] font-bold text-indigo-500 hover:text-indigo-700 transition-colors">
@@ -816,7 +901,7 @@ export function WeekDashboardClient({
 
                 {/* Défis de la semaine */}
                 {initialExploits.length > 0 && (
-                    <section>
+                    <section id="defis" className="scroll-mt-4">
                         <div className="flex items-center justify-between mb-3">
                             <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
                                 Défis terrain
@@ -839,7 +924,7 @@ export function WeekDashboardClient({
                 )}
 
                 {/* Retours terrain */}
-                <section>
+                <section id="retours" className="scroll-mt-4">
                     <div className="flex items-center justify-between mb-3">
                         <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Retours terrain</p>
                         {observations.length > 0 && (
