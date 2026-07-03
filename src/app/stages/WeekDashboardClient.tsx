@@ -467,14 +467,16 @@ function ObjectiveRow({
                         transition={{ duration: 0.2 }}
                         className="overflow-hidden"
                     >
-                        <div className="px-4 pb-4 space-y-4 border-t border-slate-100 pt-3">
-                            {/* Objectif pédagogique */}
+                        <div className="px-4 pb-4 space-y-3 border-t border-slate-100 pt-3">
+                            {/* Objectif pédagogique — juste de quoi statuer vite ; le contenu détaillé
+                                (explication, tags, fiches mémo) vit dans le modal, pas ici */}
                             <p className="text-xs text-slate-500 leading-relaxed">{card.objectif}</p>
 
                             {/* Tip si présent */}
                             {card.tip && (
-                                <div className="rounded-xl bg-amber-50 border border-amber-100 px-3 py-2 text-xs text-amber-700 leading-relaxed">
-                                    <span className="font-bold">Conseil : </span>{card.tip}
+                                <div className="flex items-start gap-2 rounded-xl bg-amber-50 border border-amber-100 px-3 py-2.5">
+                                    <span className="material-symbols-outlined text-amber-500 text-base shrink-0 mt-0.5">lightbulb</span>
+                                    <p className="text-xs text-amber-800 leading-relaxed">{card.tip}</p>
                                 </div>
                             )}
 

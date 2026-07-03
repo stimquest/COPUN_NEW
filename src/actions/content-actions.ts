@@ -78,6 +78,7 @@ export async function createPedagogicalContent(data: Partial<PedagogicalContent>
     const newContent = {
         question: data.question,
         objectif: data.objectif,
+        explication: data.explication,
         tip: data.tip,
         niveau: data.niveau || 1,
         dimension: data.dimension || 'COMPRENDRE',

@@ -93,13 +93,19 @@ export default function CardDetailModal({ isOpen, onClose, content }: CardDetail
                         <div className="p-8 overflow-y-auto custom-scrollbar">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                                 {/* LEFT COLUMN: Basic Info */}
-                                <div className="space-y-8">
-                                    <div>
-                                        <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Objectif</h3>
-                                        <p className="text-lg font-medium text-slate-700 leading-relaxed">
-                                            {content.objectif}
-                                        </p>
-                                    </div>
+                                <div className="space-y-6">
+                                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide leading-snug">
+                                        {content.objectif}
+                                    </p>
+
+                                    {content.explication && (
+                                        <div>
+                                            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Ce qu&apos;il faut savoir</h3>
+                                            <p className="text-lg font-medium text-slate-700 leading-relaxed">
+                                                {content.explication}
+                                            </p>
+                                        </div>
+                                    )}
 
                                     {content.tip && (
                                         <div className="bg-indigo-50 rounded-2xl p-6 border border-indigo-100">

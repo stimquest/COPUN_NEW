@@ -45,6 +45,7 @@ export type PedagogicalContent = {
   id: string;
   question: string;
   objectif: string;
+  explication?: string;
   tip: string;
   niveau: 1 | 2 | 3;
   dimension: Dimension;

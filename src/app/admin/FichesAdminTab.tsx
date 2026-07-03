@@ -25,6 +25,7 @@ type Mode = 'list' | 'edit' | 'create';
 interface FicheFormState {
     question: string;
     objectif: string;
+    explication: string;
     tip: string;
     niveau: 1 | 2 | 3;
     dimension: Dimension;
@@ -36,6 +37,7 @@ interface FicheFormState {
 const emptyForm = (): FicheFormState => ({
     question: '',
     objectif: '',
+    explication: '',
     tip: '',
     niveau: 1,
     dimension: 'COMPRENDRE',
@@ -48,6 +50,7 @@ function formFromFiche(f: PedagogicalContent): FicheFormState {
     return {
         question: f.question,
         objectif: f.objectif,
+        explication: f.explication ?? '',
         tip: f.tip,
         niveau: f.niveau,
         dimension: f.dimension,
@@ -367,6 +370,20 @@ export function FichesAdminTab({ initialFiches, fichesMemo }: {
                                 value={form.objectif}
                                 onChange={e => setField('objectif', e.target.value)}
                                 placeholder="Pourquoi cette fiche ? Qu'est-ce que le stagiaire doit comprendre…"
+                                rows={3}
+                                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none"
+                            />
+                        </div>
+
+                        {/* Explication courte */}
+                        <div>
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">
+                                Ce qu&apos;il faut savoir <span className="font-semibold normal-case tracking-normal text-slate-300">— optionnel</span>
+                            </label>
+                            <textarea
+                                value={form.explication}
+                                onChange={e => setField('explication', e.target.value)}
+                                placeholder="2-3 phrases qui répondent vraiment à la question, façon 'les pourquoi' — de quoi raconter le concept sans faire un cours…"
                                 rows={3}
                                 className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none"
                             />
