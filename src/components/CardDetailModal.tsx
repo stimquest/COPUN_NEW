@@ -4,7 +4,9 @@ import { PedagogicalContent } from '@/types';
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
 import { createPortal } from 'react-dom';
-import { useSyncExternalStore } from 'react';
+import { useSyncExternalStore, useEffect, useState } from 'react';
+import { getFichesMemoForCard } from '@/actions/fiche-memo-actions';
+import type { FicheMemo } from '@/actions/fiche-memo-actions';
 
 type CardDetailModalProps = {
     isOpen: boolean;
@@ -18,6 +20,16 @@ function subscribe() {
 
 export default function CardDetailModal({ isOpen, onClose, content }: CardDetailModalProps) {
     const isClient = useSyncExternalStore(subscribe, () => true, () => false);
+    const [relatedFiches, setRelatedFiches] = useState<FicheMemo[]>([]);
+
+    useEffect(() => {
+        if (!isOpen || !content) { setRelatedFiches([]); return; }
+        let cancelled = false;
+        getFichesMemoForCard(content.tags_theme ?? [], content.tags_filtre ?? []).then(fiches => {
+            if (!cancelled) setRelatedFiches(fiches);
+        });
+        return () => { cancelled = true; };
+    }, [isOpen, content]);
 
     if (!isClient) return null;
 
@@ -132,7 +144,7 @@ export default function CardDetailModal({ isOpen, onClose, content }: CardDetail
 
                                 {/* RIGHT COLUMN: Ressources */}
                                 <div className="space-y-10">
-                                    {/* RESSOURCES SECTION */}
+                                    {/* RESSOURCES SECTION — liens posés à la main */}
                                     {content.ressources && content.ressources.length > 0 && (
                                         <section>
                                             <div className="flex items-center gap-2 mb-4">
@@ -168,6 +180,33 @@ export default function CardDetailModal({ isOpen, onClose, content }: CardDetail
                                                             <span className="material-symbols-outlined text-teal-300 text-sm group-hover:translate-x-0.5 transition-transform">open_in_new</span>
                                                         </a>
                                                     )
+                                                ))}
+                                            </div>
+                                        </section>
+                                    )}
+
+                                    {/* FICHES MÉMO LIÉES — retrouvées automatiquement via les tags de la carte */}
+                                    {relatedFiches.length > 0 && (
+                                        <section>
+                                            <div className="flex items-center gap-2 mb-4">
+                                                <div className="size-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center">
+                                                    <span className="material-symbols-outlined text-lg">auto_stories</span>
+                                                </div>
+                                                <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">À lire dans le wiki</h3>
+                                            </div>
+                                            <div className="space-y-2">
+                                                {relatedFiches.map(fiche => (
+                                                    <a
+                                                        key={fiche.id}
+                                                        href={`/ressources/${fiche.id}`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="flex items-center gap-3 px-4 py-3 bg-indigo-50 border border-indigo-100 rounded-xl hover:bg-indigo-100 transition group"
+                                                    >
+                                                        <span className="material-symbols-outlined text-indigo-500 text-base shrink-0">article</span>
+                                                        <span className="text-sm font-semibold text-indigo-800 flex-1 truncate">{fiche.titre}</span>
+                                                        <span className="material-symbols-outlined text-indigo-300 text-sm group-hover:translate-x-0.5 transition-transform">open_in_new</span>
+                                                    </a>
                                                 ))}
                                             </div>
                                         </section>

@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import clsx from 'clsx';
+import { SPORT_FEATURES_ENABLED } from '@/lib/feature-flags';
 
 const baseNavItems = [
     { name: 'Accueil', href: '/stages', icon: 'dashboard', fill: true },
@@ -23,9 +24,10 @@ type SidebarProps = {
 
 export function Sidebar({ role, fullName, email, clubName }: SidebarProps) {
     const pathname = usePathname();
-    const navItems = (role === 'admin' || role === 'club_admin')
+    const navItems = ((role === 'admin' || role === 'club_admin')
         ? [...baseNavItems, adminNavItem]
-        : baseNavItems;
+        : baseNavItems)
+        .filter(i => SPORT_FEATURES_ENABLED || i.href !== '/fiches');
 
     const initials = fullName
         ? fullName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()

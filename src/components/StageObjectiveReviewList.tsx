@@ -8,6 +8,7 @@ import {
 } from '@/lib/stage-objective-review';
 import { StageObjectiveReviewDraft, StageObjectiveReviewItem } from '@/types';
 import { PILLARS } from '@/data/etages';
+import { SPORT_FEATURES_ENABLED } from '@/lib/feature-flags';
 
 const STATUS_META = {
     done:     { label: 'Travaillé',   icon: 'check_circle',    bg: 'bg-emerald-500', text: 'text-emerald-700', light: 'bg-emerald-50 border-emerald-200' },
@@ -269,7 +270,7 @@ export function StageObjectiveReviewList({ items, editable = false, drafts, onCh
                         </div>
                     );
                 })}
-                {sportItems.length > 0 && (
+                {SPORT_FEATURES_ENABLED && sportItems.length > 0 && (
                     <div className="space-y-2">
                         <div className="flex items-center gap-2 px-1">
                             <div className="size-6 rounded-lg flex items-center justify-center shrink-0 bg-indigo-500">

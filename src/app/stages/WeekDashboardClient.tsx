@@ -11,11 +11,13 @@ import { OBSERVATION_TYPES, SPECIES_CATEGORY_LABELS, SPECIES_CATEGORY_ORDER } fr
 import { PILLARS } from '@/data/etages';
 import { OBJECTIFS, extractIntention, extractCoeff, extractMeteo } from '@/data/objectifs';
 import { parseStageDateRange } from '@/lib/stage-dates';
+import { SPORT_FEATURES_ENABLED } from '@/lib/feature-flags';
 import { addObservation, deleteObservation } from '@/actions/observation-actions';
 import { saveObjectiveStatus, clearObjectiveStatus, updateStagePool } from '@/actions/stage-actions';
 import { updateStageExploitStatus, uploadDefiPhoto } from '@/actions/defi-actions';
 import FilRougeForm from '@/components/defis/FilRougeForm';
 import { DeleteStageButton } from '@/components/DeleteStageButton';
+import CardDetailModal from '@/components/CardDetailModal';
 
 type DefiInfo = {
     id: string;
@@ -372,11 +374,13 @@ function ObjectiveRow({
     status,
     stageId,
     onStatusChange,
+    onOpenDetail,
 }: {
     card: PedagogicalContent;
     status: StageObjectiveExecutionStatus | null;
     stageId: string;
     onStatusChange: (cardId: string, s: StageObjectiveExecutionStatus | null) => void;
+    onOpenDetail: (card: PedagogicalContent) => void;
 }) {
     const [open, setOpen] = useState(false);
     const [saving, setSaving] = useState(false);
@@ -412,18 +416,20 @@ function ObjectiveRow({
             "border-slate-200 bg-white"
         )}>
             {/* Header ligne */}
-            <button
-                onClick={() => setOpen(o => !o)}
-                className="w-full flex items-center gap-3 px-4 py-3 text-left"
-            >
-                <div className={clsx("size-2 rounded-full shrink-0", dotClass)} />
-                <span className={clsx(
-                    "flex-1 text-sm font-semibold leading-snug",
-                    status === 'not_done' ? "line-through text-slate-400" : "text-slate-800"
-                )}>
-                    {card.question}
-                </span>
-                <div className="flex items-center gap-2 shrink-0">
+            <div className="w-full flex items-center gap-1 pr-2">
+                <button
+                    onClick={() => setOpen(o => !o)}
+                    className="flex-1 flex items-center gap-3 pl-4 py-3 text-left min-w-0"
+                >
+                    <div className={clsx("size-2 rounded-full shrink-0", dotClass)} />
+                    <span className={clsx(
+                        "flex-1 text-sm font-semibold leading-snug",
+                        status === 'not_done' ? "line-through text-slate-400" : "text-slate-800"
+                    )}>
+                        {card.question}
+                    </span>
+                </button>
+                <div className="flex items-center gap-1 shrink-0">
                     {statusMeta && (
                         <span className={clsx(
                             "text-[10px] font-black px-2 py-0.5 rounded-full border",
@@ -432,14 +438,24 @@ function ObjectiveRow({
                             {statusMeta.label}
                         </span>
                     )}
-                    <span className={clsx(
-                        "material-symbols-outlined text-slate-300 text-base transition-transform duration-200",
-                        open && "rotate-180"
-                    )}>
-                        expand_more
-                    </span>
+                    {/* Pense-bête : ouvre la fiche complète (objectif détaillé, conseil, fiches mémo liées) */}
+                    <button
+                        onClick={() => onOpenDetail(card)}
+                        className="size-7 rounded-full flex items-center justify-center text-slate-300 hover:text-indigo-500 hover:bg-indigo-50 transition-colors"
+                        aria-label="Voir la fiche détaillée"
+                    >
+                        <span className="material-symbols-outlined text-[17px]">menu_book</span>
+                    </button>
+                    <button onClick={() => setOpen(o => !o)} className="size-7 flex items-center justify-center">
+                        <span className={clsx(
+                            "material-symbols-outlined text-slate-300 text-base transition-transform duration-200",
+                            open && "rotate-180"
+                        )}>
+                            expand_more
+                        </span>
+                    </button>
                 </div>
-            </button>
+            </div>
 
             {/* Corps accordéon */}
             <AnimatePresence initial={false}>
@@ -515,6 +531,8 @@ type Props = {
     upcomingStages: { id: string; title: string; dates: string }[];
     suggestedThematics: string[];
     quizDone: boolean;
+    totalPoints: number;
+    weekPoints: number;
 };
 
 export function WeekDashboardClient({
@@ -522,11 +540,12 @@ export function WeekDashboardClient({
     initialStatuses, initialObservations, initialExploits, clubObservationTargets,
     greeting, firstName, seasonGradient, seasonIcon,
     contentCount, validatedCount: initialValidatedCount, archivedStages, upcomingStages,
-    suggestedThematics, quizDone,
+    suggestedThematics, quizDone, totalPoints, weekPoints,
 }: Props) {
     const [statuses, setStatuses] = useState<Record<string, StageObjectiveExecutionStatus>>(initialStatuses);
     const [technicalObjectiveList, setTechnicalObjectiveList] = useState<PedagogicalContent[]>(technicalObjectives);
     const [showSportPicker, setShowSportPicker] = useState(false);
+    const [detailCard, setDetailCard] = useState<PedagogicalContent | null>(null);
     const [observations, setObservations] = useState<WeekObservation[]>(initialObservations);
     const [showAddObs, setShowAddObs] = useState(false);
     const [showAllUpcoming, setShowAllUpcoming] = useState(false);
@@ -602,6 +621,15 @@ export function WeekDashboardClient({
     const defiSingle = initialExploits.length === 1 ? initialExploits[0] : null;
     const allDefisDone = initialExploits.length > 0 && defisDone === initialExploits.length;
 
+    // Potentiel de points restant sur la semaine : défis non validés + quiz (≈10 pts,
+    // 5 questions × 2) + retours terrain (1 pt chacun, plafonnés à 3 par semaine).
+    const pendingDefisPts = initialExploits
+        .filter(e => e.status !== 'complete')
+        .reduce((sum, e) => sum + (e.defis.points || 2), 0);
+    const potentialPoints = pendingDefisPts
+        + (quizDone ? 0 : 10)
+        + Math.max(0, 3 - Math.min(observations.length, 3));
+
     const resetObsForm = () => {
         setObsText('');
         setObsAction(null);
@@ -669,13 +697,20 @@ export function WeekDashboardClient({
 
             {/* Header saisonnier — cockpit de la semaine */}
             <header className={`relative bg-linear-to-br ${seasonGradient} overflow-hidden`}>
-                <div className="relative z-10 px-5 pt-10 pb-3 flex items-center justify-between">
-                    <p className="text-white/80 text-sm font-semibold">
+                <div className="relative z-10 px-5 pt-10 pb-3 flex items-center justify-between gap-3">
+                    <p className="text-white/80 text-sm font-semibold min-w-0 truncate">
                         {greeting}, <span className="font-black text-white italic">{firstName}.</span>
                     </p>
-                    <Link href="/profil" className="size-9 rounded-full bg-white/20 border border-white/30 flex items-center justify-center text-white">
-                        <span className="material-symbols-outlined text-lg">{seasonIcon}</span>
-                    </Link>
+                    <div className="flex items-center gap-2 shrink-0">
+                        {/* Score global, cliquable vers le classement */}
+                        <Link href="/classement" className="flex items-center gap-1 h-9 px-3 rounded-full bg-white/20 border border-white/30 text-white active:scale-95 transition">
+                            <span className="material-symbols-outlined text-[15px] text-amber-300">emoji_events</span>
+                            <span className="text-xs font-black">{totalPoints}<span className="font-bold text-white/60"> pts</span></span>
+                        </Link>
+                        <Link href="/profil" className="size-9 rounded-full bg-white/20 border border-white/30 flex items-center justify-center text-white">
+                            <span className="material-symbols-outlined text-lg">{seasonIcon}</span>
+                        </Link>
+                    </div>
                 </div>
 
                 <div className="relative z-10 mx-4 mb-5">
@@ -789,6 +824,23 @@ export function WeekDashboardClient({
                                 </a>
                             )}
                         </div>
+
+                        {/* Points de la semaine : gagnés + restant à prendre (distincts du score général en haut) */}
+                        {(weekPoints > 0 || potentialPoints > 0) && (
+                            <p className="mt-2.5 flex items-center gap-1 text-[11px] font-bold text-white/70">
+                                <span className="material-symbols-outlined text-[13px] text-amber-300">emoji_events</span>
+                                {weekPoints > 0 ? (
+                                    <span>
+                                        +{weekPoints} pts gagnés
+                                        {potentialPoints > 0 && (
+                                            <span className="text-white/50"> · encore jusqu&apos;à {potentialPoints} à prendre</span>
+                                        )}
+                                    </span>
+                                ) : (
+                                    <span>Jusqu&apos;à {potentialPoints} pts à gagner cette semaine</span>
+                                )}
+                            </p>
+                        )}
                     </div>
                 </div>
 
@@ -835,6 +887,7 @@ export function WeekDashboardClient({
                                                     status={statuses[card.id] ?? null}
                                                     stageId={stageId}
                                                     onStatusChange={handleStatusChange}
+                                                    onOpenDetail={setDetailCard}
                                                 />
                                             ))}
                                         </div>
@@ -846,7 +899,7 @@ export function WeekDashboardClient({
                 </section>
 
                 {/* Objectifs sportifs — fiches créées par le moniteur, indépendantes du programme environnemental COP'UN */}
-                {(technicalObjectiveList.length > 0 || sportFiches.length > 0) && (
+                {SPORT_FEATURES_ENABLED && (technicalObjectiveList.length > 0 || sportFiches.length > 0) && (
                     <section>
                         <div className="flex items-center justify-between mb-3">
                             <p className="text-[10px] font-black uppercase tracking-[0.18em] text-indigo-500 flex items-center gap-1.5">
@@ -883,6 +936,7 @@ export function WeekDashboardClient({
                                         status={statuses[card.id] ?? null}
                                         stageId={stageId}
                                         onStatusChange={handleStatusChange}
+                                        onOpenDetail={setDetailCard}
                                     />
                                 ))}
                             </div>
@@ -890,7 +944,7 @@ export function WeekDashboardClient({
                     </section>
                 )}
 
-                {showSportPicker && (
+                {SPORT_FEATURES_ENABLED && showSportPicker && (
                     <SportObjectivesPicker
                         allFiches={sportFiches}
                         selectedIds={technicalObjectiveList.map(c => c.id)}
@@ -1377,6 +1431,12 @@ export function WeekDashboardClient({
                 </section>
 
             </main>
+
+            <CardDetailModal
+                isOpen={!!detailCard}
+                onClose={() => setDetailCard(null)}
+                content={detailCard}
+            />
         </div>
     );
 }

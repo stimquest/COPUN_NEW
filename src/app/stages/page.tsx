@@ -4,7 +4,7 @@ import { getProfile } from '@/actions/user-actions';
 import { getObservationsForStage } from '@/actions/observation-actions';
 import { getStageExploits, getClubObservationTargets } from '@/actions/defi-actions';
 import { getUserContent } from '@/actions/content-actions';
-import { getStageQuiz } from '@/actions/quiz-actions';
+import { getStageQuiz, getMyTotalPoints } from '@/actions/quiz-actions';
 import { getPeriodForMonth } from '@/data/seasonal-context';
 import { pickCurrentStage } from '@/lib/stage-dates';
 import { WeekDashboardClient } from './WeekDashboardClient';
@@ -20,6 +20,14 @@ const SEASON_STYLES: Record<string, { gradient: string; icon: string }> = {
     transition_automnale: { gradient: 'from-orange-600 to-red-800',     icon: 'filter_drama' },
     entree_hiver:         { gradient: 'from-blue-700 to-slate-800',     icon: 'water' },
 };
+
+/** Points gagnés sur cette semaine (défis, quiz, retours terrain) — sous-ensemble du score général. */
+async function getStagePointsTotal(stageId: string): Promise<number> {
+    const supabase = await createClient();
+    const { data } = await supabase
+        .from('leaderboard_points').select('points').eq('stage_id', stageId);
+    return (data ?? []).reduce((sum: number, r: { points: number }) => sum + r.points, 0);
+}
 
 async function getObjectiveStatusesForStage(stageId: string): Promise<Record<string, StageObjectiveExecutionStatus>> {
     const supabase = await createClient();
@@ -129,7 +137,7 @@ export default async function StagesPage() {
     }
 
     // Stage actif — tableau de bord principal
-    const [copunPool, observations, objectiveStatuses, assignedExploits, clubObservationTargets, sportFiches, quizData] = await Promise.all([
+    const [copunPool, observations, objectiveStatuses, assignedExploits, clubObservationTargets, sportFiches, quizData, totalPoints] = await Promise.all([
         getPedagogicalPool(),
         getObservationsForStage(activeStage.id),
         getObjectiveStatusesForStage(activeStage.id),
@@ -137,7 +145,9 @@ export default async function StagesPage() {
         getClubObservationTargets(),
         getUserContent(),
         getStageQuiz(activeStage.id),
+        getMyTotalPoints(),
     ]);
+    const weekPoints = await getStagePointsTotal(activeStage.id);
 
     const selectedIds: string[] = activeStage.selected_content ?? [];
     const selectedContent = selectedIds
@@ -171,6 +181,8 @@ export default async function StagesPage() {
             validatedCount={validatedCount}
             suggestedThematics={activeStage.suggested_thematics ?? []}
             quizDone={!!quizData?.completed_at}
+            totalPoints={totalPoints}
+            weekPoints={weekPoints}
             archivedStages={archivedStages.map(s => ({ id: s.id, title: s.title, dates: s.dates ?? '' }))}
             upcomingStages={upcomingStages.map(s => ({ id: s.id, title: s.title, dates: s.dates ?? '' }))}
         />

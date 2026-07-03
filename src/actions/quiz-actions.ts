@@ -114,12 +114,15 @@ export async function awardStageQuizPoints(
     const ctx = await requireAuth();
     if (!ctx) return { success: false, error: 'Non authentifié' };
 
+    // Un seul gain de quiz par semaine — on cible précisément les lignes "Quiz…" :
+    // un filtre trop large (ex: "tout sauf Défi") matcherait aussi les points retours terrain.
     const { data: existingPoints } = await ctx.supabase
         .from('leaderboard_points')
         .select('points')
         .eq('monitor_id', ctx.user.id)
         .eq('stage_id', stageId)
-        .not('reason', 'like', '%Défi%')
+        .like('reason', 'Quiz%')
+        .limit(1)
         .maybeSingle();
 
     if (existingPoints) return { success: true, points_awarded: existingPoints.points };
@@ -127,8 +130,9 @@ export async function awardStageQuizPoints(
     const score_pct = scoreTotal > 0 ? Math.round((scoreCorrect / scoreTotal) * 100) : 0;
     const points_awarded = computeQuizPoints(scoreCorrect, scoreTotal);
 
-    const { data: stageData } = await ctx.supabase
-        .from('stages').select('club_id').eq('id', stageId).single();
+    // Le club vient du profil du moniteur (les stages n'ont pas de club_id renseigné).
+    const { data: profile } = await ctx.supabase
+        .from('profiles').select('club_id').eq('id', ctx.user.id).maybeSingle();
 
     await Promise.all([
         ctx.supabase.from('stage_quizzes').upsert(
@@ -137,7 +141,7 @@ export async function awardStageQuizPoints(
         ),
         ctx.supabase.from('leaderboard_points').insert({
             monitor_id: ctx.user.id,
-            club_id: stageData?.club_id ?? null,
+            club_id: profile?.club_id ?? null,
             stage_id: stageId,
             defi_id: null,
             points: points_awarded,

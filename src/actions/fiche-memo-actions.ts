@@ -81,6 +81,45 @@ export async function getFichesMemoByFilters(tags_thematiques: ThematicTag[], ta
     return data as FicheMemo[];
 }
 
+/**
+ * Fiches mémo pertinentes pour une carte objectif, par rapprochement de tags — sans lien
+ * manuel à poser. Score : +2 par tags_theme en commun (mêmes valeurs que tags_thematiques),
+ * +1 par tags_filtre (mot-clé précis, ex. "marée") retrouvé dans les tags libres de la fiche.
+ * Seules les fiches avec un score > 0 sont retenues, triées par pertinence.
+ */
+export async function getFichesMemoForCard(
+    tags_theme: string[],
+    tags_filtre: string[],
+): Promise<FicheMemo[]> {
+    if (tags_theme.length === 0 && tags_filtre.length === 0) return [];
+
+    const supabase = await createClient();
+    const { data, error } = await supabase
+        .from('fiches_memo')
+        .select('*, auteur:profiles(full_name, email)')
+        .eq('statut', 'publie')
+        .or([
+            tags_theme.length > 0 ? `tags_thematiques.ov.{${tags_theme.join(',')}}` : null,
+            tags_filtre.length > 0 ? `tags.ov.{${tags_filtre.join(',')}}` : null,
+        ].filter(Boolean).join(','));
+
+    if (error || !data) return [];
+
+    const filtreLower = tags_filtre.map(t => t.toLowerCase());
+    const themeSet = new Set(tags_theme);
+
+    return (data as FicheMemo[])
+        .map(fiche => {
+            const themeMatches = fiche.tags_thematiques.filter(t => themeSet.has(t)).length;
+            const filtreMatches = (fiche.tags ?? []).filter(t => filtreLower.includes(t.toLowerCase())).length;
+            return { fiche, score: themeMatches * 2 + filtreMatches };
+        })
+        .filter(x => x.score > 0)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 5)
+        .map(x => x.fiche);
+}
+
 export async function createFicheMemo(ficheData: CreateFicheData) {
     const ctx = await requireAuth();
     if (!ctx) return { success: false, error: 'Non connecté' };

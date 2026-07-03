@@ -88,6 +88,9 @@ export async function updateStageExploitStatus(
         const { data: defi } = await supabase.from('defis').select('spot_fixe').eq('id', defiId).single();
         const points = defi?.spot_fixe ? 3 : 2;
         await awardPointsForDefiInternal(supabase, stageId, defiId, points);
+    } else {
+        // Défi dévalidé : on reprend les points pour que le total reste honnête.
+        await revokePointsForDefiInternal(supabase, stageId, defiId);
     }
 
     revalidatePath('/stages');
@@ -126,6 +129,11 @@ export async function removeDefiPhoto(
 
     if (error) return { success: false, error: error.message };
 
+    // Plus aucune preuve = défi dévalidé, on reprend aussi les points.
+    if (remaining.length === 0) {
+        await revokePointsForDefiInternal(supabase, stageId, defiId);
+    }
+
     revalidatePath(`/stages/${stageId}/defis`);
     revalidatePath('/stages');
     return { success: true };
@@ -154,11 +162,26 @@ async function awardPointsForDefiInternal(
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const { data: stage } = await supabase.from('stages').select('club_id').eq('id', stageId).single();
+    // Un seul gain par défi et par semaine : revalider (photo supplémentaire, relevé
+    // modifié, dévalidation/revalidation) ne doit jamais créditer de nouveaux points.
+    const { data: existing } = await supabase
+        .from('leaderboard_points')
+        .select('id')
+        .eq('monitor_id', user.id)
+        .eq('stage_id', stageId)
+        .eq('defi_id', defiId)
+        .limit(1)
+        .maybeSingle();
+    if (existing) return;
+
+    // Le club vient du profil du moniteur : les stages n'ont pas de club_id renseigné,
+    // s'appuyer dessus laissait toutes les lignes de points sans club.
+    const { data: profile } = await supabase
+        .from('profiles').select('club_id').eq('id', user.id).maybeSingle();
 
     await supabase.from('leaderboard_points').insert({
         monitor_id: user.id,
-        club_id: stage?.club_id || null,
+        club_id: profile?.club_id ?? null,
         stage_id: stageId,
         defi_id: defiId,
         points,
@@ -166,27 +189,29 @@ async function awardPointsForDefiInternal(
     });
 }
 
+/** Retire les points d'un défi dévalidé (nécessite la policy DELETE sur leaderboard_points). */
+async function revokePointsForDefiInternal(
+    supabase: Awaited<ReturnType<typeof createClient>>,
+    stageId: string,
+    defiId: string,
+) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    await supabase.from('leaderboard_points')
+        .delete()
+        .eq('monitor_id', user.id)
+        .eq('stage_id', stageId)
+        .eq('defi_id', defiId);
+}
+
 export async function awardPointsForDefi(stageId: string, defiId: string) {
     const ctx = await requireAuth();
     if (!ctx) return { success: false, error: 'Non authentifié' };
 
-    const [{ data: stage }, { data: defi }] = await Promise.all([
-        ctx.supabase.from('stages').select('club_id').eq('id', stageId).single(),
-        ctx.supabase.from('defis').select('points').eq('id', defiId).single(),
-    ]);
-
+    const { data: defi } = await ctx.supabase.from('defis').select('points').eq('id', defiId).single();
     const points = defi?.points ?? 2;
 
-    const { error } = await ctx.supabase.from('leaderboard_points').insert({
-        monitor_id: ctx.user.id,
-        club_id: stage?.club_id || null,
-        stage_id: stageId,
-        defi_id: defiId,
-        points,
-        reason: `Défi validé: ${defiId}`,
-    });
-
-    if (error) { console.error('[awardPointsForDefi]', error.message); return { success: false, error: error.message }; }
+    await awardPointsForDefiInternal(ctx.supabase, stageId, defiId, points);
     return { success: true, points };
 }
 
@@ -244,17 +269,28 @@ export async function getLeaderboard(type: 'monitors' | 'clubs' = 'monitors', li
             .sort((a, b) => b.total_points - a.total_points)
             .slice(0, limit);
     } else {
-        const { data, error } = await supabase
-            .from('leaderboard_points').select('club_id, points, clubs(name)').not('club_id', 'is', null);
-        if (error || !data) return [];
+        // On n'agrège PAS sur leaderboard_points.club_id : historiquement les stages n'avaient
+        // pas de club_id, donc la plupart des lignes ont club_id null et le classement club
+        // ratait les points des moniteurs. On somme par moniteur puis on rattache chaque
+        // moniteur au club de son profil.
+        const [{ data: points, error }, { data: profiles }] = await Promise.all([
+            supabase.from('leaderboard_points').select('monitor_id, points'),
+            supabase.from('profiles').select('id, club_id, clubs(name)').not('club_id', 'is', null),
+        ]);
+        if (error || !points) return [];
+
+        const profileClub = new Map<string, { id: string; name: string }>();
+        (profiles ?? []).forEach((p: Record<string, unknown>) => {
+            const club = p.clubs as { name?: string } | null;
+            profileClub.set(p.id as string, { id: p.club_id as string, name: club?.name ?? 'Club' });
+        });
 
         const byClub = new Map<string, { name: string; total: number }>();
-        data.forEach((row: Record<string, unknown>) => {
-            if (!row.club_id) return;
-            const id = row.club_id as string;
-            const club = row.clubs as { name?: string } | null;
-            const existing = byClub.get(id);
-            byClub.set(id, { name: club?.name ?? 'Club', total: (existing?.total ?? 0) + (row.points as number) });
+        points.forEach((row: Record<string, unknown>) => {
+            const club = profileClub.get(row.monitor_id as string);
+            if (!club) return;
+            const existing = byClub.get(club.id);
+            byClub.set(club.id, { name: club.name, total: (existing?.total ?? 0) + (row.points as number) });
         });
 
         return Array.from(byClub.entries())

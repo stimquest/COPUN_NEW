@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Stage, PedagogicalContent } from '@/types';
 import { PILLARS, THEMES_BY_PILLAR } from '@/data/etages';
 import { OBJECTIFS, extractIntention, stripIntention } from '@/data/objectifs';
 import { updateStagePool } from '@/actions/stage-actions';
+import { SPORT_FEATURES_ENABLED } from '@/lib/feature-flags';
 import clsx from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
 import CardDetailModal from '@/components/CardDetailModal';
@@ -157,8 +158,32 @@ export default function ProgramBuilderClient({ stage, copunPool, customPool }: {
         }
     };
 
+    // 2-3 notions par semaine = bon rythme de transmission ; 5 max pour les très motivés
+    // (ex. 2-3 cartes connexes sur les marées) — au-delà, rien ne sera vraiment travaillé.
+    const MAX_WEEK_OBJECTIVES = 5;
+    const envSelectedCount = useMemo(
+        () => programIds.filter(id => copunPool.some(c => c.id === id)).length,
+        [programIds, copunPool]
+    );
+    const [capReached, setCapReached] = useState(false);
+
+    useEffect(() => {
+        if (!capReached) return;
+        const t = setTimeout(() => setCapReached(false), 3500);
+        return () => clearTimeout(t);
+    }, [capReached]);
+
     const toggleCard = (cardId: string) => {
-        setProgramIds(prev => prev.includes(cardId) ? prev.filter(i => i !== cardId) : [...prev, cardId]);
+        setProgramIds(prev => {
+            if (prev.includes(cardId)) return prev.filter(i => i !== cardId);
+            const envCount = prev.filter(id => copunPool.some(c => c.id === id)).length;
+            const isEnvCard = copunPool.some(c => c.id === cardId);
+            if (isEnvCard && envCount >= MAX_WEEK_OBJECTIVES) {
+                setCapReached(true);
+                return prev;
+            }
+            return [...prev, cardId];
+        });
     };
 
     const toggleTheme = (themeId: string) => {
@@ -327,10 +352,12 @@ export default function ProgramBuilderClient({ stage, copunPool, customPool }: {
                                 </div>
                             )}
 
-                            <Link href="/fiches" className="w-full py-2.5 rounded-xl border-2 border-dashed border-slate-200 text-slate-400 font-bold text-[11px] hover:border-indigo-300 hover:text-indigo-500 transition-all flex items-center justify-center gap-2">
-                                <span className="material-symbols-outlined text-base">sailing</span>
-                                Créer fiche voile (dans /fiches)
-                            </Link>
+                            {SPORT_FEATURES_ENABLED && (
+                                <Link href="/fiches" className="w-full py-2.5 rounded-xl border-2 border-dashed border-slate-200 text-slate-400 font-bold text-[11px] hover:border-indigo-300 hover:text-indigo-500 transition-all flex items-center justify-center gap-2">
+                                    <span className="material-symbols-outlined text-base">sailing</span>
+                                    Créer fiche voile (dans /fiches)
+                                </Link>
+                            )}
                         </section>
 
                         {/* CARDS GROUPED BY DIMENSION */}
@@ -451,7 +478,15 @@ export default function ProgramBuilderClient({ stage, copunPool, customPool }: {
                             </div>
                         ) : (
                             <>
-                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">{programCards.length} objectif{programCards.length > 1 ? 's' : ''} sélectionné{programCards.length > 1 ? 's' : ''}</p>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">
+                                    {programCards.length} objectif{programCards.length > 1 ? 's' : ''} sélectionné{programCards.length > 1 ? 's' : ''}
+                                    <span className={clsx(
+                                        'ml-2 normal-case tracking-normal font-bold',
+                                        envSelectedCount <= 3 ? 'text-emerald-500' : 'text-amber-500'
+                                    )}>
+                                        {envSelectedCount <= 3 ? '· 2-3 par semaine, bon rythme' : '· 5 max — mieux vaut peu et bien'}
+                                    </span>
+                                </p>
 
                                 {/* COPUN environmental cards */}
                                 {(() => {
@@ -496,6 +531,20 @@ export default function ProgramBuilderClient({ stage, copunPool, customPool }: {
                     </div>
                 )}
             </main>
+
+            {/* Toast plafond atteint */}
+            <AnimatePresence>
+                {capReached && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 12 }}
+                        className="fixed bottom-28 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white text-xs font-bold px-4 py-3 rounded-2xl shadow-xl max-w-[90vw] text-center"
+                    >
+                        5 objectifs max par semaine — mieux vaut 2-3 fiches bien travaillées.
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Footer save — anchored above the bottom nav */}
             <div className="above-nav fixed left-0 right-0 px-4 pb-4 pt-12 bg-linear-to-t from-[#EBF0F7] via-[#EBF0F7] to-transparent z-40 pointer-events-none flex justify-center">

@@ -11,6 +11,7 @@ import { getStageById, getStageCockpitStats, getStageObjectiveReviewItems } from
 import { getStageExploits } from '@/actions/defi-actions';
 import { getStageQuiz } from '@/actions/quiz-actions';
 import { getObservationsForStage } from '@/actions/observation-actions';
+import { SPORT_FEATURES_ENABLED } from '@/lib/feature-flags';
 
 const STATUS_COUNTS = (items: Awaited<ReturnType<typeof getStageObjectiveReviewItems>>) => ({
     done:     items.filter(i => i.review?.executionStatus === 'done').length,
@@ -22,7 +23,7 @@ export default async function StageBilanPage({ params }: { params: Promise<{ id:
     noStore();
     const { id } = await params;
 
-    const [stage, stats, objectiveItems, defisAssigned, quizData, observations] = await Promise.all([
+    const [stage, stats, allObjectiveItems, defisAssigned, quizData, observations] = await Promise.all([
         getStageById(id),
         getStageCockpitStats(id),
         getStageObjectiveReviewItems(id),
@@ -32,6 +33,12 @@ export default async function StageBilanPage({ params }: { params: Promise<{ id:
     ]);
 
     if (!stage) return notFound();
+
+    // Fiches sportives masquées pour le moment : on les écarte du bilan (affichage ET
+    // compteurs), sinon la clôture serait bloquée par des fiches invisibles sans statut.
+    const objectiveItems = SPORT_FEATURES_ENABLED
+        ? allObjectiveItems
+        : allObjectiveItems.filter(i => i.pedagogicalContent.source !== 'custom');
 
     const isClosed = !!stage.closed_at;
 

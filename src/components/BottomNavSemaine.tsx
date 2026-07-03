@@ -1,6 +1,7 @@
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import clsx from 'clsx';
+import { SPORT_FEATURES_ENABLED } from '@/lib/feature-flags';
 
 const baseNavItems = [
     { name: 'Accueil', href: '/', icon: 'home', fill: false },
@@ -12,7 +13,7 @@ const baseNavItems = [
 
 export function BottomNav() {
     const pathname = usePathname();
-    const navItems = baseNavItems;
+    const navItems = baseNavItems.filter(i => SPORT_FEATURES_ENABLED || i.href !== '/fiches');
 
     return (
         <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden px-4 pb-[max(env(safe-area-inset-bottom),0.75rem)] pt-2 pointer-events-none">

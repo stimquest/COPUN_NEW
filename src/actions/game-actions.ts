@@ -91,9 +91,16 @@ export async function getGamesForStage(stageId: string) {
     return data;
 }
 
+/**
+ * Jeux "bibliothèque" : ceux créés à la main via le générateur (stage_id null).
+ * Les quiz auto-générés en fin de semaine (stage_id renseigné) sont un artefact
+ * technique de la clôture de stage, pas des jeux réutilisables — on ne veut pas
+ * qu'ils s'accumulent dans /jeux et /ressources/jeux au fil des semaines.
+ */
 export async function getAllGames() {
     const supabase = await createClient();
-    const { data, error } = await supabase.from('games').select('*').order('created_at', { ascending: false });
+    const { data, error } = await supabase
+        .from('games').select('*').is('stage_id', null).order('created_at', { ascending: false });
     if (error) { console.error('[getAllGames]', error.message); return []; }
     return data;
 }

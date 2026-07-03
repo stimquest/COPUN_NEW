@@ -7,6 +7,7 @@ import { Profile, PedagogicalContent, Stage } from '@/types';
 import Link from 'next/link';
 import SignOutButton from '@/components/SignOutButton';
 import { FilRougePicker } from '@/components/FilRougePicker';
+import { SPORT_FEATURES_ENABLED } from '@/lib/feature-flags';
 
 export default async function ProfilPage() {
     let profile: Profile | null = null;
@@ -77,7 +78,7 @@ export default async function ProfilPage() {
 
             {/* Stats Grid */}
             <div className="px-5 -mt-8">
-                <div className="grid grid-cols-3 gap-3">
+                <div className={SPORT_FEATURES_ENABLED ? 'grid grid-cols-3 gap-3' : 'grid grid-cols-2 gap-3'}>
                     <div className="bg-indigo-600 p-5 rounded-2xl shadow-xl shadow-indigo-500/30 flex flex-col items-center justify-center text-center col-span-1">
                         <span className="text-4xl font-black text-white mb-1">{totalPoints}</span>
                         <span className="text-[9px] text-indigo-200 font-black uppercase tracking-widest">Points</span>
@@ -86,10 +87,12 @@ export default async function ProfilPage() {
                         <span className="text-4xl font-black text-emerald-500 mb-1">{stats?.totalValidations || 0}</span>
                         <span className="text-[9px] text-slate-400 font-black uppercase tracking-widest">Validations</span>
                     </div>
-                    <div className="bg-white p-5 rounded-2xl shadow-xl shadow-slate-200/50 flex flex-col items-center justify-center text-center">
-                        <span className="text-4xl font-black text-indigo-500 mb-1">{stats?.createdContent || 0}</span>
-                        <span className="text-[9px] text-slate-400 font-black uppercase tracking-widest">Fiches</span>
-                    </div>
+                    {SPORT_FEATURES_ENABLED && (
+                        <div className="bg-white p-5 rounded-2xl shadow-xl shadow-slate-200/50 flex flex-col items-center justify-center text-center">
+                            <span className="text-4xl font-black text-indigo-500 mb-1">{stats?.createdContent || 0}</span>
+                            <span className="text-[9px] text-slate-400 font-black uppercase tracking-widest">Fiches</span>
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -175,7 +178,8 @@ export default async function ProfilPage() {
                 <SignOutButton />
             </div>
 
-            {/* Content List */}
+            {/* Content List — fiches perso (sportives), masquées pour le moment */}
+            {SPORT_FEATURES_ENABLED && (
             <div className="px-5 mt-6 max-w-md mx-auto w-full">
                 <div className="flex items-center justify-between mb-4">
                     <h2 className="text-lg font-black text-slate-900">Mes Fiches</h2>
@@ -210,6 +214,7 @@ export default async function ProfilPage() {
                     </div>
                 )}
             </div>
+            )}
         </div>
     );
 }
