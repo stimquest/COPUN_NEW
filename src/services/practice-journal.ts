@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { createClient, getCachedUser } from '@/lib/supabase/server';
 import { isStageObjectiveExecutionStatus, isStageObjectiveImpactLevel } from '@/lib/stage-objective-review';
 import { StageObjectiveExecutionStatus, StageObjectiveImpactLevel } from '@/types';
 
@@ -63,7 +63,7 @@ function attemptRank(status: StageObjectiveExecutionStatus, impact: StageObjecti
 export async function getPracticeJournal(): Promise<PracticeJournal> {
     const empty: PracticeJournal = { weeksCount: 0, insights: [], reminder: null, evolution: [], progressing: [], resisting: [], weeks: [] };
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getCachedUser();
     if (!user) return empty;
 
     const { data: allStages } = await supabase

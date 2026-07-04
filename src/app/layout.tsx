@@ -4,7 +4,7 @@ import './globals.css';
 import { BottomNav } from '@/components/BottomNav';
 import { Sidebar } from '@/components/Sidebar';
 import { cn } from "@/lib/utils";
-import { createClient } from '@/lib/supabase/server';
+import { createClient, getCachedUser } from '@/lib/supabase/server';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
@@ -39,7 +39,7 @@ export default async function RootLayout({
   let clubName: string | null = null;
   try {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getCachedUser();
     if (user) {
       email = user.email ?? null;
       const { data: profile } = await supabase

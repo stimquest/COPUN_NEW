@@ -1,11 +1,11 @@
-import { createClient } from '@/lib/supabase/server';
+import { createClient, getCachedUser } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { FichesClient } from './FichesClient';
 import { ContentTodo, PedagogicalContent } from '@/types';
 
 export default async function FichesPage() {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getCachedUser();
     if (!user) redirect('/login');
 
     const { data } = await supabase

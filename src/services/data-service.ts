@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { createClient, getCachedUser } from '@/lib/supabase/server';
 import { summarizeObjectiveReviews, type ObjectiveAnalyticsInput, type StageObjectiveAnalyticsSummary } from '@/lib/stage-objective-analytics';
 import { isStageObjectiveExecutionStatus, isStageObjectiveImpactLevel } from '@/lib/stage-objective-review';
 import { PedagogicalContent, StageObjectiveReviewItem } from '@/types';
@@ -15,7 +15,7 @@ export async function getStageById(id: string) {
     }
 
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getCachedUser();
 
     if (!user) return null;
 
@@ -35,7 +35,7 @@ export async function getStageById(id: string) {
 
 export async function getStages() {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getCachedUser();
 
     if (!user) return [];
 
@@ -54,7 +54,7 @@ export async function getStages() {
 
 export async function getDashboardStages() {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getCachedUser();
     if (!user) return [];
 
     const { data: stages, error: stagesError } = await supabase
@@ -113,7 +113,7 @@ export async function getDashboardStages() {
  */
 export async function getStageCockpitStats(stageId: string) {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getCachedUser();
     if (!user) return null;
 
     const [{ data: stage }, { data: exploits }, { data: quiz }, { data: pointsRows }] = await Promise.all([
@@ -145,7 +145,7 @@ export async function getStageCockpitStats(stageId: string) {
 
 export async function getStageObjectiveReviewItems(stageId: string): Promise<StageObjectiveReviewItem[]> {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getCachedUser();
     if (!user) return [];
 
     const { data: stage, error: stageError } = await supabase
@@ -247,7 +247,7 @@ export async function getStageObjectiveDashboardStats(): Promise<StageObjectiveD
     const emptySummary = summarizeObjectiveReviews([]);
     const empty: StageObjectiveDashboardStats = { stagesCount: 0, summary: emptySummary, recentStages: [], pillars: [], catalogCoverage: { selected: 0, total: 0 }, keywords: [] };
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getCachedUser();
     if (!user) return empty;
 
     const { data: stages, error: stagesError } = await supabase
@@ -421,7 +421,7 @@ export type ObservationsDashboardStats = {
 export async function getObservationsDashboardStats(): Promise<ObservationsDashboardStats> {
     const empty: ObservationsDashboardStats = { totalObservations: 0, byType: [], topSpecies: [] };
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getCachedUser();
     if (!user) return empty;
 
     const { data: stages } = await supabase.from('stages').select('id').eq('owner_id', user.id);

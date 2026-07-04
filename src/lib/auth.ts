@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { createClient, getCachedUser } from '@/lib/supabase/server';
 import type { User } from '@supabase/supabase-js';
 
 type AuthResult =
@@ -6,8 +6,7 @@ type AuthResult =
     | null;
 
 export async function requireAuth(): Promise<AuthResult> {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const [supabase, user] = await Promise.all([createClient(), getCachedUser()]);
     if (!user) return null;
     return { user, supabase };
 }

@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from '@/lib/supabase/server';
+import { createClient, getCachedUser } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { requireAuth } from '@/lib/auth';
 import { DEFAULT_LITTORAL_SPECIES } from '@/data/littoral-species';
@@ -161,7 +161,7 @@ async function awardPointsForDefiInternal(
     defiId: string,
     points: number
 ): Promise<boolean> {
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getCachedUser();
     if (!user) return false;
 
     // Un seul gain par défi et par semaine : revalider (photo supplémentaire, relevé
@@ -198,7 +198,7 @@ async function revokePointsForDefiInternal(
     stageId: string,
     defiId: string,
 ) {
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getCachedUser();
     if (!user) return;
     await supabase.from('leaderboard_points')
         .delete()

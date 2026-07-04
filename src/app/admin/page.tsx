@@ -2,11 +2,11 @@ import { listUsers, getClubs } from '@/actions/admin-actions';
 import { getAllPedagogicalContent } from '@/actions/content-actions';
 import { getAllFichesMemo } from '@/actions/fiche-memo-actions';
 import { AdminClient } from './AdminClient';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, getCachedUser } from '@/lib/supabase/server';
 
 export default async function AdminPage() {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getCachedUser();
     let userRole: string | null = null;
     if (user) {
         const { data: profile } = await supabase

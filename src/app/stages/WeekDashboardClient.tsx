@@ -113,8 +113,8 @@ function ExploitCard({ exploit, stageId, clubObservationTargets }: { exploit: St
             animate={flash ? { scale: [1, 1.03, 1] } : { scale: 1 }}
             transition={{ duration: 0.5, ease: 'easeOut' }}
             className={clsx(
-                'rounded-2xl border-2 overflow-hidden transition-colors',
-                flash ? 'border-amber-300 bg-amber-50' : done ? 'border-emerald-200 bg-emerald-50' : 'border-slate-200 bg-white'
+                'rounded-2xl overflow-hidden transition-colors shadow-sm shadow-slate-200/50',
+                flash ? 'bg-amber-50' : done ? 'bg-emerald-50' : 'bg-white'
             )}>
             <div className="px-4 py-3 flex items-start gap-3">
                 <div className={clsx(
@@ -416,26 +416,12 @@ function ObjectiveRow({
 }) {
     const [open, setOpen] = useState(false);
     const [saving, setSaving] = useState(false);
-    const rowRef = useRef<HTMLDivElement>(null);
     const status = review?.status ?? null;
     // Les fiches sportives du moniteur ont une dimension COP'UN par défaut en base :
     // on les distingue par l'indigo plutôt que par la couleur (trompeuse) du pilier.
     const isSport = card.source === 'custom';
     const pillar = isSport ? null : PILLARS.find(p => p.id === card.dimension) ?? null;
     const dotClass = isSport ? 'bg-indigo-500' : (pillar?.bg ?? 'bg-slate-300');
-
-    // Un clic n'importe où ailleurs sur la page referme l'accordéon ouvert — évite
-    // d'avoir à retaper sur l'en-tête une fois la saisie terminée.
-    useEffect(() => {
-        if (!open) return;
-        const handleClickOutside = (e: PointerEvent) => {
-            if (rowRef.current && !rowRef.current.contains(e.target as Node)) {
-                setOpen(false);
-            }
-        };
-        document.addEventListener('pointerdown', handleClickOutside);
-        return () => document.removeEventListener('pointerdown', handleClickOutside);
-    }, [open]);
 
     const handleStatus = async (val: StageObjectiveExecutionStatus) => {
         if (saving) return;
@@ -472,13 +458,12 @@ function ObjectiveRow({
 
     return (
         <div
-            ref={rowRef}
             className={clsx(
-                "rounded-2xl border overflow-hidden transition-all",
-                status === 'done' ? "border-emerald-100 bg-emerald-50/40" :
-                status === 'partial' ? "border-amber-100 bg-amber-50/30" :
-                status === 'not_done' ? "border-slate-100 bg-white opacity-60" :
-                "border-slate-200 bg-white"
+                "rounded-2xl overflow-hidden transition-all shadow-sm shadow-slate-200/50",
+                status === 'done' ? "bg-emerald-50" :
+                status === 'partial' ? "bg-amber-50" :
+                status === 'not_done' ? "bg-white opacity-60" :
+                "bg-white"
             )}>
             {/* Header ligne */}
             <div className="w-full flex items-center gap-1 pr-2">
@@ -976,36 +961,43 @@ export function WeekDashboardClient({
                 </svg>
             </header>
 
-            <main className="flex-1 px-4 pt-5 space-y-6 max-w-2xl mx-auto w-full">
+            <main className="flex-1 px-4 pt-6 space-y-9 max-w-2xl mx-auto w-full">
 
                 {/* Objectifs de la semaine */}
                 <section id="objectifs" className="scroll-mt-4">
                     <div className="flex items-center justify-between mb-3">
-                        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Objectifs de la semaine</p>
-                        <Link href={`/stages/${stageId}/program`} className="text-[10px] font-bold text-indigo-500 hover:text-indigo-700 transition-colors">
+                        <h2 className="text-lg font-black tracking-tight text-slate-900">Objectifs de la semaine</h2>
+                        <Link href={`/stages/${stageId}/program`} className="text-xs font-bold text-indigo-500 hover:text-indigo-700 transition-colors">
                             Modifier
                         </Link>
                     </div>
 
-                    {objectives.length === 0 ? (
-                        <Link href={`/stages/${stageId}/program`} className="block rounded-2xl border-2 border-dashed border-slate-200 bg-white p-6 text-center hover:border-indigo-300 transition-colors">
-                            <p className="text-sm font-bold text-slate-400">Aucun objectif choisi</p>
-                            <p className="text-xs text-slate-300 mt-1">Choisir les fiches de la semaine →</p>
-                        </Link>
-                    ) : (
-                        <div className="space-y-5">
-                            {PILLARS.map(pillar => {
-                                const cardsInPillar = objectives.filter(c => c.dimension === pillar.id);
-                                if (cardsInPillar.length === 0) return null;
-                                return (
-                                    <div key={pillar.id} className="space-y-2">
-                                        <div className="flex items-center gap-2 px-1">
-                                            <div className={clsx("size-6 rounded-lg flex items-center justify-center shrink-0", pillar.bg)}>
-                                                <span className="material-symbols-outlined text-white text-sm">{pillar.icon}</span>
-                                            </div>
-                                            <p className={clsx("text-xs font-black uppercase tracking-tight", pillar.color)}>{pillar.label}</p>
-                                            <span className="text-[10px] font-bold text-slate-300">{cardsInPillar.length}</span>
-                                        </div>
+                    {/* Les 3 piliers COP sont TOUJOURS affichés, même vides — c'est le cœur
+                        de la méthode (Comprendre / Observer / Protéger), un pilier sans
+                        objectif cette semaine reste visible comme repère. */}
+                    <div className="space-y-5">
+                        {PILLARS.map(pillar => {
+                            const cardsInPillar = objectives.filter(c => c.dimension === pillar.id);
+                            return (
+                                <div key={pillar.id} className="space-y-2">
+                                    <div className="flex items-center px-1">
+                                        <span className={clsx("inline-flex items-center gap-1.5 rounded-full pl-2.5 pr-3 py-1.5 text-white shadow-sm", pillar.bg)}>
+                                            <span className="material-symbols-outlined text-[15px]">{pillar.icon}</span>
+                                            <span className="text-[11px] font-black uppercase tracking-wide">{pillar.label}</span>
+                                            {cardsInPillar.length > 0 && (
+                                                <span className="text-[11px] font-bold text-white/70">{cardsInPillar.length}</span>
+                                            )}
+                                        </span>
+                                    </div>
+                                    {cardsInPillar.length === 0 ? (
+                                        <Link
+                                            href={`/stages/${stageId}/program`}
+                                            className="flex items-center gap-2 rounded-2xl border-2 border-dashed border-slate-200 bg-white/50 px-4 py-3 hover:border-slate-300 transition-colors"
+                                        >
+                                            <span className="text-xs font-semibold text-slate-400">Rien prévu sur ce pilier cette semaine</span>
+                                            <span className="ml-auto text-xs font-bold text-indigo-400">Ajouter</span>
+                                        </Link>
+                                    ) : (
                                         <div className="space-y-2">
                                             {cardsInPillar.map(card => (
                                                 <ObjectiveRow
@@ -1019,29 +1011,29 @@ export function WeekDashboardClient({
                                                 />
                                             ))}
                                         </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    )}
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
                 </section>
 
                 {/* Objectifs sportifs — fiches créées par le moniteur, indépendantes du programme environnemental COP'UN */}
                 {SPORT_FEATURES_ENABLED && (technicalObjectiveList.length > 0 || sportFiches.length > 0) && (
                     <section>
                         <div className="flex items-center justify-between mb-3">
-                            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-indigo-500 flex items-center gap-1.5">
-                                <span className="material-symbols-outlined text-sm">sailing</span>
+                            <h2 className="text-lg font-black tracking-tight text-slate-900 flex items-center gap-2">
+                                <span className="material-symbols-outlined text-lg text-indigo-500">sailing</span>
                                 Objectifs sportifs
-                            </p>
+                            </h2>
                             <div className="flex items-center gap-3">
                                 <button
                                     onClick={() => setShowSportPicker(true)}
-                                    className="text-[10px] font-bold text-indigo-500 hover:text-indigo-700 transition-colors"
+                                    className="text-xs font-bold text-indigo-500 hover:text-indigo-700 transition-colors"
                                 >
                                     Ajouter
                                 </button>
-                                <Link href="/fiches" className="text-[10px] font-bold text-slate-400 hover:text-slate-600 transition-colors">
+                                <Link href="/fiches" className="text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors">
                                     Mes fiches
                                 </Link>
                             </div>
@@ -1086,15 +1078,15 @@ export function WeekDashboardClient({
                 {initialExploits.length > 0 && (
                     <section id="defis" className="scroll-mt-4">
                         <div className="flex items-center justify-between mb-3">
-                            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+                            <h2 className="text-lg font-black tracking-tight text-slate-900">
                                 Défis terrain
                                 {initialExploits.filter(e => e.status === 'complete').length > 0 && (
-                                    <span className="ml-2 text-emerald-500">
+                                    <span className="ml-2 text-xs font-bold text-emerald-500 align-middle">
                                         {initialExploits.filter(e => e.status === 'complete').length}/{initialExploits.length} validés
                                     </span>
                                 )}
-                            </p>
-                            <Link href={`/stages/${stageId}/defis`} className="text-[10px] font-bold text-indigo-500 hover:text-indigo-700 transition-colors">
+                            </h2>
+                            <Link href={`/stages/${stageId}/defis`} className="text-xs font-bold text-indigo-500 hover:text-indigo-700 transition-colors">
                                 Gérer
                             </Link>
                         </div>
@@ -1109,9 +1101,9 @@ export function WeekDashboardClient({
                 {/* Retours terrain */}
                 <section id="retours" className="scroll-mt-4">
                     <div className="flex items-center justify-between mb-3">
-                        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Retours terrain</p>
+                        <h2 className="text-lg font-black tracking-tight text-slate-900">Retours terrain</h2>
                         {observations.length > 0 && (
-                            <span className="text-[10px] font-bold text-slate-300">{observations.length} moment{observations.length > 1 ? 's' : ''}</span>
+                            <span className="text-xs font-bold text-slate-300">{observations.length} moment{observations.length > 1 ? 's' : ''}</span>
                         )}
                     </div>
 
@@ -1123,7 +1115,7 @@ export function WeekDashboardClient({
                                 exit={{ opacity: 0, height: 0 }}
                                 className="mb-3 overflow-hidden"
                             >
-                                <div className="bg-white rounded-2xl border border-slate-200 p-4 space-y-4 shadow-sm">
+                                <div className="bg-white rounded-2xl p-4 space-y-4 shadow-sm shadow-slate-200/60">
 
                                     {/* Type d'observation */}
                                     <div>
@@ -1420,7 +1412,7 @@ export function WeekDashboardClient({
                                     initial={{ opacity: 0, y: -8 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, height: 0 }}
-                                    className="group relative bg-white rounded-2xl border border-slate-100 px-4 py-3 mb-2 shadow-sm"
+                                    className="group relative bg-white rounded-2xl px-4 py-3 mb-2 shadow-sm shadow-slate-200/50"
                                 >
                                     <div className="flex items-start gap-3">
                                         {dim ? (
@@ -1485,12 +1477,12 @@ export function WeekDashboardClient({
                     )}
                 </section>
 
-                {/* Accès rapides — deux gros boutons empilés, toujours là pour garder le
-                    repère "où cliquer pour avancer" stable tout au long de la semaine */}
-                <section className="space-y-2">
+                {/* Pied de page : accès rapides + création + archives — une seule pile de
+                    boutons pleine largeur au rythme uniforme, pas trois sections disjointes */}
+                <section className="space-y-3">
                     <Link
                         href={`/stages/${stageId}/quiz`}
-                        className="flex items-center gap-3 bg-white rounded-2xl border border-slate-200 px-4 py-3.5 shadow-sm hover:bg-slate-50 active:scale-[0.98] transition"
+                        className="flex items-center gap-3 bg-white rounded-2xl px-4 py-3.5 shadow-sm shadow-slate-200/60 hover:bg-slate-50 active:scale-[0.98] transition"
                     >
                         <span className="size-11 rounded-full bg-violet-600 text-white flex items-center justify-center shrink-0">
                             <span className="material-symbols-outlined text-[20px]">quiz</span>
@@ -1503,7 +1495,7 @@ export function WeekDashboardClient({
                     </Link>
                     <Link
                         href={`/stages/${stageId}/bilan`}
-                        className="flex items-center gap-3 bg-white rounded-2xl border border-slate-200 px-4 py-3.5 shadow-sm hover:bg-slate-50 active:scale-[0.98] transition"
+                        className="flex items-center gap-3 bg-white rounded-2xl px-4 py-3.5 shadow-sm shadow-slate-200/60 hover:bg-slate-50 active:scale-[0.98] transition"
                     >
                         <span className="size-11 rounded-full bg-slate-900 text-white flex items-center justify-center shrink-0">
                             <span className="material-symbols-outlined text-[20px]">article</span>
@@ -1514,15 +1506,12 @@ export function WeekDashboardClient({
                         </span>
                         <span className="material-symbols-outlined text-slate-300 shrink-0">arrow_forward</span>
                     </Link>
-                </section>
 
-                {/* Historique + nouvelle semaine */}
-                <section className="space-y-2">
                     {upcomingStages.length > 0 && (
-                        <div className="space-y-1.5 mb-3">
-                            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Semaines préparées à l&apos;avance</p>
+                        <div className="space-y-1.5">
+                            <p className="text-sm font-bold text-slate-500">Semaines préparées à l&apos;avance</p>
                             {(showAllUpcoming ? upcomingStages : upcomingStages.slice(0, 3)).map(s => (
-                                <div key={s.id} className="flex items-center gap-1 bg-white rounded-xl border border-indigo-100 pl-3 pr-1.5 py-1.5">
+                                <div key={s.id} className="flex items-center gap-1 bg-white rounded-xl shadow-sm shadow-indigo-100/60 pl-3 pr-1.5 py-1.5">
                                     <Link href={`/stages/${s.id}/program`} className="flex items-center gap-3 flex-1 min-w-0 py-1 active:scale-95 transition">
                                         <span className="material-symbols-outlined text-indigo-300 text-base shrink-0">event_upcoming</span>
                                         <div className="flex-1 min-w-0">
@@ -1543,29 +1532,6 @@ export function WeekDashboardClient({
                             )}
                         </div>
                     )}
-                    {archivedStages.length > 0 && (
-                        <div className="space-y-1.5 mb-3">
-                            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Semaines passées</p>
-                            {(showAllArchived ? archivedStages : archivedStages.slice(0, 3)).map(s => (
-                                <Link key={s.id} href={`/stages/${s.id}/bilan`} className="flex items-center gap-3 bg-white rounded-xl border border-slate-200 px-3 py-2.5 hover:bg-slate-50 transition active:scale-95">
-                                    <span className="material-symbols-outlined text-slate-300 text-base shrink-0">archive</span>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-xs font-bold text-slate-600 truncate">{s.title}</p>
-                                        <p className="text-[10px] text-slate-400">{s.dates}</p>
-                                    </div>
-                                    <span className="material-symbols-outlined text-slate-300 text-sm shrink-0">chevron_right</span>
-                                </Link>
-                            ))}
-                            {!showAllArchived && archivedStages.length > 3 && (
-                                <button
-                                    onClick={() => setShowAllArchived(true)}
-                                    className="block w-full text-center text-xs font-bold text-slate-400 hover:text-slate-600 py-1 transition"
-                                >
-                                    Voir les {archivedStages.length - 3} autres
-                                </button>
-                            )}
-                        </div>
-                    )}
                     <Link
                         href="/stages/new"
                         className="flex items-center justify-between bg-slate-900 text-white rounded-2xl px-4 py-3.5 hover:bg-slate-800 transition active:scale-95"
@@ -1576,6 +1542,49 @@ export function WeekDashboardClient({
                         </div>
                         <span className="material-symbols-outlined text-xl text-white/60">add_circle</span>
                     </Link>
+
+                    {/* Archives en toute fin de page, repliées : utile à garder sous la main,
+                        mais pas une info du quotidien — ne doit pas peser visuellement */}
+                    {archivedStages.length > 0 && (
+                        <div>
+                            <button
+                                onClick={() => setShowAllArchived(o => !o)}
+                                className="w-full flex items-center gap-3 bg-white rounded-2xl px-4 py-3 shadow-sm shadow-slate-200/50 hover:bg-slate-50 active:scale-[0.98] transition"
+                            >
+                                <span className="material-symbols-outlined text-base text-slate-400">archive</span>
+                                <span className="text-sm font-bold text-slate-600">Semaines passées</span>
+                                <span className="text-xs font-semibold text-slate-300">{archivedStages.length}</span>
+                                <span className={clsx(
+                                    'material-symbols-outlined text-base text-slate-300 ml-auto transition-transform duration-200',
+                                    showAllArchived && 'rotate-180'
+                                )}>expand_more</span>
+                            </button>
+                            <AnimatePresence initial={false}>
+                                {showAllArchived && (
+                                    <motion.div
+                                        initial={{ height: 0, opacity: 0 }}
+                                        animate={{ height: 'auto', opacity: 1 }}
+                                        exit={{ height: 0, opacity: 0 }}
+                                        transition={{ duration: 0.2 }}
+                                        className="overflow-hidden"
+                                    >
+                                        <div className="space-y-1.5 pt-1">
+                                            {archivedStages.map(s => (
+                                                <Link key={s.id} href={`/stages/${s.id}/bilan`} className="flex items-center gap-3 bg-white rounded-xl px-3 py-2.5 shadow-sm shadow-slate-200/50 hover:bg-slate-50 transition active:scale-95">
+                                                    <span className="material-symbols-outlined text-slate-300 text-base shrink-0">archive</span>
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-xs font-bold text-slate-600 truncate">{s.title}</p>
+                                                        <p className="text-[10px] text-slate-400">{s.dates}</p>
+                                                    </div>
+                                                    <span className="material-symbols-outlined text-slate-300 text-sm shrink-0">chevron_right</span>
+                                                </Link>
+                                            ))}
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+                    )}
                 </section>
 
             </main>
