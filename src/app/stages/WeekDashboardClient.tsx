@@ -1485,15 +1485,34 @@ export function WeekDashboardClient({
                     )}
                 </section>
 
-                {/* Accès rapides */}
-                <section className="grid grid-cols-2 gap-2">
-                    <Link href={`/stages/${stageId}/quiz`} className="bg-white rounded-2xl border border-slate-200 p-3 flex flex-col items-center text-center gap-1 hover:bg-slate-50 transition">
-                        <span className="material-symbols-outlined text-xl text-violet-500">quiz</span>
-                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-600">Quiz</span>
+                {/* Accès rapides — deux gros boutons empilés, toujours là pour garder le
+                    repère "où cliquer pour avancer" stable tout au long de la semaine */}
+                <section className="space-y-2">
+                    <Link
+                        href={`/stages/${stageId}/quiz`}
+                        className="flex items-center gap-3 bg-white rounded-2xl border border-slate-200 px-4 py-3.5 shadow-sm hover:bg-slate-50 active:scale-[0.98] transition"
+                    >
+                        <span className="size-11 rounded-full bg-violet-600 text-white flex items-center justify-center shrink-0">
+                            <span className="material-symbols-outlined text-[20px]">quiz</span>
+                        </span>
+                        <span className="flex-1 min-w-0">
+                            <span className="block text-sm font-black text-slate-900 leading-snug">Quiz de la semaine</span>
+                            <span className="block text-[11px] text-slate-400 mt-0.5">{quizDone ? 'Déjà fait — revoir ou refaire' : 'À faire avec ton groupe'}</span>
+                        </span>
+                        <span className="material-symbols-outlined text-slate-300 shrink-0">arrow_forward</span>
                     </Link>
-                    <Link href={`/stages/${stageId}/bilan`} className="bg-white rounded-2xl border border-slate-200 p-3 flex flex-col items-center text-center gap-1 hover:bg-slate-50 transition">
-                        <span className="material-symbols-outlined text-xl text-amber-500">article</span>
-                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-600">Bilan</span>
+                    <Link
+                        href={`/stages/${stageId}/bilan`}
+                        className="flex items-center gap-3 bg-white rounded-2xl border border-slate-200 px-4 py-3.5 shadow-sm hover:bg-slate-50 active:scale-[0.98] transition"
+                    >
+                        <span className="size-11 rounded-full bg-slate-900 text-white flex items-center justify-center shrink-0">
+                            <span className="material-symbols-outlined text-[20px]">article</span>
+                        </span>
+                        <span className="flex-1 min-w-0">
+                            <span className="block text-sm font-black text-slate-900 leading-snug">Bilan de la semaine</span>
+                            <span className="block text-[11px] text-slate-400 mt-0.5">Vérifier, compléter et clôturer</span>
+                        </span>
+                        <span className="material-symbols-outlined text-slate-300 shrink-0">arrow_forward</span>
                     </Link>
                 </section>
 
