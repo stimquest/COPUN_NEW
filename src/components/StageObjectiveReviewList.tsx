@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import {
     STAGE_OBJECTIVE_EXECUTION_OPTIONS,
@@ -40,137 +40,50 @@ const IMPACT_META = {
 
 type ImpactOption = { value: StageObjectiveImpactLevel; label: string; helper: string };
 
-// Slider glissable à 3 crans : le geste de déplacer le curseur aide à mentaliser le
-// niveau choisi. Se resnap sur l'un des 3 crans au relâchement.
-function ImpactSlider({
+// 3 boutons à choix unique : un tap direct plutôt qu'un geste de précision, tout en
+// gardant le même habillage soigné (couleur émeraude, relief) que l'ancien slider.
+// Exporté pour être réutilisé depuis l'accueil (saisie à chaud le jour même).
+export function ImpactToggle({
     options, value, onChange,
 }: {
     options: ImpactOption[];
     value: StageObjectiveImpactLevel | null;
     onChange: (level: StageObjectiveImpactLevel | null) => void;
 }) {
-    const trackRef = useRef<HTMLDivElement>(null);
-    const [dragIndex, setDragIndex] = useState<number | null>(null);
-    const [dragging, setDragging] = useState(false);
-
-    const selectedIndex = value ? options.findIndex(o => o.value === value) : -1;
-    const displayIndex = dragging && dragIndex !== null ? dragIndex : selectedIndex;
-
-    const indexFromClientX = useCallback((clientX: number) => {
-        const track = trackRef.current;
-        if (!track) return 0;
-        const rect = track.getBoundingClientRect();
-        const ratio = (clientX - rect.left) / rect.width;
-        return Math.min(2, Math.max(0, Math.round(ratio * 2)));
-    }, []);
-
-    const handlePointerDown = (e: React.PointerEvent) => {
-        (e.target as HTMLElement).setPointerCapture(e.pointerId);
-        setDragging(true);
-        setDragIndex(indexFromClientX(e.clientX));
-    };
-
-    const handlePointerMove = (e: React.PointerEvent) => {
-        if (!dragging) return;
-        setDragIndex(indexFromClientX(e.clientX));
-    };
-
-    const handlePointerUp = () => {
-        if (dragging && dragIndex !== null) {
-            const next = options[dragIndex]?.value ?? null;
-            onChange(next === value ? value : next);
-        }
-        setDragging(false);
-        setDragIndex(null);
-    };
-
-    // Position exprimée comme calc(1rem + ratio * (100% - 2rem)) : le rail utile va de
-    // 1rem (rayon du curseur) à 100%-1rem, les crans se répartissent dessus.
-    const posStyle = (ratio: number) => `calc(1rem + ${ratio} * (100% - 2rem))`;
-
-    const hasValue = displayIndex >= 0;
-
     return (
         <div>
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between mb-2">
                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
                     Ce que le groupe a retenu
                 </p>
-                {!hasValue && (
-                    <span className="text-[10px] font-bold text-slate-300 italic">à évaluer — glissez le curseur</span>
+                {!value && (
+                    <span className="text-[10px] font-bold text-slate-300 italic">à évaluer</span>
                 )}
             </div>
-            <div
-                ref={trackRef}
-                onPointerDown={handlePointerDown}
-                onPointerMove={handlePointerMove}
-                onPointerUp={handlePointerUp}
-                className="relative h-14 flex items-center cursor-pointer touch-none select-none"
-            >
-                {/* Rail creusé — ombre intérieure pour donner une vraie sensation de profondeur */}
-                <div className="absolute left-4 right-4 h-3 rounded-full bg-slate-100 shadow-[inset_0_1.5px_3px_rgba(0,0,0,0.12)]" />
-                {hasValue && (
-                    <div
-                        className="absolute left-4 h-3 rounded-full bg-emerald-500 transition-all"
-                        style={{ width: `calc(${posStyle(displayIndex / 2)} - 1rem)` }}
-                    />
-                )}
-                {/* Repères de crans, toujours visibles sous le rail */}
-                {options.map((_, i) => (
-                    <div
-                        key={i}
-                        className={cn(
-                            'absolute size-1.5 rounded-full -translate-x-1/2 transition-colors',
-                            hasValue && i <= displayIndex ? 'bg-emerald-200' : 'bg-white/80 ring-1 ring-slate-300'
-                        )}
-                        style={{ left: posStyle(i / 2) }}
-                    />
-                ))}
-                {/* Poignée : relief marqué (gradient + double ombre) pour qu'elle se lise
-                    comme un vrai objet à saisir, pas un simple contour */}
-                {hasValue ? (
-                    <div
-                        className={cn(
-                            'absolute size-9 rounded-full -translate-x-1/2 transition-transform',
-                            'bg-linear-to-b from-white to-slate-50',
-                            'border-2 border-emerald-500',
-                            'shadow-[0_1px_2px_rgba(0,0,0,0.06),0_4px_10px_rgba(0,0,0,0.18)]',
-                            dragging && 'scale-115 shadow-[0_2px_4px_rgba(0,0,0,0.1),0_6px_16px_rgba(0,0,0,0.25)]'
-                        )}
-                        style={{ left: posStyle(displayIndex / 2) }}
-                    >
-                        <div className="absolute inset-1.5 rounded-full bg-emerald-500" />
-                    </div>
-                ) : (
-                    // État vide : poignée fantôme centrée, invite claire à saisir
-                    <div
-                        className={cn(
-                            'absolute size-9 rounded-full -translate-x-1/2 left-1/2',
-                            'bg-white border-2 border-dashed border-slate-300',
-                            dragging && 'scale-110 border-emerald-400'
-                        )}
-                    />
-                )}
-            </div>
-            {/* Labels alignés exactement sur la position de leur cran (pas justify-between,
-                qui décale le libellé du milieu dès que les textes ont des largeurs différentes) */}
-            <div className="relative h-8 -mt-1">
-                {options.map((opt, i) => (
-                    <span
-                        key={opt.value}
-                        className={cn(
-                            'absolute top-0 text-xs font-bold leading-tight w-24',
-                            i === 0 ? 'text-left' : i === 2 ? 'text-right' : 'text-center',
-                            displayIndex === i ? 'text-emerald-600' : 'text-slate-400'
-                        )}
-                        style={{
-                            left: posStyle(i / 2),
-                            transform: i === 0 ? 'none' : i === 2 ? 'translateX(-100%)' : 'translateX(-50%)',
-                        }}
-                    >
-                        {opt.label}
-                    </span>
-                ))}
+            <div className="grid grid-cols-3 gap-1.5">
+                {options.map(opt => {
+                    const selected = value === opt.value;
+                    return (
+                        <button
+                            key={opt.value}
+                            type="button"
+                            onClick={() => onChange(selected ? value : opt.value)}
+                            className={cn(
+                                'rounded-xl border py-2.5 px-1.5 text-center transition active:scale-95',
+                                selected
+                                    ? 'bg-emerald-500 border-emerald-500 shadow-[0_1px_2px_rgba(0,0,0,0.06),0_4px_10px_rgba(16,185,129,0.25)]'
+                                    : 'bg-white border-slate-200 hover:border-emerald-300'
+                            )}
+                        >
+                            <span className={cn(
+                                'text-xs font-bold leading-tight',
+                                selected ? 'text-white' : 'text-slate-500'
+                            )}>
+                                {opt.label}
+                            </span>
+                        </button>
+                    );
+                })}
             </div>
         </div>
     );
@@ -181,15 +94,19 @@ type Props = {
     editable?: boolean;
     drafts?: Record<string, StageObjectiveReviewDraft>;
     onChangeDraft?: (contentId: string, patch: Partial<StageObjectiveReviewDraft>) => void;
+    // Météo de la semaine défavorable ("instable"/"tempête") : remonte la raison météo
+    // en tête des listes plutôt que de la laisser noyée parmi 4-5 autres raisons.
+    weatherIsBad?: boolean;
 };
 
 function ReviewCard({
-    item, editable, draft, onChangeDraft,
+    item, editable, draft, onChangeDraft, weatherIsBad,
 }: {
     item: StageObjectiveReviewItem;
     editable: boolean;
     draft: StageObjectiveReviewDraft;
     onChangeDraft?: (contentId: string, patch: Partial<StageObjectiveReviewDraft>) => void;
+    weatherIsBad?: boolean;
 }) {
     // La note reste repliée par défaut (texte libre, vraiment optionnel) — elle
     // s'ouvre automatiquement si elle contient déjà une valeur. L'impact, lui,
@@ -199,7 +116,7 @@ function ReviewCard({
     const statusMeta = draft.executionStatus ? STATUS_META[draft.executionStatus] : null;
     const impactMeta = draft.impactLevel ? IMPACT_META[draft.impactLevel] : null;
     const impactOptions = getStageObjectiveImpactOptions(draft.executionStatus);
-    const reasonOptions = getStageObjectiveReasonOptions(draft.executionStatus, draft.impactLevel);
+    const reasonOptions = getStageObjectiveReasonOptions(draft.executionStatus, draft.impactLevel, weatherIsBad);
     const themes = (item.pedagogicalContent.tags_theme ?? []).slice(0, 3);
     const isNotDone = draft.executionStatus === 'not_done';
 
@@ -301,10 +218,10 @@ function ReviewCard({
                         })}
                     </div>
 
-                    {/* Impact : slider glissable à 3 crans, affiché dès qu'un statut
+                    {/* Impact : 3 boutons à choix unique, affichés dès qu'un statut
                         effleuré/travaillé est choisi. */}
                     {!isNotDone && draft.executionStatus && (
-                        <ImpactSlider
+                        <ImpactToggle
                             options={impactOptions}
                             value={draft.impactLevel}
                             onChange={level => {
@@ -416,7 +333,7 @@ function ReviewCard({
     );
 }
 
-export function StageObjectiveReviewList({ items, editable = false, drafts, onChangeDraft }: Props) {
+export function StageObjectiveReviewList({ items, editable = false, drafts, onChangeDraft, weatherIsBad = false }: Props) {
     if (items.length === 0) {
         return (
             <div className="rounded-2xl border-2 border-dashed border-slate-200 bg-white p-8 text-center">
@@ -454,6 +371,7 @@ export function StageObjectiveReviewList({ items, editable = false, drafts, onCh
             editable={editable}
             draft={getDraft(item)}
             onChangeDraft={onChangeDraft}
+            weatherIsBad={weatherIsBad}
         />
     );
 

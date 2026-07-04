@@ -71,6 +71,14 @@ export type ContentTodo = {
 export type StageObjectiveExecutionStatus = 'not_done' | 'partial' | 'done';
 export type StageObjectiveImpactLevel = 'low' | 'medium' | 'high';
 
+// État complet d'un objectif tel que saisi à chaud depuis l'accueil — le bilan de fin de
+// semaine reprend ces valeurs telles quelles plutôt que de les redemander.
+export type ObjectiveReviewState = {
+  status: StageObjectiveExecutionStatus;
+  impactLevel: StageObjectiveImpactLevel | null;
+  reasons: string[];
+};
+
 export type StageObjectiveReviewDraft = {
   pedagogicalContentId: string;
   executionStatus: StageObjectiveExecutionStatus | null;

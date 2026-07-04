@@ -339,6 +339,39 @@ export async function saveObjectiveStatus(
   return { success: true };
 }
 
+/**
+ * Sauvegarde le niveau d'impact et les raisons cochées depuis l'accueil, à chaud — la
+ * ligne existe déjà (le statut est posé avant l'impact), on met donc à jour plutôt que
+ * d'upsert pour ne jamais écraser execution_status.
+ */
+export async function saveObjectiveImpact(
+  stageId: string,
+  contentId: string,
+  impactLevel: import('@/types').StageObjectiveImpactLevel | null,
+  reasons: string[],
+) {
+  const ctx = await requireAuth();
+  if (!ctx) return { success: false, error: 'Non autorisé' };
+
+  const { error } = await ctx.supabase
+    .from('stage_objective_reviews')
+    .update({
+      impact_level: impactLevel,
+      reasons,
+    })
+    .eq('stage_id', stageId)
+    .eq('pedagogical_content_id', contentId);
+
+  if (error) {
+    console.error('[saveObjectiveImpact] error:', error.message, error.details);
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath('/stages');
+  revalidatePath(`/stages/${stageId}/bilan`);
+  return { success: true };
+}
+
 /** Efface le statut d'exécution d'un objectif pour revenir à l'état neutre (non renseigné). */
 export async function clearObjectiveStatus(stageId: string, contentId: string) {
   const ctx = await requireAuth();

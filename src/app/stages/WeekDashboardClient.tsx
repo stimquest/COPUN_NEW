@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useTransition } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
-import { WeekObservation, PedagogicalAction, PedagogicalContent, StageObjectiveExecutionStatus, ObservationType } from '@/types';
+import { WeekObservation, PedagogicalAction, PedagogicalContent, StageObjectiveExecutionStatus, StageObjectiveImpactLevel, ObjectiveReviewState, ObservationType } from '@/types';
 import { THEMATIC_LABELS, ThematicTag } from '@/data/seasonal-context';
 import { DEFAULT_WASTE_TYPES } from '@/data/littoral-species';
 import { OBSERVATION_TYPES, SPECIES_CATEGORY_LABELS, SPECIES_CATEGORY_ORDER } from '@/data/observations';
@@ -13,11 +13,15 @@ import { OBJECTIFS, extractIntention, extractCoeff, extractMeteo } from '@/data/
 import { parseStageDateRange } from '@/lib/stage-dates';
 import { SPORT_FEATURES_ENABLED } from '@/lib/feature-flags';
 import { addObservation, deleteObservation } from '@/actions/observation-actions';
-import { saveObjectiveStatus, clearObjectiveStatus, updateStagePool } from '@/actions/stage-actions';
+import { saveObjectiveStatus, saveObjectiveImpact, clearObjectiveStatus, updateStagePool } from '@/actions/stage-actions';
 import { updateStageExploitStatus, uploadDefiPhoto } from '@/actions/defi-actions';
 import FilRougeForm from '@/components/defis/FilRougeForm';
 import { DeleteStageButton } from '@/components/DeleteStageButton';
 import CardDetailModal from '@/components/CardDetailModal';
+import { ImpactToggle } from '@/components/StageObjectiveReviewList';
+import { PointsGainedBadge, usePointsGainedBadge } from '@/components/PointsGainedBadge';
+import { compressImage } from '@/lib/image-compression';
+import { getStageObjectiveImpactOptions, getStageObjectiveReasonOptions } from '@/lib/stage-objective-review';
 
 type DefiInfo = {
     id: string;
@@ -36,6 +40,7 @@ type StageExploit = {
     status: 'en_cours' | 'complete';
     completed_at: string | null;
     preuves_url: string[];
+    structured_data: Record<string, unknown> | null;
     defis: DefiInfo;
 };
 
@@ -56,11 +61,22 @@ function ExploitCard({ exploit, stageId, clubObservationTargets }: { exploit: St
     const defi = exploit.defis;
     const done = localStatus === 'complete';
     const isStructured = STRUCTURED_DEFI_IDS.has(exploit.exploit_id);
+    const { points: pointsGained, triggerGain } = usePointsGainedBadge();
+    const [flash, setFlash] = useState(false);
+
+    const celebrate = (pointsAwarded: number) => {
+        triggerGain(pointsAwarded);
+        if (pointsAwarded > 0) {
+            setFlash(true);
+            setTimeout(() => setFlash(false), 700);
+        }
+    };
 
     const validate = () => {
         setLocalStatus('complete');
         startTransition(async () => {
-            await updateStageExploitStatus(stageId, exploit.exploit_id, 'complete');
+            const res = await updateStageExploitStatus(stageId, exploit.exploit_id, 'complete');
+            if (res.success) celebrate(res.pointsAwarded ?? 0);
         });
     };
 
@@ -75,15 +91,17 @@ function ExploitCard({ exploit, stageId, clubObservationTargets }: { exploit: St
         const file = e.target.files?.[0];
         if (!file) return;
         setUploading(true);
+        const compressed = await compressImage(file);
         const fd = new FormData();
-        fd.append('file', file);
+        fd.append('file', compressed);
         const res = await uploadDefiPhoto(fd);
         if (res.success && res.url) {
             const newUrl = res.url;
             setLocalPhotos(prev => [...prev, newUrl]);
             setLocalStatus('complete');
             startTransition(async () => {
-                await updateStageExploitStatus(stageId, exploit.exploit_id, 'complete', newUrl);
+                const statusRes = await updateStageExploitStatus(stageId, exploit.exploit_id, 'complete', newUrl);
+                if (statusRes.success) celebrate(statusRes.pointsAwarded ?? 0);
             });
         }
         setUploading(false);
@@ -91,10 +109,13 @@ function ExploitCard({ exploit, stageId, clubObservationTargets }: { exploit: St
     };
 
     return (
-        <div className={clsx(
-            'rounded-2xl border-2 overflow-hidden transition-all',
-            done ? 'border-emerald-200 bg-emerald-50' : 'border-slate-200 bg-white'
-        )}>
+        <motion.div
+            animate={flash ? { scale: [1, 1.03, 1] } : { scale: 1 }}
+            transition={{ duration: 0.5, ease: 'easeOut' }}
+            className={clsx(
+                'rounded-2xl border-2 overflow-hidden transition-colors',
+                flash ? 'border-amber-300 bg-amber-50' : done ? 'border-emerald-200 bg-emerald-50' : 'border-slate-200 bg-white'
+            )}>
             <div className="px-4 py-3 flex items-start gap-3">
                 <div className={clsx(
                     'size-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5',
@@ -190,8 +211,12 @@ function ExploitCard({ exploit, stageId, clubObservationTargets }: { exploit: St
                             </button>
                         )}
 
-                        <span className="text-[10px] font-black text-slate-300 ml-auto">
-                            {defi.points} pts
+                        <span className="ml-auto">
+                            {pointsGained !== null ? (
+                                <PointsGainedBadge points={pointsGained} />
+                            ) : (
+                                <span className="text-[10px] font-black text-slate-300">{defi.points} pts</span>
+                            )}
                         </span>
                     </div>
                 </div>
@@ -203,14 +228,17 @@ function ExploitCard({ exploit, stageId, clubObservationTargets }: { exploit: St
                     defiDescription={defi.description}
                     stageId={stageId}
                     clubTargets={clubObservationTargets}
+                    existingData={exploit.structured_data}
+                    existingPhotoUrl={localPhotos[localPhotos.length - 1] ?? null}
                     onClose={() => setShowStructuredForm(false)}
-                    onSuccess={() => {
+                    onSuccess={pointsAwarded => {
                         setLocalStatus('complete');
                         setShowStructuredForm(false);
+                        celebrate(pointsAwarded);
                     }}
                 />
             )}
-        </div>
+        </motion.div>
     );
 }
 
@@ -373,50 +401,85 @@ function SportObjectivesPicker({
 
 function ObjectiveRow({
     card,
-    status,
+    review,
     stageId,
     onStatusChange,
+    onImpactChange,
     onOpenDetail,
 }: {
     card: PedagogicalContent;
-    status: StageObjectiveExecutionStatus | null;
+    review: ObjectiveReviewState | null;
     stageId: string;
     onStatusChange: (cardId: string, s: StageObjectiveExecutionStatus | null) => void;
+    onImpactChange: (cardId: string, impactLevel: StageObjectiveImpactLevel | null, reasons: string[]) => void;
     onOpenDetail: (card: PedagogicalContent) => void;
 }) {
     const [open, setOpen] = useState(false);
     const [saving, setSaving] = useState(false);
+    const rowRef = useRef<HTMLDivElement>(null);
+    const status = review?.status ?? null;
     // Les fiches sportives du moniteur ont une dimension COP'UN par défaut en base :
     // on les distingue par l'indigo plutôt que par la couleur (trompeuse) du pilier.
     const isSport = card.source === 'custom';
     const pillar = isSport ? null : PILLARS.find(p => p.id === card.dimension) ?? null;
     const dotClass = isSport ? 'bg-indigo-500' : (pillar?.bg ?? 'bg-slate-300');
 
+    // Un clic n'importe où ailleurs sur la page referme l'accordéon ouvert — évite
+    // d'avoir à retaper sur l'en-tête une fois la saisie terminée.
+    useEffect(() => {
+        if (!open) return;
+        const handleClickOutside = (e: PointerEvent) => {
+            if (rowRef.current && !rowRef.current.contains(e.target as Node)) {
+                setOpen(false);
+            }
+        };
+        document.addEventListener('pointerdown', handleClickOutside);
+        return () => document.removeEventListener('pointerdown', handleClickOutside);
+    }, [open]);
+
     const handleStatus = async (val: StageObjectiveExecutionStatus) => {
         if (saving) return;
         setSaving(true);
         if (status === val) {
-            // Reclic sur le statut déjà actif : retour à l'état neutre.
+            // Reclic sur le statut déjà actif : retour à l'état neutre (efface aussi
+            // l'impact et les raisons, qui n'ont plus de sens sans statut).
             onStatusChange(card.id, null);
             await clearObjectiveStatus(stageId, card.id);
         } else {
             onStatusChange(card.id, val);
             await saveObjectiveStatus(stageId, card.id, val);
-            if (val !== 'not_done') setOpen(false);
         }
         setSaving(false);
     };
 
+    const handleImpact = (level: StageObjectiveImpactLevel | null) => {
+        // Les raisons cochées appartenaient au niveau précédent — elles n'ont plus de
+        // sens si le niveau change, on repart à zéro.
+        onImpactChange(card.id, level, []);
+        saveObjectiveImpact(stageId, card.id, level, []);
+    };
+
+    const toggleReason = (reason: string) => {
+        const current = review?.reasons ?? [];
+        const next = current.includes(reason) ? current.filter(r => r !== reason) : [...current, reason];
+        onImpactChange(card.id, review?.impactLevel ?? null, next);
+        saveObjectiveImpact(stageId, card.id, review?.impactLevel ?? null, next);
+    };
+
     const statusMeta = status ? EXECUTION_OPTIONS.find(o => o.value === status) : null;
+    const impactOptions = getStageObjectiveImpactOptions(status);
+    const reasonOptions = getStageObjectiveReasonOptions(status, review?.impactLevel ?? null);
 
     return (
-        <div className={clsx(
-            "rounded-2xl border overflow-hidden transition-all",
-            status === 'done' ? "border-emerald-100 bg-emerald-50/40" :
-            status === 'partial' ? "border-amber-100 bg-amber-50/30" :
-            status === 'not_done' ? "border-slate-100 bg-white opacity-60" :
-            "border-slate-200 bg-white"
-        )}>
+        <div
+            ref={rowRef}
+            className={clsx(
+                "rounded-2xl border overflow-hidden transition-all",
+                status === 'done' ? "border-emerald-100 bg-emerald-50/40" :
+                status === 'partial' ? "border-amber-100 bg-amber-50/30" :
+                status === 'not_done' ? "border-slate-100 bg-white opacity-60" :
+                "border-slate-200 bg-white"
+            )}>
             {/* Header ligne */}
             <div className="w-full flex items-center gap-1 pr-2">
                 <button
@@ -488,8 +551,8 @@ function ObjectiveRow({
                                 </div>
                             )}
 
-                            {/* Statut — mémo à chaud, optionnel ; le bilan de fin de semaine reste
-                                l'endroit où tout se confirme (et où "non abordé" se marque) */}
+                            {/* Statut — saisi à chaud, le bilan de fin de semaine ne fait que
+                                reprendre ces valeurs (sauf "non abordé", qui n'a de sens qu'a posteriori) */}
                             <div>
                                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Comment ça s&apos;est passé ?</p>
                                 <div className="flex gap-2">
@@ -511,6 +574,51 @@ function ObjectiveRow({
                                     ))}
                                 </div>
                             </div>
+
+                            {/* Impact : dès qu'un statut est choisi, on demande directement le
+                                ressenit à chaud plutôt que d'attendre le bilan de fin de semaine */}
+                            {status && status !== 'not_done' && (
+                                <ImpactToggle
+                                    options={impactOptions}
+                                    value={review?.impactLevel ?? null}
+                                    onChange={handleImpact}
+                                />
+                            )}
+
+                            {/* Raisons à cocher, propres au statut + niveau choisis */}
+                            {reasonOptions.length > 0 && (
+                                <div>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5">
+                                        Pourquoi ce niveau ?
+                                    </p>
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {reasonOptions.map(reason => {
+                                            const selected = (review?.reasons ?? []).includes(reason);
+                                            return (
+                                                <button
+                                                    key={reason}
+                                                    type="button"
+                                                    onClick={() => toggleReason(reason)}
+                                                    className={clsx(
+                                                        'flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-semibold text-left transition active:scale-95',
+                                                        selected
+                                                            ? 'bg-emerald-50 border-emerald-300 text-emerald-700'
+                                                            : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'
+                                                    )}
+                                                >
+                                                    <span className={clsx(
+                                                        'size-3.5 rounded border shrink-0 flex items-center justify-center',
+                                                        selected ? 'bg-emerald-500 border-emerald-500' : 'border-slate-300'
+                                                    )}>
+                                                        {selected && <span className="material-symbols-outlined text-white text-[10px]">check</span>}
+                                                    </span>
+                                                    {reason}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </motion.div>
                 )}
@@ -528,7 +636,7 @@ type Props = {
     objectives: PedagogicalContent[];
     technicalObjectives: PedagogicalContent[];
     sportFiches: PedagogicalContent[];
-    initialStatuses: Record<string, StageObjectiveExecutionStatus>;
+    initialStatuses: Record<string, ObjectiveReviewState>;
     initialObservations: WeekObservation[];
     initialExploits: StageExploit[];
     clubObservationTargets: ObservationTarget[];
@@ -553,7 +661,7 @@ export function WeekDashboardClient({
     contentCount, validatedCount: initialValidatedCount, archivedStages, upcomingStages,
     suggestedThematics, quizDone, totalPoints, weekPoints,
 }: Props) {
-    const [statuses, setStatuses] = useState<Record<string, StageObjectiveExecutionStatus>>(initialStatuses);
+    const [reviews, setReviews] = useState<Record<string, ObjectiveReviewState>>(initialStatuses);
     const [technicalObjectiveList, setTechnicalObjectiveList] = useState<PedagogicalContent[]>(technicalObjectives);
     const [showSportPicker, setShowSportPicker] = useState(false);
     const [detailCard, setDetailCard] = useState<PedagogicalContent | null>(null);
@@ -579,20 +687,28 @@ export function WeekDashboardClient({
     }, [showAddObs]);
 
     const handleStatusChange = (cardId: string, s: StageObjectiveExecutionStatus | null) => {
-        setStatuses(prev => {
+        setReviews(prev => {
             if (s === null) {
                 const next = { ...prev };
                 delete next[cardId];
                 return next;
             }
-            return { ...prev, [cardId]: s };
+            return { ...prev, [cardId]: { status: s, impactLevel: null, reasons: [] } };
+        });
+    };
+
+    const handleImpactChange = (cardId: string, impactLevel: StageObjectiveImpactLevel | null, reasons: string[]) => {
+        setReviews(prev => {
+            const current = prev[cardId];
+            if (!current) return prev;
+            return { ...prev, [cardId]: { ...current, impactLevel, reasons } };
         });
     };
 
     // Compte uniquement les objectifs environnementaux (pas les fiches sportives) pour le cockpit
     const envObjectiveIds = new Set(objectives.map(o => o.id));
-    const validatedCount = Object.entries(statuses)
-        .filter(([id, s]) => envObjectiveIds.has(id) && (s === 'done' || s === 'partial')).length;
+    const validatedCount = Object.entries(reviews)
+        .filter(([id, r]) => envObjectiveIds.has(id) && (r.status === 'done' || r.status === 'partial')).length;
 
     // Conditions de la semaine, décodées depuis suggested_thematics
     const weekIntentionId = extractIntention(suggestedThematics);
@@ -800,7 +916,7 @@ export function WeekDashboardClient({
                                     <span className="text-[10px] font-black uppercase tracking-widest text-white/50 shrink-0">Objectifs</span>
                                     <span className="flex items-center gap-1.5">
                                         {objectives.map(o => {
-                                            const s = statuses[o.id];
+                                            const s = reviews[o.id]?.status;
                                             return (
                                                 <span
                                                     key={o.id}
@@ -895,9 +1011,10 @@ export function WeekDashboardClient({
                                                 <ObjectiveRow
                                                     key={card.id}
                                                     card={card}
-                                                    status={statuses[card.id] ?? null}
+                                                    review={reviews[card.id] ?? null}
                                                     stageId={stageId}
                                                     onStatusChange={handleStatusChange}
+                                                    onImpactChange={handleImpactChange}
                                                     onOpenDetail={setDetailCard}
                                                 />
                                             ))}
@@ -944,9 +1061,10 @@ export function WeekDashboardClient({
                                     <ObjectiveRow
                                         key={card.id}
                                         card={card}
-                                        status={statuses[card.id] ?? null}
+                                        review={reviews[card.id] ?? null}
                                         stageId={stageId}
                                         onStatusChange={handleStatusChange}
+                                        onImpactChange={handleImpactChange}
                                         onOpenDetail={setDetailCard}
                                     />
                                 ))}

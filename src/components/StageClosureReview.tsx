@@ -24,6 +24,8 @@ type Props = {
     defisAssigned: DefiReview[];
     observations: WeekObservation[];
     quizData: QuizReview | null;
+    // Météo de la semaine défavorable — remonte la raison météo en tête des listes.
+    weatherIsBad?: boolean;
 };
 
 // "Non abordé" n'a de sens qu'a posteriori — un objectif sans statut à la clôture n'a
@@ -47,7 +49,7 @@ function buildDraftMap(items: StageObjectiveReviewItem[]): Record<string, StageO
     );
 }
 
-export function StageClosureReview({ stageId, stageTitle, objectiveItems, initialClosingNotes, defisAssigned, observations, quizData }: Props) {
+export function StageClosureReview({ stageId, stageTitle, objectiveItems, initialClosingNotes, defisAssigned, observations, quizData, weatherIsBad = false }: Props) {
     const router = useRouter();
     const [drafts, setDrafts] = useState<Record<string, StageObjectiveReviewDraft>>(() => buildDraftMap(objectiveItems));
     const [closingNote, setClosingNote] = useState(initialClosingNotes ?? '');
@@ -58,7 +60,10 @@ export function StageClosureReview({ stageId, stageTitle, objectiveItems, initia
     const defisTotal = defisAssigned.length;
     const quizDone = quizData?.done ?? false;
 
-    const canClose = quizDone;
+    // Le quiz (comme les défis) peut être impossible à faire pour des raisons hors du
+    // contrôle du moniteur (groupe déjà reparti, conditions terrain…) — la clôture ne
+    // doit jamais être bloquée par un élément externe, seulement rappelée si manquant.
+    const canClose = true;
 
     const handleDraftChange = (contentId: string, patch: Partial<StageObjectiveReviewDraft>) => {
         setDrafts(prev => ({
@@ -107,6 +112,7 @@ export function StageClosureReview({ stageId, stageTitle, objectiveItems, initia
                     editable
                     drafts={drafts}
                     onChangeDraft={handleDraftChange}
+                    weatherIsBad={weatherIsBad}
                 />
             </section>
 
@@ -202,7 +208,7 @@ export function StageClosureReview({ stageId, stageTitle, objectiveItems, initia
                 <div className="rounded-2xl border border-slate-200 bg-white/95 backdrop-blur-sm shadow-xl shadow-slate-200/60 p-3 flex items-center gap-3">
                     <div className="flex-1">
                         {!quizDone ? (
-                            <p className="text-xs font-semibold text-amber-600">Quiz non terminé</p>
+                            <p className="text-xs font-semibold text-amber-600">Quiz pas fait — clôture possible quand même</p>
                         ) : (
                             <p className="text-xs font-semibold text-emerald-600">Tous les éléments sont renseignés</p>
                         )}

@@ -12,6 +12,7 @@ import { getStageExploits } from '@/actions/defi-actions';
 import { getStageQuiz } from '@/actions/quiz-actions';
 import { getObservationsForStage } from '@/actions/observation-actions';
 import { SPORT_FEATURES_ENABLED } from '@/lib/feature-flags';
+import { extractMeteo } from '@/data/objectifs';
 
 const STATUS_COUNTS = (items: Awaited<ReturnType<typeof getStageObjectiveReviewItems>>) => ({
     done:     items.filter(i => i.review?.executionStatus === 'done').length,
@@ -58,6 +59,9 @@ export default async function StageBilanPage({ params }: { params: Promise<{ id:
         score: quizData.score_correct,
         total: quizData.score_total,
     } : null;
+
+    const weekMeteo = extractMeteo(stage.suggested_thematics);
+    const weatherIsBad = weekMeteo === 'instable' || weekMeteo === 'tempete';
 
     const defiReviews: DefiReview[] = defisAssigned.map(e => ({
         id: e.exploit_id,
@@ -211,6 +215,7 @@ export default async function StageBilanPage({ params }: { params: Promise<{ id:
                         defisAssigned={defiReviews}
                         observations={observations}
                         quizData={quizReviewData}
+                        weatherIsBad={weatherIsBad}
                     />
                 )}
             </main>

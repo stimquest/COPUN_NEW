@@ -49,6 +49,7 @@ const REASON_OPTIONS: Partial<Record<
             'Juste mentionné, pas de temps pour approfondir',
             'Pas de support concret pour illustrer',
             'Groupe pas réceptif à ce moment-là',
+            'Groupe trop nombreux pour capter tout le monde',
         ],
         medium: [
             'Sujet évoqué rapidement, sans plus de détail',
@@ -68,6 +69,7 @@ const REASON_OPTIONS: Partial<Record<
             "Séance écourtée ou trop d'objectifs à la fois",
             'Conditions météo/terrain défavorables',
             'Groupe fatigué ou peu concentré ce jour-là',
+            'Groupe trop nombreux pour capter tout le monde',
         ],
         medium: [
             'Compris sur le principe, mais pas encore appliqué spontanément',
@@ -93,14 +95,28 @@ const NOT_DONE_REASON_OPTIONS: string[] = [
     'Objectif redondant avec un autre déjà travaillé',
 ];
 
+// Sous-chaîne distinctive de la raison météo dans chaque liste — sert à la remonter en
+// tête quand la météo du jour est effectivement mauvaise (evite au moniteur de la
+// chercher dans une liste de 4-5 raisons alors qu'elle lui saute déjà aux yeux dehors).
+const WEATHER_REASON_MARKER = 'météo';
+
 export function getStageObjectiveReasonOptions(
     executionStatus: StageObjectiveExecutionStatus | null,
     impactLevel: StageObjectiveImpactLevel | null,
+    weatherIsBad = false,
 ): string[] {
     if (!executionStatus) return [];
-    if (executionStatus === 'not_done') return NOT_DONE_REASON_OPTIONS;
-    if (!impactLevel) return [];
-    return REASON_OPTIONS[executionStatus]?.[impactLevel] ?? [];
+    const options = executionStatus === 'not_done'
+        ? NOT_DONE_REASON_OPTIONS
+        : impactLevel
+            ? REASON_OPTIONS[executionStatus]?.[impactLevel] ?? []
+            : [];
+
+    if (!weatherIsBad) return options;
+
+    const weatherIndex = options.findIndex(r => r.toLowerCase().includes(WEATHER_REASON_MARKER));
+    if (weatherIndex <= 0) return options;
+    return [options[weatherIndex], ...options.slice(0, weatherIndex), ...options.slice(weatherIndex + 1)];
 }
 
 export function isStageObjectiveExecutionStatus(value: string): value is StageObjectiveExecutionStatus {

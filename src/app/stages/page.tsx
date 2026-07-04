@@ -10,7 +10,7 @@ import { pickCurrentStage } from '@/lib/stage-dates';
 import { WeekDashboardClient } from './WeekDashboardClient';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
-import { PedagogicalContent, StageObjectiveExecutionStatus } from '@/types';
+import { PedagogicalContent, StageObjectiveExecutionStatus, StageObjectiveImpactLevel, ObjectiveReviewState } from '@/types';
 
 const SEASON_STYLES: Record<string, { gradient: string; icon: string }> = {
     hiver_marin:          { gradient: 'from-slate-700 to-slate-900',    icon: 'storm' },
@@ -29,16 +29,20 @@ async function getStagePointsTotal(stageId: string): Promise<number> {
     return (data ?? []).reduce((sum: number, r: { points: number }) => sum + r.points, 0);
 }
 
-async function getObjectiveStatusesForStage(stageId: string): Promise<Record<string, StageObjectiveExecutionStatus>> {
+async function getObjectiveStatusesForStage(stageId: string): Promise<Record<string, ObjectiveReviewState>> {
     const supabase = await createClient();
     const { data } = await supabase
         .from('stage_objective_reviews')
-        .select('pedagogical_content_id, execution_status')
+        .select('pedagogical_content_id, execution_status, impact_level, reasons')
         .eq('stage_id', stageId);
 
-    const result: Record<string, StageObjectiveExecutionStatus> = {};
-    (data ?? []).forEach((r: { pedagogical_content_id: string; execution_status: string }) => {
-        result[r.pedagogical_content_id] = r.execution_status as StageObjectiveExecutionStatus;
+    const result: Record<string, ObjectiveReviewState> = {};
+    (data ?? []).forEach((r: { pedagogical_content_id: string; execution_status: string; impact_level: string | null; reasons: string[] | null }) => {
+        result[r.pedagogical_content_id] = {
+            status: r.execution_status as StageObjectiveExecutionStatus,
+            impactLevel: r.impact_level as StageObjectiveImpactLevel | null,
+            reasons: r.reasons ?? [],
+        };
     });
     return result;
 }
@@ -159,7 +163,7 @@ export default async function StagesPage() {
     const objectives = selectedContent.filter(c => c.source !== 'custom');
     const technicalObjectives = selectedContent.filter(c => c.source === 'custom');
 
-    const validatedCount = Object.values(objectiveStatuses).filter(s => s === 'done' || s === 'partial').length;
+    const validatedCount = Object.values(objectiveStatuses).filter(s => s.status === 'done' || s.status === 'partial').length;
 
     return (
         <WeekDashboardClient

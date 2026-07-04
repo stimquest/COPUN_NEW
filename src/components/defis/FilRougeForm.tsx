@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react';
 import clsx from 'clsx';
 import { uploadDefiPhoto, completeFilRougeDefi, saveClubObservationTargets } from '@/actions/defi-actions';
+import { compressImage } from '@/lib/image-compression';
 import {
     Abundance, Frequency,
     ABUNDANCE_OPTIONS, INVENTAIRE_GROUPES, LAISSE_CATEGORIES,
@@ -37,37 +38,48 @@ type Props = {
     defiDescription: string;
     stageId: string;
     clubTargets: ObservationTarget[];
+    // Relevé déjà enregistré (si on rouvre le formulaire pour le modifier) — sans ça,
+    // "Modifier le relevé" repartait à zéro et écrasait silencieusement les données saisies.
+    existingData?: Record<string, unknown> | null;
+    existingPhotoUrl?: string | null;
     onClose: () => void;
-    onSuccess: () => void;
+    onSuccess: (pointsAwarded: number) => void;
 };
 
-export default function FilRougeForm({ defiId, defiDescription, stageId, clubTargets, onClose, onSuccess }: Props) {
+export default function FilRougeForm({ defiId, defiDescription, stageId, clubTargets, existingData, existingPhotoUrl, onClose, onSuccess }: Props) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
-    const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+    const [photoUrl, setPhotoUrl] = useState<string | null>(existingPhotoUrl ?? null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const existingGroupes = existingData?.groupes as Record<string, Abundance> | undefined;
+    const existingCategories = existingData?.categories as Record<string, Abundance> | undefined;
+    const existingObservations = existingData?.observations as { name: string; count: number; frequency: Frequency | null }[] | undefined;
 
     // Inventaire du m²
     const [groupes, setGroupes] = useState<InventaireGroupe[]>(
-        INVENTAIRE_GROUPES.map(g => ({ ...g, abundance: 'absent' }))
+        INVENTAIRE_GROUPES.map(g => ({ ...g, abundance: existingGroupes?.[g.key] ?? 'absent' }))
     );
-    const [coverage, setCoverage] = useState('');
-    const [etat, setEtat] = useState('');
+    const [coverage, setCoverage] = useState((existingData?.coverage as string) ?? '');
+    const [etat, setEtat] = useState((existingData?.etat as string) ?? '');
 
     // Laisse du jour
     const [laisseCategories, setLaisseCategories] = useState<LaisseCategorie[]>(
-        LAISSE_CATEGORIES.map(c => ({ ...c, abundance: 'absent' }))
+        LAISSE_CATEGORIES.map(c => ({ ...c, abundance: existingCategories?.[c.key] ?? 'absent' }))
     );
 
     // Évolution de la côte
-    const [changeVisible, setChangeVisible] = useState<boolean | null>(null);
-    const [erosionNotes, setErosionNotes] = useState('');
+    const [changeVisible, setChangeVisible] = useState<boolean | null>((existingData?.change_visible as boolean | null) ?? null);
+    const [erosionNotes, setErosionNotes] = useState((existingData?.notes as string) ?? '');
 
     // Faune observée
     const [fauneEntries, setFauneEntries] = useState<FauneEntry[]>(
-        clubTargets.map(t => ({ targetId: t.id, name: t.name, count: '', frequency: '' }))
+        clubTargets.map(t => {
+            const existing = existingObservations?.find(o => o.name === t.name);
+            return { targetId: t.id, name: t.name, count: existing ? String(existing.count) : '', frequency: existing?.frequency ?? '' };
+        })
     );
-    const [fauneFreeText, setFauneFreeText] = useState('');
+    const [fauneFreeText, setFauneFreeText] = useState((existingData?.free_text as string) ?? '');
 
     // Config targets — pré-rempli avec la liste actuelle du club (par défaut : espèces
     // courantes du littoral) pour permettre d'ajuster sans repartir de zéro.
@@ -84,8 +96,9 @@ export default function FilRougeForm({ defiId, defiDescription, stageId, clubTar
         if (!file) return;
         setIsUploading(true);
         try {
+            const compressed = await compressImage(file);
             const formData = new FormData();
-            formData.append('file', file);
+            formData.append('file', compressed);
             const result = await uploadDefiPhoto(formData);
             if (result.success && result.url) setPhotoUrl(result.url);
         } finally {
@@ -140,9 +153,9 @@ export default function FilRougeForm({ defiId, defiDescription, stageId, clubTar
             };
         }
 
-        await completeFilRougeDefi(stageId, defiId, structuredData, photoUrl ?? undefined);
+        const res = await completeFilRougeDefi(stageId, defiId, structuredData, photoUrl ?? undefined);
         setIsSubmitting(false);
-        onSuccess();
+        onSuccess(res.success ? res.pointsAwarded ?? 0 : 0);
     };
 
     if (configMode) {

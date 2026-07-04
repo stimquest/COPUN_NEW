@@ -84,10 +84,12 @@ export async function updateStageExploitStatus(
         .from('stage_exploits').update(updateData).eq('stage_id', stageId).eq('exploit_id', defiId);
     if (error) { console.error('[updateStageExploitStatus]', error.message); return { success: false, error: error.message }; }
 
+    let pointsAwarded = 0;
     if (status === 'complete') {
         const { data: defi } = await supabase.from('defis').select('spot_fixe').eq('id', defiId).single();
         const points = defi?.spot_fixe ? 3 : 2;
-        await awardPointsForDefiInternal(supabase, stageId, defiId, points);
+        const awarded = await awardPointsForDefiInternal(supabase, stageId, defiId, points);
+        if (awarded) pointsAwarded = points;
     } else {
         // Défi dévalidé : on reprend les points pour que le total reste honnête.
         await revokePointsForDefiInternal(supabase, stageId, defiId);
@@ -95,7 +97,7 @@ export async function updateStageExploitStatus(
 
     revalidatePath('/stages');
     revalidatePath(`/stages/${stageId}/defis`);
-    return { success: true };
+    return { success: true, pointsAwarded };
 }
 
 export async function removeDefiPhoto(
@@ -158,9 +160,9 @@ async function awardPointsForDefiInternal(
     stageId: string,
     defiId: string,
     points: number
-) {
+): Promise<boolean> {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!user) return false;
 
     // Un seul gain par défi et par semaine : revalider (photo supplémentaire, relevé
     // modifié, dévalidation/revalidation) ne doit jamais créditer de nouveaux points.
@@ -172,7 +174,7 @@ async function awardPointsForDefiInternal(
         .eq('defi_id', defiId)
         .limit(1)
         .maybeSingle();
-    if (existing) return;
+    if (existing) return false;
 
     // Le club vient du profil du moniteur : les stages n'ont pas de club_id renseigné,
     // s'appuyer dessus laissait toutes les lignes de points sans club.
@@ -187,6 +189,7 @@ async function awardPointsForDefiInternal(
         points,
         reason: `Défi validé: ${defiId}`,
     });
+    return true;
 }
 
 /** Retire les points d'un défi dévalidé (nécessite la policy DELETE sur leaderboard_points). */
@@ -372,11 +375,15 @@ export async function completeFilRougeDefi(
     if (error) return { success: false, error: error.message };
     if (!count || count === 0) return { success: false, error: 'Exploit introuvable' };
 
+    let pointsAwarded = 0;
     const { data: defi } = await supabase.from('defis').select('points').eq('id', defiId).single();
-    if (defi) await awardPointsForDefiInternal(supabase, stageId, defiId, defi.points);
+    if (defi) {
+        const awarded = await awardPointsForDefiInternal(supabase, stageId, defiId, defi.points);
+        if (awarded) pointsAwarded = defi.points;
+    }
 
     revalidatePath(`/stages/${stageId}/defis`);
-    return { success: true };
+    return { success: true, pointsAwarded };
 }
 
 // ==========================================

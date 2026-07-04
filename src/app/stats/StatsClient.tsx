@@ -1,11 +1,26 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import type { StageObjectiveDashboardStats, ObservationsDashboardStats } from '@/services/data-service';
 import { PILLARS } from '@/data/etages';
+
+/** Referme une section repliée dès qu'on clique n'importe où en dehors d'elle — évite
+ * d'avoir à retaper sur son en-tête une fois consultée. */
+function useCollapseOnOutsideClick<T extends HTMLElement>(open: boolean, onClose: () => void) {
+    const ref = useRef<T>(null);
+    useEffect(() => {
+        if (!open) return;
+        const handleClickOutside = (e: PointerEvent) => {
+            if (ref.current && !ref.current.contains(e.target as Node)) onClose();
+        };
+        document.addEventListener('pointerdown', handleClickOutside);
+        return () => document.removeEventListener('pointerdown', handleClickOutside);
+    }, [open, onClose]);
+    return ref;
+}
 
 export type MonitorRow = { monitor_id: string; full_name: string; club_name: string | null; total_points: number };
 export type ClubRow = { club_id: string; club_name: string; total_points: number };
@@ -36,6 +51,15 @@ function MetricCard({ label, value, helper, className }: { label: string; value:
 
 export default function StatsClient({ monitors, clubs, currentUserId, myPoints, objectiveDashboard, observationsDashboard }: Props) {
     const [activeTab, setActiveTab] = useState<'CLUBS' | 'MONITEURS'>('MONITEURS');
+    // Les 4 metric cards + derniers carnets restent visibles d'emblée ; le détail plus
+    // long (orientations par mot-clé, suivi thème par thème) reste disponible mais replié
+    // par défaut pour ne pas noyer l'essentiel dans un scroll interminable.
+    const [showOrientations, setShowOrientations] = useState(false);
+    const [showPillarDetail, setShowPillarDetail] = useState(false);
+    const [showObservations, setShowObservations] = useState(false);
+    const orientationsRef = useCollapseOnOutsideClick<HTMLDivElement>(showOrientations, () => setShowOrientations(false));
+    const pillarDetailRef = useCollapseOnOutsideClick<HTMLDivElement>(showPillarDetail, () => setShowPillarDetail(false));
+    const observationsRef = useCollapseOnOutsideClick<HTMLElement>(showObservations, () => setShowObservations(false));
     const hasObjectiveData = objectiveDashboard.summary.totalObjectives > 0;
 
     const rows: { id: string; name: string; sub?: string; points: number; isMe: boolean }[] =
@@ -116,11 +140,21 @@ export default function StatsClient({ monitors, clubs, currentUserId, myPoints, 
                             </div>
 
                             {totalKeywordOccurrences > 0 && (
-                                <div className="rounded-3xl border border-white bg-white/80 p-4 space-y-3">
-                                    <div>
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Vos orientations</p>
-                                        <p className="text-xs text-slate-500 mt-0.5">Répartition précise de vos choix par notion — reste-t-on toujours sur les mêmes sujets (marée, vent…) ?</p>
-                                    </div>
+                                <div ref={orientationsRef} className="rounded-3xl border border-white bg-white/80 p-4 space-y-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowOrientations(o => !o)}
+                                        className="w-full flex items-center justify-between gap-2 text-left"
+                                    >
+                                        <div>
+                                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Vos orientations</p>
+                                            <p className="text-xs text-slate-500 mt-0.5">Répartition précise de vos choix par notion — reste-t-on toujours sur les mêmes sujets (marée, vent…) ?</p>
+                                        </div>
+                                        <span className={clsx(
+                                            'material-symbols-outlined text-slate-300 text-base shrink-0 transition-transform duration-200',
+                                            showOrientations && 'rotate-180'
+                                        )}>expand_more</span>
+                                    </button>
 
                                     {topKeywordShare >= 30 && (
                                         <div className="rounded-2xl bg-amber-50 border border-amber-200 px-3 py-2.5 flex items-start gap-2">
@@ -131,43 +165,65 @@ export default function StatsClient({ monitors, clubs, currentUserId, myPoints, 
                                         </div>
                                     )}
 
-                                    <div className="space-y-2.5">
-                                        {keywordsByFocus.filter(k => k.occurrences > 0).map(keyword => {
-                                            const share = Math.round((keyword.occurrences / totalKeywordOccurrences) * 100);
-                                            return (
-                                                <div key={keyword.tag}>
-                                                    <div className="flex items-center justify-between gap-2 text-xs font-bold text-slate-700 mb-1">
-                                                        <span className="truncate capitalize">{keyword.tag}</span>
-                                                        <span className="shrink-0 text-slate-500">{keyword.occurrences}× · {share}%</span>
-                                                    </div>
-                                                    <div className="h-2 overflow-hidden rounded-full bg-slate-100">
-                                                        <div className="h-full rounded-full bg-indigo-500" style={{ width: `${share}%` }} />
-                                                    </div>
+                                    <AnimatePresence initial={false}>
+                                        {showOrientations && (
+                                            <motion.div
+                                                initial={{ height: 0, opacity: 0 }}
+                                                animate={{ height: 'auto', opacity: 1 }}
+                                                exit={{ height: 0, opacity: 0 }}
+                                                transition={{ duration: 0.2 }}
+                                                className="overflow-hidden"
+                                            >
+                                                <div className="space-y-2.5">
+                                                    {keywordsByFocus.filter(k => k.occurrences > 0).map(keyword => {
+                                                        const share = Math.round((keyword.occurrences / totalKeywordOccurrences) * 100);
+                                                        return (
+                                                            <div key={keyword.tag}>
+                                                                <div className="flex items-center justify-between gap-2 text-xs font-bold text-slate-700 mb-1">
+                                                                    <span className="truncate capitalize">{keyword.tag}</span>
+                                                                    <span className="shrink-0 text-slate-500">{keyword.occurrences}× · {share}%</span>
+                                                                </div>
+                                                                <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                                                                    <div className="h-full rounded-full bg-indigo-500" style={{ width: `${share}%` }} />
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
                                                 </div>
-                                            );
-                                        })}
-                                    </div>
 
-                                    {neverExploredKeywords.length > 0 && (
-                                        <div className="pt-1">
-                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1.5">
-                                                Jamais explorés ({neverExploredKeywords.length})
-                                            </p>
-                                            <div className="flex flex-wrap gap-1.5">
-                                                {neverExploredKeywords.map(keyword => (
-                                                    <span key={keyword.tag} className="inline-flex items-center text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded-full capitalize">
-                                                        {keyword.tag}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
+                                                {neverExploredKeywords.length > 0 && (
+                                                    <div className="pt-3">
+                                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1.5">
+                                                            Jamais explorés ({neverExploredKeywords.length})
+                                                        </p>
+                                                        <div className="flex flex-wrap gap-1.5">
+                                                            {neverExploredKeywords.map(keyword => (
+                                                                <span key={keyword.tag} className="inline-flex items-center text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded-full capitalize">
+                                                                    {keyword.tag}
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
                                 </div>
                             )}
 
                             {objectiveDashboard.pillars.length > 0 && (
-                                <div className="rounded-3xl border border-white bg-white/80 p-4 space-y-5">
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Suivi par pilier</p>
+                                <div ref={pillarDetailRef} className="rounded-3xl border border-white bg-white/80 p-4 space-y-5">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPillarDetail(o => !o)}
+                                        className="w-full flex items-center justify-between gap-2"
+                                    >
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Suivi par pilier</p>
+                                        <span className={clsx(
+                                            'material-symbols-outlined text-slate-300 text-base shrink-0 transition-transform duration-200',
+                                            showPillarDetail && 'rotate-180'
+                                        )}>expand_more</span>
+                                    </button>
                                     {objectiveDashboard.pillars.map(pillarStat => {
                                         const pillar = PILLARS.find(p => p.id === pillarStat.pillarId);
                                         if (!pillar) return null;
@@ -188,41 +244,53 @@ export default function StatsClient({ monitors, clubs, currentUserId, myPoints, 
                                                 <div className="h-1.5 overflow-hidden rounded-full bg-slate-100">
                                                     <div className={clsx('h-full rounded-full', pillar.bg)} style={{ width: `${pillarPct}%` }} />
                                                 </div>
-                                                <div className="space-y-1.5 pt-1">
-                                                    {pillarStat.themes.map(theme => (
-                                                        <div
-                                                            key={theme.id}
-                                                            className={clsx(
-                                                                'rounded-xl border px-3 py-2.5',
-                                                                theme.occurrences === 0 ? 'border-dashed border-slate-200 bg-slate-50/50' : 'border-white bg-white'
-                                                            )}
+                                                <AnimatePresence initial={false}>
+                                                    {showPillarDetail && (
+                                                        <motion.div
+                                                            initial={{ height: 0, opacity: 0 }}
+                                                            animate={{ height: 'auto', opacity: 1 }}
+                                                            exit={{ height: 0, opacity: 0 }}
+                                                            transition={{ duration: 0.2 }}
+                                                            className="overflow-hidden"
                                                         >
-                                                            <div className="flex items-start gap-2">
-                                                                <span className="material-symbols-outlined text-base text-slate-400 shrink-0 mt-0.5">{theme.icon}</span>
-                                                                <p className="text-xs font-bold text-slate-700 leading-snug flex-1">{theme.label}</p>
-                                                            </div>
-                                                            <div className="mt-1.5 pl-6.5 flex items-center gap-1.5 flex-wrap">
-                                                                {theme.occurrences === 0 ? (
-                                                                    <span className="text-[10px] font-semibold text-slate-400">Jamais abordé</span>
-                                                                ) : (
-                                                                    <>
-                                                                        <span className="text-[10px] font-black text-white bg-slate-900 px-1.5 py-0.5 rounded-full">
-                                                                            {theme.summary.doneCount + theme.summary.partialCount}/{theme.summary.totalObjectives} travaillées
-                                                                        </span>
-                                                                        {theme.observationCount > 0 && (
-                                                                            <span className="text-[10px] font-bold text-emerald-600">+{theme.observationCount} retour{theme.observationCount > 1 ? 's' : ''} terrain</span>
+                                                            <div className="space-y-1.5 pt-1">
+                                                                {pillarStat.themes.map(theme => (
+                                                                    <div
+                                                                        key={theme.id}
+                                                                        className={clsx(
+                                                                            'rounded-xl border px-3 py-2.5',
+                                                                            theme.occurrences === 0 ? 'border-dashed border-slate-200 bg-slate-50/50' : 'border-white bg-white'
                                                                         )}
-                                                                    </>
-                                                                )}
-                                                                {theme.catalogCount > 0 && (
-                                                                    <span className="text-[10px] font-bold text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded-full">
-                                                                        {theme.selectedCount}/{theme.catalogCount} fiches explorées
-                                                                    </span>
-                                                                )}
+                                                                    >
+                                                                        <div className="flex items-start gap-2">
+                                                                            <span className="material-symbols-outlined text-base text-slate-400 shrink-0 mt-0.5">{theme.icon}</span>
+                                                                            <p className="text-xs font-bold text-slate-700 leading-snug flex-1">{theme.label}</p>
+                                                                        </div>
+                                                                        <div className="mt-1.5 pl-6.5 flex items-center gap-1.5 flex-wrap">
+                                                                            {theme.occurrences === 0 ? (
+                                                                                <span className="text-[10px] font-semibold text-slate-400">Jamais abordé</span>
+                                                                            ) : (
+                                                                                <>
+                                                                                    <span className="text-[10px] font-black text-white bg-slate-900 px-1.5 py-0.5 rounded-full">
+                                                                                        {theme.summary.doneCount + theme.summary.partialCount}/{theme.summary.totalObjectives} travaillées
+                                                                                    </span>
+                                                                                    {theme.observationCount > 0 && (
+                                                                                        <span className="text-[10px] font-bold text-emerald-600">+{theme.observationCount} retour{theme.observationCount > 1 ? 's' : ''} terrain</span>
+                                                                                    )}
+                                                                                </>
+                                                                            )}
+                                                                            {theme.catalogCount > 0 && (
+                                                                                <span className="text-[10px] font-bold text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded-full">
+                                                                                    {theme.selectedCount}/{theme.catalogCount} fiches explorées
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+                                                                ))}
                                                             </div>
-                                                        </div>
-                                                    ))}
-                                                </div>
+                                                        </motion.div>
+                                                    )}
+                                                </AnimatePresence>
                                             </div>
                                         );
                                     })}
@@ -251,45 +319,69 @@ export default function StatsClient({ monitors, clubs, currentUserId, myPoints, 
                 </section>
 
                 {/* Retours terrain */}
-                <section className="rounded-[2rem] border border-emerald-100 bg-gradient-to-br from-white via-emerald-50 to-sky-50 p-5 shadow-xl shadow-slate-200/70">
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                <section ref={observationsRef} className="rounded-[2rem] border border-emerald-100 bg-gradient-to-br from-white via-emerald-50 to-sky-50 p-5 shadow-xl shadow-slate-200/70">
+                    <button
+                        type="button"
+                        onClick={() => observationsDashboard.totalObservations > 0 && setShowObservations(o => !o)}
+                        className="w-full flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between text-left"
+                    >
                         <div>
                             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500">Sciences participatives</p>
                             <h3 className="mt-1 text-2xl font-black tracking-tight text-slate-950">Retours terrain</h3>
                         </div>
-                        <p className="text-xs font-bold text-slate-500">
-                            {observationsDashboard.totalObservations} observation{observationsDashboard.totalObservations > 1 ? 's' : ''}
-                        </p>
-                    </div>
-
-                    {observationsDashboard.totalObservations > 0 ? (
-                        <div className="mt-5 space-y-5">
-                            {observationsDashboard.byType.length > 0 && (
-                                <div className="flex flex-wrap gap-2">
-                                    {observationsDashboard.byType.map(t => (
-                                        <span key={t.type} className="inline-flex items-center gap-1.5 rounded-full bg-white/80 border border-white px-3 py-1.5 text-xs font-bold text-slate-700">
-                                            <span className="material-symbols-outlined text-sm text-emerald-600">{t.icon}</span>
-                                            {t.label}
-                                            <span className="text-[10px] font-black text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-full">{t.count}</span>
-                                        </span>
-                                    ))}
-                                </div>
-                            )}
-
-                            {observationsDashboard.topSpecies.length > 0 && (
-                                <div className="rounded-3xl border border-white bg-white/80 p-4">
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Espèces / éléments les plus observés</p>
-                                    <ul className="space-y-1.5">
-                                        {observationsDashboard.topSpecies.map(s => (
-                                            <li key={`${s.type}-${s.name}`} className="text-xs font-bold text-slate-700 flex justify-between items-center">
-                                                <span className="truncate">{s.name}</span>
-                                                <span className="text-[10px] font-black text-white bg-emerald-600 px-2 py-0.5 rounded-full shrink-0 ml-2">×{s.count}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
+                        <div className="flex items-center gap-2">
+                            <p className="text-xs font-bold text-slate-500">
+                                {observationsDashboard.totalObservations} observation{observationsDashboard.totalObservations > 1 ? 's' : ''}
+                            </p>
+                            {observationsDashboard.totalObservations > 0 && (
+                                <span className={clsx(
+                                    'material-symbols-outlined text-slate-300 text-base shrink-0 transition-transform duration-200',
+                                    showObservations && 'rotate-180'
+                                )}>expand_more</span>
                             )}
                         </div>
+                    </button>
+
+                    {observationsDashboard.totalObservations > 0 ? (
+                        <AnimatePresence initial={false}>
+                            {showObservations && (
+                                <motion.div
+                                    initial={{ height: 0, opacity: 0 }}
+                                    animate={{ height: 'auto', opacity: 1 }}
+                                    exit={{ height: 0, opacity: 0 }}
+                                    transition={{ duration: 0.2 }}
+                                    className="overflow-hidden"
+                                >
+                                    <div className="mt-5 space-y-5">
+                                        {observationsDashboard.byType.length > 0 && (
+                                            <div className="flex flex-wrap gap-2">
+                                                {observationsDashboard.byType.map(t => (
+                                                    <span key={t.type} className="inline-flex items-center gap-1.5 rounded-full bg-white/80 border border-white px-3 py-1.5 text-xs font-bold text-slate-700">
+                                                        <span className="material-symbols-outlined text-sm text-emerald-600">{t.icon}</span>
+                                                        {t.label}
+                                                        <span className="text-[10px] font-black text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-full">{t.count}</span>
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        {observationsDashboard.topSpecies.length > 0 && (
+                                            <div className="rounded-3xl border border-white bg-white/80 p-4">
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Espèces / éléments les plus observés</p>
+                                                <ul className="space-y-1.5">
+                                                    {observationsDashboard.topSpecies.map(s => (
+                                                        <li key={`${s.type}-${s.name}`} className="text-xs font-bold text-slate-700 flex justify-between items-center">
+                                                            <span className="truncate">{s.name}</span>
+                                                            <span className="text-[10px] font-black text-white bg-emerald-600 px-2 py-0.5 rounded-full shrink-0 ml-2">×{s.count}</span>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        )}
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     ) : (
                         <div className="mt-5 rounded-3xl border border-dashed border-emerald-200 bg-white/70 p-5 text-sm font-semibold text-slate-600">
                             Les retours terrain enregistrés depuis l&apos;accueil des semaines alimenteront ici un suivi des observations.
