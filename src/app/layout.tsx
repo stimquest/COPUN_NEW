@@ -9,8 +9,14 @@ import { createClient } from '@/lib/supabase/server';
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
 export const metadata: Metadata = {
-  title: 'COPUN Dashboard',
+  title: "COP'UN Dashboard",
   description: 'Instructor Hub',
+  manifest: '/manifest.webmanifest',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: "COP'UN",
+  },
 };
 
 export const viewport: Viewport = {
