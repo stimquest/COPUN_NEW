@@ -34,34 +34,20 @@ export function parseStageDateRange(dates: string, referenceDate = new Date()): 
     return { start, end };
 }
 
-/** Distance (en jours) entre `referenceDate` et l'intervalle [start, end] ; 0 si referenceDate est dedans. */
-function distanceToRange(range: { start: Date; end: Date }, referenceDate: Date): number {
-    const ref = referenceDate.getTime();
-    if (ref >= range.start.getTime() && ref <= range.end.getTime()) return 0;
-    if (ref < range.start.getTime()) return range.start.getTime() - ref;
-    return ref - range.end.getTime();
-}
-
 /**
- * Choisit, parmi une liste de semaines non clôturées, celle qui correspond à aujourd'hui
- * (ou la plus proche si aucune ne couvre la date du jour). Fallback sur la première si le
- * parsing échoue pour toutes.
+ * Choisit, parmi une liste de semaines non clôturées, celle dont l'intervalle de dates
+ * couvre exactement aujourd'hui. Retourne `null` si aucune ne correspond — pas de fallback
+ * sur "la plus proche", ce qui serait trompeur (afficher une semaine passée ou future comme
+ * si elle était en cours).
  */
 export function pickCurrentStage<T extends { dates: string }>(stages: T[], referenceDate = new Date()): T | null {
-    if (stages.length === 0) return null;
-
-    let best: T | null = null;
-    let bestDistance = Infinity;
+    const ref = referenceDate.getTime();
 
     for (const stage of stages) {
         const range = parseStageDateRange(stage.dates, referenceDate);
         if (!range) continue;
-        const distance = distanceToRange(range, referenceDate);
-        if (distance < bestDistance) {
-            bestDistance = distance;
-            best = stage;
-        }
+        if (ref >= range.start.getTime() && ref <= range.end.getTime()) return stage;
     }
 
-    return best ?? stages[0];
+    return null;
 }

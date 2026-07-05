@@ -63,13 +63,14 @@ export default async function StagesPage() {
 
     const firstName = profile?.full_name?.split(' ')[0] ?? 'Moniteur';
 
-    // Semaine active = celle dont l'intervalle de dates couvre aujourd'hui, ou la plus proche
-    // (parmi les non clôturées) — pas simplement la dernière créée, pour ne pas afficher une
-    // semaine préparée à l'avance à la place de la semaine en cours.
+    // Semaine active = uniquement celle dont l'intervalle de dates couvre exactement
+    // aujourd'hui — jamais la plus proche, pour ne pas afficher une semaine passée ou
+    // préparée à l'avance à la place de la semaine en cours.
     const openStages = stages.filter(s => !s.closed_at);
     const activeStage = pickCurrentStage(openStages, now);
     const upcomingStages = openStages.filter(s => s.id !== activeStage?.id);
     const archivedStages = stages.filter(s => !!s.closed_at);
+    const hasOpenNonActiveStages = upcomingStages.length > 0;
 
     // Écran vide — aucun stage
     if (stages.length === 0) {
@@ -97,14 +98,19 @@ export default async function StagesPage() {
         );
     }
 
-    // Toutes les semaines sont clôturées — afficher l'historique + bouton nouvelle semaine
+    // Aucune semaine ne couvre exactement aujourd'hui — afficher l'historique/les semaines
+    // à venir + bouton nouvelle semaine, sans faire croire qu'une semaine est en cours.
     if (!activeStage) {
         return (
             <div className="min-h-screen bg-slate-50 pb-32">
                 <header className={`bg-linear-to-br ${seasonStyle.gradient} px-5 pt-12 pb-8`}>
                     <p className="text-white/60 text-sm font-semibold">{greeting},</p>
                     <h1 className="text-3xl font-black text-white italic mt-0.5">{firstName}.</h1>
-                    <p className="text-white/50 text-sm mt-2">Toutes vos semaines sont archivées.</p>
+                    <p className="text-white/50 text-sm mt-2">
+                        {hasOpenNonActiveStages
+                            ? "Aucune semaine prévue à la date d'aujourd'hui."
+                            : 'Toutes vos semaines sont archivées.'}
+                    </p>
                 </header>
                 <main className="max-w-2xl mx-auto px-4 pt-5 space-y-4">
                     <Link
@@ -117,6 +123,24 @@ export default async function StagesPage() {
                         </div>
                         <span className="material-symbols-outlined text-2xl text-white/60">add_circle</span>
                     </Link>
+
+                    {upcomingStages.length > 0 && (
+                        <section>
+                            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400 mb-3">Semaines prévues</p>
+                            <div className="space-y-2">
+                                {upcomingStages.map(s => (
+                                    <Link key={s.id} href={`/stages/${s.id}/program`} className="flex items-center gap-3 bg-white rounded-2xl border border-slate-200 px-4 py-3 hover:bg-slate-50 transition active:scale-95">
+                                        <span className="material-symbols-outlined text-slate-300 text-xl shrink-0">event</span>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-bold text-slate-700 truncate">{s.title}</p>
+                                            <p className="text-xs text-slate-400">{s.dates}</p>
+                                        </div>
+                                        <span className="material-symbols-outlined text-slate-300 text-base shrink-0">chevron_right</span>
+                                    </Link>
+                                ))}
+                            </div>
+                        </section>
+                    )}
 
                     {archivedStages.length > 0 && (
                         <section>
