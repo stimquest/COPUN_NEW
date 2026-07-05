@@ -38,6 +38,43 @@ function initials(name: string) {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 }
 
+// Paliers de connaissances — la même donnée que "catalogue exploré", mais présentée
+// comme une progression personnelle valorisante plutôt que du reporting : l'acquisition
+// des connaissances environnement devient un parcours, pas une obligation fédérale.
+const KNOWLEDGE_LEVELS = [
+    { min: 0, label: 'Moussaillon' },
+    { min: 10, label: 'Matelot' },
+    { min: 30, label: 'Second' },
+    { min: 60, label: 'Capitaine' },
+    { min: 100, label: 'Sentinelle' },
+];
+
+function KnowledgeProgressCard({ explored, total }: { explored: number; total: number }) {
+    const levelIndex = KNOWLEDGE_LEVELS.reduce((acc, lvl, i) => (explored >= lvl.min ? i : acc), 0);
+    const level = KNOWLEDGE_LEVELS[levelIndex];
+    const next = KNOWLEDGE_LEVELS[levelIndex + 1] ?? null;
+    const pct = next
+        ? Math.round(((explored - level.min) / (next.min - level.min)) * 100)
+        : 100;
+
+    return (
+        <div className="rounded-3xl p-4 ring-1 ring-black/5 bg-amber-100 text-amber-950">
+            <p className="text-[10px] font-black uppercase tracking-widest opacity-70">Tes connaissances</p>
+            <div className="mt-1 flex items-baseline gap-2">
+                <p className="text-3xl font-black leading-none">{level.label}</p>
+                <span className="material-symbols-outlined text-xl text-amber-600">workspace_premium</span>
+            </div>
+            <p className="mt-2 text-xs font-semibold opacity-75">{explored} notion{explored > 1 ? 's' : ''} explorée{explored > 1 ? 's' : ''} sur {total}</p>
+            <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/60">
+                <div className="h-full rounded-full bg-amber-500 transition-all" style={{ width: `${Math.max(4, pct)}%` }} />
+            </div>
+            <p className="mt-1.5 text-[10px] font-bold opacity-60">
+                {next ? `Encore ${next.min - explored} pour passer ${next.label}` : 'Niveau max — vraie sentinelle de l\'Océan'}
+            </p>
+        </div>
+    );
+}
+
 function MetricCard({ label, value, helper, className }: { label: string; value: string; helper: string; className: string }) {
     return (
         <div className={clsx('rounded-3xl p-4 ring-1 ring-black/5', className)}>
@@ -131,11 +168,9 @@ export default function StatsClient({ monitors, clubs, currentUserId, myPoints, 
                                     helper="Sur les 9 thèmes COP'UN (3 par pilier)"
                                     className="bg-sky-100 text-sky-950"
                                 />
-                                <MetricCard
-                                    label="Catalogue exploré"
-                                    value={`${objectiveDashboard.catalogCoverage.selected}/${objectiveDashboard.catalogCoverage.total}`}
-                                    helper="Fiches déjà choisies, sur l'ensemble disponible"
-                                    className="bg-amber-100 text-amber-950"
+                                <KnowledgeProgressCard
+                                    explored={objectiveDashboard.catalogCoverage.selected}
+                                    total={objectiveDashboard.catalogCoverage.total}
                                 />
                             </div>
 

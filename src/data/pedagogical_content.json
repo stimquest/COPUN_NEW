@@ -932,9 +932,9 @@
     "id": "62",
     "niveau": 2,
     "dimension": "OBSERVER",
-    "question": "Comment observer le vivant sans déranger",
-    "objectif": "\"Retenir qu’il y a dérangement dès qu’il y a un changement de comportement",
-    "tip": "Rester à distance, ne pas faire de bruit, utiliser des jumelles",
+    "question": "Comment savoir si on dérange un animal ?",
+    "objectif": "Retenir qu’il y a dérangement dès qu’il y a un changement de comportement.",
+    "tip": "Jumelles et silence. Faites observer un oiseau au groupe : s’il relève la tête ou s’arrête de se nourrir, on a déjà fait un pas de trop — on recule.",
     "tags_theme": [
       "lecture_paysage"
     ],
@@ -977,9 +977,9 @@
     "id": "65",
     "niveau": 2,
     "dimension": "PROTÉGER",
-    "question": "Comprendre qu’au fil des saisons le vivant est différent et choisit le site en fonction de ses besoins (hivernage, reproduction….)",
+    "question": "Pourquoi ne voit-on pas les mêmes animaux selon les saisons ?",
     "objectif": "Comprendre la multifonctionnalité des habitats et l'importance de les préserver.",
-    "tip": "Il y a des moments clés à chaque saison pour chaque espèce, il est important de les repérer pour savoir qui est là, à quel moment et pourquoi",
+    "tip": "Demandez au groupe : qui habite la plage cette semaine ? Cherchez un indice du moment (nid, jeunes, groupe en halte) et expliquez pourquoi cette espèce a choisi ce site à cette saison.",
     "tags_theme": [
       "cohabitation_vivant",
       "biodiversite_saisonnalite"
@@ -1023,9 +1023,9 @@
     "id": "68",
     "niveau": 1,
     "dimension": "COMPRENDRE",
-    "question": "Comment prendre en compte les rythmes naturels",
-    "objectif": "Comprendre que les activités humaines sont soumises à différents rythmes : le rythme quotidien des marées, le rythme mensuel des cycles de la lune, le rythme annuel des saisons …",
-    "tip": "La nature aura toujours le dernier mot, à charge pour l’homme d’ajuster ses activités pour être en sécurité et en harmonie avec le lieu. L’adaptation à tous ces rythmes passe par la connaissance.",
+    "question": "Pourquoi on ne part pas à la même heure chaque jour ?",
+    "objectif": "Comprendre que les activités nautiques suivent les rythmes de la nature : la marée chaque jour, les coefficients sur deux semaines, les saisons sur l’année.",
+    "tip": "Affichez l’horaire de marée du jour et celui de demain : faites constater le décalage aux stagiaires, puis demandez-leur de prédire l’heure de mise à l’eau d’après-demain.",
     "tags_theme": [
       "caracteristiques_littoral"
     ],

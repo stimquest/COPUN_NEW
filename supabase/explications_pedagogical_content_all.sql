@@ -189,7 +189,7 @@ UPDATE pedagogical_content SET explication =
 WHERE id = '52';
 
 UPDATE pedagogical_content SET explication =
-'Marées deux fois par jour, cycles de coefficient toutes les deux semaines, saisons qui changent la faune et la météo : la nature impose son propre calendrier, et une activité bien préparée s''ajuste à ces rythmes plutôt que de les ignorer.'
+'Parce que la marée se décale d''environ 50 minutes chaque jour : l''horaire de navigation d''aujourd''hui ne sera plus le bon demain. Ce décalage suit la Lune, comme le cycle des coefficients qui revient toutes les deux semaines — la nature impose son calendrier, et le programme de la semaine s''y ajuste.'
 WHERE id = '68';
 
 UPDATE pedagogical_content SET explication =

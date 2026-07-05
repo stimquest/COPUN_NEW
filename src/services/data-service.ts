@@ -199,6 +199,45 @@ export async function getStageObjectiveReviewItems(stageId: string): Promise<Sta
         .filter((item): item is StageObjectiveReviewItem => item !== null);
 }
 
+/**
+ * Bilan cumulé par fiche sur toutes les semaines du moniteur : quelles fiches ont bien
+ * accroché (valeurs sûres à reproposer aux nouveaux groupes, comme les exercices sportifs
+ * qu'on répète chaque semaine) et lesquelles sont tombées à plat. La RLS limite déjà les
+ * lignes aux stages du moniteur connecté.
+ */
+export async function getMyFicheOutcomes(): Promise<{ successIds: string[]; lowIds: string[] }> {
+    const supabase = await createClient();
+    const user = await getCachedUser();
+    if (!user) return { successIds: [], lowIds: [] };
+
+    const { data, error } = await supabase
+        .from('stage_objective_reviews')
+        .select('pedagogical_content_id, execution_status, impact_level');
+
+    if (error || !data) {
+        if (error) console.error('[getMyFicheOutcomes]', error.message);
+        return { successIds: [], lowIds: [] };
+    }
+
+    const success = new Set<string>();
+    const low = new Set<string>();
+    for (const row of data) {
+        const id = row.pedagogical_content_id as string;
+        const worked = row.execution_status === 'done' || row.execution_status === 'partial';
+        if (!worked) continue;
+        if (row.impact_level === 'high' || (row.execution_status === 'done' && row.impact_level === 'medium')) {
+            success.add(id);
+        } else if (row.impact_level === 'low') {
+            low.add(id);
+        }
+    }
+    // Un succès quelque part efface un échec ailleurs : les groupes changent, on retient
+    // le meilleur résultat obtenu avec la fiche.
+    for (const id of success) low.delete(id);
+
+    return { successIds: Array.from(success), lowIds: Array.from(low) };
+}
+
 export type ThemeTracking = {
     id: string;
     label: string;

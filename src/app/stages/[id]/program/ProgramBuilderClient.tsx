@@ -53,7 +53,7 @@ function IntentionBanner({ intention, stageId }: { intention: string | null | un
     );
 }
 
-export default function ProgramBuilderClient({ stage, copunPool, customPool, usedContentIds }: { stage: Stage, copunPool: PedagogicalContent[], customPool: PedagogicalContent[], usedContentIds: string[] }) {
+export default function ProgramBuilderClient({ stage, copunPool, customPool, usedContentIds, successIds }: { stage: Stage, copunPool: PedagogicalContent[], customPool: PedagogicalContent[], usedContentIds: string[], successIds: string[] }) {
     const fullPool = useMemo(() => [...copunPool, ...customPool], [copunPool, customPool]);
     const router = useRouter();
     // Deux modes : "Guidé" (défaut) propose une semaine composée — le contenu a été
@@ -102,11 +102,33 @@ export default function ProgramBuilderClient({ stage, copunPool, customPool, use
     // ── Mode guidé ────────────────────────────────────────────────────────────
     const usedIdSet = useMemo(() => new Set(usedContentIds), [usedContentIds]);
     const [expandedPillar, setExpandedPillar] = useState<string | null>(null);
+    // Accordéon par carte (même geste que l'accueil) : fermé = question seule, déplié =
+    // début du contenu (objectif + tip), la fiche complète reste dans le modal.
+    const [expandedGuideCard, setExpandedGuideCard] = useState<string | null>(null);
+    // Après "Adopter la proposition" : écran de découverte des fiches choisies avec
+    // leurs explications dépliées — le seul moment calme où le moniteur est déjà dans
+    // le sujet, on en profite pour déposer la connaissance sans que ça ressemble à
+    // du travail. (Philosophie : le guidage doit enseigner en passant.)
+    const [showWeekPreview, setShowWeekPreview] = useState(false);
+
+    // Passage de relais : sur un pilier dont le moniteur a déjà exploré plusieurs
+    // fiches, on ne propose plus une fiche unique — on lui rend le choix (parmi 3),
+    // précisément là où il est devenu compétent.
+    const PILLAR_HANDOVER_THRESHOLD = 4;
+    const usedCountByPillar = useMemo(() => {
+        const counts: Record<string, number> = {};
+        copunPool.forEach(c => {
+            if (usedIdSet.has(c.id)) counts[c.dimension] = (counts[c.dimension] ?? 0) + 1;
+        });
+        return counts;
+    }, [copunPool, usedIdSet]);
 
     // Classement guidé par pilier : la pertinence (conditions + intention) pèse le plus,
     // une fiche jamais explorée est favorisée, léger bonus N1 (découverte). Départage
     // déterministe seedé par la semaine : la proposition varie d'un stage à l'autre
     // sans bouger à chaque rendu.
+    const successIdSet = useMemo(() => new Set(successIds), [successIds]);
+
     const guidedByPillar = useMemo(() => {
         const tieBreak = (cardId: string) => {
             const s = stage.id + cardId;
@@ -119,8 +141,12 @@ export default function ProgramBuilderClient({ stage, copunPool, customPool, use
                 .filter(c => c.dimension === pillar.id)
                 .map(card => ({
                     card,
+                    // Une valeur sûre (a bien accroché avec un groupe passé) gagne toujours
+                    // sur une nouveauté : les groupes changent, le message se répète — comme
+                    // les exercices sportifs. La nouveauté ne fait que remplir les trous.
                     guideScore: recommendScore(card) * 2
-                        + (usedIdSet.has(card.id) ? 0 : 2)
+                        + (successIdSet.has(card.id) ? 3 : 0)
+                        + (usedIdSet.has(card.id) ? 0 : 1)
                         + (Number(card.niveau) === 1 ? 1 : 0)
                         + tieBreak(card.id),
                 }))
@@ -128,7 +154,7 @@ export default function ProgramBuilderClient({ stage, copunPool, customPool, use
                 .map(x => x.card);
             return { pillar, candidates };
         });
-    }, [copunPool, usedIdSet, recommendScore, stage.id]);
+    }, [copunPool, usedIdSet, successIdSet, recommendScore, stage.id]);
 
     const ALL_THEMES = useMemo(() => Object.values(THEMES_BY_PILLAR).flat(), []);
 
@@ -136,7 +162,14 @@ export default function ProgramBuilderClient({ stage, copunPool, customPool, use
     // information qui rend le choix évident, au lieu de laisser le moniteur simuler
     // mentalement sa semaine avec chaque carte du catalogue.
     const reasonChips = (card: PedagogicalContent) => {
-        const chips: { icon: string; label: string; novel?: boolean }[] = [];
+        // Ordre = priorité d'affichage : valeur sûre > intention > thématique > nouveauté.
+        const chips: { icon: string; label: string; novel?: boolean; success?: boolean }[] = [];
+        if (successIdSet.has(card.id)) chips.push({ icon: 'verified', label: 'A bien accroché', success: true });
+        const obj = OBJECTIFS.find(o => o.id === intention);
+        if (obj) {
+            const cardTags = (Array.isArray(card.tags_filtre) ? card.tags_filtre : []).map(t => String(t).toLowerCase().trim());
+            if (obj.tags.some(t => cardTags.includes(t.toLowerCase()))) chips.push({ icon: obj.icon, label: 'Ton intention' });
+        }
         const cardThemes = (Array.isArray(card.tags_theme) ? card.tags_theme : []).map(t => String(t).toLowerCase().trim());
         suggestedThemes.forEach(t => {
             if (cardThemes.includes(t.toLowerCase())) {
@@ -144,11 +177,6 @@ export default function ProgramBuilderClient({ stage, copunPool, customPool, use
                 if (meta) chips.push({ icon: meta.icon, label: meta.label });
             }
         });
-        const obj = OBJECTIFS.find(o => o.id === intention);
-        if (obj) {
-            const cardTags = (Array.isArray(card.tags_filtre) ? card.tags_filtre : []).map(t => String(t).toLowerCase().trim());
-            if (obj.tags.some(t => cardTags.includes(t.toLowerCase()))) chips.push({ icon: obj.icon, label: 'Ton intention' });
-        }
         if (!usedIdSet.has(card.id)) chips.push({ icon: 'auto_awesome', label: 'Jamais explorée', novel: true });
         return chips;
     };
@@ -323,58 +351,102 @@ export default function ProgramBuilderClient({ stage, copunPool, customPool, use
                 {activeTab === 'GUIDE' && (() => {
                     const slots = guidedByPillar.map(({ pillar, candidates }) => {
                         const selectedCards = programCards.filter(c => c.source !== 'custom' && c.dimension === pillar.id);
-                        const proposal = candidates.find(c => !programIds.includes(c.id)) ?? null;
-                        const alternatives = candidates.filter(c => !programIds.includes(c.id) && c.id !== proposal?.id).slice(0, 3);
-                        return { pillar, selectedCards, proposal, alternatives };
+                        const available = candidates.filter(c => !programIds.includes(c.id));
+                        const handover = (usedCountByPillar[pillar.id] ?? 0) >= PILLAR_HANDOVER_THRESHOLD;
+                        // Pilier "connu" : 3 choix équivalents au lieu d'une proposition unique.
+                        // Après un premier choix, les fiches restantes repassent derrière
+                        // "Voir d'autres pistes" — même comportement que les piliers proposés,
+                        // on peut toujours en ajouter (dans la limite des 5).
+                        const proposal = handover ? null : available[0] ?? null;
+                        const handoverChoices = handover && selectedCards.length === 0 ? available.slice(0, 3) : [];
+                        const alternatives = handover
+                            ? (selectedCards.length > 0 ? available.slice(0, 3) : [])
+                            : available.slice(1, 4);
+                        return { pillar, selectedCards, proposal, alternatives, handover, handoverChoices };
                     });
                     const allEmpty = slots.every(s => s.selectedCards.length === 0);
+                    // "Adopter" ne remplit que les piliers encore proposés — ceux passés en
+                    // "à toi de choisir" restent au moniteur, c'est le but.
+                    const autoSlots = slots.filter(s => s.selectedCards.length === 0 && !s.handover && s.proposal);
 
                     const adoptAll = () => {
-                        slots.forEach(s => {
-                            if (s.selectedCards.length === 0 && s.proposal) toggleCard(s.proposal.id);
-                        });
+                        autoSlots.forEach(s => { if (s.proposal) toggleCard(s.proposal.id); });
+                        setShowWeekPreview(true);
                     };
 
+                    // Carte accordéon (même geste que l'accueil) : fermée = 1 chip + question
+                    // + bouton "+" pour choisir ; dépliée = début du contenu (objectif + tip)
+                    // ; "Fiche complète" ouvre le modal pour toute la profondeur.
                     const renderGuidedCard = (card: PedagogicalContent, pillar: typeof PILLARS[number]) => {
-                        const chips = reasonChips(card);
+                        const chips = reasonChips(card).slice(0, 1);
+                        const isOpen = expandedGuideCard === card.id;
                         return (
                             <div key={card.id} className="relative bg-white rounded-2xl shadow-sm overflow-hidden">
-                                <div className={clsx("absolute left-0 top-0 bottom-0 w-1", pillar.bg)} />
-                                <div className="pl-5 pr-4 py-4 space-y-2.5">
-                                    {chips.length > 0 && (
-                                        <div className="flex flex-wrap gap-1.5">
-                                            {chips.map(chip => (
-                                                <span
-                                                    key={chip.label}
-                                                    className={clsx(
-                                                        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold",
-                                                        chip.novel ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-500"
-                                                    )}
-                                                >
-                                                    <span className="material-symbols-outlined text-[12px]">{chip.icon}</span>
-                                                    {chip.label}
-                                                </span>
-                                            ))}
-                                        </div>
-                                    )}
-                                    <p className="text-sm font-black text-slate-900 leading-snug">{card.question}</p>
-                                    <p className="text-[11px] text-slate-400 leading-relaxed">{card.objectif}</p>
-                                    <div className="flex items-center justify-between pt-1">
-                                        <button
-                                            onClick={() => setSelectedCardForDetail(card)}
-                                            className="text-[11px] font-bold text-slate-400 hover:text-slate-600 transition-colors"
-                                        >
-                                            En savoir plus
-                                        </button>
-                                        <button
-                                            onClick={() => toggleCard(card.id)}
-                                            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[11px] font-black bg-slate-900 text-white hover:bg-slate-700 active:scale-95 transition"
-                                        >
-                                            <span className="material-symbols-outlined text-sm">add</span>
-                                            Choisir cette fiche
-                                        </button>
-                                    </div>
+                                <div className={clsx("absolute left-0 top-0 bottom-0 w-2", pillar.bg)} />
+                                <div className="pl-6 pr-4 py-4 flex items-center gap-3">
+                                    <button
+                                        onClick={() => setExpandedGuideCard(isOpen ? null : card.id)}
+                                        className="flex-1 min-w-0 text-left"
+                                        aria-label="Déplier la fiche"
+                                    >
+                                        {chips.length > 0 && (
+                                            <div className="flex flex-wrap gap-1.5 mb-2">
+                                                {chips.map(chip => (
+                                                    <span
+                                                        key={chip.label}
+                                                        className={clsx(
+                                                            "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold",
+                                                            chip.success ? "bg-emerald-100 text-emerald-700" :
+                                                            chip.novel ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-500"
+                                                        )}
+                                                    >
+                                                        <span className="material-symbols-outlined text-[12px]">{chip.icon}</span>
+                                                        {chip.label}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
+                                        <p className="text-sm font-black text-slate-900 leading-relaxed">{card.question}</p>
+                                    </button>
+                                    <span className={clsx(
+                                        "material-symbols-outlined text-slate-300 text-base shrink-0 transition-transform duration-200",
+                                        isOpen && "rotate-180"
+                                    )}>expand_more</span>
+                                    <button
+                                        onClick={() => toggleCard(card.id)}
+                                        className="size-10 rounded-full bg-slate-900 text-white flex items-center justify-center shrink-0 hover:bg-slate-700 active:scale-90 transition"
+                                        aria-label="Choisir cette fiche"
+                                    >
+                                        <span className="material-symbols-outlined text-lg">add</span>
+                                    </button>
                                 </div>
+                                <AnimatePresence initial={false}>
+                                    {isOpen && (
+                                        <motion.div
+                                            initial={{ height: 0, opacity: 0 }}
+                                            animate={{ height: 'auto', opacity: 1 }}
+                                            exit={{ height: 0, opacity: 0 }}
+                                            transition={{ duration: 0.2 }}
+                                            className="overflow-hidden"
+                                        >
+                                            <div className="pl-6 pr-4 pb-4 pt-0.5 space-y-2 border-t border-slate-50">
+                                                <p className="text-xs text-slate-500 leading-relaxed pt-2">{card.objectif}</p>
+                                                {card.tip && (
+                                                    <div className="flex items-start gap-2 rounded-xl bg-amber-50 px-3 py-2">
+                                                        <span className="material-symbols-outlined text-amber-500 text-sm shrink-0 mt-0.5">lightbulb</span>
+                                                        <p className="text-xs text-amber-800 leading-relaxed">{card.tip}</p>
+                                                    </div>
+                                                )}
+                                                <button
+                                                    onClick={() => setSelectedCardForDetail(card)}
+                                                    className="text-[11px] font-bold text-indigo-500 hover:text-indigo-700 transition-colors"
+                                                >
+                                                    Fiche complète →
+                                                </button>
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
                             </div>
                         );
                     };
@@ -395,17 +467,17 @@ export default function ProgramBuilderClient({ stage, copunPool, customPool, use
                                 </div>
                             </div>
 
-                            {allEmpty && slots.some(s => s.proposal) && (
+                            {allEmpty && autoSlots.length > 0 && (
                                 <button
                                     onClick={adoptAll}
                                     className="w-full h-12 rounded-2xl bg-slate-900 text-white text-sm font-black flex items-center justify-center gap-2 active:scale-[0.98] transition"
                                 >
                                     <span className="material-symbols-outlined text-lg">auto_awesome</span>
-                                    Adopter la proposition — 3 fiches
+                                    Adopter la proposition — {autoSlots.length} fiche{autoSlots.length > 1 ? 's' : ''}
                                 </button>
                             )}
 
-                            {slots.map(({ pillar, selectedCards, proposal, alternatives }) => (
+                            {slots.map(({ pillar, selectedCards, proposal, alternatives, handover, handoverChoices }) => (
                                 <section key={pillar.id} className="space-y-2">
                                     <span className={clsx("inline-flex items-center gap-1.5 rounded-full pl-2.5 pr-3 py-1.5 text-white shadow-sm", pillar.bg)}>
                                         <span className="material-symbols-outlined text-[15px]">{pillar.icon}</span>
@@ -429,8 +501,22 @@ export default function ProgramBuilderClient({ stage, copunPool, customPool, use
                                         </div>
                                     ))}
 
+                                    {/* Pilier bien exploré : on rend la main — choix parmi 3,
+                                        exactement là où le moniteur est devenu compétent */}
+                                    {selectedCards.length === 0 && handover && handoverChoices.length > 0 && (
+                                        <>
+                                            <div className="flex items-center gap-1.5 px-1">
+                                                <span className="material-symbols-outlined text-indigo-400 text-sm shrink-0">workspace_premium</span>
+                                                <p className="text-[11px] font-bold text-indigo-500">
+                                                    Tu connais ce pilier — à toi de choisir :
+                                                </p>
+                                            </div>
+                                            {handoverChoices.map(choice => renderGuidedCard(choice, pillar))}
+                                        </>
+                                    )}
+
                                     {/* Proposition pour un pilier encore vide */}
-                                    {selectedCards.length === 0 && proposal && renderGuidedCard(proposal, pillar)}
+                                    {selectedCards.length === 0 && !handover && proposal && renderGuidedCard(proposal, pillar)}
 
                                     {/* Autres pistes du pilier, repliées */}
                                     {alternatives.length > 0 && (
@@ -775,12 +861,13 @@ export default function ProgramBuilderClient({ stage, copunPool, customPool, use
             <AnimatePresence>
                 {capReached && (
                     <motion.div
-                        initial={{ opacity: 0, y: 12 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 12 }}
-                        className="fixed bottom-28 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white text-xs font-bold px-4 py-3 rounded-2xl shadow-xl max-w-[90vw] text-center"
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[95] bg-amber-500 text-white text-sm font-black px-6 py-4 rounded-2xl shadow-2xl shadow-amber-500/40 max-w-[85vw] flex items-center gap-3"
                     >
-                        5 objectifs max par semaine — mieux vaut 2-3 fiches bien travaillées.
+                        <span className="material-symbols-outlined text-2xl shrink-0">warning</span>
+                        5 objectifs max — mieux vaut 2-3 fiches bien travaillées.
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -804,6 +891,70 @@ export default function ProgramBuilderClient({ stage, copunPool, customPool, use
                 onClose={() => setSelectedCardForDetail(null)}
                 content={selectedCardForDetail}
             />
+
+            {/* Découverte de la semaine adoptée : les explications dépliées, à lire au
+                seul moment calme où le moniteur est déjà dans le sujet. Pas de quiz,
+                pas d'obligation — on met juste la connaissance sous les yeux. */}
+            <AnimatePresence>
+                {showWeekPreview && (
+                    <motion.div
+                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[90] bg-slate-900/60 backdrop-blur-sm flex items-end md:items-center justify-center md:px-4"
+                    >
+                        <motion.div
+                            initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
+                            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+                            className="bg-white rounded-t-[2rem] md:rounded-3xl w-full max-w-lg max-h-[88vh] flex flex-col shadow-2xl"
+                        >
+                            <div className="px-6 pt-6 pb-4 border-b border-slate-100">
+                                <div className="flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-2xl text-indigo-500">auto_awesome</span>
+                                    <h3 className="text-lg font-black text-slate-900">Ta semaine est prête</h3>
+                                </div>
+                                <p className="text-xs text-slate-400 mt-1">2 minutes pour la découvrir — de quoi être à l&apos;aise devant ton groupe.</p>
+                            </div>
+
+                            <div className="overflow-y-auto px-6 py-4 flex-1 space-y-4">
+                                {programCards.filter(c => c.source !== 'custom').map(card => {
+                                    const p = pillarOf(card);
+                                    return (
+                                        <div key={card.id} className="relative bg-slate-50 rounded-2xl overflow-hidden">
+                                            <div className={clsx("absolute left-0 top-0 bottom-0 w-1", p?.bg)} />
+                                            <div className="pl-5 pr-4 py-4 space-y-2">
+                                                <p className="text-sm font-black text-slate-900 leading-snug">{card.question}</p>
+                                                <p className="text-xs text-slate-600 leading-relaxed">
+                                                    {card.explication || card.objectif}
+                                                </p>
+                                                {card.tip && (
+                                                    <div className="flex items-start gap-2 rounded-xl bg-amber-50 px-3 py-2">
+                                                        <span className="material-symbols-outlined text-amber-500 text-base shrink-0 mt-0.5">lightbulb</span>
+                                                        <p className="text-xs text-amber-800 leading-relaxed">{card.tip}</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            <div className="p-4 border-t border-slate-100 flex gap-3">
+                                <button
+                                    onClick={() => setShowWeekPreview(false)}
+                                    className="flex-1 h-12 rounded-2xl border-2 border-slate-200 text-xs font-black text-slate-500 uppercase tracking-wider hover:bg-slate-50 transition"
+                                >
+                                    Ajuster encore
+                                </button>
+                                <button
+                                    onClick={() => { setShowWeekPreview(false); handleSave(); }}
+                                    className="flex-1 h-12 rounded-2xl bg-slate-900 text-white text-xs font-black uppercase tracking-wider active:scale-[0.98] transition"
+                                >
+                                    Enregistrer ma semaine
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

@@ -1,4 +1,4 @@
-import { getStageById, getPedagogicalPool, getStages } from '@/services/data-service';
+import { getStageById, getPedagogicalPool, getStages, getMyFicheOutcomes } from '@/services/data-service';
 import { getUserContent } from '@/actions/content-actions';
 import ProgramBuilderClient from './ProgramBuilderClient';
 import { notFound } from 'next/navigation';
@@ -7,11 +7,12 @@ export default async function ProgramPage({ params }: { params: Promise<{ id: st
     const { id } = await params;
 
     // Fetch production-ready data
-    const [stage, systemPool, userPool, allStages] = await Promise.all([
+    const [stage, systemPool, userPool, allStages, ficheOutcomes] = await Promise.all([
         getStageById(id),
         getPedagogicalPool(),
         getUserContent(),
         getStages(),
+        getMyFicheOutcomes(),
     ]);
 
     if (!stage) return notFound();
@@ -30,6 +31,7 @@ export default async function ProgramPage({ params }: { params: Promise<{ id: st
             copunPool={systemPool}
             customPool={userPool}
             usedContentIds={usedContentIds}
+            successIds={ficheOutcomes.successIds}
         />
     );
 }
