@@ -53,10 +53,13 @@ function IntentionBanner({ intention, stageId }: { intention: string | null | un
     );
 }
 
-export default function ProgramBuilderClient({ stage, copunPool, customPool }: { stage: Stage, copunPool: PedagogicalContent[], customPool: PedagogicalContent[] }) {
+export default function ProgramBuilderClient({ stage, copunPool, customPool, usedContentIds }: { stage: Stage, copunPool: PedagogicalContent[], customPool: PedagogicalContent[], usedContentIds: string[] }) {
     const fullPool = useMemo(() => [...copunPool, ...customPool], [copunPool, customPool]);
     const router = useRouter();
-    const [activeTab, setActiveTab] = useState<'EXPLORER' | 'SELECTION'>('EXPLORER');
+    // Deux modes : "Guidé" (défaut) propose une semaine composée — le contenu a été
+    // pensé par l'expert de la méthode, le moniteur qui débute n'a pas les repères pour
+    // choisir dans un catalogue. "Explorer" (mode expert) garde le pilotage total.
+    const [activeTab, setActiveTab] = useState<'GUIDE' | 'EXPLORER' | 'SELECTION'>('GUIDE');
     const [selectedLevel, setSelectedLevel] = useState<1 | 2 | 3>(1);
     // Les thématiques suggérées (marée/météo/saison) servent à la fois à présélectionner les filtres
     // (comme avant) et à marquer/trier les cartes « Suggéré » en croisant aussi l'objectif choisi.
@@ -95,6 +98,60 @@ export default function ProgramBuilderClient({ stage, copunPool, customPool }: {
         };
     }, [intention, suggestedThemes]);
     const isRecommended = (card: PedagogicalContent) => recommendScore(card) > 0;
+
+    // ── Mode guidé ────────────────────────────────────────────────────────────
+    const usedIdSet = useMemo(() => new Set(usedContentIds), [usedContentIds]);
+    const [expandedPillar, setExpandedPillar] = useState<string | null>(null);
+
+    // Classement guidé par pilier : la pertinence (conditions + intention) pèse le plus,
+    // une fiche jamais explorée est favorisée, léger bonus N1 (découverte). Départage
+    // déterministe seedé par la semaine : la proposition varie d'un stage à l'autre
+    // sans bouger à chaque rendu.
+    const guidedByPillar = useMemo(() => {
+        const tieBreak = (cardId: string) => {
+            const s = stage.id + cardId;
+            let h = 0;
+            for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+            return (h % 997) / 997;
+        };
+        return PILLARS.map(pillar => {
+            const candidates = copunPool
+                .filter(c => c.dimension === pillar.id)
+                .map(card => ({
+                    card,
+                    guideScore: recommendScore(card) * 2
+                        + (usedIdSet.has(card.id) ? 0 : 2)
+                        + (Number(card.niveau) === 1 ? 1 : 0)
+                        + tieBreak(card.id),
+                }))
+                .sort((a, b) => b.guideScore - a.guideScore)
+                .map(x => x.card);
+            return { pillar, candidates };
+        });
+    }, [copunPool, usedIdSet, recommendScore, stage.id]);
+
+    const ALL_THEMES = useMemo(() => Object.values(THEMES_BY_PILLAR).flat(), []);
+
+    // « Pourquoi cette fiche ? » — les critères croisés rendus visibles. C'est cette
+    // information qui rend le choix évident, au lieu de laisser le moniteur simuler
+    // mentalement sa semaine avec chaque carte du catalogue.
+    const reasonChips = (card: PedagogicalContent) => {
+        const chips: { icon: string; label: string; novel?: boolean }[] = [];
+        const cardThemes = (Array.isArray(card.tags_theme) ? card.tags_theme : []).map(t => String(t).toLowerCase().trim());
+        suggestedThemes.forEach(t => {
+            if (cardThemes.includes(t.toLowerCase())) {
+                const meta = ALL_THEMES.find(th => th.id.toLowerCase() === t.toLowerCase());
+                if (meta) chips.push({ icon: meta.icon, label: meta.label });
+            }
+        });
+        const obj = OBJECTIFS.find(o => o.id === intention);
+        if (obj) {
+            const cardTags = (Array.isArray(card.tags_filtre) ? card.tags_filtre : []).map(t => String(t).toLowerCase().trim());
+            if (obj.tags.some(t => cardTags.includes(t.toLowerCase()))) chips.push({ icon: obj.icon, label: 'Ton intention' });
+        }
+        if (!usedIdSet.has(card.id)) chips.push({ icon: 'auto_awesome', label: 'Jamais explorée', novel: true });
+        return chips;
+    };
 
     // Group cards by dimension, filtered by selected themes and tags
     const groupedCards = useMemo(() => {
@@ -242,6 +299,9 @@ export default function ProgramBuilderClient({ stage, copunPool, customPool }: {
                     {/* Tabs */}
                     <div className="absolute -bottom-px left-0 right-0 translate-y-full pt-4">
                         <div className="bg-white rounded-2xl shadow-lg p-1 flex gap-1">
+                            <button onClick={() => setActiveTab('GUIDE')} className={clsx("flex-1 py-3 rounded-xl text-[11px] font-black tracking-widest uppercase transition-all", activeTab === 'GUIDE' ? "bg-slate-900 text-white shadow" : "text-slate-400 hover:text-slate-600")}>
+                                Guidé
+                            </button>
                             <button onClick={() => setActiveTab('EXPLORER')} className={clsx("flex-1 py-3 rounded-xl text-[11px] font-black tracking-widest uppercase transition-all", activeTab === 'EXPLORER' ? "bg-slate-900 text-white shadow" : "text-slate-400 hover:text-slate-600")}>
                                 Explorer
                             </button>
@@ -260,8 +320,187 @@ export default function ProgramBuilderClient({ stage, copunPool, customPool }: {
 
             <main className="mt-20 px-4 md:px-6 max-w-5xl mx-auto w-full space-y-4 pb-[calc(var(--bottom-nav-h)+6rem)]">
 
+                {activeTab === 'GUIDE' && (() => {
+                    const slots = guidedByPillar.map(({ pillar, candidates }) => {
+                        const selectedCards = programCards.filter(c => c.source !== 'custom' && c.dimension === pillar.id);
+                        const proposal = candidates.find(c => !programIds.includes(c.id)) ?? null;
+                        const alternatives = candidates.filter(c => !programIds.includes(c.id) && c.id !== proposal?.id).slice(0, 3);
+                        return { pillar, selectedCards, proposal, alternatives };
+                    });
+                    const allEmpty = slots.every(s => s.selectedCards.length === 0);
+
+                    const adoptAll = () => {
+                        slots.forEach(s => {
+                            if (s.selectedCards.length === 0 && s.proposal) toggleCard(s.proposal.id);
+                        });
+                    };
+
+                    const renderGuidedCard = (card: PedagogicalContent, pillar: typeof PILLARS[number]) => {
+                        const chips = reasonChips(card);
+                        return (
+                            <div key={card.id} className="relative bg-white rounded-2xl shadow-sm overflow-hidden">
+                                <div className={clsx("absolute left-0 top-0 bottom-0 w-1", pillar.bg)} />
+                                <div className="pl-5 pr-4 py-4 space-y-2.5">
+                                    {chips.length > 0 && (
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {chips.map(chip => (
+                                                <span
+                                                    key={chip.label}
+                                                    className={clsx(
+                                                        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold",
+                                                        chip.novel ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-500"
+                                                    )}
+                                                >
+                                                    <span className="material-symbols-outlined text-[12px]">{chip.icon}</span>
+                                                    {chip.label}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    )}
+                                    <p className="text-sm font-black text-slate-900 leading-snug">{card.question}</p>
+                                    <p className="text-[11px] text-slate-400 leading-relaxed">{card.objectif}</p>
+                                    <div className="flex items-center justify-between pt-1">
+                                        <button
+                                            onClick={() => setSelectedCardForDetail(card)}
+                                            className="text-[11px] font-bold text-slate-400 hover:text-slate-600 transition-colors"
+                                        >
+                                            En savoir plus
+                                        </button>
+                                        <button
+                                            onClick={() => toggleCard(card.id)}
+                                            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[11px] font-black bg-slate-900 text-white hover:bg-slate-700 active:scale-95 transition"
+                                        >
+                                            <span className="material-symbols-outlined text-sm">add</span>
+                                            Choisir cette fiche
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    };
+
+                    return (
+                        <div className="space-y-5">
+                            <IntentionBanner intention={intention} stageId={stage.id} />
+
+                            {/* Intro : la proposition est le défaut, l'expertise reste accessible */}
+                            <div className="rounded-2xl bg-white p-4 shadow-sm flex items-start gap-3">
+                                <span className="material-symbols-outlined text-2xl text-indigo-500 shrink-0 mt-0.5">auto_awesome</span>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-black text-slate-900">Une semaine prête à l&apos;emploi</p>
+                                    <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                                        Une fiche par pilier, choisie d&apos;après tes conditions et ton intention.
+                                        Garde, remplace — ou passe en mode <button onClick={() => setActiveTab('EXPLORER')} className="font-bold text-indigo-500">Explorer</button> pour composer librement.
+                                    </p>
+                                </div>
+                            </div>
+
+                            {allEmpty && slots.some(s => s.proposal) && (
+                                <button
+                                    onClick={adoptAll}
+                                    className="w-full h-12 rounded-2xl bg-slate-900 text-white text-sm font-black flex items-center justify-center gap-2 active:scale-[0.98] transition"
+                                >
+                                    <span className="material-symbols-outlined text-lg">auto_awesome</span>
+                                    Adopter la proposition — 3 fiches
+                                </button>
+                            )}
+
+                            {slots.map(({ pillar, selectedCards, proposal, alternatives }) => (
+                                <section key={pillar.id} className="space-y-2">
+                                    <span className={clsx("inline-flex items-center gap-1.5 rounded-full pl-2.5 pr-3 py-1.5 text-white shadow-sm", pillar.bg)}>
+                                        <span className="material-symbols-outlined text-[15px]">{pillar.icon}</span>
+                                        <span className="text-[11px] font-black uppercase tracking-wide">{pillar.label}</span>
+                                    </span>
+
+                                    {/* Fiches déjà retenues sur ce pilier */}
+                                    {selectedCards.map(card => (
+                                        <div key={card.id} className="relative bg-emerald-50 rounded-2xl shadow-sm overflow-hidden">
+                                            <div className={clsx("absolute left-0 top-0 bottom-0 w-1", pillar.bg)} />
+                                            <div className="pl-5 pr-4 py-3.5 flex items-center gap-3">
+                                                <span className="material-symbols-outlined text-emerald-500 shrink-0">check_circle</span>
+                                                <p className="flex-1 min-w-0 text-sm font-bold text-slate-800 leading-snug">{card.question}</p>
+                                                <button
+                                                    onClick={() => toggleCard(card.id)}
+                                                    className="shrink-0 text-[10px] font-black text-red-400 hover:text-red-600 px-2 py-1 transition-colors"
+                                                >
+                                                    Retirer
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+
+                                    {/* Proposition pour un pilier encore vide */}
+                                    {selectedCards.length === 0 && proposal && renderGuidedCard(proposal, pillar)}
+
+                                    {/* Autres pistes du pilier, repliées */}
+                                    {alternatives.length > 0 && (
+                                        <div>
+                                            <button
+                                                onClick={() => setExpandedPillar(p => p === pillar.id ? null : pillar.id)}
+                                                className={clsx(
+                                                    "w-full flex items-center gap-3 rounded-2xl px-4 py-3 shadow-sm active:scale-[0.98] transition",
+                                                    expandedPillar === pillar.id
+                                                        ? "bg-slate-900 text-white"
+                                                        : "bg-white hover:bg-slate-50"
+                                                )}
+                                            >
+                                                <span className={clsx(
+                                                    "material-symbols-outlined text-lg shrink-0",
+                                                    expandedPillar === pillar.id ? "text-white/70" : "text-indigo-500"
+                                                )}>style</span>
+                                                <span className={clsx(
+                                                    "flex-1 text-left text-xs font-black",
+                                                    expandedPillar === pillar.id ? "text-white" : "text-slate-700"
+                                                )}>
+                                                    {expandedPillar === pillar.id ? 'Masquer les autres pistes' : 'Voir d’autres pistes sur ce pilier'}
+                                                </span>
+                                                <span className={clsx(
+                                                    "text-[10px] font-black px-2 py-0.5 rounded-full shrink-0",
+                                                    expandedPillar === pillar.id ? "bg-white/20 text-white" : "bg-indigo-50 text-indigo-500"
+                                                )}>
+                                                    {alternatives.length}
+                                                </span>
+                                                <span className={clsx(
+                                                    "material-symbols-outlined text-base shrink-0 transition-transform duration-200",
+                                                    expandedPillar === pillar.id ? "rotate-180 text-white/70" : "text-slate-300"
+                                                )}>expand_more</span>
+                                            </button>
+                                            <AnimatePresence initial={false}>
+                                                {expandedPillar === pillar.id && (
+                                                    <motion.div
+                                                        initial={{ height: 0, opacity: 0 }}
+                                                        animate={{ height: 'auto', opacity: 1 }}
+                                                        exit={{ height: 0, opacity: 0 }}
+                                                        transition={{ duration: 0.2 }}
+                                                        className="overflow-hidden"
+                                                    >
+                                                        <div className="space-y-2 pt-1">
+                                                            {alternatives.map(alt => renderGuidedCard(alt, pillar))}
+                                                        </div>
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
+                                        </div>
+                                    )}
+                                </section>
+                            ))}
+                        </div>
+                    );
+                })()}
+
                 {activeTab === 'EXPLORER' && (
                     <>
+                        {/* Retour visible vers le mode guidé — la barre d'onglets est tout en
+                            haut et sort de l'écran dès qu'on scrolle dans le catalogue */}
+                        <button
+                            onClick={() => setActiveTab('GUIDE')}
+                            className="w-full flex items-center gap-2 bg-white rounded-2xl px-4 py-3 shadow-sm text-left active:scale-[0.98] transition"
+                        >
+                            <span className="material-symbols-outlined text-indigo-500 text-lg">auto_awesome</span>
+                            <span className="flex-1 text-xs font-bold text-slate-600">Mode expert — composez librement</span>
+                            <span className="text-xs font-black text-indigo-500">Revenir au guidé</span>
+                        </button>
+
                         {/* OBJECTIF */}
                         <IntentionBanner intention={intention} stageId={stage.id} />
 

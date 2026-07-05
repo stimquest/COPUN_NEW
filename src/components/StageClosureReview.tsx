@@ -26,6 +26,8 @@ type Props = {
     quizData: QuizReview | null;
     // Météo de la semaine défavorable — remonte la raison météo en tête des listes.
     weatherIsBad?: boolean;
+    // Message affiché quand on ouvre le bilan avant le dernier jour de la semaine.
+    earlyWarning?: string | null;
 };
 
 // "Non abordé" n'a de sens qu'a posteriori — un objectif sans statut à la clôture n'a
@@ -49,7 +51,7 @@ function buildDraftMap(items: StageObjectiveReviewItem[]): Record<string, StageO
     );
 }
 
-export function StageClosureReview({ stageId, stageTitle, objectiveItems, initialClosingNotes, defisAssigned, observations, quizData, weatherIsBad = false }: Props) {
+export function StageClosureReview({ stageId, stageTitle, objectiveItems, initialClosingNotes, defisAssigned, observations, quizData, weatherIsBad = false, earlyWarning = null }: Props) {
     const router = useRouter();
     const [drafts, setDrafts] = useState<Record<string, StageObjectiveReviewDraft>>(() => buildDraftMap(objectiveItems));
     const [closingNote, setClosingNote] = useState(initialClosingNotes ?? '');
@@ -92,6 +94,20 @@ export function StageClosureReview({ stageId, stageTitle, objectiveItems, initia
 
     return (
         <div className="space-y-6">
+
+            {/* Semaine pas finie : le bilan reste consultable mais on cadre les attentes,
+                notamment les "non abordé" auto-remplis qui ne sont pas encore définitifs */}
+            {earlyWarning && (
+                <div className="rounded-2xl bg-orange-100 border border-orange-300 px-4 py-3 flex items-start gap-2.5">
+                    <span className="material-symbols-outlined text-orange-500 text-xl shrink-0">schedule</span>
+                    <div>
+                        <p className="text-sm font-black text-orange-900">{earlyWarning}</p>
+                        <p className="text-xs text-orange-700 mt-0.5 leading-snug">
+                            Les objectifs pas encore traités apparaissent « Non abordé » — ils se rempliront au fil de la semaine depuis l&apos;accueil.
+                        </p>
+                    </div>
+                </div>
+            )}
 
             {/* Intro */}
             <div className="rounded-2xl bg-amber-50 border border-amber-200 px-4 py-4">

@@ -13,6 +13,7 @@ import { getStageQuiz } from '@/actions/quiz-actions';
 import { getObservationsForStage } from '@/actions/observation-actions';
 import { SPORT_FEATURES_ENABLED } from '@/lib/feature-flags';
 import { extractMeteo } from '@/data/objectifs';
+import { parseStageDateRange } from '@/lib/stage-dates';
 
 const STATUS_COUNTS = (items: Awaited<ReturnType<typeof getStageObjectiveReviewItems>>) => ({
     done:     items.filter(i => i.review?.executionStatus === 'done').length,
@@ -62,6 +63,26 @@ export default async function StageBilanPage({ params }: { params: Promise<{ id:
 
     const weekMeteo = extractMeteo(stage.suggested_thematics);
     const weatherIsBad = weekMeteo === 'instable' || weekMeteo === 'tempete';
+
+    // Le bilan est accessible toute la semaine (bouton permanent sur l'accueil), mais
+    // avant le dernier jour les objectifs pas encore traités s'affichent "non abordé"
+    // à tort — on prévient plutôt que de laisser croire à un oubli ou clôturer trop tôt.
+    let earlyWarning: string | null = null;
+    if (!isClosed) {
+        const range = parseStageDateRange(stage.dates, new Date());
+        if (range) {
+            const DAY_MS = 86_400_000;
+            const startDay = new Date(range.start);
+            startDay.setHours(0, 0, 0, 0);
+            const dayTotal = Math.round((range.end.getTime() - range.start.getTime()) / DAY_MS) + 1;
+            const diff = Math.floor((Date.now() - startDay.getTime()) / DAY_MS);
+            if (diff < 0) {
+                earlyWarning = "Cette semaine n'a pas encore commencé.";
+            } else if (diff < dayTotal - 1) {
+                earlyWarning = `Jour ${diff + 1}/${dayTotal} — la semaine n'est pas terminée. Le bilan se fait normalement le dernier jour.`;
+            }
+        }
+    }
 
     const defiReviews: DefiReview[] = defisAssigned.map(e => ({
         id: e.exploit_id,
@@ -216,6 +237,7 @@ export default async function StageBilanPage({ params }: { params: Promise<{ id:
                         observations={observations}
                         quizData={quizReviewData}
                         weatherIsBad={weatherIsBad}
+                        earlyWarning={earlyWarning}
                     />
                 )}
             </main>

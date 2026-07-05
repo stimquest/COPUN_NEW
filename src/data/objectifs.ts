@@ -81,3 +81,92 @@ export const OBJECTIFS: Objectif[] = [
     { id: 'protection', label: 'Devenir acteur de la protection du site', description: 'Sciences participatives, signalement, engagement', tags: ['action citoyenne', 'éco-geste', 'zone sensible'], icon: 'shield', color: 'text-rose-600', bg: 'bg-rose-50', border: 'border-rose-200', activeBg: 'bg-rose-600' },
     { id: 'responsable', label: 'Adopter des comportements responsables', description: 'Gestes en navigation, adaptation, respect du milieu', tags: ['sécurité', 'adaptation', 'zone sensible', 'éco-geste'], icon: 'self_improvement', color: 'text-violet-600', bg: 'bg-violet-50', border: 'border-violet-200', activeBg: 'bg-violet-600' },
 ];
+
+/* ─── Suggestions d'intention selon les conditions ──────────────────────────
+   Le choix de l'intention reste au moniteur (c'est son geste pédagogique), mais
+   on lui montre lesquelles les conditions de la semaine favorisent, avec la
+   raison — il choisit informé au lieu de choisir à l'aveugle parmi 10 options. */
+
+export type IntentionSuggestion = { id: ObjectifId; reason: string };
+
+// Pool d'intentions pertinentes par saison — 3 par saison, en rotation hebdomadaire pour
+// varier les suggestions d'une semaine à l'autre. Toutes les intentions du référentiel
+// sont couvertes quelque part dans l'année (les 5 restantes viennent des conditions
+// marée/météo : marees, conditions, meteo, paysage, biodiversite).
+const SEASON_INTENTION_POOLS: Record<string, IntentionSuggestion[]> = {
+    eveil_littoral: [
+        { id: 'cohabitation', reason: 'Début de nidification : discrétion près des zones sensibles' },
+        { id: 'biodiversite', reason: 'Le vivant se réveille : premières observations de la saison' },
+        { id: 'protection', reason: 'Sciences participatives : les comptages de printemps démarrent' },
+    ],
+    printemps_actif: [
+        { id: 'cohabitation', reason: 'Pleine nidification : discrétion près des zones sensibles' },
+        { id: 'vivant', reason: 'Reproduction partout : les cycles du vivant sont visibles' },
+        { id: 'protection', reason: 'Sciences participatives : signaler ses observations compte' },
+    ],
+    haute_saison: [
+        { id: 'pollution', reason: 'Forte fréquentation estivale : déchets et pression humaine visibles' },
+        { id: 'responsable', reason: 'Plein été sur l\'eau : les bons gestes en navigation comptent double' },
+        { id: 'cohabitation', reason: 'Fréquentation maximale : limiter le dérangement de la faune' },
+    ],
+    transition_automnale: [
+        { id: 'vivant', reason: 'Migrations d\'automne : les cycles du vivant sont observables' },
+        { id: 'paysage', reason: 'Premières tempêtes : le littoral commence à se remodeler' },
+        { id: 'protection', reason: 'Observatoires d\'automne : signalements et comptages utiles' },
+    ],
+    entree_hiver: [
+        { id: 'paysage', reason: 'Tempêtes hivernales : érosion et laisses de mer racontent le littoral' },
+        { id: 'protection', reason: 'Oiseaux hivernants : les comptages d\'hiver ont besoin d\'yeux' },
+        { id: 'meteo', reason: 'Saison des dépressions : la météo marine se lit en continu' },
+    ],
+    hiver_marin: [
+        { id: 'meteo', reason: 'Cœur de l\'hiver : dépressions et coups de vent à décrypter' },
+        { id: 'paysage', reason: 'Littoral remodelé par les tempêtes : lecture du terrain à chaud' },
+        { id: 'protection', reason: 'Oiseaux hivernants : les comptages d\'hiver ont besoin d\'yeux' },
+    ],
+};
+
+export function getSuggestedIntentions(params: {
+    periodId: string;
+    coeff: CoeffType | null;
+    meteo: MeteoType | null;
+    // Index de semaine (déterministe) pour faire tourner les suggestions saisonnières —
+    // deux semaines consécutives de la même saison ne proposent pas les mêmes intentions.
+    weekSeed?: number;
+}): IntentionSuggestion[] {
+    const { periodId, coeff, meteo, weekSeed = 0 } = params;
+    const out: IntentionSuggestion[] = [];
+    const add = (id: ObjectifId, reason: string) => {
+        if (out.length < 3 && !out.some(s => s.id === id)) out.push({ id, reason });
+    };
+
+    // Marée d'abord : c'est le phénomène le plus structurant de la semaine.
+    if (coeff === 'vive_eau') {
+        add('marees', 'Grandes marées : cycles et coefficients très visibles cette semaine');
+        add('conditions', 'Estran très découvert, courants marqués — lire avant de naviguer');
+    } else if (coeff === 'morte_eau') {
+        add('biodiversite', 'Faible marnage : plan d\'eau calme, idéal pour observer le milieu');
+    }
+
+    // Météo ensuite.
+    if (meteo === 'tempete') {
+        add('meteo', 'Semaine agitée : la météo marine se vit en direct');
+        add('conditions', 'Conditions engagées — comprendre pour naviguer en sécurité');
+    } else if (meteo === 'vent') {
+        add('meteo', 'Le vent au cœur de la semaine : thermiques, risées, adaptation');
+    } else if (meteo === 'instable') {
+        add('meteo', 'Ciel changeant : parfait pour apprendre à décrypter les nuages');
+    } else if (meteo === 'beau_fixe') {
+        add('paysage', 'Grande visibilité : conditions idéales pour lire le littoral');
+    }
+
+    // Saison enfin : on complète jusqu'à 3 avec le pool saisonnier, en rotation par
+    // semaine pour la variété.
+    const pool = SEASON_INTENTION_POOLS[periodId] ?? [];
+    for (let i = 0; i < pool.length && out.length < 3; i++) {
+        const pick = pool[(weekSeed + i) % pool.length];
+        add(pick.id, pick.reason);
+    }
+
+    return out;
+}

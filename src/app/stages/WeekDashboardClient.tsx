@@ -5,15 +5,15 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
 import { WeekObservation, PedagogicalAction, PedagogicalContent, StageObjectiveExecutionStatus, StageObjectiveImpactLevel, ObjectiveReviewState, ObservationType } from '@/types';
-import { THEMATIC_LABELS, ThematicTag } from '@/data/seasonal-context';
+import { THEMATIC_LABELS, ThematicTag, CoeffType, MeteoType } from '@/data/seasonal-context';
 import { DEFAULT_WASTE_TYPES } from '@/data/littoral-species';
 import { OBSERVATION_TYPES, SPECIES_CATEGORY_LABELS, SPECIES_CATEGORY_ORDER } from '@/data/observations';
 import { PILLARS } from '@/data/etages';
-import { OBJECTIFS, extractIntention, extractCoeff, extractMeteo } from '@/data/objectifs';
+import { OBJECTIFS, ObjectifId, extractIntention, extractCoeff, extractMeteo, encodeConditions, stripIntention } from '@/data/objectifs';
 import { parseStageDateRange } from '@/lib/stage-dates';
 import { SPORT_FEATURES_ENABLED } from '@/lib/feature-flags';
 import { addObservation, deleteObservation } from '@/actions/observation-actions';
-import { saveObjectiveStatus, saveObjectiveImpact, clearObjectiveStatus, updateStagePool } from '@/actions/stage-actions';
+import { saveObjectiveStatus, saveObjectiveImpact, clearObjectiveStatus, updateStagePool, updateStageConditions } from '@/actions/stage-actions';
 import { updateStageExploitStatus, uploadDefiPhoto } from '@/actions/defi-actions';
 import FilRougeForm from '@/components/defis/FilRougeForm';
 import { DeleteStageButton } from '@/components/DeleteStageButton';
@@ -423,33 +423,50 @@ function ObjectiveRow({
     const pillar = isSport ? null : PILLARS.find(p => p.id === card.dimension) ?? null;
     const dotClass = isSport ? 'bg-indigo-500' : (pillar?.bg ?? 'bg-slate-300');
 
+    // Restaure l'état complet d'avant une sauvegarde échouée — sur le terrain (réseau
+    // capricieux en mer), un choix affiché mais pas enregistré serait découvert trop
+    // tard, au bilan. On revient en arrière ET on prévient.
+    const restoreReview = (prev: ObjectiveReviewState | null) => {
+        onStatusChange(card.id, prev?.status ?? null);
+        if (prev) onImpactChange(card.id, prev.impactLevel, prev.reasons);
+    };
+
+    const SAVE_ERROR_MSG = "Échec de l'enregistrement — vérifie ta connexion et réessaie.";
+
     const handleStatus = async (val: StageObjectiveExecutionStatus) => {
         if (saving) return;
         setSaving(true);
+        const prev = review;
         if (status === val) {
             // Reclic sur le statut déjà actif : retour à l'état neutre (efface aussi
             // l'impact et les raisons, qui n'ont plus de sens sans statut).
             onStatusChange(card.id, null);
-            await clearObjectiveStatus(stageId, card.id);
+            const res = await clearObjectiveStatus(stageId, card.id);
+            if (!res.success) { restoreReview(prev); alert(SAVE_ERROR_MSG); }
         } else {
             onStatusChange(card.id, val);
-            await saveObjectiveStatus(stageId, card.id, val);
+            const res = await saveObjectiveStatus(stageId, card.id, val);
+            if (!res.success) { restoreReview(prev); alert(SAVE_ERROR_MSG); }
         }
         setSaving(false);
     };
 
-    const handleImpact = (level: StageObjectiveImpactLevel | null) => {
+    const handleImpact = async (level: StageObjectiveImpactLevel | null) => {
+        const prev = review;
         // Les raisons cochées appartenaient au niveau précédent — elles n'ont plus de
         // sens si le niveau change, on repart à zéro.
         onImpactChange(card.id, level, []);
-        saveObjectiveImpact(stageId, card.id, level, []);
+        const res = await saveObjectiveImpact(stageId, card.id, level, []);
+        if (!res.success) { restoreReview(prev); alert(SAVE_ERROR_MSG); }
     };
 
-    const toggleReason = (reason: string) => {
+    const toggleReason = async (reason: string) => {
+        const prev = review;
         const current = review?.reasons ?? [];
         const next = current.includes(reason) ? current.filter(r => r !== reason) : [...current, reason];
         onImpactChange(card.id, review?.impactLevel ?? null, next);
-        saveObjectiveImpact(stageId, card.id, review?.impactLevel ?? null, next);
+        const res = await saveObjectiveImpact(stageId, card.id, review?.impactLevel ?? null, next);
+        if (!res.success) { restoreReview(prev); alert(SAVE_ERROR_MSG); }
     };
 
     const statusMeta = status ? EXECUTION_OPTIONS.find(o => o.value === status) : null;
@@ -604,6 +621,20 @@ function ObjectiveRow({
                                     </div>
                                 </div>
                             )}
+
+                            {/* Fermeture depuis le bas de la carte : après avoir coché ses
+                                raisons le pouce est ici, pas sur l'en-tête tout en haut —
+                                et le libellé confirme au passage que c'est enregistré. */}
+                            {status && (
+                                <button
+                                    type="button"
+                                    onClick={() => setOpen(false)}
+                                    className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-slate-900 text-white text-xs font-black py-2.5 active:scale-95 transition"
+                                >
+                                    <span className="material-symbols-outlined text-[15px]">check</span>
+                                    C&apos;est noté
+                                </button>
+                            )}
                         </div>
                     </motion.div>
                 )}
@@ -669,6 +700,9 @@ export function WeekDashboardClient({
 
     useEffect(() => {
         if (showAddObs && textRef.current) textRef.current.focus();
+        // Un retour terrain se note presque toujours juste après l'avoir vécu : la date
+        // est pré-remplie à maintenant (modifiable), pas un champ vide obligatoire.
+        if (showAddObs) setObsDate(prev => prev || toDatetimeLocal(new Date()));
     }, [showAddObs]);
 
     const handleStatusChange = (cardId: string, s: StageObjectiveExecutionStatus | null) => {
@@ -695,13 +729,45 @@ export function WeekDashboardClient({
     const validatedCount = Object.entries(reviews)
         .filter(([id, r]) => envObjectiveIds.has(id) && (r.status === 'done' || r.status === 'partial')).length;
 
-    // Conditions de la semaine, décodées depuis suggested_thematics
-    const weekIntentionId = extractIntention(suggestedThematics);
-    const weekIntention = weekIntentionId ? OBJECTIFS.find(o => o.id === weekIntentionId) ?? null : null;
-    const weekCoeffId = extractCoeff(suggestedThematics);
-    const weekCoeff = weekCoeffId ? COEFF_LABELS[weekCoeffId] ?? null : null;
-    const weekMeteoId = extractMeteo(suggestedThematics);
-    const weekMeteo = weekMeteoId ? METEO_LABELS[weekMeteoId] ?? null : null;
+    // Conditions de la semaine, décodées depuis suggested_thematics — en state local
+    // pour refléter immédiatement une modification depuis le panneau d'édition rapide
+    // (la météo tourne souvent en cours de semaine, pas question de re-traverser tout
+    // le formulaire de création pour changer une pastille).
+    const [weekConditions, setWeekConditions] = useState<{ intention: ObjectifId | null; coeff: CoeffType | null; meteo: MeteoType | null }>(() => ({
+        intention: extractIntention(suggestedThematics),
+        coeff: extractCoeff(suggestedThematics),
+        meteo: extractMeteo(suggestedThematics),
+    }));
+    const [showConditionsSheet, setShowConditionsSheet] = useState(false);
+    const [condDraft, setCondDraft] = useState(weekConditions);
+    const [savingConditions, setSavingConditions] = useState(false);
+
+    const weekIntention = weekConditions.intention ? OBJECTIFS.find(o => o.id === weekConditions.intention) ?? null : null;
+    const weekCoeff = weekConditions.coeff ? COEFF_LABELS[weekConditions.coeff] ?? null : null;
+    const weekMeteo = weekConditions.meteo ? METEO_LABELS[weekConditions.meteo] ?? null : null;
+
+    const openConditionsSheet = () => {
+        setCondDraft(weekConditions);
+        setShowConditionsSheet(true);
+    };
+
+    const handleSaveConditions = async () => {
+        setSavingConditions(true);
+        // stripIntention retire intention + coeff + météo : on repart des thématiques
+        // pures puis on ré-encode les nouvelles conditions choisies.
+        const res = await updateStageConditions(
+            stageId,
+            [...stripIntention(suggestedThematics), ...encodeConditions(condDraft.coeff, condDraft.meteo)],
+            condDraft.intention,
+        );
+        setSavingConditions(false);
+        if (res.success) {
+            setWeekConditions(condDraft);
+            setShowConditionsSheet(false);
+        } else {
+            alert('Erreur : ' + res.error);
+        }
+    };
     const defisDone = initialExploits.filter(e => e.status === 'complete').length;
     // Position dans la semaine : "Jour 2/5" si aujourd'hui est dans l'intervalle du stage.
     const now = new Date();
@@ -838,9 +904,16 @@ export function WeekDashboardClient({
                         <p className="text-lg font-black text-white leading-tight">{stageName}</p>
                         <p className="text-xs text-white/50 mt-0.5">{stageDates}</p>
 
-                        {/* Conditions de la semaine — libellés complets, cliquables pour les modifier */}
+                        {/* Conditions de la semaine — libellés complets, cliquables pour les
+                            modifier via le panneau rapide (pas le formulaire complet) */}
+                        {!(weekCoeff || weekMeteo || weekIntention) && (
+                            <button type="button" onClick={openConditionsSheet} className="mt-2.5 inline-flex items-center gap-1 text-[10px] font-bold text-white/60 bg-white/10 px-2 py-1 rounded-full active:scale-95 transition">
+                                <span className="material-symbols-outlined text-[12px]">add</span>
+                                Définir les conditions
+                            </button>
+                        )}
                         {(weekCoeff || weekMeteo || weekIntention) && (
-                            <Link href={`/stages/new?edit=${stageId}`} className="mt-2.5 flex flex-wrap items-center gap-1.5">
+                            <button type="button" onClick={openConditionsSheet} className="mt-2.5 flex flex-wrap items-center gap-1.5 text-left">
                                 {weekIntention && (
                                     <span className="inline-flex items-center gap-1 text-[10px] font-bold text-white bg-white/20 px-2 py-1 rounded-full">
                                         <span className="material-symbols-outlined text-[12px]">{weekIntention.icon}</span>
@@ -859,7 +932,7 @@ export function WeekDashboardClient({
                                         {weekMeteo.label}
                                     </span>
                                 )}
-                            </Link>
+                            </button>
                         )}
 
                         {/* Fin de semaine : rappel quiz puis bilan — rien le reste du temps */}
@@ -1072,6 +1145,105 @@ export function WeekDashboardClient({
                         onClose={() => setShowSportPicker(false)}
                         onSave={handleSaveSportSelection}
                     />
+                )}
+
+                {/* Panneau d'édition rapide des conditions — la météo tourne en cours de
+                    semaine, changer une pastille ne doit pas re-traverser la création */}
+                {showConditionsSheet && (
+                    <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center px-4 pt-4 pb-20">
+                        <div className="bg-white rounded-3xl w-full max-w-md max-h-[80vh] flex flex-col shadow-2xl">
+                            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+                                <div>
+                                    <p className="text-sm font-black text-slate-900">Conditions de la semaine</p>
+                                    <p className="text-xs text-slate-400 mt-0.5">Intention, marée et météo</p>
+                                </div>
+                                <button onClick={() => setShowConditionsSheet(false)} className="size-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 hover:bg-slate-200 transition">
+                                    <span className="material-symbols-outlined text-[18px]">close</span>
+                                </button>
+                            </div>
+
+                            <div className="overflow-y-auto px-5 py-4 flex-1 space-y-5">
+                                <div>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Intention de la semaine</p>
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {OBJECTIFS.map(o => {
+                                            const selected = condDraft.intention === o.id;
+                                            return (
+                                                <button
+                                                    key={o.id}
+                                                    type="button"
+                                                    onClick={() => setCondDraft(d => ({ ...d, intention: selected ? null : o.id }))}
+                                                    className={clsx(
+                                                        'flex items-center gap-1.5 rounded-xl px-2.5 py-2 text-[11px] font-bold text-left transition active:scale-95 border',
+                                                        selected ? 'bg-slate-900 border-slate-900 text-white' : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
+                                                    )}
+                                                >
+                                                    <span className="material-symbols-outlined text-[14px] shrink-0">{o.icon}</span>
+                                                    {o.label}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Coefficient de marée</p>
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {(Object.entries(COEFF_LABELS) as [CoeffType, { label: string; icon: string }][]).map(([id, meta]) => {
+                                            const selected = condDraft.coeff === id;
+                                            return (
+                                                <button
+                                                    key={id}
+                                                    type="button"
+                                                    onClick={() => setCondDraft(d => ({ ...d, coeff: selected ? null : id }))}
+                                                    className={clsx(
+                                                        'flex items-center gap-1.5 rounded-xl px-3 py-2 text-[11px] font-bold transition active:scale-95 border',
+                                                        selected ? 'bg-slate-900 border-slate-900 text-white' : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
+                                                    )}
+                                                >
+                                                    <span className="material-symbols-outlined text-[14px]">{meta.icon}</span>
+                                                    {meta.label}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Tendance météo</p>
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {(Object.entries(METEO_LABELS) as [MeteoType, { label: string; icon: string }][]).map(([id, meta]) => {
+                                            const selected = condDraft.meteo === id;
+                                            return (
+                                                <button
+                                                    key={id}
+                                                    type="button"
+                                                    onClick={() => setCondDraft(d => ({ ...d, meteo: selected ? null : id }))}
+                                                    className={clsx(
+                                                        'flex items-center gap-1.5 rounded-xl px-3 py-2 text-[11px] font-bold transition active:scale-95 border',
+                                                        selected ? 'bg-slate-900 border-slate-900 text-white' : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
+                                                    )}
+                                                >
+                                                    <span className="material-symbols-outlined text-[14px]">{meta.icon}</span>
+                                                    {meta.label}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="p-4 border-t border-slate-100">
+                                <button
+                                    onClick={handleSaveConditions}
+                                    disabled={savingConditions}
+                                    className="w-full h-12 rounded-2xl bg-slate-900 text-white text-sm font-black disabled:opacity-40 transition active:scale-[0.98]"
+                                >
+                                    {savingConditions ? 'Enregistrement…' : 'Enregistrer'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 )}
 
                 {/* Défis de la semaine */}

@@ -9,7 +9,7 @@ import {
     MeteoType,
     ThematicTag,
 } from '@/data/seasonal-context';
-import { OBJECTIFS, ObjectifId } from '@/data/objectifs';
+import { OBJECTIFS, ObjectifId, IntentionSuggestion, getSuggestedIntentions } from '@/data/objectifs';
 import clsx from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -38,10 +38,19 @@ const DIMENSION_COLORS: Record<'C' | 'O' | 'P', string> = {
     P: 'text-emerald-500',
 };
 
-function IntentionDropdown({ intentionId, setIntentionId }: { intentionId: ObjectifId | null, setIntentionId: (v: ObjectifId | null) => void }) {
+function IntentionDropdown({ intentionId, setIntentionId, suggestions }: { intentionId: ObjectifId | null, setIntentionId: (v: ObjectifId | null) => void, suggestions: IntentionSuggestion[] }) {
     const [open, setOpen] = useState(false);
     const ref = useRef<HTMLDivElement>(null);
     const selected = OBJECTIFS.find(o => o.id === intentionId);
+
+    // Les intentions favorisées par les conditions remontent en tête, avec leur raison —
+    // le choix reste entièrement au moniteur, mais il choisit informé.
+    const suggestedIds = suggestions.map(s => s.id);
+    const orderedObjectifs = [
+        ...suggestions.map(s => OBJECTIFS.find(o => o.id === s.id)).filter((o): o is typeof OBJECTIFS[number] => Boolean(o)),
+        ...OBJECTIFS.filter(o => !suggestedIds.includes(o.id)),
+    ];
+    const reasonOf = (id: ObjectifId) => suggestions.find(s => s.id === id)?.reason ?? null;
 
     useEffect(() => {
         const handler = (e: MouseEvent) => {
@@ -95,8 +104,9 @@ function IntentionDropdown({ intentionId, setIntentionId }: { intentionId: Objec
                                 <span className="text-xs font-bold">Aucun objectif</span>
                             </button>
                         )}
-                        {OBJECTIFS.map(obj => {
+                        {orderedObjectifs.map(obj => {
                             const isActive = intentionId === obj.id;
+                            const reason = reasonOf(obj.id);
                             return (
                                 <button
                                     key={obj.id}
@@ -111,8 +121,17 @@ function IntentionDropdown({ intentionId, setIntentionId }: { intentionId: Objec
                                         <span className={clsx("material-symbols-outlined text-sm", isActive ? "text-white" : "text-slate-400")}>{obj.icon}</span>
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <p className={clsx("text-xs font-black leading-snug", isActive ? obj.color : "text-slate-700")}>{obj.label}</p>
-                                        <p className="text-[10px] text-slate-400 mt-0.5">{obj.description}</p>
+                                        <p className={clsx("text-xs font-black leading-snug flex items-center gap-1.5", isActive ? obj.color : "text-slate-700")}>
+                                            {obj.label}
+                                            {reason && (
+                                                <span className="shrink-0 text-[9px] font-black uppercase tracking-wide bg-indigo-100 text-indigo-600 px-1.5 py-0.5 rounded-full">
+                                                    Suggéré
+                                                </span>
+                                            )}
+                                        </p>
+                                        <p className={clsx("text-[10px] mt-0.5", reason ? "text-indigo-500 font-semibold" : "text-slate-400")}>
+                                            {reason ?? obj.description}
+                                        </p>
                                     </div>
                                     {isActive && <span className={clsx("material-symbols-outlined text-base shrink-0", obj.color)}>check</span>}
                                 </button>
@@ -148,6 +167,12 @@ export default function SeasonalGuide({ startDate, activities = [], level = '', 
     const suggestions = coeff && meteo
         ? getSuggestedThematics({ periodId: period.id, coeff, meteo, activities, level })
         : null;
+
+    // Intentions favorisées par les conditions choisies — se mettent à jour dès qu'on
+    // touche au coefficient ou à la météo. Le seed hebdomadaire fait tourner les
+    // suggestions saisonnières d'une semaine à l'autre.
+    const weekSeed = startDate ? Math.floor(new Date(startDate + 'T12:00:00').getTime() / 604_800_000) : 0;
+    const intentionSuggestions = getSuggestedIntentions({ periodId: period.id, coeff, meteo, weekSeed });
 
     const handleValidate = () => {
         if (suggestions && !isSaving) onSuggestions(suggestions, intentionId, coeff, meteo);
@@ -225,7 +250,13 @@ export default function SeasonalGuide({ startDate, activities = [], level = '', 
                     Mon objectif pour cette semaine
                     <span className="font-semibold normal-case tracking-normal text-slate-300 ml-1">— optionnel</span>
                 </label>
-                <IntentionDropdown intentionId={intentionId} setIntentionId={setIntentionId} />
+                <IntentionDropdown intentionId={intentionId} setIntentionId={setIntentionId} suggestions={intentionSuggestions} />
+                {!intentionId && intentionSuggestions.length > 0 && (
+                    <p className="text-[10px] text-indigo-500 font-semibold px-1 flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[13px]">auto_awesome</span>
+                        Vu tes conditions : {intentionSuggestions.map(s => OBJECTIFS.find(o => o.id === s.id)?.label).filter(Boolean).join(' · ')}
+                    </p>
+                )}
                 {intentionId && (
                     <p className="text-[10px] text-slate-400 px-1">
                         Les fiches correspondantes seront marquées ★ dans le programme.
