@@ -8,6 +8,7 @@ import { getStageQuiz, getMyTotalPoints } from '@/actions/quiz-actions';
 import { getPeriodForMonth } from '@/data/seasonal-context';
 import { pickCurrentStage } from '@/lib/stage-dates';
 import { WeekDashboardClient } from './WeekDashboardClient';
+import { DeleteStageButton } from '@/components/DeleteStageButton';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { PedagogicalContent, StageObjectiveExecutionStatus, StageObjectiveImpactLevel, ObjectiveReviewState } from '@/types';
@@ -128,16 +129,26 @@ export default async function StagesPage() {
                         <section>
                             <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400 mb-3">Semaines prévues</p>
                             <div className="space-y-2">
-                                {upcomingStages.map(s => (
-                                    <Link key={s.id} href={`/stages/${s.id}/program`} className="flex items-center gap-3 bg-white rounded-2xl border border-slate-200 px-4 py-3 hover:bg-slate-50 transition active:scale-95">
-                                        <span className="material-symbols-outlined text-slate-300 text-xl shrink-0">event</span>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-bold text-slate-700 truncate">{s.title}</p>
-                                            <p className="text-xs text-slate-400">{s.dates}</p>
+                                {upcomingStages.map(s => {
+                                    const objectiveCount = s.selected_content?.length ?? 0;
+                                    return (
+                                        <div key={s.id} className="flex items-center gap-3 bg-white rounded-2xl border border-slate-200 px-4 py-3">
+                                            <Link href={`/stages/${s.id}/program`} className="flex items-center gap-3 flex-1 min-w-0 active:scale-95 transition">
+                                                <span className="material-symbols-outlined text-slate-300 text-xl shrink-0">event</span>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-sm font-bold text-slate-700 truncate">{s.title}</p>
+                                                    <p className="text-xs text-slate-400">
+                                                        {s.dates}
+                                                        {objectiveCount > 0 && (
+                                                            <span className="text-slate-300"> · {objectiveCount} objectif{objectiveCount > 1 ? 's' : ''} sélectionné{objectiveCount > 1 ? 's' : ''}</span>
+                                                        )}
+                                                    </p>
+                                                </div>
+                                            </Link>
+                                            <DeleteStageButton stageId={s.id} size="sm" />
                                         </div>
-                                        <span className="material-symbols-outlined text-slate-300 text-base shrink-0">chevron_right</span>
-                                    </Link>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </section>
                     )}

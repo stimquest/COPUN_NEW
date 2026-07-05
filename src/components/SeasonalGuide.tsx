@@ -92,7 +92,7 @@ function IntentionDropdown({ intentionId, setIntentionId, suggestions }: { inten
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -8, scale: 0.98 }}
                         transition={{ duration: 0.15 }}
-                        className="absolute left-0 right-0 top-[calc(100%+8px)] z-50 bg-white rounded-2xl border-2 border-slate-100 shadow-2xl overflow-hidden"
+                        className="mt-2 bg-white rounded-2xl border-2 border-slate-100 shadow-2xl overflow-hidden"
                     >
                         {selected && (
                             <button
