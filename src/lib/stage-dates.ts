@@ -13,22 +13,25 @@ export function parseStageDateRange(dates: string, referenceDate = new Date()): 
     const parts = dates.split('-').map(s => s.trim());
     if (parts.length !== 2) return null;
 
-    const parseOne = (part: string, year: number): Date | null => {
+    const parseOne = (part: string, year: number, hours: number, minutes: number, seconds: number): Date | null => {
         const match = part.match(/^(\d{1,2})\s+([a-zûé.]+)$/i);
         if (!match) return null;
         const day = Number(match[1]);
         const month = MONTH_ABBR[match[2].toLowerCase()];
         if (month === undefined) return null;
-        return new Date(year, month, day, 12);
+        return new Date(year, month, day, hours, minutes, seconds);
     };
 
     const refYear = referenceDate.getFullYear();
-    let start = parseOne(parts[0], refYear);
-    let end = parseOne(parts[1], refYear);
+    // Bornes larges (00:00 à 23:59:59) pour que la semaine couvre toute la journée du
+    // premier au dernier jour, quelle que soit l'heure de consultation — un stage qui
+    // commence "aujourd'hui" doit être actif dès 00:00, pas seulement à partir de midi.
+    let start = parseOne(parts[0], refYear, 0, 0, 0);
+    let end = parseOne(parts[1], refYear, 23, 59, 59);
     if (!start || !end) return null;
 
     // Semaine à cheval sur le nouvel an (ex: 29 déc. - 2 janv.)
-    if (end < start) end = parseOne(parts[1], refYear + 1);
+    if (end < start) end = parseOne(parts[1], refYear + 1, 23, 59, 59);
     if (!end) return null;
 
     return { start, end };
