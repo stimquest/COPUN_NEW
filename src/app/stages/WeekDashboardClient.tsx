@@ -18,6 +18,7 @@ import { updateStageExploitStatus, uploadDefiPhoto } from '@/actions/defi-action
 import FilRougeForm from '@/components/defis/FilRougeForm';
 import { DeleteStageButton } from '@/components/DeleteStageButton';
 import CardDetailModal from '@/components/CardDetailModal';
+import { HelpGuideModal } from '@/components/HelpGuideModal';
 import { ImpactToggle } from '@/components/StageObjectiveReviewList';
 import { PointsGainedBadge, usePointsGainedBadge } from '@/components/PointsGainedBadge';
 import { compressImage } from '@/lib/image-compression';
@@ -685,6 +686,7 @@ export function WeekDashboardClient({
     const [showAddObs, setShowAddObs] = useState(false);
     const [showAllUpcoming, setShowAllUpcoming] = useState(false);
     const [showAllArchived, setShowAllArchived] = useState(false);
+    const [showHelpGuide, setShowHelpGuide] = useState(false);
     const [obsText, setObsText] = useState('');
     const [obsAction, setObsAction] = useState<PedagogicalAction | null>(null);
     const [obsType, setObsType] = useState<ObservationType | null>(null);
@@ -885,6 +887,13 @@ export function WeekDashboardClient({
                             <span className="material-symbols-outlined text-[15px] text-amber-300">emoji_events</span>
                             <span className="text-xs font-black">{totalPoints}<span className="font-bold text-white/60"> pts</span></span>
                         </Link>
+                        <button
+                            onClick={() => setShowHelpGuide(true)}
+                            className="size-9 rounded-full bg-white/20 border border-white/30 flex items-center justify-center text-white active:scale-95 transition"
+                            title="Comment ça marche ?"
+                        >
+                            <span className="material-symbols-outlined text-lg">help</span>
+                        </button>
                         <Link href="/profil" className="size-9 rounded-full bg-white/20 border border-white/30 flex items-center justify-center text-white">
                             <span className="material-symbols-outlined text-lg">{seasonIcon}</span>
                         </Link>
@@ -1766,6 +1775,7 @@ export function WeekDashboardClient({
                 onClose={() => setDetailCard(null)}
                 content={detailCard}
             />
+            <HelpGuideModal isOpen={showHelpGuide} onClose={() => setShowHelpGuide(false)} />
         </div>
     );
 }
