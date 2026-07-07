@@ -84,13 +84,22 @@ export async function listUsers() {
     const ctx = await requireAdmin();
     if (!ctx) return { error: 'Accès refusé.', users: [] };
 
-    const { data, error } = await ctx.supabase
-        .from('profiles')
-        .select('id, email, full_name, role, created_at, club_id, clubs!club_id(name)')
-        .order('created_at', { ascending: false });
+    const [{ data, error }, { data: signIns }] = await Promise.all([
+        ctx.supabase
+            .from('profiles')
+            .select('id, email, full_name, role, created_at, club_id, clubs!club_id(name)')
+            .order('created_at', { ascending: false }),
+        ctx.supabase.rpc('admin_list_last_sign_in'),
+    ]);
 
     if (error) return { error: error.message, users: [] };
-    return { users: data ?? [] };
+
+    const lastSignInById = new Map<string, string | null>(
+        (signIns ?? []).map((s: { id: string; last_sign_in_at: string | null }) => [s.id, s.last_sign_in_at])
+    );
+    const users = (data ?? []).map(u => ({ ...u, last_sign_in_at: lastSignInById.get(u.id) ?? null }));
+
+    return { users };
 }
 
 // Changer le rôle d'un utilisateur via RPC SECURITY DEFINER (bypass RLS)

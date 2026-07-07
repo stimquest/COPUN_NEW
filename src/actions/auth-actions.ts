@@ -43,8 +43,12 @@ export async function updatePassword(formData: FormData) {
     const password = formData.get('password') as string;
     const supabase = await createClient();
 
-    const { error } = await supabase.auth.updateUser({ password });
+    const { data: { user }, error } = await supabase.auth.updateUser({ password });
     if (error) return { error: error.message };
+
+    if (user) {
+        await supabase.from('profiles').update({ password_set: true }).eq('id', user.id);
+    }
 
     revalidatePath('/', 'layout');
     redirect('/stages');

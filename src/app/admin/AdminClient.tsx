@@ -17,7 +17,19 @@ type User = {
     created_at: string;
     club_id?: string | null;
     clubs?: { name: string } | null;
+    last_sign_in_at?: string | null;
 };
+
+function lastSignInLabel(iso: string | null | undefined): string {
+    if (!iso) return 'Jamais connecté';
+    const diffMs = Date.now() - new Date(iso).getTime();
+    const days = Math.floor(diffMs / 86_400_000);
+    if (days <= 0) return "Connecté aujourd'hui";
+    if (days === 1) return 'Connecté hier';
+    if (days < 30) return `Connecté il y a ${days} j`;
+    const months = Math.floor(days / 30);
+    return `Connecté il y a ${months} mois`;
+}
 
 type Club = { id: string; name: string };
 
@@ -192,6 +204,9 @@ export function AdminClient({ users: initialUsers, clubs, fiches, fichesMemo, er
                                                 Sans club
                                             </span>
                                         )}
+                                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${u.last_sign_in_at ? 'text-slate-400 bg-slate-50' : 'text-rose-500 bg-rose-50'}`}>
+                                            {lastSignInLabel(u.last_sign_in_at)}
+                                        </span>
                                     </div>
                                 </div>
                                 <span className="material-symbols-outlined text-slate-300 group-hover:text-indigo-400 transition-colors shrink-0">edit</span>

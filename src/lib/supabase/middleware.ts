@@ -45,6 +45,21 @@ export async function updateSession(request: NextRequest) {
         return NextResponse.redirect(new URL('/stages', request.url));
     }
 
+    // Compte créé par invitation/magic link : tant que le mot de passe n'a pas été défini,
+    // on bloque tout accès au reste de l'app pour éviter une session "orpheline" sans
+    // moyen de se reconnecter une fois expirée.
+    if (user && path !== '/auth/reset-password' && !path.startsWith('/auth/callback')) {
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('password_set')
+            .eq('id', user.id)
+            .single();
+
+        if (profile && profile.password_set === false) {
+            return NextResponse.redirect(new URL('/auth/reset-password', request.url));
+        }
+    }
+
     // Route /admin → vérifier le rôle admin
     if (user && path.startsWith('/admin')) {
         const { data: profile } = await supabase
