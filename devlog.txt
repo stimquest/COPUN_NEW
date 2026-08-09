@@ -4654,3 +4654,24 @@ https://nextjs.org/docs/messages/module-not-found
  GET /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/preparer 200 in 644ms (compile: 8ms, proxy.ts: 210ms, render: 426ms)
  GET /stages 200 in 606ms (compile: 5ms, proxy.ts: 143ms, render: 458ms)
  GET /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/program 200 in 359ms (compile: 10ms, proxy.ts: 127ms, render: 221ms)
+ GET /stages 200 in 779ms (compile: 7ms, proxy.ts: 545ms, render: 227ms)
+ GET /stages 200 in 643ms (compile: 4ms, proxy.ts: 230ms, render: 409ms)
+ GET /manifest.webmanifest 200 in 6ms (compile: 3ms, render: 4ms)
+ GET /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/program 200 in 823ms (compile: 19ms, proxy.ts: 401ms, render: 403ms)
+ GET /stages 200 in 259ms (compile: 5ms, proxy.ts: 126ms, render: 127ms)
+ GET /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/program 200 in 459ms (compile: 11ms, proxy.ts: 223ms, render: 225ms)
+ GET /stages 200 in 394ms (compile: 5ms, proxy.ts: 149ms, render: 239ms)
+✓ Compiled in 78ms
+ GET /stages 200 in 1057ms (compile: 331ms, proxy.ts: 664ms, render: 62ms)
+ GET /stages 200 in 407ms (compile: 5ms, proxy.ts: 370ms, render: 32ms)
+✓ Compiled in 64ms
+ GET /stages 200 in 476ms (compile: 174ms, proxy.ts: 254ms, render: 48ms)
+ GET /stages 200 in 300ms (compile: 4ms, proxy.ts: 260ms, render: 36ms)
+✓ Compiled in 60ms
+ GET /stages 200 in 492ms (compile: 163ms, proxy.ts: 271ms, render: 58ms)
+✓ Compiled in 59ms
+ GET /stages 200 in 380ms (compile: 155ms, proxy.ts: 174ms, render: 51ms)
+✓ Compiled in 55ms
+ GET /stages 200 in 509ms (compile: 165ms, proxy.ts: 285ms, render: 59ms)
+ GET /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/bilan 200 in 1392ms (compile: 243ms, proxy.ts: 168ms, render: 981ms)
+ GET /stages 200 in 377ms (compile: 4ms, proxy.ts: 151ms, render: 223ms)

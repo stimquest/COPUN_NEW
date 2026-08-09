@@ -7,7 +7,7 @@ import { getUserContent } from '@/actions/content-actions';
 import { getStageQuiz, getMyTotalPoints } from '@/actions/quiz-actions';
 import { getStagePreparations } from '@/actions/preparation-actions';
 import { getPeriodForMonth } from '@/data/seasonal-context';
-import { pickCurrentStage } from '@/lib/stage-dates';
+import { pickCurrentStage, parseStageDateRange, ymdAParis, heureAParis } from '@/lib/stage-dates';
 import { WeekDashboardClient } from './WeekDashboardClient';
 import { DeleteStageButton } from '@/components/DeleteStageButton';
 import Link from 'next/link';
@@ -25,8 +25,10 @@ const SEASON_STYLES: Record<string, { gradient: string; icon: string }> = {
 export default async function StagesPage() {
     noStore();
     const now = new Date();
-    const month = now.getMonth() + 1;
-    const hour = now.getHours();
+    // Lus dans le fuseau Europe/Paris, pas celui du serveur (UTC sur Vercel) — sinon la
+    // salutation et la saison peuvent se tromper de quelques heures selon l'hébergement.
+    const month = ymdAParis(now).month + 1;
+    const hour = heureAParis(now);
     const period = getPeriodForMonth(month);
     const seasonStyle = SEASON_STYLES[period.id] ?? SEASON_STYLES['haute_saison'];
     const greeting = hour < 12 ? 'Bonjour' : hour < 18 ? 'Bon après-midi' : 'Bonsoir';
@@ -43,9 +45,19 @@ export default async function StagesPage() {
     // préparée à l'avance à la place de la semaine en cours.
     const openStages = stages.filter(s => !s.closed_at);
     const activeStage = pickCurrentStage(openStages, now);
-    const upcomingStages = openStages.filter(s => s.id !== activeStage?.id);
+    const otherOpenStages = openStages.filter(s => s.id !== activeStage?.id);
     const archivedStages = stages.filter(s => !!s.closed_at);
-    const hasOpenNonActiveStages = upcomingStages.length > 0;
+
+    // Une semaine ouverte dont la date de fin est déjà passée n'a jamais été clôturée —
+    // sans ce tri, elle se noyait parmi les semaines à venir sous "Semaines prévues",
+    // sans accès direct au bilan : le moniteur restait bloqué, incapable de la retrouver
+    // facilement pour la clore et débloquer la semaine suivante.
+    const pastUnclosedStages = otherOpenStages.filter(s => {
+        const range = parseStageDateRange(s.dates, now);
+        return range ? range.end.getTime() < now.getTime() : false;
+    });
+    const upcomingStages = otherOpenStages.filter(s => !pastUnclosedStages.includes(s));
+    const hasOpenNonActiveStages = otherOpenStages.length > 0;
 
     // Écran vide — aucun stage
     if (stages.length === 0) {
@@ -82,9 +94,11 @@ export default async function StagesPage() {
                     <p className="text-white/60 text-sm font-semibold">{greeting},</p>
                     <h1 className="text-3xl font-black text-white italic mt-0.5">{firstName}.</h1>
                     <p className="text-white/50 text-sm mt-2">
-                        {hasOpenNonActiveStages
-                            ? "Aucune semaine prévue à la date d'aujourd'hui."
-                            : 'Toutes vos semaines sont archivées.'}
+                        {pastUnclosedStages.length > 0
+                            ? `${pastUnclosedStages.length} semaine${pastUnclosedStages.length > 1 ? 's' : ''} en attente de bilan.`
+                            : hasOpenNonActiveStages
+                                ? "Aucune semaine prévue à la date d'aujourd'hui."
+                                : 'Toutes vos semaines sont archivées.'}
                     </p>
                 </header>
                 <main className="max-w-2xl mx-auto px-4 pt-5 space-y-4">
@@ -98,6 +112,31 @@ export default async function StagesPage() {
                         </div>
                         <span className="material-symbols-outlined text-2xl text-white/60">add_circle</span>
                     </Link>
+
+                    {/* Semaines passées jamais clôturées — priorité sur "Semaines prévues" :
+                        c'est ce qui bloque le moniteur, pas ce qui l'attend. */}
+                    {pastUnclosedStages.length > 0 && (
+                        <section>
+                            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-amber-600 mb-3">Bilan en attente</p>
+                            <div className="space-y-2">
+                                {pastUnclosedStages.map(s => (
+                                    <Link
+                                        key={s.id}
+                                        href={`/stages/${s.id}/bilan`}
+                                        className="flex items-center gap-3 bg-amber-50 rounded-2xl border border-amber-200 px-4 py-3.5 hover:bg-amber-100 transition active:scale-95"
+                                    >
+                                        <span className="material-symbols-outlined text-amber-500 text-xl shrink-0">event_busy</span>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-bold text-amber-950 truncate">{s.title}</p>
+                                            <p className="text-xs text-amber-700/70">{s.dates}</p>
+                                        </div>
+                                        <span className="text-[10px] font-black text-amber-700 uppercase tracking-wide shrink-0">Clôturer</span>
+                                        <span className="material-symbols-outlined text-amber-400 text-base shrink-0">chevron_right</span>
+                                    </Link>
+                                ))}
+                            </div>
+                        </section>
+                    )}
 
                     {upcomingStages.length > 0 && (
                         <section>
