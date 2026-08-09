@@ -5,10 +5,12 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import clsx from 'clsx';
 import { closeStage } from '@/actions/stage-actions';
-import { StageObjectiveReviewList } from '@/components/StageObjectiveReviewList';
 import { StageDefisReview, DefiReview } from '@/components/StageDefisReview';
 import { StageObservationsReview } from '@/components/StageObservationsReview';
-import { StageObjectiveReviewDraft, StageObjectiveReviewItem, WeekObservation } from '@/types';
+import { WeekObservation, PedagogicalContent } from '@/types';
+import { RessentiNiveau, RESSENTI_OPTIONS, RESSENTI_RAISONS } from '@/lib/stage-ressenti';
+import { StagePreparation } from '@/actions/preparation-actions';
+import ProgrammeCondense from '@/components/ProgrammeCondense';
 
 type QuizReview = {
     done: boolean;
@@ -19,42 +21,32 @@ type QuizReview = {
 type Props = {
     stageId: string;
     stageTitle: string;
-    objectiveItems: StageObjectiveReviewItem[];
+    objectives: PedagogicalContent[];
+    preparations: Record<string, StagePreparation>;
     initialClosingNotes?: string | null;
+    initialNbStagiaires?: number | null;
     defisAssigned: DefiReview[];
     observations: WeekObservation[];
     quizData: QuizReview | null;
-    // Météo de la semaine défavorable — remonte la raison météo en tête des listes.
-    weatherIsBad?: boolean;
-    // Message affiché quand on ouvre le bilan avant le dernier jour de la semaine.
     earlyWarning?: string | null;
 };
 
-// "Non abordé" n'a de sens qu'a posteriori — un objectif sans statut à la clôture n'a
-// simplement pas été fait de la semaine. On le pré-remplit automatiquement plutôt que
-// de forcer le moniteur à cliquer "non abordé" à la main pour chaque fiche non touchée.
-function buildDraftMap(items: StageObjectiveReviewItem[]): Record<string, StageObjectiveReviewDraft> {
-    return Object.fromEntries(
-        items.map(item => {
-            const existing = item.review;
-            return [
-                item.pedagogicalContent.id,
-                {
-                    pedagogicalContentId: item.pedagogicalContent.id,
-                    executionStatus: existing ? existing.executionStatus : 'not_done',
-                    impactLevel: existing ? existing.impactLevel : null,
-                    reasons: existing?.reasons ?? [],
-                    note: existing?.note ?? '',
-                } satisfies StageObjectiveReviewDraft,
-            ];
-        })
-    );
-}
-
-export function StageClosureReview({ stageId, stageTitle, objectiveItems, initialClosingNotes, defisAssigned, observations, quizData, weatherIsBad = false, earlyWarning = null }: Props) {
+/**
+ * Clôture de semaine : un ressenti global, pas un statut par fiche.
+ *
+ * Remplace le formulaire qui faisait remplir exécution + impact + raisons pour chaque
+ * fiche du programme — jusqu'à 15 fois le même formulaire pour clôturer une semaine.
+ * Voir src/lib/stage-ressenti.ts pour le raisonnement complet.
+ */
+export function StageClosureReview({
+    stageId, stageTitle, objectives, preparations, initialClosingNotes, initialNbStagiaires,
+    defisAssigned, observations, quizData, earlyWarning = null,
+}: Props) {
     const router = useRouter();
-    const [drafts, setDrafts] = useState<Record<string, StageObjectiveReviewDraft>>(() => buildDraftMap(objectiveItems));
+    const [niveau, setNiveau] = useState<RessentiNiveau | null>(null);
+    const [raisons, setRaisons] = useState<string[]>([]);
     const [closingNote, setClosingNote] = useState(initialClosingNotes ?? '');
+    const [nbStagiaires, setNbStagiaires] = useState(initialNbStagiaires ? String(initialNbStagiaires) : '');
     const [error, setError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -62,25 +54,33 @@ export function StageClosureReview({ stageId, stageTitle, objectiveItems, initia
     const defisTotal = defisAssigned.length;
     const quizDone = quizData?.done ?? false;
 
-    // Le quiz (comme les défis) peut être impossible à faire pour des raisons hors du
-    // contrôle du moniteur (groupe déjà reparti, conditions terrain…) — la clôture ne
-    // doit jamais être bloquée par un élément externe, seulement rappelée si manquant.
-    const canClose = true;
-
-    const handleDraftChange = (contentId: string, patch: Partial<StageObjectiveReviewDraft>) => {
-        setDrafts(prev => ({
-            ...prev,
-            [contentId]: { ...prev[contentId], ...patch },
-        }));
+    const choisirNiveau = (n: RessentiNiveau) => {
+        setNiveau(n);
+        setRaisons([]); // les raisons dépendent du niveau, on repart à zéro en changeant
     };
 
+    const toggleRaison = (r: string) => {
+        setRaisons(prev => prev.includes(r) ? prev.filter(x => x !== r) : [...prev, r]);
+    };
+
+    const nbStagiairesValide = Number(nbStagiaires) >= 1;
+
     const handleClose = async () => {
+        if (!niveau) {
+            setError('Indiquez si vous avez pu raconter ce qui était prévu.');
+            return;
+        }
+        if (!nbStagiairesValide) {
+            setError('Indiquez le nombre de stagiaires de la semaine.');
+            return;
+        }
         setIsSubmitting(true);
         setError(null);
 
         const result = await closeStage(stageId, {
             closingNotes: closingNote,
-            objectiveReviews: Object.values(drafts),
+            ressenti: { niveau, raisons, note: '' },
+            nbStagiaires: Number(nbStagiaires),
         });
 
         setIsSubmitting(false);
@@ -95,17 +95,10 @@ export function StageClosureReview({ stageId, stageTitle, objectiveItems, initia
     return (
         <div className="space-y-6">
 
-            {/* Semaine pas finie : le bilan reste consultable mais on cadre les attentes,
-                notamment les "non abordé" auto-remplis qui ne sont pas encore définitifs */}
             {earlyWarning && (
                 <div className="rounded-2xl bg-orange-100 border border-orange-300 px-4 py-3 flex items-start gap-2.5">
                     <span className="material-symbols-outlined text-orange-500 text-xl shrink-0">schedule</span>
-                    <div>
-                        <p className="text-sm font-black text-orange-900">{earlyWarning}</p>
-                        <p className="text-xs text-orange-700 mt-0.5 leading-snug">
-                            Les objectifs pas encore traités apparaissent « Non abordé » — ils se rempliront au fil de la semaine depuis l&apos;accueil.
-                        </p>
-                    </div>
+                    <p className="text-sm font-black text-orange-900">{earlyWarning}</p>
                 </div>
             )}
 
@@ -113,22 +106,99 @@ export function StageClosureReview({ stageId, stageTitle, objectiveItems, initia
             <div className="rounded-2xl bg-amber-50 border border-amber-200 px-4 py-4">
                 <p className="text-xs font-black uppercase tracking-widest text-amber-600 mb-1">Clôture de la semaine</p>
                 <p className="text-sm font-semibold text-amber-900">{stageTitle}</p>
-                <p className="mt-1 text-xs text-amber-700 leading-relaxed">
-                    Vos notes prises depuis l&apos;accueil sont reprises ici. Les objectifs restés sans note sont marqués « Non abordé » — corrigez-les si besoin avant de clôturer.
-                </p>
             </div>
 
-            {/* Objectifs */}
+            {/* Le programme, rappelé pour se souvenir de ce qui était prévu avant de juger */}
+            {objectives.length > 0 && (
+                <section>
+                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400 mb-3">
+                        Ce qui était prévu
+                    </p>
+                    <ProgrammeCondense stageId={stageId} contents={objectives} preparations={preparations} />
+                </section>
+            )}
+
+            {/* Le ressenti global */}
             <section>
                 <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400 mb-3">
-                    Objectifs de la semaine
+                    Dans l&apos;ensemble
                 </p>
-                <StageObjectiveReviewList
-                    items={objectiveItems}
-                    editable
-                    drafts={drafts}
-                    onChangeDraft={handleDraftChange}
-                    weatherIsBad={weatherIsBad}
+                <p className="text-sm font-bold text-slate-900 mb-3">
+                    Avez-vous pu raconter ce que vous aviez prévu ?
+                </p>
+                <div className="space-y-2">
+                    {RESSENTI_OPTIONS.map(opt => (
+                        <button
+                            key={opt.value}
+                            onClick={() => choisirNiveau(opt.value)}
+                            className={clsx(
+                                'w-full flex items-center gap-3 rounded-2xl border-2 px-4 py-3.5 text-left transition-all active:scale-[0.99]',
+                                niveau === opt.value
+                                    ? 'bg-slate-900 border-slate-900 text-white'
+                                    : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300',
+                            )}
+                        >
+                            <span className={clsx(
+                                'material-symbols-outlined text-2xl shrink-0',
+                                niveau === opt.value ? 'text-white' : 'text-slate-400',
+                            )}>
+                                {opt.icon}
+                            </span>
+                            <span className="flex-1 min-w-0">
+                                <span className="block font-black text-sm">{opt.label}</span>
+                                <span className={clsx(
+                                    'block text-xs mt-0.5',
+                                    niveau === opt.value ? 'text-white/60' : 'text-slate-400',
+                                )}>
+                                    {opt.helper}
+                                </span>
+                            </span>
+                        </button>
+                    ))}
+                </div>
+
+                {/* Raisons — dépendent du niveau choisi, utiles pour le club */}
+                {niveau && (
+                    <div className="mt-4">
+                        <p className="text-xs font-bold text-slate-500 mb-2">
+                            Pourquoi, en quelques mots ? <span className="font-medium text-slate-300">— optionnel</span>
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                            {RESSENTI_RAISONS[niveau].map(r => (
+                                <button
+                                    key={r}
+                                    onClick={() => toggleRaison(r)}
+                                    className={clsx(
+                                        'px-3 py-2 rounded-xl text-xs font-semibold border transition-all active:scale-[0.98]',
+                                        raisons.includes(r)
+                                            ? 'bg-indigo-50 border-indigo-300 text-indigo-700'
+                                            : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300',
+                                    )}
+                                >
+                                    {r}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
+            </section>
+
+            {/* Nombre de stagiaires — obligatoire ici plutôt qu'à la création : c'est un
+                chiffre connu à ce stade, pas une estimation avant même que le groupe soit
+                constitué. Utile plus tard pour mesurer combien de personnes ont été
+                sensibilisées sur une saison. */}
+            <section>
+                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400 mb-3">
+                    Combien de stagiaires cette semaine
+                </p>
+                <input
+                    type="number"
+                    min={1}
+                    max={999}
+                    placeholder="ex : 12"
+                    value={nbStagiaires}
+                    onChange={e => setNbStagiaires(e.target.value)}
+                    className="w-full h-12 bg-white border border-slate-200 rounded-xl px-4 text-sm font-bold text-slate-900 placeholder:text-slate-300 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-100 transition"
                 />
             </section>
 
@@ -223,10 +293,14 @@ export function StageClosureReview({ stageId, stageTitle, objectiveItems, initia
             <div className="sticky bottom-4 z-30">
                 <div className="rounded-2xl border border-slate-200 bg-white/95 backdrop-blur-sm shadow-xl shadow-slate-200/60 p-3 flex items-center gap-3">
                     <div className="flex-1">
-                        {!quizDone ? (
+                        {!niveau ? (
+                            <p className="text-xs font-semibold text-amber-600">Un mot sur la semaine, avant de clôturer</p>
+                        ) : !nbStagiairesValide ? (
+                            <p className="text-xs font-semibold text-amber-600">Indiquez le nombre de stagiaires</p>
+                        ) : !quizDone ? (
                             <p className="text-xs font-semibold text-amber-600">Quiz pas fait — clôture possible quand même</p>
                         ) : (
-                            <p className="text-xs font-semibold text-emerald-600">Tous les éléments sont renseignés</p>
+                            <p className="text-xs font-semibold text-emerald-600">Prêt à clôturer</p>
                         )}
                     </div>
                     <Link
@@ -237,10 +311,10 @@ export function StageClosureReview({ stageId, stageTitle, objectiveItems, initia
                     </Link>
                     <button
                         onClick={handleClose}
-                        disabled={isSubmitting || !canClose}
+                        disabled={isSubmitting || !niveau || !nbStagiairesValide}
                         className={clsx(
                             'h-11 px-5 rounded-xl text-sm font-black text-white transition',
-                            !canClose || isSubmitting
+                            !niveau || !nbStagiairesValide || isSubmitting
                                 ? 'bg-slate-300 cursor-not-allowed'
                                 : 'bg-slate-900 hover:bg-slate-700 active:scale-95'
                         )}

@@ -524,6 +524,14 @@ export async function getPedagogicalPool() {
     return data;
 }
 
+/**
+ * Charge des fiches en respectant l'ordre des identifiants demandés.
+ *
+ * PostgREST renvoie les lignes dans l'ordre de la table, pas dans celui du filtre `in` :
+ * une fiche ajoutée en dernier remontait donc en tête si son identifiant était plus petit.
+ * Or l'ordre des sujets porte du sens — enchaîner les méduses puis le vent parce que les
+ * méduses dérivent avec lui est une intention pédagogique, pas un hasard de sélection.
+ */
 export async function getPedagogicalContentByIds(ids: string[]) {
     if (!ids || ids.length === 0) return [];
     const supabase = await createClient();
@@ -536,6 +544,10 @@ export async function getPedagogicalContentByIds(ids: string[]) {
         console.error('Error fetching content by ids:', error);
         return [];
     }
-    return data;
+
+    const rang = new Map(ids.map((id, i) => [id, i]));
+    return (data ?? []).sort(
+        (a, b) => (rang.get(a.id) ?? Infinity) - (rang.get(b.id) ?? Infinity),
+    );
 }
 

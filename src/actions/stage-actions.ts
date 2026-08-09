@@ -2,14 +2,18 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { requireAuth } from '@/lib/auth';
-import { isStageObjectiveExecutionStatus, isStageObjectiveImpactLevel } from '@/lib/stage-objective-review';
 import { revalidatePath } from 'next/cache';
-import { StageObjectiveReviewDraft } from '@/types';
 import { encodeIntention, ObjectifId } from '@/data/objectifs';
+import { StageRessenti, isRessentiNiveau } from '@/lib/stage-ressenti';
 
 /**
  * Persists the selected pedagogical pool for a stage.
  * Layer 1: Strategy
+ *
+ * L'ordre du tableau est signifiant : il fixe l'ordre de traitement des sujets, que le
+ * moniteur compose lui-même (enchaîner les méduses puis le vent parce que les méduses
+ * dérivent avec lui). Cette action sert donc aussi bien à la sélection qu'au
+ * réordonnancement.
  */
 export async function updateStagePool(stageId: string, contentIds: string[]) {
     const supabase = await createClient();
@@ -25,6 +29,7 @@ export async function updateStagePool(stageId: string, contentIds: string[]) {
 
     revalidatePath('/stages');
     revalidatePath(`/stages/${stageId}/program`);
+    revalidatePath(`/stages/${stageId}/preparer`);
     return { success: true };
 }
 
@@ -172,7 +177,14 @@ export async function deleteStage(stageId: string) {
 
 type CloseStageInput = {
   closingNotes: string;
-  objectiveReviews: StageObjectiveReviewDraft[];
+  ressenti: StageRessenti;
+  /**
+   * Nombre de stagiaires réellement encadrés cette semaine. Obligatoire à la clôture :
+   * ce n'est plus une estimation demandée avant même que le groupe soit constitué (voir
+   * NewStageClient), mais un chiffre connu, saisi une fois — utile plus tard pour
+   * mesurer combien de personnes ont été sensibilisées sur une saison.
+   */
+  nbStagiaires: number;
 };
 
 export async function closeStage(stageId: string, input: CloseStageInput) {
@@ -181,66 +193,20 @@ export async function closeStage(stageId: string, input: CloseStageInput) {
   const supabase = ctx.supabase;
   const user = ctx.user;
 
-  const { data: stage, error: stageError } = await supabase
-    .from('stages')
-    .select('selected_content')
-    .eq('id', stageId)
-    .eq('owner_id', user.id)
-    .single();
-
-  if (stageError || !stage) {
-    console.error('Error fetching stage before closing:', stageError);
-    return { success: false, error: stageError?.message || 'Semaine introuvable' };
+  if (!isRessentiNiveau(input.ressenti?.niveau)) {
+    return { success: false, error: 'Indiquez si vous avez pu raconter ce qui était prévu.' };
+  }
+  if (!Number.isFinite(input.nbStagiaires) || input.nbStagiaires < 1) {
+    return { success: false, error: 'Indiquez le nombre de stagiaires de la semaine.' };
   }
 
-  const selectedContent: string[] = stage.selected_content ?? [];
-  const selectedSet = new Set(selectedContent);
-  const reviewByContentId = new Map<string, StageObjectiveReviewDraft>();
-
-  for (const review of input.objectiveReviews ?? []) {
-    if (!review?.pedagogicalContentId || !selectedSet.has(review.pedagogicalContentId)) continue;
-    if (!review.executionStatus || !isStageObjectiveExecutionStatus(review.executionStatus)) {
-      return { success: false, error: 'Chaque objectif doit avoir un sort renseigné.' };
-    }
-
-    const normalizedReview: StageObjectiveReviewDraft = {
-      pedagogicalContentId: review.pedagogicalContentId,
-      executionStatus: review.executionStatus,
-      impactLevel: review.executionStatus === 'not_done'
-        ? null
-        : (review.impactLevel && isStageObjectiveImpactLevel(review.impactLevel) ? review.impactLevel : null),
-      reasons: Array.isArray(review.reasons) ? review.reasons.filter((r): r is string => typeof r === 'string') : [],
-      note: typeof review.note === 'string' ? review.note.trim() : '',
-    };
-
-    reviewByContentId.set(normalizedReview.pedagogicalContentId, normalizedReview);
-  }
-
-  if (selectedContent.length > 0) {
-    const missingReviews = selectedContent.filter(contentId => !reviewByContentId.has(contentId));
-    if (missingReviews.length > 0) {
-      return { success: false, error: 'Complétez l’analyse de chaque objectif avant de clôturer la semaine.' };
-    }
-
-    const { error: reviewError } = await supabase
-      .from('stage_objective_reviews')
-      .upsert(
-        Array.from(reviewByContentId.values()).map(review => ({
-          stage_id: stageId,
-          pedagogical_content_id: review.pedagogicalContentId,
-          execution_status: review.executionStatus,
-          impact_level: review.executionStatus === 'not_done' ? null : review.impactLevel,
-          reasons: review.reasons,
-          note: review.note || null,
-        })),
-        { onConflict: 'stage_id,pedagogical_content_id' }
-      );
-
-    if (reviewError) {
-      console.error('Error saving stage objective reviews:', reviewError);
-      return { success: false, error: reviewError.message };
-    }
-  }
+  const ressenti: StageRessenti = {
+    niveau: input.ressenti.niveau,
+    raisons: Array.isArray(input.ressenti.raisons)
+      ? input.ressenti.raisons.filter((r): r is string => typeof r === 'string')
+      : [],
+    note: typeof input.ressenti.note === 'string' ? input.ressenti.note.trim() : '',
+  };
 
   const normalizedNotes = input.closingNotes.trim();
 
@@ -249,10 +215,12 @@ export async function closeStage(stageId: string, input: CloseStageInput) {
     .update({
       closed_at: new Date().toISOString(),
       closing_notes: normalizedNotes || null,
+      ressenti,
+      nb_stagiaires: input.nbStagiaires,
     })
     .eq('id', stageId)
     .eq('owner_id', user.id)
-    .select('id, closed_at, closing_notes')
+    .select('id, closed_at, closing_notes, ressenti, nb_stagiaires')
     .single();
 
   if (error) {

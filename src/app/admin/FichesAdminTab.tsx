@@ -8,6 +8,7 @@ import {
     deletePedagogicalContent,
 } from '@/actions/content-actions';
 import { PILLARS, THEMES_BY_PILLAR } from '@/data/etages';
+import { NIVEAU_LABELS_LONGS } from '@/data/niveaux';
 import type { PedagogicalContent, PedagogicalRessource, Dimension } from '@/types';
 import { getAllFichesMemo } from '@/actions/fiche-memo-actions';
 import type { FicheMemo } from '@/actions/fiche-memo-actions';
@@ -18,8 +19,6 @@ const DIMENSION_COLORS: Record<Dimension, { bg: string; text: string; badge: str
     'PROTÉGER':   { bg: 'bg-emerald-50', text: 'text-emerald-700', badge: 'bg-emerald-100 text-emerald-700' },
 };
 
-const NIVEAU_LABELS: Record<number, string> = { 1: 'N1 — Découverte', 2: 'N2 — Approfondissement', 3: 'N3 — Engagement' };
-
 type Mode = 'list' | 'edit' | 'create';
 
 interface FicheFormState {
@@ -27,7 +26,7 @@ interface FicheFormState {
     objectif: string;
     explication: string;
     tip: string;
-    niveau: 1 | 2 | 3;
+    niveau: 1 | 2 | 3 | 4;
     dimension: Dimension;
     tags_theme: string[];
     tags_filtre: string[];
@@ -329,7 +328,7 @@ export function FichesAdminTab({ initialFiches, fichesMemo }: {
                             <div>
                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Niveau</label>
                                 <div className="flex flex-col gap-1.5">
-                                    {([1, 2, 3] as const).map(n => (
+                                    {([1, 2, 3, 4] as const).map(n => (
                                         <button
                                             key={n}
                                             type="button"
@@ -340,7 +339,7 @@ export function FichesAdminTab({ initialFiches, fichesMemo }: {
                                                     : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'
                                             }`}
                                         >
-                                            {NIVEAU_LABELS[n]}
+                                            {NIVEAU_LABELS_LONGS[n]}
                                         </button>
                                     ))}
                                 </div>

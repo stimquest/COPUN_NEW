@@ -9,8 +9,12 @@ export type Stage = {
   nb_stagiaires?: number | null;
   selected_content?: string[];
   suggested_thematics?: string[];
+  /** Rituels tenus sur toute la semaine (`src/data/actions-semaine.ts`). */
+  actions_semaine?: string[] | null;
   closed_at?: string | null;
   closing_notes?: string | null;
+  /** Bilan global de clôture (`src/lib/stage-ressenti.ts`), null tant que non clôturé. */
+  ressenti?: { niveau: string; raisons: string[]; note: string } | null;
 };
 
 export type PedagogicalRessource =
@@ -18,6 +22,20 @@ export type PedagogicalRessource =
     | { type: 'url'; label: string; url: string };
 
 export type ContentSource = 'copun' | 'custom';
+
+/**
+ * Action de terrain proposée pour une fiche.
+ *
+ * `id` est stable et référencé par `stage_preparations.actions` : le renommer orpheline
+ * les choix déjà enregistrés par les moniteurs.
+ */
+export type ActionFiche = {
+  id: string;
+  /** Ce qu'on fait, nommé simplement. */
+  label: string;
+  /** La consigne, reprenable telle quelle devant le groupe. */
+  consigne: string;
+};
 
 export type ObservationPillar = 'COMPRENDRE' | 'OBSERVER' | 'PROTÉGER';
 
@@ -47,7 +65,17 @@ export type PedagogicalContent = {
   objectif: string;
   explication?: string;
   tip: string;
-  niveau: 1 | 2 | 3;
+  // Couche « comment en parler aux enfants » — rédigée au fil de l'eau, donc
+  // absente sur la plupart des fiches (l'UI n'affiche le bloc que si accroche existe).
+  accroche?: string;
+  accroches_variantes?: string[];
+  a_observer?: string;
+  a_retenir?: string;
+  erreur_frequente?: string;
+  /** Actions de terrain propres à cette fiche. Repli sur le groupe si absent. */
+  actions?: ActionFiche[] | null;
+  /** Cible de public (voir src/data/niveaux.ts) : pas une échelle de difficulté du texte. */
+  niveau: 1 | 2 | 3 | 4;
   dimension: Dimension;
   tags_theme: string[];
   tags_filtre: string[];
@@ -58,6 +86,19 @@ export type PedagogicalContent = {
   source?: ContentSource;
   ffv_level?: number | null;
   supports?: string[];
+};
+
+/** Capsule environnement fabriquée par le moniteur à partir des questions retenues. */
+export type Sujet = {
+  id: string;
+  stage_id: string | null;
+  titre: string;
+  accroche: string | null;
+  points_cles: string | null;
+  a_retenir: string | null;
+  notes_perso: string | null;
+  acquis: boolean;
+  sources?: string[];
 };
 
 export type ContentTodo = {

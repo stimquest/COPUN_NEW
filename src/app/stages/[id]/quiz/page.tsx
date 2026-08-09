@@ -9,9 +9,13 @@ export default async function StageQuizPage({ params }: { params: Promise<{ id: 
     const stage = await getStageById(id);
     if (!stage) return notFound();
 
-    // Quiz déjà généré — redirige directement vers le jeu
+    // Quiz déjà généré : on ne redirige plus aveuglément dessus. Le moniteur doit
+    // pouvoir revenir ici pour changer de registre (enfants / adultes) ou de thème —
+    // le lancement précédent le prive sinon de tout retour en arrière. On ne saute
+    // directement au jeu que si un résultat a déjà été enregistré : rejouer serait
+    // alors ambigu (nouveau quiz ou reprise ?), donc on laisse voir le score existant.
     const existingQuiz = await getStageQuiz(id);
-    if (existingQuiz?.game_id) {
+    if (existingQuiz?.game_id && existingQuiz.completed_at) {
         redirect(`/jeux/${existingQuiz.game_id}`);
     }
 
@@ -30,7 +34,11 @@ export default async function StageQuizPage({ params }: { params: Promise<{ id: 
                 </div>
             </header>
 
-            <QuizLaunchClient stageId={id} stageTitle={stage.title} />
+            <QuizLaunchClient
+                stageId={id}
+                stageTitle={stage.title}
+                existingGameId={existingQuiz?.game_id ?? null}
+            />
         </div>
     );
 }

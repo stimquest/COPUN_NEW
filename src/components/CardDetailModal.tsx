@@ -187,6 +187,46 @@ export default function CardDetailModal({ isOpen, onClose, content }: CardDetail
                                         </div>
                                     )}
 
+                                    {/* Comment en parler aux enfants — le besoin n°1 remonté par les
+                                        moniteurs : ils savent quoi savoir, pas quoi dire. Placé avant le
+                                        conseil d'animation car c'est ce qu'ils viennent chercher. */}
+                                    {content.accroche && (
+                                        <div className="bg-amber-50 rounded-2xl p-6 border border-amber-200 space-y-4">
+                                            <div className="flex items-center gap-2">
+                                                <span className="material-symbols-outlined text-amber-600">record_voice_over</span>
+                                                <h3 className="text-xs font-black text-amber-900 uppercase tracking-widest">Comment en parler aux enfants</h3>
+                                            </div>
+
+                                            <div>
+                                                <span className="text-[10px] font-black text-amber-700/70 uppercase tracking-widest block mb-1">On lance comme ça</span>
+                                                <p className="text-base font-bold text-amber-950 leading-relaxed italic">
+                                                    «&nbsp;{content.accroche}&nbsp;»
+                                                </p>
+                                            </div>
+
+                                            {content.a_observer && (
+                                                <div>
+                                                    <span className="text-[10px] font-black text-amber-700/70 uppercase tracking-widest block mb-1">À leur faire observer</span>
+                                                    <p className="text-sm font-medium text-amber-900 leading-relaxed">{content.a_observer}</p>
+                                                </div>
+                                            )}
+
+                                            {content.a_retenir && (
+                                                <div>
+                                                    <span className="text-[10px] font-black text-amber-700/70 uppercase tracking-widest block mb-1">Ce qu&apos;ils doivent retenir</span>
+                                                    <p className="text-sm font-bold text-amber-950 leading-relaxed">{content.a_retenir}</p>
+                                                </div>
+                                            )}
+
+                                            {content.erreur_frequente && (
+                                                <div className="pt-3 border-t border-amber-200">
+                                                    <span className="text-[10px] font-black text-amber-700/70 uppercase tracking-widest block mb-1">L&apos;erreur classique à corriger</span>
+                                                    <p className="text-sm font-medium text-amber-900 leading-relaxed">{content.erreur_frequente}</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
                                     {content.tip && (
                                         <div className="bg-indigo-50 rounded-2xl p-6 border border-indigo-100">
                                             <div className="flex items-center gap-2 mb-3">

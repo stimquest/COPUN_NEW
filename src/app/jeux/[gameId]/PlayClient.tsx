@@ -213,12 +213,24 @@ export default function PlayClient({ game }: { game: Game }) {
         <div className="min-h-screen bg-slate-50 flex flex-col">
             {/* Header */}
             <header className="bg-white border-b border-slate-200 px-4 py-4">
-                <div className="max-w-3xl mx-auto flex items-center justify-between">
-                    <div>
-                        <h1 className="text-lg font-bold text-slate-900">{game.title}</h1>
+                <div className="max-w-3xl mx-auto flex items-center justify-between gap-3">
+                    {/* Retour vers le choix du registre (enfants / adultes) et des réglages
+                        du quiz — sans lui, un quiz déjà lancé était un cul-de-sac : rien ne
+                        permettait de changer de public une fois arrivé ici. */}
+                    {game.stage_id && game.game_data.leGrandQuizz && (
+                        <button
+                            onClick={() => router.push(`/stages/${game.stage_id}/quiz`)}
+                            aria-label="Changer les réglages du quiz"
+                            className="size-9 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 shrink-0 transition-colors"
+                        >
+                            <span className="material-symbols-outlined text-[20px]">arrow_back</span>
+                        </button>
+                    )}
+                    <div className="min-w-0 flex-1">
+                        <h1 className="text-lg font-bold text-slate-900 truncate">{game.title}</h1>
                         <p className="text-sm text-slate-500">{currentCard?.sectionTitle}</p>
                     </div>
-                    <div className="text-right">
+                    <div className="text-right shrink-0">
                         <p className="text-2xl font-black text-indigo-600">{currentIndex + 1}/{totalCards}</p>
                         <p className="text-sm text-slate-500">Score: {score}</p>
                     </div>

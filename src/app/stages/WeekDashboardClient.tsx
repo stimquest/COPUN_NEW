@@ -4,22 +4,22 @@ import { useState, useRef, useEffect, useTransition } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
-import { WeekObservation, PedagogicalAction, PedagogicalContent, StageObjectiveExecutionStatus, StageObjectiveImpactLevel, ObjectiveReviewState, ObservationType } from '@/types';
-import { THEMATIC_LABELS, ThematicTag, CoeffType, MeteoType } from '@/data/seasonal-context';
+import { WeekObservation, PedagogicalAction, PedagogicalContent, ObservationType } from '@/types';
+import { StagePreparation } from '@/actions/preparation-actions';
+import ProgrammeCondense from '@/components/ProgrammeCondense';
+import { THEMATIC_LABELS, ThematicTag } from '@/data/seasonal-context';
 import { DEFAULT_WASTE_TYPES } from '@/data/littoral-species';
 import { OBSERVATION_TYPES, SPECIES_CATEGORY_LABELS, SPECIES_CATEGORY_ORDER } from '@/data/observations';
 import { PILLARS } from '@/data/etages';
-import { OBJECTIFS, ObjectifId, extractIntention, extractCoeff, extractMeteo, encodeConditions, stripIntention } from '@/data/objectifs';
 import { parseStageDateRange } from '@/lib/stage-dates';
 import { SPORT_FEATURES_ENABLED } from '@/lib/feature-flags';
 import { addObservation, deleteObservation } from '@/actions/observation-actions';
-import { saveObjectiveStatus, saveObjectiveImpact, clearObjectiveStatus, updateStagePool, updateStageConditions } from '@/actions/stage-actions';
+import { saveObjectiveStatus, saveObjectiveImpact, clearObjectiveStatus, updateStagePool } from '@/actions/stage-actions';
 import { updateStageExploitStatus, uploadDefiPhoto } from '@/actions/defi-actions';
 import FilRougeForm from '@/components/defis/FilRougeForm';
 import { DeleteStageButton } from '@/components/DeleteStageButton';
 import CardDetailModal from '@/components/CardDetailModal';
 import { HelpGuideModal } from '@/components/HelpGuideModal';
-import { ImpactToggle } from '@/components/StageObjectiveReviewList';
 import { PointsGainedBadge, usePointsGainedBadge } from '@/components/PointsGainedBadge';
 import { compressImage } from '@/lib/image-compression';
 import { getStageObjectiveImpactOptions, getStageObjectiveReasonOptions } from '@/lib/stage-objective-review';
@@ -249,18 +249,6 @@ const DIM_COLORS: Record<'C' | 'O' | 'P', { bg: string; text: string; border: st
     P: { bg: 'bg-emerald-500', text: 'text-emerald-700', border: 'border-emerald-200', label: 'Protéger' },
 };
 
-const COEFF_LABELS: Record<string, { label: string; icon: string }> = {
-    morte_eau: { label: 'Morte-eau', icon: 'water' },
-    entre_deux: { label: 'Entre-deux', icon: 'waves' },
-    vive_eau: { label: 'Vive-eau', icon: 'tsunami' },
-};
-const METEO_LABELS: Record<string, { label: string; icon: string }> = {
-    beau_fixe: { label: 'Beau fixe', icon: 'wb_sunny' },
-    vent: { label: 'Venteux', icon: 'air' },
-    instable: { label: 'Mitigé', icon: 'cloud' },
-    tempete: { label: 'Agité', icon: 'thunderstorm' },
-};
-
 // Thématique COP'UN déduite automatiquement du type d'observation — le moniteur n'a pas
 // à savoir classer son retour dans le référentiel pédagogique, on le fait pour lui.
 const OBSERVATION_TYPE_TO_THEMATIC: Record<ObservationType, ThematicTag | null> = {
@@ -277,14 +265,6 @@ const PEDAGOGICAL_ACTIONS: { value: PedagogicalAction; label: string; icon: stri
     { value: 'montrer',           label: 'Montrer',            icon: 'visibility' },
     { value: 'questionner',       label: 'Questionner',        icon: 'help' },
     { value: 'laisser_decouvrir', label: 'Laisser découvrir',  icon: 'explore' },
-];
-
-// "Non abordé" n'a de sens qu'en fin de semaine (voir bilan) — sur l'accueil, pendant
-// la semaine, un objectif pas encore statué n'est pas "non abordé", juste pas encore
-// fait. On ne propose donc ici que le mémo à chaud, à poser juste après l'activité.
-const EXECUTION_OPTIONS: { value: StageObjectiveExecutionStatus; label: string; icon: string; active: string }[] = [
-    { value: 'partial',  label: 'Effleuré',   icon: 'timelapse',      active: 'bg-amber-100 text-amber-700 border-amber-300' },
-    { value: 'done',     label: 'Travaillé',  icon: 'check_circle',   active: 'bg-emerald-100 text-emerald-700 border-emerald-300' },
 ];
 
 // Format attendu par <input type="datetime-local"> : "YYYY-MM-DDTHH:mm", en heure locale.
@@ -398,252 +378,6 @@ function SportObjectivesPicker({
     );
 }
 
-// ── Accordéon objectif ────────────────────────────────────────────────────────
-
-function ObjectiveRow({
-    card,
-    review,
-    stageId,
-    onStatusChange,
-    onImpactChange,
-    onOpenDetail,
-}: {
-    card: PedagogicalContent;
-    review: ObjectiveReviewState | null;
-    stageId: string;
-    onStatusChange: (cardId: string, s: StageObjectiveExecutionStatus | null) => void;
-    onImpactChange: (cardId: string, impactLevel: StageObjectiveImpactLevel | null, reasons: string[]) => void;
-    onOpenDetail: (card: PedagogicalContent) => void;
-}) {
-    const [open, setOpen] = useState(false);
-    const [saving, setSaving] = useState(false);
-    const status = review?.status ?? null;
-    // Les fiches sportives du moniteur ont une dimension COP'UN par défaut en base :
-    // on les distingue par l'indigo plutôt que par la couleur (trompeuse) du pilier.
-    const isSport = card.source === 'custom';
-    const pillar = isSport ? null : PILLARS.find(p => p.id === card.dimension) ?? null;
-    const dotClass = isSport ? 'bg-indigo-500' : (pillar?.bg ?? 'bg-slate-300');
-
-    // Restaure l'état complet d'avant une sauvegarde échouée — sur le terrain (réseau
-    // capricieux en mer), un choix affiché mais pas enregistré serait découvert trop
-    // tard, au bilan. On revient en arrière ET on prévient.
-    const restoreReview = (prev: ObjectiveReviewState | null) => {
-        onStatusChange(card.id, prev?.status ?? null);
-        if (prev) onImpactChange(card.id, prev.impactLevel, prev.reasons);
-    };
-
-    const SAVE_ERROR_MSG = "Échec de l'enregistrement — vérifie ta connexion et réessaie.";
-
-    const handleStatus = async (val: StageObjectiveExecutionStatus) => {
-        if (saving) return;
-        setSaving(true);
-        const prev = review;
-        if (status === val) {
-            // Reclic sur le statut déjà actif : retour à l'état neutre (efface aussi
-            // l'impact et les raisons, qui n'ont plus de sens sans statut).
-            onStatusChange(card.id, null);
-            const res = await clearObjectiveStatus(stageId, card.id);
-            if (!res.success) { restoreReview(prev); alert(SAVE_ERROR_MSG); }
-        } else {
-            onStatusChange(card.id, val);
-            const res = await saveObjectiveStatus(stageId, card.id, val);
-            if (!res.success) { restoreReview(prev); alert(SAVE_ERROR_MSG); }
-        }
-        setSaving(false);
-    };
-
-    const handleImpact = async (level: StageObjectiveImpactLevel | null) => {
-        const prev = review;
-        // Les raisons cochées appartenaient au niveau précédent — elles n'ont plus de
-        // sens si le niveau change, on repart à zéro.
-        onImpactChange(card.id, level, []);
-        const res = await saveObjectiveImpact(stageId, card.id, level, []);
-        if (!res.success) { restoreReview(prev); alert(SAVE_ERROR_MSG); }
-    };
-
-    const toggleReason = async (reason: string) => {
-        const prev = review;
-        const current = review?.reasons ?? [];
-        const next = current.includes(reason) ? current.filter(r => r !== reason) : [...current, reason];
-        onImpactChange(card.id, review?.impactLevel ?? null, next);
-        const res = await saveObjectiveImpact(stageId, card.id, review?.impactLevel ?? null, next);
-        if (!res.success) { restoreReview(prev); alert(SAVE_ERROR_MSG); }
-    };
-
-    const statusMeta = status ? EXECUTION_OPTIONS.find(o => o.value === status) : null;
-    const impactOptions = getStageObjectiveImpactOptions(status);
-    const reasonOptions = getStageObjectiveReasonOptions(status, review?.impactLevel ?? null);
-
-    return (
-        <div
-            className={clsx(
-                "rounded-2xl overflow-hidden transition-all shadow-sm shadow-slate-200/50",
-                status === 'done' ? "bg-emerald-50" :
-                status === 'partial' ? "bg-amber-50" :
-                status === 'not_done' ? "bg-white opacity-60" :
-                "bg-white"
-            )}>
-            {/* Header ligne */}
-            <div className="w-full flex items-center gap-1 pr-2">
-                <button
-                    onClick={() => setOpen(o => !o)}
-                    className="flex-1 flex items-center gap-3 pl-4 py-3 text-left min-w-0"
-                >
-                    <div className={clsx("size-2 rounded-full shrink-0", dotClass)} />
-                    <span className={clsx(
-                        "flex-1 text-sm font-semibold leading-snug",
-                        status === 'not_done' ? "line-through text-slate-400" : "text-slate-800"
-                    )}>
-                        {card.question}
-                    </span>
-                </button>
-                <div className="flex items-center gap-1 shrink-0">
-                    {statusMeta ? (
-                        <span className={clsx(
-                            "text-[10px] font-black px-2 py-0.5 rounded-full border",
-                            statusMeta.active
-                        )}>
-                            {statusMeta.label}
-                        </span>
-                    ) : status === 'not_done' && (
-                        // Statut posé depuis le bilan d'une clôture précédente (semaine rouverte) —
-                        // pas de bouton pour le fixer ici, juste un rappel visuel neutre.
-                        <span className="text-[10px] font-black px-2 py-0.5 rounded-full border bg-slate-100 text-slate-500 border-slate-200">
-                            Non abordé
-                        </span>
-                    )}
-                    {/* Pense-bête : ouvre la fiche complète (objectif détaillé, conseil, fiches mémo liées) */}
-                    <button
-                        onClick={() => onOpenDetail(card)}
-                        className="size-7 rounded-full flex items-center justify-center text-slate-300 hover:text-indigo-500 hover:bg-indigo-50 transition-colors"
-                        aria-label="Voir la fiche détaillée"
-                    >
-                        <span className="material-symbols-outlined text-[17px]">menu_book</span>
-                    </button>
-                    <button onClick={() => setOpen(o => !o)} className="size-7 flex items-center justify-center">
-                        <span className={clsx(
-                            "material-symbols-outlined text-slate-300 text-base transition-transform duration-200",
-                            open && "rotate-180"
-                        )}>
-                            expand_more
-                        </span>
-                    </button>
-                </div>
-            </div>
-
-            {/* Corps accordéon */}
-            <AnimatePresence initial={false}>
-                {open && (
-                    <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className="overflow-hidden"
-                    >
-                        <div className="px-4 pb-4 space-y-3 border-t border-slate-100 pt-3">
-                            {/* Objectif pédagogique — juste de quoi statuer vite ; le contenu détaillé
-                                (explication, tags, fiches mémo) vit dans le modal, pas ici */}
-                            <p className="text-xs text-slate-500 leading-relaxed">{card.objectif}</p>
-
-                            {/* Tip si présent */}
-                            {card.tip && (
-                                <div className="flex items-start gap-2 rounded-xl bg-amber-50 border border-amber-100 px-3 py-2.5">
-                                    <span className="material-symbols-outlined text-amber-500 text-base shrink-0 mt-0.5">lightbulb</span>
-                                    <p className="text-xs text-amber-800 leading-relaxed">{card.tip}</p>
-                                </div>
-                            )}
-
-                            {/* Statut — saisi à chaud, le bilan de fin de semaine ne fait que
-                                reprendre ces valeurs (sauf "non abordé", qui n'a de sens qu'a posteriori) */}
-                            <div>
-                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Comment ça s&apos;est passé ?</p>
-                                <div className="flex gap-2">
-                                    {EXECUTION_OPTIONS.map(opt => (
-                                        <button
-                                            key={opt.value}
-                                            onClick={() => handleStatus(opt.value)}
-                                            disabled={saving}
-                                            className={clsx(
-                                                "flex-1 flex flex-col items-center gap-1 py-2.5 px-1 rounded-xl border-2 text-[10px] font-black uppercase tracking-wider transition-all active:scale-95",
-                                                status === opt.value
-                                                    ? opt.active + " border-current"
-                                                    : "bg-white border-slate-100 text-slate-400 hover:border-slate-200"
-                                            )}
-                                        >
-                                            <span className="material-symbols-outlined text-base">{opt.icon}</span>
-                                            {opt.label}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Impact : dès qu'un statut est choisi, on demande directement le
-                                ressenit à chaud plutôt que d'attendre le bilan de fin de semaine */}
-                            {status && status !== 'not_done' && (
-                                <ImpactToggle
-                                    options={impactOptions}
-                                    value={review?.impactLevel ?? null}
-                                    onChange={handleImpact}
-                                />
-                            )}
-
-                            {/* Raisons à cocher, propres au statut + niveau choisis */}
-                            {reasonOptions.length > 0 && (
-                                <div>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5">
-                                        Pourquoi ce niveau ?
-                                    </p>
-                                    <div className="flex flex-wrap gap-1.5">
-                                        {reasonOptions.map(reason => {
-                                            const selected = (review?.reasons ?? []).includes(reason);
-                                            return (
-                                                <button
-                                                    key={reason}
-                                                    type="button"
-                                                    onClick={() => toggleReason(reason)}
-                                                    className={clsx(
-                                                        'flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-semibold text-left transition active:scale-95',
-                                                        selected
-                                                            ? 'bg-emerald-50 border-emerald-300 text-emerald-700'
-                                                            : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'
-                                                    )}
-                                                >
-                                                    <span className={clsx(
-                                                        'size-3.5 rounded border shrink-0 flex items-center justify-center',
-                                                        selected ? 'bg-emerald-500 border-emerald-500' : 'border-slate-300'
-                                                    )}>
-                                                        {selected && <span className="material-symbols-outlined text-white text-[10px]">check</span>}
-                                                    </span>
-                                                    {reason}
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Fermeture depuis le bas de la carte : après avoir coché ses
-                                raisons le pouce est ici, pas sur l'en-tête tout en haut —
-                                et le libellé confirme au passage que c'est enregistré. */}
-                            {status && (
-                                <button
-                                    type="button"
-                                    onClick={() => setOpen(false)}
-                                    className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-slate-900 text-white text-xs font-black py-2.5 active:scale-95 transition"
-                                >
-                                    <span className="material-symbols-outlined text-[15px]">check</span>
-                                    C&apos;est noté
-                                </button>
-                            )}
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-        </div>
-    );
-}
-
 // ── Composant principal ────────────────────────────────────────────────────────
 
 type Props = {
@@ -653,7 +387,8 @@ type Props = {
     objectives: PedagogicalContent[];
     technicalObjectives: PedagogicalContent[];
     sportFiches: PedagogicalContent[];
-    initialStatuses: Record<string, ObjectiveReviewState>;
+    /** Programme condensé : ce que le moniteur a préparé, lu en lecture depuis stage_preparations. */
+    preparations: Record<string, StagePreparation>;
     initialObservations: WeekObservation[];
     initialExploits: StageExploit[];
     clubObservationTargets: ObservationTarget[];
@@ -662,23 +397,20 @@ type Props = {
     seasonGradient: string;
     seasonIcon: string;
     contentCount: number;
-    validatedCount: number;
     archivedStages: { id: string; title: string; dates: string }[];
     upcomingStages: { id: string; title: string; dates: string }[];
     suggestedThematics: string[];
     quizDone: boolean;
     totalPoints: number;
-    weekPoints: number;
 };
 
 export function WeekDashboardClient({
     stageId, stageName, stageDates, objectives, technicalObjectives, sportFiches,
-    initialStatuses, initialObservations, initialExploits, clubObservationTargets,
+    preparations, initialObservations, initialExploits, clubObservationTargets,
     greeting, firstName, seasonGradient, seasonIcon,
-    contentCount, validatedCount: initialValidatedCount, archivedStages, upcomingStages,
-    suggestedThematics, quizDone, totalPoints, weekPoints,
+    contentCount, archivedStages, upcomingStages,
+    suggestedThematics, quizDone, totalPoints,
 }: Props) {
-    const [reviews, setReviews] = useState<Record<string, ObjectiveReviewState>>(initialStatuses);
     const [technicalObjectiveList, setTechnicalObjectiveList] = useState<PedagogicalContent[]>(technicalObjectives);
     const [showSportPicker, setShowSportPicker] = useState(false);
     const [detailCard, setDetailCard] = useState<PedagogicalContent | null>(null);
@@ -707,69 +439,10 @@ export function WeekDashboardClient({
         if (showAddObs) setObsDate(prev => prev || toDatetimeLocal(new Date()));
     }, [showAddObs]);
 
-    const handleStatusChange = (cardId: string, s: StageObjectiveExecutionStatus | null) => {
-        setReviews(prev => {
-            if (s === null) {
-                const next = { ...prev };
-                delete next[cardId];
-                return next;
-            }
-            return { ...prev, [cardId]: { status: s, impactLevel: null, reasons: [] } };
-        });
-    };
+    // Sujets dont l'accroche est choisie : c'est le signal "prêt à raconter", au même
+    // sens que sur l'écran de préparation — pas un statut d'exécution après coup.
+    const validatedCount = objectives.filter(o => preparations[o.id]?.accroche_choisie).length;
 
-    const handleImpactChange = (cardId: string, impactLevel: StageObjectiveImpactLevel | null, reasons: string[]) => {
-        setReviews(prev => {
-            const current = prev[cardId];
-            if (!current) return prev;
-            return { ...prev, [cardId]: { ...current, impactLevel, reasons } };
-        });
-    };
-
-    // Compte uniquement les objectifs environnementaux (pas les fiches sportives) pour le cockpit
-    const envObjectiveIds = new Set(objectives.map(o => o.id));
-    const validatedCount = Object.entries(reviews)
-        .filter(([id, r]) => envObjectiveIds.has(id) && (r.status === 'done' || r.status === 'partial')).length;
-
-    // Conditions de la semaine, décodées depuis suggested_thematics — en state local
-    // pour refléter immédiatement une modification depuis le panneau d'édition rapide
-    // (la météo tourne souvent en cours de semaine, pas question de re-traverser tout
-    // le formulaire de création pour changer une pastille).
-    const [weekConditions, setWeekConditions] = useState<{ intention: ObjectifId | null; coeff: CoeffType | null; meteo: MeteoType | null }>(() => ({
-        intention: extractIntention(suggestedThematics),
-        coeff: extractCoeff(suggestedThematics),
-        meteo: extractMeteo(suggestedThematics),
-    }));
-    const [showConditionsSheet, setShowConditionsSheet] = useState(false);
-    const [condDraft, setCondDraft] = useState(weekConditions);
-    const [savingConditions, setSavingConditions] = useState(false);
-
-    const weekIntention = weekConditions.intention ? OBJECTIFS.find(o => o.id === weekConditions.intention) ?? null : null;
-    const weekCoeff = weekConditions.coeff ? COEFF_LABELS[weekConditions.coeff] ?? null : null;
-    const weekMeteo = weekConditions.meteo ? METEO_LABELS[weekConditions.meteo] ?? null : null;
-
-    const openConditionsSheet = () => {
-        setCondDraft(weekConditions);
-        setShowConditionsSheet(true);
-    };
-
-    const handleSaveConditions = async () => {
-        setSavingConditions(true);
-        // stripIntention retire intention + coeff + météo : on repart des thématiques
-        // pures puis on ré-encode les nouvelles conditions choisies.
-        const res = await updateStageConditions(
-            stageId,
-            [...stripIntention(suggestedThematics), ...encodeConditions(condDraft.coeff, condDraft.meteo)],
-            condDraft.intention,
-        );
-        setSavingConditions(false);
-        if (res.success) {
-            setWeekConditions(condDraft);
-            setShowConditionsSheet(false);
-        } else {
-            alert('Erreur : ' + res.error);
-        }
-    };
     const defisDone = initialExploits.filter(e => e.status === 'complete').length;
     // Position dans la semaine : "Jour 2/5" si aujourd'hui est dans l'intervalle du stage.
     const now = new Date();
@@ -800,15 +473,6 @@ export function WeekDashboardClient({
     // Rappel du défi de la semaine : libellé si unique, fraction sinon.
     const defiSingle = initialExploits.length === 1 ? initialExploits[0] : null;
     const allDefisDone = initialExploits.length > 0 && defisDone === initialExploits.length;
-
-    // Potentiel de points restant sur la semaine : défis non validés + quiz (≈10 pts,
-    // 5 questions × 2) + retours terrain (1 pt chacun, plafonnés à 3 par semaine).
-    const pendingDefisPts = initialExploits
-        .filter(e => e.status !== 'complete')
-        .reduce((sum, e) => sum + (e.defis.points || 2), 0);
-    const potentialPoints = pendingDefisPts
-        + (quizDone ? 0 : 10)
-        + Math.max(0, 3 - Math.min(observations.length, 3));
 
     const resetObsForm = () => {
         setObsText('');
@@ -913,128 +577,102 @@ export function WeekDashboardClient({
                         <p className="text-lg font-black text-white leading-tight">{stageName}</p>
                         <p className="text-xs text-white/50 mt-0.5">{stageDates}</p>
 
-                        {/* Conditions de la semaine — libellés complets, cliquables pour les
-                            modifier via le panneau rapide (pas le formulaire complet) */}
-                        {!(weekCoeff || weekMeteo || weekIntention) && (
-                            <button type="button" onClick={openConditionsSheet} className="mt-2.5 inline-flex items-center gap-1 text-[10px] font-bold text-white/60 bg-white/10 px-2 py-1 rounded-full active:scale-95 transition">
-                                <span className="material-symbols-outlined text-[12px]">add</span>
-                                Définir les conditions
-                            </button>
-                        )}
-                        {(weekCoeff || weekMeteo || weekIntention) && (
-                            <button type="button" onClick={openConditionsSheet} className="mt-2.5 flex flex-wrap items-center gap-1.5 text-left">
-                                {weekIntention && (
-                                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-white bg-white/20 px-2 py-1 rounded-full">
-                                        <span className="material-symbols-outlined text-[12px]">{weekIntention.icon}</span>
-                                        {weekIntention.label}
-                                    </span>
+                        {/* Une seule carte : action du jour (préparer / quiz / bilan) en tête,
+                            puis Programme et Défi en lignes fines juste en dessous si présents.
+                            Avant, ces trois blocs étaient des cartes/pastilles séparées — sur
+                            une semaine sans contenu ça laissait un gros bouton blanc isolé. */}
+                        {(contentCount > 0 || initialExploits.length > 0) && (
+                            <div className="mt-3.5 bg-white/80 backdrop-blur-sm rounded-xl shadow-sm overflow-hidden divide-y divide-slate-900/5">
+                                {/* Préparer : l'app ne suit pas le moniteur sur l'eau (pas de
+                                    téléphone en séance), son travail est donc de lui mettre le
+                                    discours en tête avant. Visible tant que la semaine n'est pas
+                                    en phase de clôture. */}
+                                {contentCount > 0 && todayCard?.kind !== 'quiz' && todayCard?.kind !== 'bilan' && (
+                                    <Link
+                                        href={`/stages/${stageId}/preparer`}
+                                        className="flex items-center gap-3 px-3.5 py-3 active:bg-slate-900/5 transition"
+                                    >
+                                        <span className="size-9 rounded-full bg-violet-600 text-white flex items-center justify-center shrink-0">
+                                            <span className="material-symbols-outlined text-[18px]">psychology</span>
+                                        </span>
+                                        <span className="flex-1 min-w-0">
+                                            <span className="block text-[9px] font-black uppercase tracking-widest text-slate-400">Avant d&apos;aller sur l&apos;eau</span>
+                                            <span className="block text-sm font-black text-slate-900 leading-snug">Préparer le fil de ma semaine</span>
+                                        </span>
+                                        <span className="material-symbols-outlined text-slate-300 shrink-0">arrow_forward</span>
+                                    </Link>
                                 )}
-                                {weekCoeff && (
-                                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-white/80 bg-white/10 px-2 py-1 rounded-full">
-                                        <span className="material-symbols-outlined text-[12px]">{weekCoeff.icon}</span>
-                                        {weekCoeff.label}
-                                    </span>
-                                )}
-                                {weekMeteo && (
-                                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-white/80 bg-white/10 px-2 py-1 rounded-full">
-                                        <span className="material-symbols-outlined text-[12px]">{weekMeteo.icon}</span>
-                                        {weekMeteo.label}
-                                    </span>
-                                )}
-                            </button>
-                        )}
 
-                        {/* Fin de semaine : rappel quiz puis bilan — rien le reste du temps */}
-                        {todayCard?.kind === 'quiz' && (
-                            <Link
-                                href={`/stages/${stageId}/quiz`}
-                                className="mt-3.5 flex items-center gap-3 bg-white rounded-xl px-3.5 py-3 shadow-sm active:scale-[0.98] transition"
-                            >
-                                <span className="size-9 rounded-full bg-violet-600 text-white flex items-center justify-center shrink-0">
-                                    <span className="material-symbols-outlined text-[18px]">quiz</span>
-                                </span>
-                                <span className="flex-1 min-w-0">
-                                    <span className="block text-[9px] font-black uppercase tracking-widest text-slate-400">Fin de semaine</span>
-                                    <span className="block text-sm font-black text-slate-900 leading-snug">Fais le quiz avec ton groupe</span>
-                                </span>
-                                <span className="material-symbols-outlined text-slate-300 shrink-0">arrow_forward</span>
-                            </Link>
-                        )}
-                        {todayCard?.kind === 'bilan' && (
-                            <Link
-                                href={`/stages/${stageId}/bilan`}
-                                className="mt-3.5 flex items-center gap-3 bg-white rounded-xl px-3.5 py-3 shadow-sm active:scale-[0.98] transition"
-                            >
-                                <span className="size-9 rounded-full bg-slate-900 text-white flex items-center justify-center shrink-0">
-                                    <span className="material-symbols-outlined text-[18px]">article</span>
-                                </span>
-                                <span className="flex-1 min-w-0">
-                                    <span className="block text-[9px] font-black uppercase tracking-widest text-slate-400">Fin de semaine</span>
-                                    <span className="block text-sm font-black text-slate-900 leading-snug">Fais le bilan de ta semaine</span>
-                                </span>
-                                <span className="material-symbols-outlined text-slate-300 shrink-0">arrow_forward</span>
-                            </Link>
-                        )}
+                                {/* Fin de semaine : rappel quiz puis bilan — rien le reste du temps */}
+                                {todayCard?.kind === 'quiz' && (
+                                    <Link
+                                        href={`/stages/${stageId}/quiz`}
+                                        className="flex items-center gap-3 px-3.5 py-3 active:bg-slate-900/5 transition"
+                                    >
+                                        <span className="size-9 rounded-full bg-violet-600 text-white flex items-center justify-center shrink-0">
+                                            <span className="material-symbols-outlined text-[18px]">quiz</span>
+                                        </span>
+                                        <span className="flex-1 min-w-0">
+                                            <span className="block text-[9px] font-black uppercase tracking-widest text-slate-400">Fin de semaine</span>
+                                            <span className="block text-sm font-black text-slate-900 leading-snug">Fais le quiz avec ton groupe</span>
+                                        </span>
+                                        <span className="material-symbols-outlined text-slate-300 shrink-0">arrow_forward</span>
+                                    </Link>
+                                )}
+                                {todayCard?.kind === 'bilan' && (
+                                    <Link
+                                        href={`/stages/${stageId}/bilan`}
+                                        className="flex items-center gap-3 px-3.5 py-3 active:bg-slate-900/5 transition"
+                                    >
+                                        <span className="size-9 rounded-full bg-slate-900 text-white flex items-center justify-center shrink-0">
+                                            <span className="material-symbols-outlined text-[18px]">article</span>
+                                        </span>
+                                        <span className="flex-1 min-w-0">
+                                            <span className="block text-[9px] font-black uppercase tracking-widest text-slate-400">Fin de semaine</span>
+                                            <span className="block text-sm font-black text-slate-900 leading-snug">Fais le bilan de ta semaine</span>
+                                        </span>
+                                        <span className="material-symbols-outlined text-slate-300 shrink-0">arrow_forward</span>
+                                    </Link>
+                                )}
 
-                        {/* Où on en est : objectifs faits / restants (une pastille par fiche) + rappel défi */}
-                        <div className="mt-3 space-y-1.5">
-                            {contentCount > 0 && (
-                                <a href="#objectifs" className="flex items-center gap-2.5 bg-white/10 rounded-xl px-3 py-2 active:scale-[0.98] transition">
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-white/50 shrink-0">Objectifs</span>
-                                    <span className="flex items-center gap-1.5">
-                                        {objectives.map(o => {
-                                            const s = reviews[o.id]?.status;
-                                            return (
+                                {/* Où on en est : objectifs faits / restants (une pastille par fiche) + rappel défi */}
+                                {contentCount > 0 && (
+                                    <a href="#programme" className="flex items-center gap-2.5 px-3.5 py-2.5 active:bg-slate-900/5 transition">
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 shrink-0">Programme</span>
+                                        <span className="flex items-center gap-1.5">
+                                            {objectives.map(o => (
                                                 <span
                                                     key={o.id}
                                                     className={clsx(
                                                         'size-2.5 rounded-full',
-                                                        s === 'done' ? 'bg-emerald-300' :
-                                                        s === 'partial' ? 'bg-amber-300' :
-                                                        'bg-white/25'
+                                                        preparations[o.id]?.accroche_choisie ? 'bg-emerald-400' : 'bg-slate-200'
                                                     )}
                                                 />
-                                            );
-                                        })}
-                                    </span>
-                                    <span className="ml-auto text-[11px] font-black text-white shrink-0">
-                                        {validatedCount}/{contentCount}
-                                        <span className="text-white/50 font-bold"> fait{validatedCount > 1 ? 's' : ''}</span>
-                                    </span>
-                                </a>
-                            )}
-                            {initialExploits.length > 0 && (
-                                <a href="#defis" className="flex items-center gap-2.5 bg-white/10 rounded-xl px-3 py-2 active:scale-[0.98] transition">
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-white/50 shrink-0">Défi</span>
-                                    <span className="flex-1 min-w-0 text-[11px] font-bold text-white truncate">
-                                        {defiSingle ? defiSingle.defis.description : `${defisDone}/${initialExploits.length} validés`}
-                                    </span>
-                                    <span className={clsx(
-                                        'text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full shrink-0',
-                                        allDefisDone ? 'bg-emerald-400/90 text-emerald-950' : 'bg-white/20 text-white/80'
-                                    )}>
-                                        {allDefisDone ? 'Validé' : 'En cours'}
-                                    </span>
-                                </a>
-                            )}
-                        </div>
-
-                        {/* Points de la semaine : gagnés + restant à prendre (distincts du score général en haut) */}
-                        {(weekPoints > 0 || potentialPoints > 0) && (
-                            <p className="mt-2.5 flex items-center gap-1 text-[11px] font-bold text-white/70">
-                                <span className="material-symbols-outlined text-[13px] text-amber-300">emoji_events</span>
-                                {weekPoints > 0 ? (
-                                    <span>
-                                        +{weekPoints} pts gagnés
-                                        {potentialPoints > 0 && (
-                                            <span className="text-white/50"> · encore jusqu&apos;à {potentialPoints} à prendre</span>
-                                        )}
-                                    </span>
-                                ) : (
-                                    <span>Jusqu&apos;à {potentialPoints} pts à gagner cette semaine</span>
+                                            ))}
+                                        </span>
+                                        <span className="ml-auto text-[11px] font-black text-slate-900 shrink-0">
+                                            {validatedCount}/{contentCount}
+                                            <span className="text-slate-400 font-bold"> prêt{validatedCount > 1 ? 's' : ''}</span>
+                                        </span>
+                                    </a>
                                 )}
-                            </p>
+                                {initialExploits.length > 0 && (
+                                    <a href="#defis" className="flex items-center gap-2.5 px-3.5 py-2.5 active:bg-slate-900/5 transition">
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 shrink-0">Défi</span>
+                                        <span className="flex-1 min-w-0 text-[11px] font-bold text-slate-700 truncate">
+                                            {defiSingle ? defiSingle.defis.description : `${defisDone}/${initialExploits.length} validés`}
+                                        </span>
+                                        <span className={clsx(
+                                            'text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full shrink-0',
+                                            allDefisDone ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'
+                                        )}>
+                                            {allDefisDone ? 'Validé' : 'En cours'}
+                                        </span>
+                                    </a>
+                                )}
+                            </div>
                         )}
+
                     </div>
                 </div>
 
@@ -1045,59 +683,18 @@ export function WeekDashboardClient({
 
             <main className="flex-1 px-4 pt-6 space-y-9 max-w-2xl mx-auto w-full">
 
-                {/* Objectifs de la semaine */}
-                <section id="objectifs" className="scroll-mt-4">
+                {/* Programme de la semaine — condensé, en lecture. Remplace l'ancienne liste
+                    par pilier où chaque fiche portait un statut à cocher (fait / partiel /
+                    pas fait) : ce modèle traitait les fiches comme des tâches, alors
+                    qu'elles servent à construire un discours. Voir ProgrammeCondense. */}
+                <section id="programme" className="scroll-mt-4">
                     <div className="flex items-center justify-between mb-3">
-                        <h2 className="text-lg font-black tracking-tight text-slate-900">Objectifs de la semaine</h2>
+                        <h2 className="text-lg font-black tracking-tight text-slate-900">Le fil de ma semaine</h2>
                         <Link href={`/stages/${stageId}/program`} className="text-xs font-bold text-indigo-500 hover:text-indigo-700 transition-colors">
                             Modifier
                         </Link>
                     </div>
-
-                    {/* Les 3 piliers COP sont TOUJOURS affichés, même vides — c'est le cœur
-                        de la méthode (Comprendre / Observer / Protéger), un pilier sans
-                        objectif cette semaine reste visible comme repère. */}
-                    <div className="space-y-5">
-                        {PILLARS.map(pillar => {
-                            const cardsInPillar = objectives.filter(c => c.dimension === pillar.id);
-                            return (
-                                <div key={pillar.id} className="space-y-2">
-                                    <div className="flex items-center px-1">
-                                        <span className={clsx("inline-flex items-center gap-1.5 rounded-full pl-2.5 pr-3 py-1.5 text-white shadow-sm", pillar.bg)}>
-                                            <span className="material-symbols-outlined text-[15px]">{pillar.icon}</span>
-                                            <span className="text-[11px] font-black uppercase tracking-wide">{pillar.label}</span>
-                                            {cardsInPillar.length > 0 && (
-                                                <span className="text-[11px] font-bold text-white/70">{cardsInPillar.length}</span>
-                                            )}
-                                        </span>
-                                    </div>
-                                    {cardsInPillar.length === 0 ? (
-                                        <Link
-                                            href={`/stages/${stageId}/program`}
-                                            className="flex items-center gap-2 rounded-2xl border-2 border-dashed border-slate-200 bg-white/50 px-4 py-3 hover:border-slate-300 transition-colors"
-                                        >
-                                            <span className="text-xs font-semibold text-slate-400">Rien prévu sur ce pilier cette semaine</span>
-                                            <span className="ml-auto text-xs font-bold text-indigo-400">Ajouter</span>
-                                        </Link>
-                                    ) : (
-                                        <div className="space-y-2">
-                                            {cardsInPillar.map(card => (
-                                                <ObjectiveRow
-                                                    key={card.id}
-                                                    card={card}
-                                                    review={reviews[card.id] ?? null}
-                                                    stageId={stageId}
-                                                    onStatusChange={handleStatusChange}
-                                                    onImpactChange={handleImpactChange}
-                                                    onOpenDetail={setDetailCard}
-                                                />
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            );
-                        })}
-                    </div>
+                    <ProgrammeCondense stageId={stageId} contents={objectives} preparations={preparations} />
                 </section>
 
                 {/* Objectifs sportifs — fiches créées par le moniteur, indépendantes du programme environnemental COP'UN */}
@@ -1132,15 +729,15 @@ export function WeekDashboardClient({
                         ) : (
                             <div className="space-y-2">
                                 {technicalObjectiveList.map(card => (
-                                    <ObjectiveRow
+                                    <button
                                         key={card.id}
-                                        card={card}
-                                        review={reviews[card.id] ?? null}
-                                        stageId={stageId}
-                                        onStatusChange={handleStatusChange}
-                                        onImpactChange={handleImpactChange}
-                                        onOpenDetail={setDetailCard}
-                                    />
+                                        onClick={() => setDetailCard(card)}
+                                        className="w-full flex items-center gap-3 rounded-2xl bg-white border border-slate-200 px-4 py-3 text-left hover:border-indigo-300 transition-colors"
+                                    >
+                                        <span className="material-symbols-outlined text-indigo-400 text-xl shrink-0">sailing</span>
+                                        <span className="flex-1 min-w-0 text-sm font-bold text-slate-800 truncate">{card.question}</span>
+                                        <span className="material-symbols-outlined text-slate-300 text-base shrink-0">chevron_right</span>
+                                    </button>
                                 ))}
                             </div>
                         )}
@@ -1154,105 +751,6 @@ export function WeekDashboardClient({
                         onClose={() => setShowSportPicker(false)}
                         onSave={handleSaveSportSelection}
                     />
-                )}
-
-                {/* Panneau d'édition rapide des conditions — la météo tourne en cours de
-                    semaine, changer une pastille ne doit pas re-traverser la création */}
-                {showConditionsSheet && (
-                    <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center px-4 pt-4 pb-20">
-                        <div className="bg-white rounded-3xl w-full max-w-md max-h-[80vh] flex flex-col shadow-2xl">
-                            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
-                                <div>
-                                    <p className="text-sm font-black text-slate-900">Conditions de la semaine</p>
-                                    <p className="text-xs text-slate-400 mt-0.5">Intention, marée et météo</p>
-                                </div>
-                                <button onClick={() => setShowConditionsSheet(false)} className="size-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 hover:bg-slate-200 transition">
-                                    <span className="material-symbols-outlined text-[18px]">close</span>
-                                </button>
-                            </div>
-
-                            <div className="overflow-y-auto px-5 py-4 flex-1 space-y-5">
-                                <div>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Intention de la semaine</p>
-                                    <div className="flex flex-wrap gap-1.5">
-                                        {OBJECTIFS.map(o => {
-                                            const selected = condDraft.intention === o.id;
-                                            return (
-                                                <button
-                                                    key={o.id}
-                                                    type="button"
-                                                    onClick={() => setCondDraft(d => ({ ...d, intention: selected ? null : o.id }))}
-                                                    className={clsx(
-                                                        'flex items-center gap-1.5 rounded-xl px-2.5 py-2 text-[11px] font-bold text-left transition active:scale-95 border',
-                                                        selected ? 'bg-slate-900 border-slate-900 text-white' : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
-                                                    )}
-                                                >
-                                                    <span className="material-symbols-outlined text-[14px] shrink-0">{o.icon}</span>
-                                                    {o.label}
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Coefficient de marée</p>
-                                    <div className="flex flex-wrap gap-1.5">
-                                        {(Object.entries(COEFF_LABELS) as [CoeffType, { label: string; icon: string }][]).map(([id, meta]) => {
-                                            const selected = condDraft.coeff === id;
-                                            return (
-                                                <button
-                                                    key={id}
-                                                    type="button"
-                                                    onClick={() => setCondDraft(d => ({ ...d, coeff: selected ? null : id }))}
-                                                    className={clsx(
-                                                        'flex items-center gap-1.5 rounded-xl px-3 py-2 text-[11px] font-bold transition active:scale-95 border',
-                                                        selected ? 'bg-slate-900 border-slate-900 text-white' : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
-                                                    )}
-                                                >
-                                                    <span className="material-symbols-outlined text-[14px]">{meta.icon}</span>
-                                                    {meta.label}
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Tendance météo</p>
-                                    <div className="flex flex-wrap gap-1.5">
-                                        {(Object.entries(METEO_LABELS) as [MeteoType, { label: string; icon: string }][]).map(([id, meta]) => {
-                                            const selected = condDraft.meteo === id;
-                                            return (
-                                                <button
-                                                    key={id}
-                                                    type="button"
-                                                    onClick={() => setCondDraft(d => ({ ...d, meteo: selected ? null : id }))}
-                                                    className={clsx(
-                                                        'flex items-center gap-1.5 rounded-xl px-3 py-2 text-[11px] font-bold transition active:scale-95 border',
-                                                        selected ? 'bg-slate-900 border-slate-900 text-white' : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
-                                                    )}
-                                                >
-                                                    <span className="material-symbols-outlined text-[14px]">{meta.icon}</span>
-                                                    {meta.label}
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="p-4 border-t border-slate-100">
-                                <button
-                                    onClick={handleSaveConditions}
-                                    disabled={savingConditions}
-                                    className="w-full h-12 rounded-2xl bg-slate-900 text-white text-sm font-black disabled:opacity-40 transition active:scale-[0.98]"
-                                >
-                                    {savingConditions ? 'Enregistrement…' : 'Enregistrer'}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
                 )}
 
                 {/* Défis de la semaine */}

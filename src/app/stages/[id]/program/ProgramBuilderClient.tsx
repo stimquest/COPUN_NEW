@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Stage, PedagogicalContent } from '@/types';
+import { Stage, PedagogicalContent, Sujet } from '@/types';
 import { PILLARS, THEMES_BY_PILLAR } from '@/data/etages';
 import { OBJECTIFS, extractIntention, stripIntention } from '@/data/objectifs';
 import { updateStagePool } from '@/actions/stage-actions';
@@ -11,6 +11,8 @@ import { SPORT_FEATURES_ENABLED } from '@/lib/feature-flags';
 import clsx from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
 import CardDetailModal from '@/components/CardDetailModal';
+import SujetBuilder from '@/components/SujetBuilder';
+import FiltresPanel from '@/components/FiltresPanel';
 
 function IntentionBanner({ intention, stageId }: { intention: string | null | undefined; stageId: string }) {
     const obj = OBJECTIFS.find(o => o.id === intention);
@@ -53,7 +55,7 @@ function IntentionBanner({ intention, stageId }: { intention: string | null | un
     );
 }
 
-export default function ProgramBuilderClient({ stage, copunPool, customPool, usedContentIds, successIds }: { stage: Stage, copunPool: PedagogicalContent[], customPool: PedagogicalContent[], usedContentIds: string[], successIds: string[] }) {
+export default function ProgramBuilderClient({ stage, copunPool, customPool, usedContentIds, successIds, sujets = [] }: { stage: Stage, copunPool: PedagogicalContent[], customPool: PedagogicalContent[], usedContentIds: string[], successIds: string[], sujets?: Sujet[] }) {
     const fullPool = useMemo(() => [...copunPool, ...customPool], [copunPool, customPool]);
     const router = useRouter();
     // Deux modes : "Guidé" (défaut) propose une semaine composée — le contenu a été
@@ -222,14 +224,22 @@ export default function ProgramBuilderClient({ stage, copunPool, customPool, use
         return Array.from(tags).sort();
     }, [poolMatchingLevel, selectedThemes]);
 
-    const filteredTags = useMemo(() => {
-        if (!tagSearch) return availableTags;
-        return availableTags.filter(t => t.toLowerCase().includes(tagSearch.toLowerCase()));
-    }, [availableTags, tagSearch]);
-
     const programCards = useMemo(() => {
         return programIds.map(id => fullPool.find(c => c.id === id)).filter((c): c is PedagogicalContent => Boolean(c));
     }, [fullPool, programIds]);
+
+    // Filtres en panneau : la barre reste compacte, le détail s'ouvre sur demande.
+    const [showFiltres, setShowFiltres] = useState(false);
+    const activeFilterCount = selectedThemes.length + selectedTags.length;
+    const visibleCount = useMemo(
+        () => groupedCards.reduce((n, g) => n + g.cards.length, 0),
+        [groupedCards],
+    );
+    const resetFiltres = () => {
+        setSelectedThemes([]);
+        setSelectedTags([]);
+        setTagSearch('');
+    };
 
     const handleSave = async () => {
         setIsSaving(true);
@@ -590,100 +600,36 @@ export default function ProgramBuilderClient({ stage, copunPool, customPool, use
                         {/* OBJECTIF */}
                         <IntentionBanner intention={intention} stageId={stage.id} />
 
-                        {/* FILTERS */}
-                        <section className="bg-white rounded-2xl p-5 space-y-5 shadow-sm">
-                            <p className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-400">Filtres</p>
-
-                            {/* Level */}
-                            <div className="space-y-2">
-                                <div className="flex items-center gap-2">
-                                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Niveau d&apos;implication</p>
-                                    <LevelInfoButton />
-                                </div>
-                                <div className="flex bg-[#EBF0F7] p-1 rounded-xl gap-1">
-                                    {([
-                                        { lvl: 1 as const, label: 'N1', sub: 'Découverte' },
-                                        { lvl: 2 as const, label: 'N2', sub: 'Approfondissement' },
-                                        { lvl: 3 as const, label: 'N3', sub: 'Engagement' },
-                                    ]).map(({ lvl, label, sub }) => (
-                                        <button
-                                            key={lvl}
-                                            onClick={() => setSelectedLevel(lvl)}
-                                            className={clsx(
-                                                "flex-1 flex flex-col items-center py-2.5 px-1 rounded-lg transition-all",
-                                                selectedLevel === lvl ? "bg-white text-slate-900 shadow-sm" : "text-slate-400 hover:text-slate-600"
-                                            )}
-                                        >
-                                            <span className="text-[12px] font-black">{label}</span>
-                                            <span className="text-[9px] font-bold text-center leading-tight mt-0.5 opacity-70">{sub}</span>
-                                        </button>
-                                    ))}
-                                </div>
+                        {/* Barre de filtres compacte — le détail s'ouvre en panneau sur demande.
+                            Le bloc déployé en permanence forçait à régler des critères avant
+                            d'avoir vu la moindre fiche : on paramétrait à l'aveugle. */}
+                        <div className="sticky top-[68px] z-30 -mx-4 px-4 py-2 bg-[#EBF0F7]/95 backdrop-blur-sm">
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => setShowFiltres(true)}
+                                    className="flex items-center gap-2 h-10 px-4 bg-white rounded-xl shadow-sm text-xs font-black text-slate-700 active:scale-95 transition"
+                                >
+                                    <span className="material-symbols-outlined text-[17px] text-slate-400">tune</span>
+                                    Affiner
+                                    {activeFilterCount > 0 && (
+                                        <span className="size-5 rounded-full bg-slate-900 text-white text-[10px] font-black flex items-center justify-center">
+                                            {activeFilterCount}
+                                        </span>
+                                    )}
+                                </button>
+                                <p className="text-[11px] font-bold text-slate-400 flex-1 min-w-0 truncate">
+                                    {visibleCount} fiche{visibleCount > 1 ? 's' : ''} · Niveau {selectedLevel}
+                                </p>
+                                {activeFilterCount > 0 && (
+                                    <button
+                                        onClick={resetFiltres}
+                                        className="text-[11px] font-bold text-slate-400 hover:text-slate-600 shrink-0 transition"
+                                    >
+                                        Effacer
+                                    </button>
+                                )}
                             </div>
-
-                            {/* Themes */}
-                            <div className="space-y-3">
-                                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Thématiques</p>
-                                <div className="space-y-3">
-                                    {PILLARS.map(pillar => (
-                                        <div key={pillar.id} className="space-y-2">
-                                            <p className={clsx("text-[9px] font-black uppercase tracking-[0.15em]", pillar.color)}>{pillar.label}</p>
-                                            <div className="flex flex-wrap gap-1.5">
-                                                {THEMES_BY_PILLAR[pillar.id].map(theme => {
-                                                    const active = selectedThemes.includes(theme.id);
-                                                    return (
-                                                        <button key={theme.id} onClick={() => toggleTheme(theme.id)} className={clsx(
-                                                            "flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all",
-                                                            active ? `${pillar.bg} text-white` : "bg-[#EBF0F7] text-slate-500 hover:text-slate-700"
-                                                        )}>
-                                                            <span className="material-symbols-outlined text-[13px]">{theme.icon}</span>
-                                                            {theme.label}
-                                                        </button>
-                                                    );
-                                                })}
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Tags */}
-                            {availableTags.length > 0 && (
-                                <div className="space-y-2">
-                                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Mots-clés</p>
-                                    <div className="relative">
-                                        <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 text-base">search</span>
-                                        <input type="text" placeholder="Filtrer..." value={tagSearch} onChange={e => setTagSearch(e.target.value)} className="w-full pl-9 pr-4 py-2 rounded-xl bg-[#EBF0F7] text-[11px] font-bold text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300 transition-all" />
-                                    </div>
-                                    <AnimatePresence>
-                                        {selectedTags.length > 0 && (
-                                            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="flex flex-wrap gap-1.5 pt-1">
-                                                {selectedTags.map(tag => (
-                                                    <button key={tag} onClick={() => toggleTag(tag)} className="bg-slate-800 text-white pl-2.5 pr-1.5 py-0.5 rounded-lg text-[10px] font-bold uppercase flex items-center gap-1 hover:bg-red-500 transition-colors">
-                                                        {tag}<span className="material-symbols-outlined text-[12px]">close</span>
-                                                    </button>
-                                                ))}
-                                                <button onClick={() => setSelectedTags([])} className="text-[10px] font-bold text-slate-400 hover:text-slate-600 underline px-1">Effacer</button>
-                                            </motion.div>
-                                        )}
-                                    </AnimatePresence>
-                                    <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto">
-                                        {filteredTags.filter(t => !selectedTags.includes(t)).map(tag => (
-                                            <button key={tag} onClick={() => toggleTag(tag)} className="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase bg-[#EBF0F7] text-slate-500 hover:text-slate-800 hover:bg-slate-200 transition-all">
-                                                {tag}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            {SPORT_FEATURES_ENABLED && (
-                                <Link href="/fiches" className="w-full py-2.5 rounded-xl border-2 border-dashed border-slate-200 text-slate-400 font-bold text-[11px] hover:border-indigo-300 hover:text-indigo-500 transition-all flex items-center justify-center gap-2">
-                                    <span className="material-symbols-outlined text-base">sailing</span>
-                                    Créer fiche voile (dans /fiches)
-                                </Link>
-                            )}
-                        </section>
+                        </div>
 
                         {/* CARDS GROUPED BY DIMENSION */}
                         {/* SECTION LABEL — environnemental */}
@@ -853,9 +799,43 @@ export default function ProgramBuilderClient({ stage, copunPool, customPool, use
                                 })()}
                             </>
                         )}
+
+                        {/* Fabrication du sujet : le réservoir s'arrêtait à une liste de
+                            questions, il en sort maintenant une capsule à transmettre. */}
+                        {programCards.length > 0 && (
+                            <section className="pt-6 mt-2 border-t-2 border-slate-200 space-y-3">
+                                <div className="flex items-center gap-2 px-1">
+                                    <div className="size-5 rounded-md bg-violet-600 flex items-center justify-center shrink-0">
+                                        <span className="material-symbols-outlined text-white text-[11px]">auto_stories</span>
+                                    </div>
+                                    <p className="text-[10px] font-black uppercase tracking-[0.15em] text-violet-700">Mes sujets</p>
+                                </div>
+                                <SujetBuilder
+                                    stageId={stage.id}
+                                    fiches={programCards.filter(c => c.source !== 'custom')}
+                                    sujets={sujets}
+                                />
+                            </section>
+                        )}
                     </div>
                 )}
             </main>
+
+            <FiltresPanel
+                open={showFiltres}
+                onClose={() => setShowFiltres(false)}
+                selectedLevel={selectedLevel}
+                setSelectedLevel={setSelectedLevel}
+                selectedThemes={selectedThemes}
+                toggleTheme={toggleTheme}
+                availableTags={availableTags}
+                selectedTags={selectedTags}
+                toggleTag={toggleTag}
+                tagSearch={tagSearch}
+                setTagSearch={setTagSearch}
+                resultCount={visibleCount}
+                onReset={resetFiltres}
+            />
 
             {/* Toast plafond atteint */}
             <AnimatePresence>
@@ -956,86 +936,5 @@ export default function ProgramBuilderClient({ stage, copunPool, customPool, use
                 )}
             </AnimatePresence>
         </div>
-    );
-}
-
-const LEVEL_INFO = [
-    {
-        label: 'N1 — Découverte',
-        sub: 'Je prends conscience',
-        color: 'text-sky-600',
-        bg: 'bg-sky-50',
-        border: 'border-sky-100',
-        description: "Le stagiaire découvre le milieu littoral et ses enjeux. Il observe, s'interroge et commence à identifier les interactions entre activités humaines et environnement. Les fiches N1 visent l'éveil et la curiosité — pas encore d'engagement actif, mais une prise de conscience progressive.",
-    },
-    {
-        label: 'N2 — Approfondissement',
-        sub: 'J\'agis en conscience',
-        color: 'text-indigo-600',
-        bg: 'bg-indigo-50',
-        border: 'border-indigo-100',
-        description: "Le stagiaire commence à intégrer ce qu'il a observé dans ses comportements. Il adapte ses gestes, fait des choix éclairés et comprend pourquoi certaines pratiques protègent le littoral. Les fiches N2 ancrent la connaissance dans l'action quotidienne.",
-    },
-    {
-        label: 'N3 — Engagement',
-        sub: 'J\'agis de façon responsable',
-        color: 'text-emerald-600',
-        bg: 'bg-emerald-50',
-        border: 'border-emerald-100',
-        description: "Le stagiaire devient acteur de la protection du littoral. Il anticipe les impacts, partage ses connaissances et s'implique dans des démarches collectives (sciences participatives, sensibilisation). Les fiches N3 visent l'autonomie et la posture de sentinelle.",
-    },
-];
-
-function LevelInfoButton() {
-    const [open, setOpen] = useState(false);
-
-    return (
-        <>
-            <button
-                onClick={() => setOpen(true)}
-                className="size-5 rounded-full bg-slate-100 text-slate-400 hover:bg-indigo-100 hover:text-indigo-500 transition-colors flex items-center justify-center shrink-0"
-                title="En savoir plus sur les niveaux"
-            >
-                <span className="material-symbols-outlined text-[13px]">info</span>
-            </button>
-
-            <AnimatePresence>
-                {open && (
-                    <>
-                        <motion.div
-                            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                            className="fixed inset-0 bg-slate-900/50 z-50 backdrop-blur-sm"
-                            onClick={() => setOpen(false)}
-                        />
-                        <motion.div
-                            initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
-                            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-                            className="fixed bottom-0 left-0 right-0 bg-white rounded-t-[2rem] z-50 max-h-[85vh] overflow-y-auto shadow-2xl"
-                        >
-                            <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-slate-100">
-                                <div>
-                                    <h3 className="text-lg font-black text-slate-900">Niveaux d&apos;implication</h3>
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Progression COP&apos;UN</p>
-                                </div>
-                                <button onClick={() => setOpen(false)} className="size-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
-                                    <span className="material-symbols-outlined">close</span>
-                                </button>
-                            </div>
-                            <div className="px-6 py-5 space-y-4 pb-10">
-                                {LEVEL_INFO.map((lvl) => (
-                                    <div key={lvl.label} className={clsx("rounded-2xl border p-5 space-y-2", lvl.bg, lvl.border)}>
-                                        <div>
-                                            <p className={clsx("text-sm font-black", lvl.color)}>{lvl.label}</p>
-                                            <p className={clsx("text-[11px] font-bold italic", lvl.color, "opacity-70")}>{lvl.sub}</p>
-                                        </div>
-                                        <p className="text-sm text-slate-600 font-medium leading-relaxed">{lvl.description}</p>
-                                    </div>
-                                ))}
-                            </div>
-                        </motion.div>
-                    </>
-                )}
-            </AnimatePresence>
-        </>
     );
 }

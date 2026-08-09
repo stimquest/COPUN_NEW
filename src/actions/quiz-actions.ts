@@ -25,6 +25,7 @@ export async function generateStageQuiz(
     stageId: string,
     questionCount: number = 5,
     forceTheme: string | null = null,
+    audience: 'enfant' | 'adulte' = 'enfant',
 ): Promise<{ success: boolean; gameId?: string; error?: string }> {
     const supabase = await createClient();
 
@@ -76,7 +77,19 @@ export async function generateStageQuiz(
 
     const count = Math.min(questionCount, quizzCards.length);
     const shuffled = [...quizzCards].sort(() => Math.random() - 0.5).slice(0, count);
-    const quizzItems = shuffled.map(card => card.data);
+    // `data` porte la version adulte au premier niveau, `data.version_enfant` la version
+    // enfant du même sujet (même fiche, même bonne réponse, vocabulaire simplifié). On
+    // substitue ici plutôt que de complexifier QuizzComponent, qui reste ignorant du
+    // registre choisi.
+    const quizzItems = shuffled.map(card => {
+        const data = card.data as Record<string, unknown>;
+        if (audience === 'enfant' && data.version_enfant) {
+            const { version_enfant, ...adulte } = data;
+            return { ...adulte, ...(version_enfant as object) };
+        }
+        const { version_enfant: _omit, ...adulte } = data;
+        return adulte;
+    });
 
     const { data: existingQuiz } = await supabase
         .from('stage_quizzes').select('game_id').eq('stage_id', stageId).single();

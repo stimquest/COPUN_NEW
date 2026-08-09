@@ -4,47 +4,41 @@ import { notFound } from 'next/navigation';
 import { DeleteStageButton } from '@/components/DeleteStageButton';
 import { ReopenConfirmSheet } from '@/components/ReopenConfirmSheet';
 import { StageClosureReview } from '@/components/StageClosureReview';
-import { StageObjectiveReviewList } from '@/components/StageObjectiveReviewList';
 import { StageDefisReview, DefiReview } from '@/components/StageDefisReview';
 import { StageObservationsReview } from '@/components/StageObservationsReview';
-import { getStageById, getStageCockpitStats, getStageObjectiveReviewItems } from '@/services/data-service';
+import ProgrammeCondense from '@/components/ProgrammeCondense';
+import { getStageById, getStageCockpitStats, getPedagogicalPool } from '@/services/data-service';
 import { getStageExploits } from '@/actions/defi-actions';
 import { getStageQuiz } from '@/actions/quiz-actions';
+import { getStagePreparations } from '@/actions/preparation-actions';
 import { getObservationsForStage } from '@/actions/observation-actions';
-import { SPORT_FEATURES_ENABLED } from '@/lib/feature-flags';
-import { extractMeteo } from '@/data/objectifs';
+import { RESSENTI_OPTIONS, isRessentiNiveau } from '@/lib/stage-ressenti';
 import { parseStageDateRange } from '@/lib/stage-dates';
-
-const STATUS_COUNTS = (items: Awaited<ReturnType<typeof getStageObjectiveReviewItems>>) => ({
-    done:     items.filter(i => i.review?.executionStatus === 'done').length,
-    partial:  items.filter(i => i.review?.executionStatus === 'partial').length,
-    not_done: items.filter(i => i.review?.executionStatus === 'not_done').length,
-});
+import { PedagogicalContent } from '@/types';
 
 export default async function StageBilanPage({ params }: { params: Promise<{ id: string }> }) {
     noStore();
     const { id } = await params;
 
-    const [stage, stats, allObjectiveItems, defisAssigned, quizData, observations] = await Promise.all([
+    const [stage, stats, copunPool, defisAssigned, quizData, observations, preparations] = await Promise.all([
         getStageById(id),
         getStageCockpitStats(id),
-        getStageObjectiveReviewItems(id),
+        getPedagogicalPool(),
         getStageExploits(id),
         getStageQuiz(id),
         getObservationsForStage(id),
+        getStagePreparations(id),
     ]);
 
     if (!stage) return notFound();
 
-    // Fiches sportives masquées pour le moment : on les écarte du bilan (affichage ET
-    // compteurs), sinon la clôture serait bloquée par des fiches invisibles sans statut.
-    const objectiveItems = SPORT_FEATURES_ENABLED
-        ? allObjectiveItems
-        : allObjectiveItems.filter(i => i.pedagogicalContent.source !== 'custom');
+    const selectedIds: string[] = stage.selected_content ?? [];
+    const objectives = selectedIds
+        .map(cid => copunPool.find((c: PedagogicalContent) => c.id === cid))
+        .filter((c): c is PedagogicalContent => Boolean(c) && c.source !== 'custom');
 
     const isClosed = !!stage.closed_at;
 
-    const counts = STATUS_COUNTS(objectiveItems);
     const totalPts = stats?.stageTotalPoints ?? 0;
     const quizScore = stats?.quizScore ?? 0;
     const quizTotal = stats?.quizTotal ?? 0;
@@ -61,12 +55,9 @@ export default async function StageBilanPage({ params }: { params: Promise<{ id:
         total: quizData.score_total,
     } : null;
 
-    const weekMeteo = extractMeteo(stage.suggested_thematics);
-    const weatherIsBad = weekMeteo === 'instable' || weekMeteo === 'tempete';
-
     // Le bilan est accessible toute la semaine (bouton permanent sur l'accueil), mais
-    // avant le dernier jour les objectifs pas encore traités s'affichent "non abordé"
-    // à tort — on prévient plutôt que de laisser croire à un oubli ou clôturer trop tôt.
+    // avant le dernier jour le programme n'est pas encore complet — on prévient plutôt
+    // que de laisser croire à une clôture prématurée.
     let earlyWarning: string | null = null;
     if (!isClosed) {
         const range = parseStageDateRange(stage.dates, new Date());
@@ -93,6 +84,12 @@ export default async function StageBilanPage({ params }: { params: Promise<{ id:
         structured_data: e.structured_data ?? null,
         preuves_url: e.preuves_url ?? [],
     }));
+
+    // Ressenti de clôture, tel qu'enregistré par closeStage — src/lib/stage-ressenti.ts.
+    const ressenti = stage.ressenti && isRessentiNiveau(stage.ressenti.niveau)
+        ? stage.ressenti
+        : null;
+    const ressentiOption = ressenti ? RESSENTI_OPTIONS.find(o => o.value === ressenti.niveau) : null;
 
     return (
         <div className="min-h-screen bg-slate-50 pb-32">
@@ -138,11 +135,25 @@ export default async function StageBilanPage({ params }: { params: Promise<{ id:
                                 </p>
                             )}
 
+                            {/* Ressenti global, mis en avant — c'est le vrai bilan de la semaine */}
+                            {ressentiOption && (
+                                <div className="mt-4 rounded-xl bg-white/10 px-3.5 py-3 flex items-center gap-3">
+                                    <span className="material-symbols-outlined text-2xl text-white/70 shrink-0">{ressentiOption.icon}</span>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-[10px] text-white/40 font-semibold">Avez-vous pu raconter ce qui était prévu ?</p>
+                                        <p className="text-sm font-black mt-0.5">{ressentiOption.label}</p>
+                                    </div>
+                                </div>
+                            )}
+
                             {/* Stats en ligne */}
-                            <div className="mt-4 grid grid-cols-2 gap-2">
+                            <div className="mt-3 grid grid-cols-2 gap-2">
                                 <div className="rounded-xl bg-white/10 px-3 py-2.5">
-                                    <p className="text-[10px] text-white/40 font-semibold">Objectifs travaillés</p>
-                                    <p className="text-lg font-black mt-0.5">{counts.done + counts.partial}<span className="text-white/40 text-sm font-semibold">/{objectiveItems.length}</span></p>
+                                    <p className="text-[10px] text-white/40 font-semibold">Sujets préparés</p>
+                                    <p className="text-lg font-black mt-0.5">
+                                        {objectives.filter(o => preparations[o.id]?.accroche_choisie).length}
+                                        <span className="text-white/40 text-sm font-semibold">/{objectives.length}</span>
+                                    </p>
                                 </div>
                                 <div className="rounded-xl bg-white/10 px-3 py-2.5">
                                     <p className="text-[10px] text-white/40 font-semibold">Points cumulés</p>
@@ -161,13 +172,25 @@ export default async function StageBilanPage({ params }: { params: Promise<{ id:
                                     </div>
                                 )}
                             </div>
+
+                            {ressenti && ressenti.raisons.length > 0 && (
+                                <div className="mt-3 flex flex-wrap gap-1.5">
+                                    {ressenti.raisons.map((r: string) => (
+                                        <span key={r} className="text-[10px] font-semibold text-white/70 bg-white/10 px-2 py-1 rounded-full">
+                                            {r}
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
                         </section>
 
-                        {/* Objectifs */}
-                        <section>
-                            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400 mb-3">Objectifs de la semaine</p>
-                            <StageObjectiveReviewList items={objectiveItems} />
-                        </section>
+                        {/* Programme de la semaine */}
+                        {objectives.length > 0 && (
+                            <section>
+                                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400 mb-3">Ce qui a été raconté</p>
+                                <ProgrammeCondense stageId={stage.id} contents={objectives} preparations={preparations} />
+                            </section>
+                        )}
 
                         {/* Défis terrain */}
                         {defisTotal > 0 && (
@@ -231,12 +254,13 @@ export default async function StageBilanPage({ params }: { params: Promise<{ id:
                     <StageClosureReview
                         stageId={stage.id}
                         stageTitle={stage.title}
-                        objectiveItems={objectiveItems}
+                        objectives={objectives}
+                        preparations={preparations}
                         initialClosingNotes={stage.closing_notes}
+                        initialNbStagiaires={stage.nb_stagiaires}
                         defisAssigned={defiReviews}
                         observations={observations}
                         quizData={quizReviewData}
-                        weatherIsBad={weatherIsBad}
                         earlyWarning={earlyWarning}
                     />
                 )}

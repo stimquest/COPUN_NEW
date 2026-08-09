@@ -8,9 +8,16 @@ import { generateStageQuiz } from '@/actions/quiz-actions';
 type Props = {
     stageId: string;
     stageTitle: string;
+    /** Quiz déjà généré pour ce stage, pas encore joué — permet d'y revenir sans le refaire. */
+    existingGameId: string | null;
 };
 
 const QUESTION_OPTIONS = [5, 7, 10];
+
+const PUBLIC_OPTIONS = [
+    { value: 'enfant' as const, label: 'Enfants', description: 'Vocabulaire simple, posé à voix haute', icon: 'child_care' },
+    { value: 'adulte' as const, label: 'Ados / adultes', description: 'Vocabulaire technique complet', icon: 'groups' },
+];
 
 // Quiz thématiques : option secondaire, repliée par défaut. C'est le même quiz de fin
 // de semaine (un seul par stage, il remplace toute génération précédente) — seule la
@@ -24,18 +31,21 @@ const THEME_OPTIONS = [
     { value: 'Général', label: 'Général', description: 'Biodiversité, environnement, gestes…', icon: 'eco' },
 ];
 
-export default function QuizLaunchClient({ stageId, stageTitle }: Props) {
+export default function QuizLaunchClient({ stageId, stageTitle, existingGameId }: Props) {
     const router = useRouter();
     const [isPending, startTransition] = useTransition();
     const [questionCount, setQuestionCount] = useState(5);
     const [selectedTheme, setSelectedTheme] = useState('auto');
+    /** Registre de vocabulaire : les 131 fiches et les cartes quiz portent chacune une
+     *  version adulte et une version enfant depuis la correction du 2026-08-09. */
+    const [audience, setAudience] = useState<'enfant' | 'adulte'>('enfant');
     const [showThemeQuiz, setShowThemeQuiz] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     const handleLaunch = () => {
         setError(null);
         startTransition(async () => {
-            const result = await generateStageQuiz(stageId, questionCount, selectedTheme === 'auto' ? null : selectedTheme);
+            const result = await generateStageQuiz(stageId, questionCount, selectedTheme === 'auto' ? null : selectedTheme, audience);
             if (result.success && result.gameId) {
                 router.push(`/jeux/${result.gameId}`);
             } else {
@@ -59,6 +69,24 @@ export default function QuizLaunchClient({ stageId, stageTitle }: Props) {
                 </p>
             </div>
 
+            {/* Un quiz existe déjà pour ce stage, pas encore joué : proposer d'y retourner
+                plutôt que d'en imposer un nouveau ou de forcer à en relancer un. */}
+            {existingGameId && (
+                <button
+                    onClick={() => router.push(`/jeux/${existingGameId}`)}
+                    className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-white/5 border border-white/10 hover:border-white/20 text-left transition-all active:scale-[0.98]"
+                >
+                    <span className="size-9 rounded-xl bg-emerald-500/20 flex items-center justify-center shrink-0">
+                        <span className="material-symbols-outlined text-[18px] text-emerald-400">play_circle</span>
+                    </span>
+                    <div className="flex-1 min-w-0">
+                        <p className="font-black text-sm text-white">Reprendre le quiz déjà préparé</p>
+                        <p className="text-[11px] text-slate-400">Ou choisissez d&apos;autres réglages ci-dessous pour le remplacer</p>
+                    </div>
+                    <span className="material-symbols-outlined text-slate-500 shrink-0">chevron_right</span>
+                </button>
+            )}
+
             {/* Nombre de questions */}
             <section>
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">
@@ -77,6 +105,31 @@ export default function QuizLaunchClient({ stageId, stageTitle }: Props) {
                             )}
                         >
                             {n}
+                        </button>
+                    ))}
+                </div>
+            </section>
+
+            {/* Public — choisit la version du vocabulaire, pas le contenu des questions */}
+            <section>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">
+                    À qui vous posez les questions
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                    {PUBLIC_OPTIONS.map(opt => (
+                        <button
+                            key={opt.value}
+                            onClick={() => setAudience(opt.value)}
+                            className={clsx(
+                                'flex flex-col items-center gap-1.5 py-4 rounded-2xl border-2 transition-all active:scale-95',
+                                audience === opt.value
+                                    ? 'bg-violet-600/20 border-violet-500 text-white'
+                                    : 'bg-white/5 border-white/10 text-slate-400 hover:border-white/20'
+                            )}
+                        >
+                            <span className="material-symbols-outlined text-[22px]">{opt.icon}</span>
+                            <span className="font-black text-sm">{opt.label}</span>
+                            <span className="text-[10px] text-slate-500 text-center px-2 leading-snug">{opt.description}</span>
                         </button>
                     ))}
                 </div>

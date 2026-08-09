@@ -5,13 +5,13 @@ import { getObservationsForStage } from '@/actions/observation-actions';
 import { getStageExploits, getClubObservationTargets } from '@/actions/defi-actions';
 import { getUserContent } from '@/actions/content-actions';
 import { getStageQuiz, getMyTotalPoints } from '@/actions/quiz-actions';
+import { getStagePreparations } from '@/actions/preparation-actions';
 import { getPeriodForMonth } from '@/data/seasonal-context';
 import { pickCurrentStage } from '@/lib/stage-dates';
 import { WeekDashboardClient } from './WeekDashboardClient';
 import { DeleteStageButton } from '@/components/DeleteStageButton';
 import Link from 'next/link';
-import { createClient } from '@/lib/supabase/server';
-import { PedagogicalContent, StageObjectiveExecutionStatus, StageObjectiveImpactLevel, ObjectiveReviewState } from '@/types';
+import { PedagogicalContent } from '@/types';
 
 const SEASON_STYLES: Record<string, { gradient: string; icon: string }> = {
     hiver_marin:          { gradient: 'from-slate-700 to-slate-900',    icon: 'storm' },
@@ -21,32 +21,6 @@ const SEASON_STYLES: Record<string, { gradient: string; icon: string }> = {
     transition_automnale: { gradient: 'from-orange-600 to-red-800',     icon: 'filter_drama' },
     entree_hiver:         { gradient: 'from-blue-700 to-slate-800',     icon: 'water' },
 };
-
-/** Points gagnés sur cette semaine (défis, quiz, retours terrain) — sous-ensemble du score général. */
-async function getStagePointsTotal(stageId: string): Promise<number> {
-    const supabase = await createClient();
-    const { data } = await supabase
-        .from('leaderboard_points').select('points').eq('stage_id', stageId);
-    return (data ?? []).reduce((sum: number, r: { points: number }) => sum + r.points, 0);
-}
-
-async function getObjectiveStatusesForStage(stageId: string): Promise<Record<string, ObjectiveReviewState>> {
-    const supabase = await createClient();
-    const { data } = await supabase
-        .from('stage_objective_reviews')
-        .select('pedagogical_content_id, execution_status, impact_level, reasons')
-        .eq('stage_id', stageId);
-
-    const result: Record<string, ObjectiveReviewState> = {};
-    (data ?? []).forEach((r: { pedagogical_content_id: string; execution_status: string; impact_level: string | null; reasons: string[] | null }) => {
-        result[r.pedagogical_content_id] = {
-            status: r.execution_status as StageObjectiveExecutionStatus,
-            impactLevel: r.impact_level as StageObjectiveImpactLevel | null,
-            reasons: r.reasons ?? [],
-        };
-    });
-    return result;
-}
 
 export default async function StagesPage() {
     noStore();
@@ -132,20 +106,35 @@ export default async function StagesPage() {
                                 {upcomingStages.map(s => {
                                     const objectiveCount = s.selected_content?.length ?? 0;
                                     return (
-                                        <div key={s.id} className="flex items-center gap-3 bg-white rounded-2xl border border-slate-200 px-4 py-3">
-                                            <Link href={`/stages/${s.id}/program`} className="flex items-center gap-3 flex-1 min-w-0 active:scale-95 transition">
-                                                <span className="material-symbols-outlined text-slate-300 text-xl shrink-0">event</span>
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="text-sm font-bold text-slate-700 truncate">{s.title}</p>
-                                                    <p className="text-xs text-slate-400">
-                                                        {s.dates}
-                                                        {objectiveCount > 0 && (
-                                                            <span className="text-slate-300"> · {objectiveCount} objectif{objectiveCount > 1 ? 's' : ''} sélectionné{objectiveCount > 1 ? 's' : ''}</span>
-                                                        )}
-                                                    </p>
-                                                </div>
-                                            </Link>
-                                            <DeleteStageButton stageId={s.id} size="sm" />
+                                        <div key={s.id} className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+                                            <div className="flex items-center gap-3 px-4 py-3">
+                                                <Link href={`/stages/${s.id}/program`} className="flex items-center gap-3 flex-1 min-w-0 active:scale-95 transition">
+                                                    <span className="material-symbols-outlined text-slate-300 text-xl shrink-0">event</span>
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-sm font-bold text-slate-700 truncate">{s.title}</p>
+                                                        <p className="text-xs text-slate-400">
+                                                            {s.dates}
+                                                            {objectiveCount > 0 && (
+                                                                <span className="text-slate-300"> · {objectiveCount} objectif{objectiveCount > 1 ? 's' : ''} sélectionné{objectiveCount > 1 ? 's' : ''}</span>
+                                                            )}
+                                                        </p>
+                                                    </div>
+                                                </Link>
+                                                <DeleteStageButton stageId={s.id} size="sm" />
+                                            </div>
+
+                                            {/* Une semaine préparée à l'avance restait inaccessible jusqu'à son
+                                                premier jour — or c'est justement avant qu'on prépare son discours. */}
+                                            {objectiveCount > 0 && (
+                                                <Link
+                                                    href={`/stages/${s.id}/preparer`}
+                                                    className="flex items-center gap-2.5 px-4 py-2.5 bg-violet-50 border-t border-violet-100 active:scale-[0.98] transition"
+                                                >
+                                                    <span className="material-symbols-outlined text-[18px] text-violet-600 shrink-0">psychology</span>
+                                                    <span className="text-xs font-black text-violet-900 flex-1">Préparer le fil de ma semaine</span>
+                                                    <span className="material-symbols-outlined text-violet-300 text-base shrink-0">arrow_forward</span>
+                                                </Link>
+                                            )}
                                         </div>
                                     );
                                 })}
@@ -176,18 +165,16 @@ export default async function StagesPage() {
     }
 
     // Stage actif — tableau de bord principal
-    const [copunPool, observations, objectiveStatuses, assignedExploits, clubObservationTargets, sportFiches, quizData, totalPoints] = await Promise.all([
+    const [copunPool, observations, preparations, assignedExploits, clubObservationTargets, sportFiches, quizData, totalPoints] = await Promise.all([
         getPedagogicalPool(),
         getObservationsForStage(activeStage.id),
-        getObjectiveStatusesForStage(activeStage.id),
+        getStagePreparations(activeStage.id),
         getStageExploits(activeStage.id),
         getClubObservationTargets(),
         getUserContent(),
         getStageQuiz(activeStage.id),
         getMyTotalPoints(),
     ]);
-    const weekPoints = await getStagePointsTotal(activeStage.id);
-
     const selectedIds: string[] = activeStage.selected_content ?? [];
     const selectedContent = selectedIds
         .map((id: string) => copunPool.find((c: PedagogicalContent) => c.id === id))
@@ -198,8 +185,6 @@ export default async function StagesPage() {
     const objectives = selectedContent.filter(c => c.source !== 'custom');
     const technicalObjectives = selectedContent.filter(c => c.source === 'custom');
 
-    const validatedCount = Object.values(objectiveStatuses).filter(s => s.status === 'done' || s.status === 'partial').length;
-
     return (
         <WeekDashboardClient
             stageId={activeStage.id}
@@ -208,7 +193,7 @@ export default async function StagesPage() {
             objectives={objectives}
             technicalObjectives={technicalObjectives}
             sportFiches={sportFiches}
-            initialStatuses={objectiveStatuses}
+            preparations={preparations}
             initialObservations={observations}
             initialExploits={assignedExploits}
             clubObservationTargets={clubObservationTargets}
@@ -217,11 +202,9 @@ export default async function StagesPage() {
             seasonGradient={seasonStyle.gradient}
             seasonIcon={seasonStyle.icon}
             contentCount={objectives.length}
-            validatedCount={validatedCount}
             suggestedThematics={activeStage.suggested_thematics ?? []}
             quizDone={!!quizData?.completed_at}
             totalPoints={totalPoints}
-            weekPoints={weekPoints}
             archivedStages={archivedStages.map(s => ({ id: s.id, title: s.title, dates: s.dates ?? '' }))}
             upcomingStages={upcomingStages.map(s => ({ id: s.id, title: s.title, dates: s.dates ?? '' }))}
         />
