@@ -4052,3 +4052,605 @@ ReferenceError: Fraunces is not defined
  GET /jeux/9e1abdab-6fd2-42b4-b4fd-8fb21ac47423 200 in 185ms (compile: 17ms, proxy.ts: 94ms, render: 74ms)
  GET /stages/e31087b2-db58-4d09-96d4-63160723e0e5/quiz 200 in 608ms (compile: 14ms, proxy.ts: 304ms, render: 290ms)
  GET /stages 200 in 553ms (compile: 8ms, proxy.ts: 132ms, render: 413ms)
+ GET /stages/e31087b2-db58-4d09-96d4-63160723e0e5/program 200 in 1775ms (compile: 14ms, proxy.ts: 1320ms, render: 441ms)
+ POST /stages/e31087b2-db58-4d09-96d4-63160723e0e5/program 200 in 1390ms (compile: 10ms, proxy.ts: 1169ms, render: 211ms)
+✓ Compiled in 69ms
+✓ Compiled in 60ms
+✓ Compiled in 76ms
+✓ Compiled in 58ms
+✓ Compiled in 58ms
+✓ Compiled in 57ms
+✓ Compiled in 78ms
+✓ Compiled in 63ms
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+✓ Compiled in 75ms
+⨯ ReferenceError: appliquerAide is not defined
+    at ExplorerClient (src\app\stages\[id]\program\ExplorerClient.tsx:430:93)
+  428 |             />
+  429 |
+> 430 |             <AideChoix open={aideOuverte} onClose={() => setAideOuverte(false)} onResultat={appliquerAide} />
+      |                                                                                             ^
+  431 |
+  432 |             <CardDetailModal
+  433 |                 isOpen={!!ficheDetail} {
+  digest: '613061072'
+}
+ GET /stages/e31087b2-db58-4d09-96d4-63160723e0e5/program 500 in 2.5s (compile: 364ms, proxy.ts: 1188ms, render: 928ms)
+ GET /manifest.webmanifest 200 in 7ms (compile: 3ms, render: 4ms)
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+✓ Compiled in 55ms
+⨯ ReferenceError: aideOuverte is not defined
+    at ExplorerClient (src\app\stages\[id]\program\ExplorerClient.tsx:429:30)
+  427 |             />
+  428 |
+> 429 |             <AideChoix open={aideOuverte} onClose={() => setAideOuverte(false)} onResultat={appliquerAide} />
+      |                              ^
+  430 |
+  431 |             <CardDetailModal
+  432 |                 isOpen={!!ficheDetail} {
+  digest: '1311804717'
+}
+ GET /stages/e31087b2-db58-4d09-96d4-63160723e0e5/program 500 in 825ms (compile: 154ms, proxy.ts: 164ms, render: 506ms)
+ GET /manifest.webmanifest 200 in 6ms (compile: 2ms, render: 4ms)
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+✓ Compiled in 110ms
+⨯ ReferenceError: AideChoix is not defined
+    at ExplorerClient (src\app\stages\[id]\program\ExplorerClient.tsx:428:14)
+  426 |             />
+  427 |
+> 428 |             <AideChoix open={aideOuverte} onClose={() => setAideOuverte(false)} onResultat={appliquerAide} />
+      |              ^
+  429 |
+  430 |             <CardDetailModal
+  431 |                 isOpen={!!ficheDetail} {
+  digest: '1299640519'
+}
+ GET /stages/e31087b2-db58-4d09-96d4-63160723e0e5/program 500 in 909ms (compile: 140ms, proxy.ts: 288ms, render: 481ms)
+ GET /manifest.webmanifest 200 in 7ms (compile: 3ms, render: 4ms)
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+✓ Compiled in 52ms
+ GET /manifest.webmanifest 200 in 7ms (compile: 3ms, render: 4ms)
+ GET /stages/e31087b2-db58-4d09-96d4-63160723e0e5/program 200 in 817ms (compile: 155ms, proxy.ts: 235ms, render: 426ms)
+✓ Compiled in 58ms
+✓ Compiled in 60ms
+✓ Compiled in 56ms
+ POST /stages/e31087b2-db58-4d09-96d4-63160723e0e5/program 200 in 3.4s (compile: 1104ms, proxy.ts: 1639ms, render: 693ms)
+✓ Compiled in 76ms
+✓ Compiled in 55ms
+✓ Compiled in 59ms
+✓ Compiled in 74ms
+ GET /stages/e31087b2-db58-4d09-96d4-63160723e0e5/program 200 in 575ms (compile: 165ms, proxy.ts: 342ms, render: 68ms)
+ POST /stages/e31087b2-db58-4d09-96d4-63160723e0e5/program 200 in 1136ms (compile: 10ms, proxy.ts: 799ms, render: 328ms)
+ POST /stages/e31087b2-db58-4d09-96d4-63160723e0e5/program 200 in 473ms (compile: 9ms, proxy.ts: 233ms, render: 231ms)
+ POST /stages/e31087b2-db58-4d09-96d4-63160723e0e5/program 200 in 244ms (compile: 9ms, proxy.ts: 138ms, render: 97ms)
+✓ Compiled in 132ms
+⨯ ./src/app/stages/[id]/program/ExplorerClient.tsx:15:1
+Module not found: Can't resolve '@/components/explorer/AideChoix'
+[0m [90m 13 |[39m [36mimport[39m [33mGroupeBloc[39m [36mfrom[39m [32m'@/components/explorer/GroupeBloc'[39m[33m;[39m
+ [90m 14 |[39m [36mimport[39m [33mTagsPanel[39m [36mfrom[39m [32m'@/components/explorer/TagsPanel'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 15 |[39m [36mimport[39m [33mAideChoix[39m [36mfrom[39m [32m'@/components/explorer/AideChoix'[39m[33m;[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 16 |[39m [36mimport[39m [33mCardDetailModal[39m [36mfrom[39m [32m'@/components/CardDetailModal'[39m[33m;[39m
+ [90m 17 |[39m
+ [90m 18 |[39m type [33mProps[39m [33m=[39m {[0m
+
+Import map: aliased to relative './src/components/explorer/AideChoix' inside of [project]/
+
+
+Import trace:
+  Server Component:
+    ./src/app/stages/[id]/program/ExplorerClient.tsx
+    ./src/app/stages/[id]/program/page.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./src/app/stages/[id]/program/ExplorerClient.tsx:15:1
+Module not found: Can't resolve '@/components/explorer/AideChoix'
+[0m [90m 13 |[39m [36mimport[39m [33mGroupeBloc[39m [36mfrom[39m [32m'@/components/explorer/GroupeBloc'[39m[33m;[39m
+ [90m 14 |[39m [36mimport[39m [33mTagsPanel[39m [36mfrom[39m [32m'@/components/explorer/TagsPanel'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 15 |[39m [36mimport[39m [33mAideChoix[39m [36mfrom[39m [32m'@/components/explorer/AideChoix'[39m[33m;[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 16 |[39m [36mimport[39m [33mCardDetailModal[39m [36mfrom[39m [32m'@/components/CardDetailModal'[39m[33m;[39m
+ [90m 17 |[39m
+ [90m 18 |[39m type [33mProps[39m [33m=[39m {[0m
+
+Import map: aliased to relative './src/components/explorer/AideChoix' inside of [project]/
+
+
+Import trace:
+  Server Component:
+    ./src/app/stages/[id]/program/ExplorerClient.tsx
+    ./src/app/stages/[id]/program/page.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./src/app/stages/[id]/program/ExplorerClient.tsx:15:1
+Module not found: Can't resolve '@/components/explorer/AideChoix'
+[0m [90m 13 |[39m [36mimport[39m [33mGroupeBloc[39m [36mfrom[39m [32m'@/components/explorer/GroupeBloc'[39m[33m;[39m
+ [90m 14 |[39m [36mimport[39m [33mTagsPanel[39m [36mfrom[39m [32m'@/components/explorer/TagsPanel'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 15 |[39m [36mimport[39m [33mAideChoix[39m [36mfrom[39m [32m'@/components/explorer/AideChoix'[39m[33m;[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 16 |[39m [36mimport[39m [33mCardDetailModal[39m [36mfrom[39m [32m'@/components/CardDetailModal'[39m[33m;[39m
+ [90m 17 |[39m
+ [90m 18 |[39m type [33mProps[39m [33m=[39m {[0m
+
+Import map: aliased to relative './src/components/explorer/AideChoix' inside of [project]/
+
+
+Import trace:
+  Server Component:
+    ./src/app/stages/[id]/program/ExplorerClient.tsx
+    ./src/app/stages/[id]/program/page.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./src/app/stages/[id]/program/ExplorerClient.tsx:15:1
+Module not found: Can't resolve '@/components/explorer/AideChoix'
+[0m [90m 13 |[39m [36mimport[39m [33mGroupeBloc[39m [36mfrom[39m [32m'@/components/explorer/GroupeBloc'[39m[33m;[39m
+ [90m 14 |[39m [36mimport[39m [33mTagsPanel[39m [36mfrom[39m [32m'@/components/explorer/TagsPanel'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 15 |[39m [36mimport[39m [33mAideChoix[39m [36mfrom[39m [32m'@/components/explorer/AideChoix'[39m[33m;[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 16 |[39m [36mimport[39m [33mCardDetailModal[39m [36mfrom[39m [32m'@/components/CardDetailModal'[39m[33m;[39m
+ [90m 17 |[39m
+ [90m 18 |[39m type [33mProps[39m [33m=[39m {[0m
+
+Import map: aliased to relative './src/components/explorer/AideChoix' inside of [project]/
+
+
+Import trace:
+  Server Component:
+    ./src/app/stages/[id]/program/ExplorerClient.tsx
+    ./src/app/stages/[id]/program/page.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./src/app/stages/[id]/program/ExplorerClient.tsx:15:1
+Module not found: Can't resolve '@/components/explorer/AideChoix'
+[0m [90m 13 |[39m [36mimport[39m [33mGroupeBloc[39m [36mfrom[39m [32m'@/components/explorer/GroupeBloc'[39m[33m;[39m
+ [90m 14 |[39m [36mimport[39m [33mTagsPanel[39m [36mfrom[39m [32m'@/components/explorer/TagsPanel'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 15 |[39m [36mimport[39m [33mAideChoix[39m [36mfrom[39m [32m'@/components/explorer/AideChoix'[39m[33m;[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 16 |[39m [36mimport[39m [33mCardDetailModal[39m [36mfrom[39m [32m'@/components/CardDetailModal'[39m[33m;[39m
+ [90m 17 |[39m
+ [90m 18 |[39m type [33mProps[39m [33m=[39m {[0m
+
+Import map: aliased to relative './src/components/explorer/AideChoix' inside of [project]/
+
+
+Import trace:
+  Server Component:
+    ./src/app/stages/[id]/program/ExplorerClient.tsx
+    ./src/app/stages/[id]/program/page.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./src/app/stages/[id]/program/ExplorerClient.tsx:15:1
+Module not found: Can't resolve '@/components/explorer/AideChoix'
+[0m [90m 13 |[39m [36mimport[39m [33mGroupeBloc[39m [36mfrom[39m [32m'@/components/explorer/GroupeBloc'[39m[33m;[39m
+ [90m 14 |[39m [36mimport[39m [33mTagsPanel[39m [36mfrom[39m [32m'@/components/explorer/TagsPanel'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 15 |[39m [36mimport[39m [33mAideChoix[39m [36mfrom[39m [32m'@/components/explorer/AideChoix'[39m[33m;[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 16 |[39m [36mimport[39m [33mCardDetailModal[39m [36mfrom[39m [32m'@/components/CardDetailModal'[39m[33m;[39m
+ [90m 17 |[39m
+ [90m 18 |[39m type [33mProps[39m [33m=[39m {[0m
+
+Import map: aliased to relative './src/components/explorer/AideChoix' inside of [project]/
+
+
+Import trace:
+  Server Component:
+    ./src/app/stages/[id]/program/ExplorerClient.tsx
+    ./src/app/stages/[id]/program/page.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./src/app/stages/[id]/program/ExplorerClient.tsx:15:1
+Module not found: Can't resolve '@/components/explorer/AideChoix'
+[0m [90m 13 |[39m [36mimport[39m [33mGroupeBloc[39m [36mfrom[39m [32m'@/components/explorer/GroupeBloc'[39m[33m;[39m
+ [90m 14 |[39m [36mimport[39m [33mTagsPanel[39m [36mfrom[39m [32m'@/components/explorer/TagsPanel'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 15 |[39m [36mimport[39m [33mAideChoix[39m [36mfrom[39m [32m'@/components/explorer/AideChoix'[39m[33m;[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 16 |[39m [36mimport[39m [33mCardDetailModal[39m [36mfrom[39m [32m'@/components/CardDetailModal'[39m[33m;[39m
+ [90m 17 |[39m
+ [90m 18 |[39m type [33mProps[39m [33m=[39m {[0m
+
+Import map: aliased to relative './src/components/explorer/AideChoix' inside of [project]/
+
+
+Import trace:
+  Server Component:
+    ./src/app/stages/[id]/program/ExplorerClient.tsx
+    ./src/app/stages/[id]/program/page.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./src/app/stages/[id]/program/ExplorerClient.tsx:15:1
+Module not found: Can't resolve '@/components/explorer/AideChoix'
+[0m [90m 13 |[39m [36mimport[39m [33mGroupeBloc[39m [36mfrom[39m [32m'@/components/explorer/GroupeBloc'[39m[33m;[39m
+ [90m 14 |[39m [36mimport[39m [33mTagsPanel[39m [36mfrom[39m [32m'@/components/explorer/TagsPanel'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 15 |[39m [36mimport[39m [33mAideChoix[39m [36mfrom[39m [32m'@/components/explorer/AideChoix'[39m[33m;[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 16 |[39m [36mimport[39m [33mCardDetailModal[39m [36mfrom[39m [32m'@/components/CardDetailModal'[39m[33m;[39m
+ [90m 17 |[39m
+ [90m 18 |[39m type [33mProps[39m [33m=[39m {[0m
+
+Import map: aliased to relative './src/components/explorer/AideChoix' inside of [project]/
+
+
+Import trace:
+  Server Component:
+    ./src/app/stages/[id]/program/ExplorerClient.tsx
+    ./src/app/stages/[id]/program/page.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./src/app/stages/[id]/program/ExplorerClient.tsx:15:1
+Module not found: Can't resolve '@/components/explorer/AideChoix'
+[0m [90m 13 |[39m [36mimport[39m [33mGroupeBloc[39m [36mfrom[39m [32m'@/components/explorer/GroupeBloc'[39m[33m;[39m
+ [90m 14 |[39m [36mimport[39m [33mTagsPanel[39m [36mfrom[39m [32m'@/components/explorer/TagsPanel'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 15 |[39m [36mimport[39m [33mAideChoix[39m [36mfrom[39m [32m'@/components/explorer/AideChoix'[39m[33m;[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 16 |[39m [36mimport[39m [33mCardDetailModal[39m [36mfrom[39m [32m'@/components/CardDetailModal'[39m[33m;[39m
+ [90m 17 |[39m
+ [90m 18 |[39m type [33mProps[39m [33m=[39m {[0m
+
+Import map: aliased to relative './src/components/explorer/AideChoix' inside of [project]/
+
+
+Import trace:
+  Server Component:
+    ./src/app/stages/[id]/program/ExplorerClient.tsx
+    ./src/app/stages/[id]/program/page.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./src/app/stages/[id]/program/ExplorerClient.tsx:15:1
+Module not found: Can't resolve '@/components/explorer/AideChoix'
+[0m [90m 13 |[39m [36mimport[39m [33mGroupeBloc[39m [36mfrom[39m [32m'@/components/explorer/GroupeBloc'[39m[33m;[39m
+ [90m 14 |[39m [36mimport[39m [33mTagsPanel[39m [36mfrom[39m [32m'@/components/explorer/TagsPanel'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 15 |[39m [36mimport[39m [33mAideChoix[39m [36mfrom[39m [32m'@/components/explorer/AideChoix'[39m[33m;[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 16 |[39m [36mimport[39m [33mCardDetailModal[39m [36mfrom[39m [32m'@/components/CardDetailModal'[39m[33m;[39m
+ [90m 17 |[39m
+ [90m 18 |[39m type [33mProps[39m [33m=[39m {[0m
+
+Import map: aliased to relative './src/components/explorer/AideChoix' inside of [project]/
+
+
+Import trace:
+  Server Component:
+    ./src/app/stages/[id]/program/ExplorerClient.tsx
+    ./src/app/stages/[id]/program/page.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./src/app/stages/[id]/program/ExplorerClient.tsx:15:1
+Module not found: Can't resolve '@/components/explorer/AideChoix'
+[0m [90m 13 |[39m [36mimport[39m [33mGroupeBloc[39m [36mfrom[39m [32m'@/components/explorer/GroupeBloc'[39m[33m;[39m
+ [90m 14 |[39m [36mimport[39m [33mTagsPanel[39m [36mfrom[39m [32m'@/components/explorer/TagsPanel'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 15 |[39m [36mimport[39m [33mAideChoix[39m [36mfrom[39m [32m'@/components/explorer/AideChoix'[39m[33m;[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 16 |[39m [36mimport[39m [33mCardDetailModal[39m [36mfrom[39m [32m'@/components/CardDetailModal'[39m[33m;[39m
+ [90m 17 |[39m
+ [90m 18 |[39m type [33mProps[39m [33m=[39m {[0m
+
+Import map: aliased to relative './src/components/explorer/AideChoix' inside of [project]/
+
+
+Import trace:
+  Server Component:
+    ./src/app/stages/[id]/program/ExplorerClient.tsx
+    ./src/app/stages/[id]/program/page.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./src/app/stages/[id]/program/ExplorerClient.tsx:15:1
+Module not found: Can't resolve '@/components/explorer/AideChoix'
+[0m [90m 13 |[39m [36mimport[39m [33mGroupeBloc[39m [36mfrom[39m [32m'@/components/explorer/GroupeBloc'[39m[33m;[39m
+ [90m 14 |[39m [36mimport[39m [33mTagsPanel[39m [36mfrom[39m [32m'@/components/explorer/TagsPanel'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 15 |[39m [36mimport[39m [33mAideChoix[39m [36mfrom[39m [32m'@/components/explorer/AideChoix'[39m[33m;[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 16 |[39m [36mimport[39m [33mCardDetailModal[39m [36mfrom[39m [32m'@/components/CardDetailModal'[39m[33m;[39m
+ [90m 17 |[39m
+ [90m 18 |[39m type [33mProps[39m [33m=[39m {[0m
+
+Import map: aliased to relative './src/components/explorer/AideChoix' inside of [project]/
+
+
+Import trace:
+  Server Component:
+    ./src/app/stages/[id]/program/ExplorerClient.tsx
+    ./src/app/stages/[id]/program/page.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+✓ Compiled in 131ms
+✓ Compiled in 78ms
+ GET /stages/e31087b2-db58-4d09-96d4-63160723e0e5/program 200 in 599ms (compile: 265ms, proxy.ts: 266ms, render: 68ms)
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+✓ Compiled in 69ms
+⨯ ReferenceError: themes is not defined
+    at ExplorerClient (src\app\stages\[id]\program\ExplorerClient.tsx:152:35)
+  150 |
+  151 |         return [...blocsCatalogue, ...blocsExtra].filter(b => b.fiches.length > 0);
+> 152 |     }, [pool, niveau, dimensions, themes, recherche, tags]);
+      |                                   ^
+  153 |
+  154 |     const total = useMemo(() => blocs.reduce((n, b) => n + b.fiches.length, 0), [blocs]);
+  155 |     const filtresActifs = (niveau ? 1 : 0) + dimensions.length + themes.length + tags.length + (recherche.trim() ? 1 : 0); {
+  digest: '1341244409'
+}
+ GET /stages/e31087b2-db58-4d09-96d4-63160723e0e5/program 500 in 1148ms (compile: 160ms, proxy.ts: 226ms, render: 762ms)
+ GET /manifest.webmanifest 200 in 14ms (compile: 2ms, render: 12ms)
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+✓ Compiled in 70ms
+⨯ ReferenceError: themes is not defined
+    at ExplorerClient (src\app\stages\[id]\program\ExplorerClient.tsx:148:35)
+  146 |
+  147 |         return [...blocsCatalogue, ...blocsExtra].filter(b => b.fiches.length > 0);
+> 148 |     }, [pool, niveau, dimensions, themes, recherche, tags]);
+      |                                   ^
+  149 |
+  150 |     const total = useMemo(() => blocs.reduce((n, b) => n + b.fiches.length, 0), [blocs]);
+  151 |     const filtresActifs = (niveau ? 1 : 0) + dimensions.length + themes.length + tags.length + (recherche.trim() ? 1 : 0); {
+  digest: '1341244409'
+}
+ GET /stages/e31087b2-db58-4d09-96d4-63160723e0e5/program 500 in 797ms (compile: 159ms, proxy.ts: 207ms, render: 431ms)
+ GET /manifest.webmanifest 200 in 8ms (compile: 3ms, render: 5ms)
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+✓ Compiled in 47ms
+⨯ ReferenceError: AideChoix is not defined
+    at ExplorerClient (src\app\stages\[id]\program\ExplorerClient.tsx:453:14)
+  451 |             />
+  452 |
+> 453 |             <AideChoix
+      |              ^
+  454 |                 open={aideOuverte}
+  455 |                 onClose={() => setAideOuverte(false)}
+  456 |                 pool={pool} {
+  digest: '1299640519'
+}
+ GET /manifest.webmanifest 200 in 6ms (compile: 3ms, render: 4ms)
+ GET /stages/e31087b2-db58-4d09-96d4-63160723e0e5/program 500 in 1013ms (compile: 164ms, proxy.ts: 246ms, render: 603ms)
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+✓ Compiled in 66ms
+⨯ ReferenceError: AideChoix is not defined
+    at ExplorerClient (src\app\stages\[id]\program\ExplorerClient.tsx:467:14)
+  465 |             />
+  466 |
+> 467 |             <AideChoix
+      |              ^
+  468 |                 open={aideOuverte}
+  469 |                 onClose={() => setAideOuverte(false)}
+  470 |                 pool={pool} {
+  digest: '1299640519'
+}
+ GET /manifest.webmanifest 200 in 8ms (compile: 3ms, render: 4ms)
+ GET /stages/e31087b2-db58-4d09-96d4-63160723e0e5/program 500 in 1820ms (compile: 194ms, proxy.ts: 138ms, render: 1489ms)
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+✓ Compiled in 61ms
+⨯ ReferenceError: AideChoix is not defined
+    at ExplorerClient (src\app\stages\[id]\program\ExplorerClient.tsx:446:14)
+  444 |             />
+  445 |
+> 446 |             <AideChoix
+      |              ^
+  447 |                 open={aideOuverte}
+  448 |                 onClose={() => setAideOuverte(false)}
+  449 |                 pool={pool} {
+  digest: '1299640519'
+}
+ GET /stages/e31087b2-db58-4d09-96d4-63160723e0e5/program 500 in 704ms (compile: 175ms, proxy.ts: 155ms, render: 374ms)
+ GET /manifest.webmanifest 200 in 6ms (compile: 2ms, render: 4ms)
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+✓ Compiled in 67ms
+⨯ ReferenceError: AideChoix is not defined
+    at ExplorerClient (src\app\stages\[id]\program\ExplorerClient.tsx:457:14)
+  455 |             />
+  456 |
+> 457 |             <AideChoix
+      |              ^
+  458 |                 open={aideOuverte}
+  459 |                 onClose={() => setAideOuverte(false)}
+  460 |                 pool={pool} {
+  digest: '768324608'
+}
+ GET /stages/e31087b2-db58-4d09-96d4-63160723e0e5/program 500 in 805ms (compile: 173ms, proxy.ts: 245ms, render: 386ms)
+ GET /manifest.webmanifest 200 in 9ms (compile: 4ms, render: 5ms)
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+✓ Compiled in 69ms
+ GET /stages/e31087b2-db58-4d09-96d4-63160723e0e5/program 200 in 993ms (compile: 164ms, proxy.ts: 324ms, render: 504ms)
+ GET /manifest.webmanifest 200 in 6ms (compile: 2ms, render: 4ms)
+✓ Compiled in 64ms
+✓ Compiled in 57ms
+ GET /stages/e31087b2-db58-4d09-96d4-63160723e0e5/program 200 in 445ms (compile: 182ms, proxy.ts: 209ms, render: 54ms)
+ POST /stages/e31087b2-db58-4d09-96d4-63160723e0e5/program 200 in 337ms (compile: 24ms, proxy.ts: 226ms, render: 87ms)
+✓ Compiled in 58ms
+✓ Compiled in 60ms
+✓ Compiled in 58ms
+✓ Compiled in 52ms
+ GET /stages 200 in 893ms (compile: 17ms, proxy.ts: 406ms, render: 470ms)
+ GET /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/program 200 in 589ms (compile: 266ms, proxy.ts: 115ms, render: 208ms)
+✓ Compiled in 113ms
+ GET /stages 200 in 1244ms (compile: 5ms, proxy.ts: 674ms, render: 565ms)
+ POST /stages 200 in 765ms (compile: 6ms, proxy.ts: 115ms, render: 645ms)
+ GET /stages 200 in 563ms (compile: 4ms, proxy.ts: 155ms, render: 403ms)
+ POST /stages 200 in 664ms (compile: 6ms, proxy.ts: 112ms, render: 546ms)
+ GET /stages 200 in 477ms (compile: 5ms, proxy.ts: 103ms, render: 369ms)
+ POST /stages 200 in 563ms (compile: 4ms, proxy.ts: 109ms, render: 450ms)
+ GET /stages 200 in 427ms (compile: 4ms, proxy.ts: 97ms, render: 326ms)
+ POST /stages 200 in 535ms (compile: 5ms, proxy.ts: 110ms, render: 420ms)
+ GET /stages 200 in 449ms (compile: 8ms, proxy.ts: 148ms, render: 294ms)
+ GET /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/program 200 in 621ms (compile: 196ms, proxy.ts: 153ms, render: 272ms)
+✓ Compiled in 62ms
+✓ Compiled in 50ms
+✓ Compiled in 90ms
+ POST /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/program 200 in 1930ms (compile: 201ms, proxy.ts: 565ms, render: 1164ms)
+ GET /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/program 200 in 810ms (compile: 23ms, proxy.ts: 540ms, render: 248ms)
+ GET /stages 200 in 696ms (compile: 4ms, proxy.ts: 190ms, render: 501ms)
+ GET /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/program 200 in 299ms (compile: 14ms, proxy.ts: 124ms, render: 162ms)
+✓ Compiled in 53ms
+✓ Compiled in 64ms
+✓ Compiled in 54ms
+✓ Compiled in 53ms
+✓ Compiled in 68ms
+✓ Compiled in 87ms
+✓ Compiled in 73ms
+✓ Compiled in 79ms
+✓ Compiled in 85ms
+✓ Compiled in 69ms
+✓ Compiled in 81ms
+✓ Compiled in 50ms
+✓ Compiled in 61ms
+✓ Compiled in 63ms
+✓ Compiled in 62ms
+✓ Compiled in 60ms
+✓ Compiled in 71ms
+ POST /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/program 200 in 1062ms (compile: 260ms, proxy.ts: 514ms, render: 287ms)
+ GET /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/program 200 in 673ms (compile: 10ms, proxy.ts: 253ms, render: 410ms)
+ GET /manifest.webmanifest 200 in 6ms (compile: 2ms, render: 3ms)
+ POST /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/program 200 in 668ms (compile: 9ms, proxy.ts: 264ms, render: 394ms)
+ GET /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/program 200 in 481ms (compile: 14ms, proxy.ts: 194ms, render: 273ms)
+✓ Compiled in 64ms
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+✓ Compiled in 65ms
+ GET /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/program 200 in 1628ms (compile: 283ms, proxy.ts: 328ms, render: 1016ms)
+ GET /manifest.webmanifest 200 in 7ms (compile: 3ms, render: 4ms)
+ POST /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/program 200 in 310ms (compile: 23ms, proxy.ts: 173ms, render: 115ms)
+✓ Compiled in 105ms
+✓ Compiled in 67ms
+ POST /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/program 200 in 589ms (compile: 212ms, proxy.ts: 243ms, render: 134ms)
+✓ Compiled in 57ms
+ POST /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/program 200 in 971ms (compile: 175ms, proxy.ts: 299ms, render: 496ms)
+ GET /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/program 200 in 421ms (compile: 9ms, proxy.ts: 189ms, render: 224ms)
+ POST /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/program 200 in 549ms (compile: 9ms, proxy.ts: 194ms, render: 346ms)
+ GET /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/program 200 in 440ms (compile: 21ms, proxy.ts: 208ms, render: 211ms)
+ GET /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/preparer 200 in 726ms (compile: 328ms, proxy.ts: 110ms, render: 288ms)
+ POST /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/preparer 200 in 1524ms (compile: 9ms, proxy.ts: 792ms, render: 722ms)
+ POST /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/preparer 200 in 683ms (compile: 9ms, proxy.ts: 244ms, render: 431ms)
+✓ Compiled in 66ms
+✓ Compiled in 65ms
+✓ Compiled in 71ms
+ POST /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/preparer 200 in 1649ms (compile: 254ms, proxy.ts: 651ms, render: 743ms)
+ POST /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/preparer 200 in 568ms (compile: 9ms, proxy.ts: 131ms, render: 428ms)
+ POST /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/preparer 200 in 623ms (compile: 8ms, proxy.ts: 180ms, render: 435ms)
+ POST /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/preparer 200 in 417ms (compile: 8ms, proxy.ts: 95ms, render: 313ms)
+ POST /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/preparer 200 in 397ms (compile: 5ms, proxy.ts: 100ms, render: 291ms)
+ POST /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/preparer 200 in 564ms (compile: 9ms, proxy.ts: 150ms, render: 405ms)
+ POST /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/preparer 200 in 495ms (compile: 5ms, proxy.ts: 133ms, render: 357ms)
+✓ Compiled in 51ms
+ POST /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/preparer 200 in 1020ms (compile: 181ms, proxy.ts: 188ms, render: 651ms)
+ POST /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/preparer 200 in 787ms (compile: 14ms, proxy.ts: 417ms, render: 355ms)
+ POST /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/preparer 200 in 702ms (compile: 10ms, proxy.ts: 314ms, render: 379ms)
+ POST /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/preparer 200 in 604ms (compile: 8ms, proxy.ts: 147ms, render: 449ms)
+ POST /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/preparer 200 in 464ms (compile: 10ms, proxy.ts: 100ms, render: 354ms)
+✓ Compiled in 53ms
+✓ Compiled in 96ms
+ POST /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/preparer 200 in 1175ms (compile: 292ms, proxy.ts: 281ms, render: 602ms)
+ POST /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/preparer 200 in 588ms (compile: 8ms, proxy.ts: 193ms, render: 386ms)
+✓ Compiled in 52ms
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+✓ Compiled in 55ms
+⨯ ReferenceError: TrouChoix is not defined
+    at Sujet (src\app\stages\[id]\preparer\PreparerClient.tsx:498:30)
+  496 |                             retenues juste en dessous. */}
+  497 |                         {actions.length < proposees.length && (
+> 498 |                             <TrouChoix
+      |                              ^
+  499 |                                 placeholder={retenues.length > 0 ? 'Ajouter une autre proposition…' : 'Cliquez ici pour choisir ce qu’ils font…'}
+  500 |                                 options={proposees.filter(a => !actions.includes(a.id)).map(a => ({
+  501 |                                     id: a.id, label: a.consigne, sousLabel: a.label, {
+  digest: '752295276'
+}
+ GET /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/preparer 500 in 1367ms (compile: 194ms, proxy.ts: 373ms, render: 799ms)
+ GET /manifest.webmanifest 200 in 7ms (compile: 3ms, render: 5ms)
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+✓ Compiled in 101ms
+ GET /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/preparer 200 in 1477ms (compile: 174ms, proxy.ts: 448ms, render: 854ms)
+ GET /manifest.webmanifest 200 in 6ms (compile: 3ms, render: 4ms)
+✓ Compiled in 66ms
+✓ Compiled in 64ms
+✓ Compiled in 89ms
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+✓ Compiled in 58ms
+ GET /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/preparer 200 in 1913ms (compile: 301ms, proxy.ts: 800ms, render: 812ms)
+ GET /manifest.webmanifest 200 in 8ms (compile: 4ms, render: 4ms)
+ POST /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/preparer 200 in 780ms (compile: 11ms, proxy.ts: 208ms, render: 562ms)
+ POST /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/preparer 200 in 632ms (compile: 9ms, proxy.ts: 252ms, render: 371ms)
+ POST /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/preparer 200 in 514ms (compile: 9ms, proxy.ts: 112ms, render: 393ms)
+ POST /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/preparer 200 in 615ms (compile: 9ms, proxy.ts: 126ms, render: 480ms)
+ POST /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/preparer 200 in 758ms (compile: 8ms, proxy.ts: 161ms, render: 588ms)
+ POST /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/preparer 200 in 551ms (compile: 10ms, proxy.ts: 171ms, render: 370ms)
+ POST /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/preparer 200 in 1363ms (compile: 9ms, proxy.ts: 138ms, render: 1215ms)
+ POST /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/preparer 200 in 546ms (compile: 8ms, proxy.ts: 142ms, render: 395ms)
+ POST /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/preparer 200 in 522ms (compile: 9ms, proxy.ts: 127ms, render: 386ms)
+ POST /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/preparer 200 in 471ms (compile: 6ms, proxy.ts: 130ms, render: 335ms)
+ POST /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/preparer 200 in 616ms (compile: 9ms, proxy.ts: 156ms, render: 451ms)
+ POST /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/preparer 200 in 538ms (compile: 11ms, proxy.ts: 161ms, render: 366ms)
+ POST /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/preparer 200 in 529ms (compile: 9ms, proxy.ts: 130ms, render: 390ms)
+ POST /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/preparer 200 in 838ms (compile: 9ms, proxy.ts: 317ms, render: 512ms)
+ POST /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/preparer 200 in 550ms (compile: 10ms, proxy.ts: 128ms, render: 411ms)
+ POST /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/preparer 200 in 566ms (compile: 9ms, proxy.ts: 140ms, render: 416ms)
+ POST /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/preparer 200 in 502ms (compile: 9ms, proxy.ts: 115ms, render: 378ms)
+ POST /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/preparer 200 in 843ms (compile: 9ms, proxy.ts: 153ms, render: 680ms)
+✓ Compiled in 102ms
+ POST /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/preparer 200 in 1291ms (compile: 290ms, proxy.ts: 378ms, render: 624ms)
+ POST /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/preparer 200 in 502ms (compile: 10ms, proxy.ts: 103ms, render: 389ms)
+✓ Compiled in 92ms
+ POST /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/preparer 200 in 521ms (compile: 8ms, proxy.ts: 99ms, render: 413ms)
+ POST /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/preparer 200 in 891ms (compile: 162ms, proxy.ts: 184ms, render: 546ms)
+ POST /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/preparer 200 in 502ms (compile: 8ms, proxy.ts: 138ms, render: 355ms)
+ POST /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/preparer 200 in 1292ms (compile: 9ms, proxy.ts: 211ms, render: 1072ms)
+ POST /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/preparer 200 in 951ms (compile: 11ms, proxy.ts: 442ms, render: 499ms)
+ GET /stages 200 in 1331ms (compile: 314ms, proxy.ts: 164ms, render: 853ms)
+ GET /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/program 200 in 742ms (compile: 15ms, proxy.ts: 314ms, render: 413ms)
+ GET /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/preparer 200 in 641ms (compile: 10ms, proxy.ts: 160ms, render: 471ms)
+ GET /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/program 200 in 701ms (compile: 9ms, proxy.ts: 375ms, render: 318ms)
+✓ Compiled in 66ms
+✓ Compiled in 90ms
+✓ Compiled in 59ms
+✓ Compiled in 70ms
+ GET /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/preparer 200 in 962ms (compile: 9ms, proxy.ts: 360ms, render: 593ms)
+ GET /stages 200 in 1067ms (compile: 238ms, proxy.ts: 130ms, render: 700ms)
+✓ Compiled in 69ms
+ GET /stages 200 in 903ms (compile: 155ms, proxy.ts: 134ms, render: 614ms)
+ GET /manifest.webmanifest 200 in 7ms (compile: 3ms, render: 4ms)
+ GET /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/preparer 200 in 454ms (compile: 8ms, proxy.ts: 185ms, render: 260ms)
+ GET /stages 200 in 687ms (compile: 5ms, proxy.ts: 98ms, render: 583ms)
+ GET /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/preparer 200 in 455ms (compile: 9ms, proxy.ts: 198ms, render: 248ms)
+ GET /stages 200 in 462ms (compile: 5ms, proxy.ts: 102ms, render: 354ms)
+ GET /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/preparer 200 in 388ms (compile: 11ms, proxy.ts: 134ms, render: 243ms)
+ GET /stages 200 in 486ms (compile: 4ms, proxy.ts: 92ms, render: 390ms)
+✓ Compiled in 73ms
+✓ Compiled in 60ms
+✓ Compiled in 72ms
+✓ Compiled in 53ms
+✓ Compiled in 75ms
+✓ Compiled in 64ms
+✓ Compiled in 68ms
+ POST /stages 200 in 1211ms (compile: 275ms, proxy.ts: 278ms, render: 657ms)
+ POST /stages 200 in 866ms (compile: 4ms, proxy.ts: 158ms, render: 703ms)
+ GET /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/preparer 200 in 598ms (compile: 11ms, proxy.ts: 251ms, render: 335ms)
+ GET /stages 200 in 965ms (compile: 5ms, proxy.ts: 441ms, render: 520ms)
+ GET /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/program 200 in 308ms (compile: 10ms, proxy.ts: 111ms, render: 187ms)
+✓ Compiled in 52ms
+✓ Compiled in 73ms
+✓ Compiled in 63ms
+✓ Compiled in 58ms
+ POST /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/program 200 in 2.1s (compile: 294ms, proxy.ts: 813ms, render: 966ms)
+ GET /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/program 200 in 669ms (compile: 9ms, proxy.ts: 286ms, render: 374ms)
+ GET /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/preparer 200 in 644ms (compile: 8ms, proxy.ts: 210ms, render: 426ms)
+ GET /stages 200 in 606ms (compile: 5ms, proxy.ts: 143ms, render: 458ms)
+ GET /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/program 200 in 359ms (compile: 10ms, proxy.ts: 127ms, render: 221ms)

@@ -369,6 +369,8 @@ function Sujet({
     const retenues = actions
         .map(id => actionSujetParId(id, content.actions))
         .filter((a): a is NonNullable<typeof a> => !!a);
+    const restantes = proposees.filter(a => !actions.includes(a.id));
+    const variantes = formulations(content);
 
     return (
         <section ref={ref} data-rang={rang} className="pt-10">
@@ -409,144 +411,203 @@ function Sujet({
                 </div>
             )}
 
-            {/* ── Ce que je vais dire ── */}
-            <div className="mt-6 rounded-3xl bg-amber-50 border border-amber-200 px-6 py-6">
-                <div className="flex items-center gap-2 mb-5">
+            {/* ══ CE QUE JE VAIS DIRE ══
+                Le cadre distingue trois natures de contenu, pas une seule teinte plate :
+                - DÉCIDÉ (accroche choisie, actions retenues) : carte blanche nette, c'est
+                  le cœur vivant du bloc, ce que le moniteur a produit ;
+                - À CHOISIR : contour pointillé fin, clairement « pas encore rempli » ;
+                - DONNÉ PAR LA FICHE (à observer, à retenir) : texte simple sans carte,
+                  posé sur le fond ambre — c'est du contexte à lire, pas un choix à faire. */}
+            <div className="mt-6 rounded-2xl bg-white border border-amber-100 shadow-sm shadow-amber-900/5 overflow-hidden">
+                <div className="flex items-center gap-2 px-6 pt-5 pb-4 bg-amber-50/70 border-b border-amber-100">
                     <span className="material-symbols-outlined text-amber-600 text-[20px]">record_voice_over</span>
                     <h3 className="text-xs font-black text-amber-900 uppercase tracking-widest">
                         Ce que je vais dire
                     </h3>
                 </div>
 
-                <span className="text-[10px] font-black text-amber-700/70 uppercase tracking-widest block mb-2">
-                    {choisie && !changeAccroche ? 'Je lance comme ça' : 'Choisissez comment lancer le sujet'}
-                </span>
+                <div className="px-6 py-5 space-y-5">
 
-                {choisie && !changeAccroche ? (
-                    <button onClick={() => setChangeAccroche(true)} className="w-full text-left group">
-                        <p className="text-[19px] font-bold text-amber-950 leading-[1.4] italic">
-                            «&nbsp;{choisie}&nbsp;»
-                            <span className="material-symbols-outlined text-[16px] text-amber-600/50 group-hover:text-amber-800 align-middle ml-1.5 transition-colors">
-                                edit
-                            </span>
-                        </p>
-                    </button>
-                ) : (
-                    <div className="space-y-2">
-                        {formulations(content).map(v => (
+                    {/* J'ouvre avec — décision 1 */}
+                    <div>
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">
+                            J&apos;ouvre avec
+                        </span>
+
+                        {choisie && !changeAccroche ? (
                             <button
-                                key={v}
-                                onClick={() => { onChoisirAccroche(v); setChangeAccroche(false); }}
-                                className="w-full text-left px-4 py-3.5 rounded-xl bg-white/70 hover:bg-white border border-amber-200/70 hover:border-amber-400 transition-all active:scale-[0.99]"
+                                onClick={() => setChangeAccroche(true)}
+                                className="group w-full text-left rounded-xl bg-amber-50 border-l-4 border-amber-500 px-4 py-3.5"
                             >
-                                <span className="block text-[16px] font-bold text-amber-950 leading-[1.45] italic">
-                                    «&nbsp;{v}&nbsp;»
+                                <p className="text-[18px] font-bold text-amber-950 leading-[1.4] italic">
+                                    «&nbsp;{choisie}&nbsp;»
+                                </p>
+                                <span className="inline-flex items-center gap-1 text-[10px] font-black text-amber-600/70 group-hover:text-amber-800 uppercase tracking-widest mt-1.5 transition-colors">
+                                    <span className="material-symbols-outlined text-[13px]">edit</span>
+                                    Changer
                                 </span>
                             </button>
-                        ))}
-                        {choisie && (
-                            <button
-                                onClick={() => setChangeAccroche(false)}
-                                className="text-[11px] font-black text-amber-700/50 hover:text-amber-800 uppercase tracking-widest transition-colors pt-1"
-                            >
-                                Annuler
-                            </button>
+                        ) : (
+                            <div className="space-y-2">
+                                {variantes.map((v, i) => (
+                                    <CartePop key={v} delai={i * 0.06}>
+                                        <BoutonChoix onClick={() => { onChoisirAccroche(v); setChangeAccroche(false); }}>
+                                            «&nbsp;{v}&nbsp;»
+                                        </BoutonChoix>
+                                    </CartePop>
+                                ))}
+                                {choisie && (
+                                    <button
+                                        onClick={() => setChangeAccroche(false)}
+                                        className="text-[11px] font-black text-slate-400 hover:text-slate-600 uppercase tracking-widest transition-colors pt-1"
+                                    >
+                                        Annuler
+                                    </button>
+                                )}
+                            </div>
                         )}
                     </div>
-                )}
 
-                {content.a_observer && (
-                    <div className="mt-5">
-                        <span className="text-[10px] font-black text-amber-700/70 uppercase tracking-widest block mb-1.5">
-                            À leur faire observer
-                        </span>
-                        <p className="text-[15px] font-bold text-amber-950 leading-relaxed">{content.a_observer}</p>
-                    </div>
-                )}
+                    {/* Je leur fais observer — donné par la fiche */}
+                    {content.a_observer && (
+                        <div>
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1.5">
+                                Je leur fais observer
+                            </span>
+                            <p className="text-[15px] font-semibold text-slate-700 leading-relaxed">{content.a_observer}</p>
+                        </div>
+                    )}
 
-                <AnimatePresence initial={false}>
-                    {retenues.length > 0 && (
-                        <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            exit={{ opacity: 0, height: 0 }}
-                            className="overflow-hidden"
-                        >
-                            <div className="pt-5">
-                                <span className="text-[10px] font-black text-amber-700/70 uppercase tracking-widest block mb-2">
-                                    Ce que je leur fais faire
-                                </span>
-                                <div className="space-y-3">
-                                    {retenues.map(a => (
-                                        <motion.div key={a.id} layout className="flex items-start gap-3">
-                                            <p className="flex-1 text-[15px] font-bold text-amber-950 leading-snug">
+                    {/* Je leur fais faire — décision 2, choix et résultat au même endroit :
+                        avant, les propositions vivaient hors du cadre, plus bas dans la
+                        page, pendant que le résultat s'affichait ici. */}
+                    {choisie && proposees.length > 0 && (
+                        <div>
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">
+                                Je leur fais faire
+                            </span>
+
+                            <AnimatePresence initial={false}>
+                                {retenues.length > 0 && (
+                                    <motion.div
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        className="overflow-hidden"
+                                    >
+                                        <div className="space-y-2 pb-2">
+                                            {retenues.map(a => (
+                                                <motion.div
+                                                    key={a.id}
+                                                    layout
+                                                    initial={{ opacity: 0, scale: 0.85 }}
+                                                    animate={{ opacity: 1, scale: 1 }}
+                                                    transition={{ type: 'spring', stiffness: 500, damping: 22 }}
+                                                    className="flex items-start gap-3 rounded-xl bg-amber-50 border-l-4 border-amber-500 px-4 py-3.5"
+                                                >
+                                                    <p className="flex-1 text-[15px] font-bold text-amber-950 leading-snug">
+                                                        {a.consigne}
+                                                    </p>
+                                                    <button
+                                                        onClick={() => onBasculer(a.id)}
+                                                        aria-label={`Retirer : ${a.label}`}
+                                                        className="size-6 rounded-full hover:bg-white/70 flex items-center justify-center text-amber-500/60 hover:text-amber-800 transition-colors shrink-0"
+                                                    >
+                                                        <span className="material-symbols-outlined text-[16px]">close</span>
+                                                    </button>
+                                                </motion.div>
+                                            ))}
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+
+                            {restantes.length > 0 && (
+                                <div className="space-y-2">
+                                    {retenues.length === 0 && (
+                                        <p className="text-[11px] font-semibold text-slate-400 mb-1">
+                                            Touchez une ou plusieurs propositions.
+                                        </p>
+                                    )}
+                                    {restantes.map((a, i) => (
+                                        <CartePop key={a.id} delai={i * 0.06}>
+                                            <BoutonChoix onClick={() => onBasculer(a.id)} compact>
                                                 {a.consigne}
-                                            </p>
-                                            <button
-                                                onClick={() => onBasculer(a.id)}
-                                                aria-label={`Retirer : ${a.label}`}
-                                                className="size-7 rounded-full hover:bg-white/70 flex items-center justify-center text-amber-600/40 hover:text-amber-800 transition-colors shrink-0"
-                                            >
-                                                <span className="material-symbols-outlined text-[17px]">close</span>
-                                            </button>
-                                        </motion.div>
+                                            </BoutonChoix>
+                                        </CartePop>
                                     ))}
                                 </div>
-                            </div>
-                        </motion.div>
+                            )}
+                        </div>
                     )}
-                </AnimatePresence>
 
-                {content.a_retenir && (
-                    <div className="mt-5 pt-5 border-t border-amber-200">
-                        <span className="text-[10px] font-black text-amber-700/70 uppercase tracking-widest block mb-1.5">
-                            Ils repartent avec
-                        </span>
-                        <p className="text-[15px] font-bold text-amber-950 leading-relaxed">{content.a_retenir}</p>
-                    </div>
-                )}
-            </div>
-
-            {/* ── À faire avec le groupe ── */}
-            {choisie && proposees.length > 0 && (
-                <div className="mt-5">
-                    <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">
-                        À faire avec le groupe
-                    </h3>
-                    <div className="space-y-2 mt-3">
-                        {proposees.map(a => {
-                            const prise = actions.includes(a.id);
-                            return (
-                                <button
-                                    key={a.id}
-                                    onClick={() => onBasculer(a.id)}
-                                    aria-pressed={prise}
-                                    className={clsx(
-                                        'w-full text-left rounded-2xl p-5 border transition-all active:scale-[0.99]',
-                                        prise
-                                            ? 'bg-amber-50 border-amber-300'
-                                            : 'bg-white border-slate-200/80 hover:border-indigo-300',
-                                    )}
-                                >
-                                    <span className={clsx(
-                                        'block text-[11px] font-black uppercase tracking-wide mb-1',
-                                        prise ? 'text-amber-700' : 'text-slate-400',
-                                    )}>
-                                        {a.label}
-                                    </span>
-                                    <span className={clsx(
-                                        'block text-[15px] font-bold leading-snug',
-                                        prise ? 'text-amber-950' : 'text-slate-700',
-                                    )}>
-                                        {a.consigne}
-                                    </span>
-                                </button>
-                            );
-                        })}
-                    </div>
+                    {/* Ils repartent avec — donné par la fiche */}
+                    {content.a_retenir && (
+                        <div className="pt-1 border-t border-slate-100">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1.5 mt-4">
+                                Ils repartent avec
+                            </span>
+                            <p className="text-[15px] font-semibold text-slate-700 leading-relaxed">{content.a_retenir}</p>
+                        </div>
+                    )}
                 </div>
-            )}
+            </div>
         </section>
+    );
+}
+
+/**
+ * Fait entrer son contenu avec un petit rebond, en escalier avec les cartes voisines
+ * (`delai`) — le mouvement dit « je suis une option à considérer », pas un bloc de texte
+ * figé posé sur la page. Reste discret : quelques degrés d'amplitude, pas un effet de jeu.
+ */
+function CartePop({ children, delai = 0 }: { children: React.ReactNode; delai?: number }) {
+    return (
+        <motion.div
+            initial={{ opacity: 0, scale: 0.8, y: 8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ type: 'spring', stiffness: 420, damping: 16, delay: delai }}
+        >
+            {children}
+        </motion.div>
+    );
+}
+
+/**
+ * Une proposition à choisir dans « Ce que je vais dire » — accroche ou action.
+ *
+ * Le clic déclenche un aller-retour d'échelle très bref (bounce) avant que la carte ne
+ * disparaisse de la liste : la confirmation se sent physiquement, pas seulement lue.
+ */
+function BoutonChoix({
+    children,
+    onClick,
+    compact = false,
+}: {
+    children: React.ReactNode;
+    onClick: () => void;
+    compact?: boolean;
+}) {
+    const [pris, setPris] = useState(false);
+
+    return (
+        <motion.button
+            type="button"
+            onClick={() => { setPris(true); setTimeout(onClick, 140); }}
+            animate={pris ? { scale: [1, 1.06, 0.9] } : { scale: 1 }}
+            transition={{ duration: 0.16 }}
+            className={clsx(
+                'w-full text-left rounded-xl bg-white border-2 border-dashed border-slate-200 hover:border-amber-400 hover:bg-amber-50/40 transition-colors active:scale-[0.98]',
+                compact ? 'px-4 py-3' : 'px-4 py-3.5',
+            )}
+        >
+            <span className={clsx(
+                'block font-semibold text-slate-600 leading-[1.45]',
+                compact ? 'text-[14px]' : 'text-[16px] italic',
+            )}>
+                {children}
+            </span>
+        </motion.button>
     );
 }
 

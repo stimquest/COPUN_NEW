@@ -29,11 +29,13 @@ export const NIVEAU_LABELS_LONGS: Record<1 | 2 | 3 | 4, string> = {
     4: 'N4 — Expert',
 };
 
-export const NIVEAUX: Array<{ n: 1 | 2 | 3 | 4; label: string }> = [
+// Niveau 4 (Expert) retiré de la liste de filtrage : plus aucune fiche n'y est classée
+// depuis la reclassification vers niveau 2/3 — reste dans NIVEAU_LABELS au cas où
+// l'admin en aurait de nouveau besoin, mais n'apparaît plus dans les filtres.
+export const NIVEAUX: Array<{ n: 1 | 2 | 3; label: string }> = [
     { n: 1, label: NIVEAU_LABELS[1] },
     { n: 2, label: NIVEAU_LABELS[2] },
     { n: 3, label: NIVEAU_LABELS[3] },
-    { n: 4, label: NIVEAU_LABELS[4] },
 ];
 
 export function niveauRepere(niveau: number | null | undefined): string | null {

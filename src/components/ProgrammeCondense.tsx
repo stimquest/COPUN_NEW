@@ -7,6 +7,7 @@ import { PedagogicalContent } from '@/types';
 import { PILLARS } from '@/data/etages';
 import { StagePreparation, toggleSujetRaconte } from '@/actions/preparation-actions';
 import { actionSujetParId, ActionSujet } from '@/data/actions-sujets';
+import { actionSemaineParId } from '@/data/actions-semaine';
 import { niveauRepere } from '@/data/niveaux';
 
 type Props = {
@@ -15,6 +16,8 @@ type Props = {
     preparations: Record<string, StagePreparation>;
     /** Lecture seule sur le bilan clôturé : plus de rature possible, l'historique est figé. */
     readOnly?: boolean;
+    /** Rituels transversaux choisis pour la semaine (`src/data/actions-semaine.ts`). */
+    actionsSemaine?: string[];
 };
 
 function pilierDe(c: PedagogicalContent) {
@@ -40,7 +43,7 @@ function pilierDe(c: PedagogicalContent) {
  * affichage ; la donnée reste `raconte` en base et dans l'action serveur, déjà nommée
  * ainsi et migrée.
  */
-export default function ProgrammeCondense({ stageId, contents, preparations, readOnly = false }: Props) {
+export default function ProgrammeCondense({ stageId, contents, preparations, readOnly = false, actionsSemaine = [] }: Props) {
     const [traites, setTraites] = useState<Record<string, boolean>>(() =>
         Object.fromEntries(contents.map(c => [c.id, !!preparations[c.id]?.raconte])),
     );
@@ -204,6 +207,33 @@ export default function ProgrammeCondense({ stageId, contents, preparations, rea
                     </article>
                 );
             })}
+
+            {/* Rituel de semaine : transversal à tous les sujets, donc hors de la liste par
+                fiche ci-dessus. Le libellé seul (« Le geste tenu ») ne dit rien sans sa
+                consigne — les deux restent toujours affichés ensemble, jamais réduits. */}
+            {actionsSemaine.length > 0 && (
+                <div className="py-6">
+                    <span className="text-[10.5px] font-bold uppercase tracking-widest text-indigo-500">
+                        Toute la semaine
+                    </span>
+                    <div className="mt-2 space-y-3">
+                        {actionsSemaine.map(id => {
+                            const action = actionSemaineParId(id);
+                            if (!action) return null;
+                            return (
+                                <div key={id}>
+                                    <h3 className="text-[16px] font-bold text-slate-900 leading-snug">
+                                        {action.label}
+                                    </h3>
+                                    <p className="text-[13.5px] leading-relaxed text-slate-600 mt-1">
+                                        {action.consigne}
+                                    </p>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
 
             <Link
                 href={`/stages/${stageId}/preparer`}

@@ -64,6 +64,12 @@ export default function OrdreSujets({ contents, onReordonner, repliable = false 
             )}
 
             {ouvert && (
+                <p className="text-[11px] font-semibold text-slate-400 mt-1">
+                    Glissez la poignée pour réorganiser.
+                </p>
+            )}
+
+            {ouvert && (
                 <Reorder.Group
                     axis="y"
                     values={contents.map(c => c.id)}
@@ -122,7 +128,7 @@ function Ligne({ content, rang }: { content: PedagogicalContent; rang: number })
             <span
                 onPointerDown={e => controls.start(e)}
                 aria-label={`Déplacer : ${content.question}`}
-                className="size-10 flex items-center justify-center text-slate-300 hover:text-slate-500 cursor-grab active:cursor-grabbing touch-none shrink-0 transition-colors"
+                className="size-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-400 hover:text-indigo-600 hover:bg-indigo-100 cursor-grab active:cursor-grabbing touch-none shrink-0 transition-colors"
             >
                 <span className="material-symbols-outlined text-[20px]">drag_indicator</span>
             </span>

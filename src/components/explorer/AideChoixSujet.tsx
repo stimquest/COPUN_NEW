@@ -21,22 +21,20 @@ const ANGLES: { id: Dimension; label: string; detail: string }[] = [
 ];
 
 /**
- * Aide au choix — un secours, pas un péage.
+ * Aide au choix par sujet de terrain — un secours, pas un péage.
  *
  * Le catalogue reste l'arrivée par défaut : celui qui sait ce qu'il cherche n'a rien à
- * traverser. Cet entonnoir s'adresse au moniteur qui ouvre l'app sans idée précise. Il
- * pose trois questions en langage de terrain (jamais la taxonomie) et se contente de
- * PRÉ-RÉGLER les filtres — on revient dans le catalogue, ciblé, libre de continuer à la
- * main. L'aide fait son travail puis s'efface.
+ * traverser. Cet entonnoir s'adresse au moniteur qui ouvre l'app sans idée précise.
+ *
+ * Ordre délibéré : milieu → groupe (le sujet concret, ce qui se voit sur le terrain)
+ * avant l'angle COP — contrairement à la vue « Méthode COP'UN » qui part du pilier,
+ * ici le sujet vient en premier. L'angle (pilier + thème) reste une précision
+ * optionnelle en dernière étape, pas un préalable à devoir traverser.
  */
-export default function AideChoix({ open, onClose, onResultat }: Props) {
+export default function AideChoixSujet({ open, onClose, onResultat }: Props) {
     const [etape, setEtape] = useState(1);
     const [milieu, setMilieu] = useState<string | null>(null);
     const [groupe, setGroupe] = useState<Groupe | null>(null);
-    // Sélection additive : le moniteur désigne ce qu'il veut travailler plutôt que
-    // d'éliminer dans une liste pré-cochée. COP se combine librement (deux « comprendre »
-    // et un « observer », ou l'inverse) et n'impose aucun ordre — certains partent de
-    // l'observation, d'autres d'un geste à protéger.
     const [angles, setAngles] = useState<Dimension[]>([]);
 
     const fermer = () => {
@@ -57,6 +55,21 @@ export default function AideChoix({ open, onClose, onResultat }: Props) {
         else { setGroupe(null); setEtape(2); }
     };
 
+    const choisirGroupe = (g: Groupe) => {
+        setGroupe(g);
+        setEtape(3);
+    };
+
+    const toggleAngle = (a: Dimension) => {
+        setAngles(prev => (prev.includes(a) ? prev.filter(x => x !== a) : [...prev, a]));
+    };
+
+    const conclure = () => {
+        if (!groupe) return;
+        onResultat(groupe, angles);
+        fermer();
+    };
+
     const retour = () => {
         // Revenir depuis l'angle doit ramener au milieu quand l'étape 2 a été sautée.
         if (etape === 3 && milieu && groupesDuMilieu(milieu).length === 1) {
@@ -65,12 +78,6 @@ export default function AideChoix({ open, onClose, onResultat }: Props) {
         } else {
             setEtape(e => e - 1);
         }
-    };
-
-    const conclure = (dims: Dimension[]) => {
-        if (!groupe) return;
-        onResultat(groupe, dims);
-        fermer();
     };
 
     const question = etape === 1
@@ -129,10 +136,7 @@ export default function AideChoix({ open, onClose, onResultat }: Props) {
                         </div>
 
                         <div className="flex-1 overflow-y-auto px-5 pb-8">
-                            {/* Fil des choix déjà faits — sans lui, la barre de points en
-                                tête ne dit rien de concret une fois avancé dans le parcours :
-                                on ne voit plus qu'on a choisi « L'eau bouge » puis
-                                « Les marées ». Chaque miette ramène directement à son étape. */}
+                            {/* Fil des choix déjà faits — chaque miette ramène directement à son étape. */}
                             {(milieu || groupe) && (
                                 <div className="flex flex-wrap items-center gap-1.5 mb-3">
                                     {milieu && (
@@ -178,14 +182,14 @@ export default function AideChoix({ open, onClose, onResultat }: Props) {
                                         label={g.label}
                                         detail={`${g.accroche} · ${g.fiches.length} questions`}
                                         icon={g.icon}
-                                        onClick={() => { setGroupe(g); setEtape(3); }}
+                                        onClick={() => choisirGroupe(g)}
                                     />
                                 ))}
 
                                 {etape === 3 && (
                                     <>
                                         <p className="text-xs text-slate-500 leading-relaxed -mt-3 mb-3">
-                                            Choisis un ou plusieurs angles. Tu décideras ensuite par quoi commencer.
+                                            Choisis un ou plusieurs angles — facultatif, tu peux voir toutes les questions du sujet.
                                         </p>
                                         {ANGLES.map(a => {
                                             const pilier = PILLARS.find(p => p.id === a.id);
@@ -198,20 +202,16 @@ export default function AideChoix({ open, onClose, onResultat }: Props) {
                                                     icon={pilier?.icon}
                                                     accent={pilier?.bg}
                                                     coche={actif}
-                                                    onClick={() =>
-                                                        setAngles(p =>
-                                                            p.includes(a.id) ? p.filter(x => x !== a.id) : [...p, a.id],
-                                                        )
-                                                    }
+                                                    onClick={() => toggleAngle(a.id)}
                                                 />
                                             );
                                         })}
+
                                         <button
-                                            onClick={() => conclure(angles)}
-                                            disabled={angles.length === 0}
-                                            className="w-full h-14 mt-4 rounded-2xl bg-slate-900 disabled:bg-slate-200 disabled:text-slate-400 text-white text-xs font-black tracking-[0.15em] uppercase shadow-lg disabled:shadow-none active:scale-[0.98] transition-all"
+                                            onClick={conclure}
+                                            className="w-full h-14 mt-4 rounded-2xl bg-slate-900 text-white text-xs font-black tracking-[0.15em] uppercase shadow-lg active:scale-[0.98] transition-all"
                                         >
-                                            {angles.length === 0 ? 'Choisis au moins un angle' : 'Voir les questions'}
+                                            Voir les questions
                                         </button>
                                     </>
                                 )}

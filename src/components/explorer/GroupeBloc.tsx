@@ -4,7 +4,7 @@ import clsx from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PedagogicalContent, Dimension } from '@/types';
 import { Groupe } from '@/data/groupes';
-import { PILLARS } from '@/data/etages';
+import { PILLARS, THEMES_BY_PILLAR } from '@/data/etages';
 import { niveauRepere } from '@/data/niveaux';
 
 type Props = {
@@ -22,6 +22,12 @@ type Props = {
 // commencer par un geste de protection avant de l'expliquer. L'ordre du déroulé
 // appartient au moniteur, pas à l'écran.
 const ORDRE_AFFICHAGE: Dimension[] = ['COMPRENDRE', 'OBSERVER', 'PROTÉGER'];
+
+// Tous les thèmes du référentiel, tous piliers confondus — sert à retrouver le libellé
+// d'un tags_theme même quand il n'appartient pas au pilier de la fiche qui le porte (les
+// données croisent parfois les deux, ex. une fiche COMPRENDRE taguée « repères
+// spatio-temporels », qui est un thème OBSERVER).
+const TOUS_LES_THEMES = Object.values(THEMES_BY_PILLAR).flat();
 
 /**
  * Un phénomène et ses trois entrées COP.
@@ -98,12 +104,18 @@ export default function GroupeBloc({
                                     <div className="space-y-1.5">
                                         {items.map(f => {
                                             const prise = retenues.includes(f.id);
+                                            // Tous les thèmes de la fiche, pas seulement ceux du pilier
+                                            // affiché ici — les données croisent parfois pilier et thème
+                                            // d'un autre pilier (voir TOUS_LES_THEMES).
+                                            const themesFiche = TOUS_LES_THEMES.filter(t =>
+                                                (f.tags_theme ?? []).map(String).includes(t.id),
+                                            );
                                             return (
                                                 <div
                                                     key={f.id}
                                                     className={clsx(
-                                                        'relative flex items-start gap-2 rounded-xl overflow-hidden transition-colors',
-                                                        prise ? 'bg-indigo-50' : 'bg-[#EBF0F7]/60',
+                                                        'relative flex items-start gap-2 rounded-xl overflow-hidden transition-colors shadow-sm',
+                                                        prise ? 'bg-indigo-50' : 'bg-white',
                                                     )}
                                                 >
                                                     <span className={clsx('absolute left-0 top-0 bottom-0 w-1', pilier.bg)} />
@@ -112,6 +124,11 @@ export default function GroupeBloc({
                                                         onClick={() => onVoirFiche(f)}
                                                         className="flex-1 min-w-0 text-left pl-4 py-3"
                                                     >
+                                                        {themesFiche.length > 0 && (
+                                                            <span className="block text-[9px] font-black uppercase tracking-widest text-slate-400 mb-0.5">
+                                                                {themesFiche.map(t => t.label).join(' · ')}
+                                                            </span>
+                                                        )}
                                                         <span className="block text-[13px] font-bold text-slate-800 leading-snug">
                                                             {f.question}
                                                         </span>

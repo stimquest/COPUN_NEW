@@ -205,6 +205,7 @@ export default async function StagesPage() {
             suggestedThematics={activeStage.suggested_thematics ?? []}
             quizDone={!!quizData?.completed_at}
             totalPoints={totalPoints}
+            actionsSemaine={activeStage.actions_semaine ?? []}
             archivedStages={archivedStages.map(s => ({ id: s.id, title: s.title, dates: s.dates ?? '' }))}
             upcomingStages={upcomingStages.map(s => ({ id: s.id, title: s.title, dates: s.dates ?? '' }))}
         />

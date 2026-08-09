@@ -11,8 +11,10 @@ import { PILLARS } from '@/data/etages';
 import { NIVEAUX } from '@/data/niveaux';
 import { updateStagePool } from '@/actions/stage-actions';
 import GroupeBloc from '@/components/explorer/GroupeBloc';
-import AideChoix from '@/components/explorer/AideChoix';
 import TagsPanel from '@/components/explorer/TagsPanel';
+import AideChoixSujet from '@/components/explorer/AideChoixSujet';
+import FiltresCopun from '@/components/explorer/FiltresCopun';
+import SelectionRecapCopun from '@/components/explorer/SelectionRecapCopun';
 import CardDetailModal from '@/components/CardDetailModal';
 
 type Props = {
@@ -50,7 +52,6 @@ export default function ExplorerClient({ stage, copunPool, customPool }: Props) 
     // Multi-sélection : COP est un arc, pas une catégorie exclusive — on veut pouvoir
     // croiser deux « comprendre » et un « observer » sur un même sujet.
     const [dimensions, setDimensions] = useState<Dimension[]>([]);
-    const [aideOuverte, setAideOuverte] = useState(false);
     const [ficheDetail, setFicheDetail] = useState<PedagogicalContent | null>(null);
     const [enregistre, setEnregistre] = useState(false);
     const [saving, setSaving] = useState(false);
@@ -59,6 +60,23 @@ export default function ExplorerClient({ stage, copunPool, customPool }: Props) 
     const [tagsOuverts, setTagsOuverts] = useState(false);
     // Stockés en minuscules : les tags existent en plusieurs casses en base.
     const [tags, setTags] = useState<string[]>([]);
+
+    // Double entrée « Par où commencer ? », en A/B faute d'accord sur laquelle est la
+    // bonne — panneau inline juste sous le bouton (pas de feuille modale : le bouton est
+    // en haut de l'écran, une feuille qui monte du bas forçait un aller-retour visuel).
+    // « sujet » rouvre l'entonnoir angle → milieu → groupe
+    // (préconfigure les filtres du catalogue phénomène ci-dessous) ; « copun » bascule
+    // l'écran entier sur la vue FiltresCopun (Comprendre/Observer/Protéger → thème),
+    // qui n'a pas de notion de phénomène donc pas de sens à combiner avec le catalogue.
+    const [choixMethodeOuvert, setChoixMethodeOuvert] = useState(false);
+    const [aideSujetOuverte, setAideSujetOuverte] = useState(false);
+    const [vueCopun, setVueCopun] = useState(false);
+    // Le catalogue par phénomène ne s'affiche qu'après un passage explicite par
+    // l'entonnoir « Par sujet de terrain » — jamais par défaut, même sur une semaine déjà
+    // préparée : la créatrice de la méthode ne veut pas que cette organisation par sujet
+    // de terrain reste visible en permanence. Une semaine déjà préparée affiche à la place
+    // SelectionRecapCopun (voir plus bas), qui ne montre que la sélection, par pilier COP.
+    const [catalogueSujetOuvert, setCatalogueSujetOuvert] = useState(false);
 
     const pool = useMemo(() => [...copunPool, ...customPool], [copunPool, customPool]);
 
@@ -154,9 +172,19 @@ export default function ExplorerClient({ stage, copunPool, customPool }: Props) 
     };
 
 
-    // L'entonnoir ne produit pas une sélection : il règle les filtres et ouvre le groupe
-    // visé. Le moniteur retrouve son catalogue, ciblé, et reste libre de continuer.
-    const appliquerAide = (groupe: Groupe, dims: Dimension[]) => {
+    const enregistrer = async () => {
+        setSaving(true);
+        const res = await updateStagePool(stage.id, retenues);
+        setSaving(false);
+        if (res.success) { setEnregistre(true); router.refresh(); }
+        else alert('Erreur : ' + res.error);
+    };
+
+    // Résultat de l'entonnoir « par sujet » : préconfigure le catalogue phénomène
+    // ci-dessous (dimensions COP + groupe ouvert), reprend le comportement d'origine.
+    const appliquerAideSujet = (groupe: Groupe, dims: Dimension[]) => {
+        setVueCopun(false);
+        setCatalogueSujetOuvert(true);
         // Trois dimensions retenues = aucune restriction utile, on n'affiche pas de filtre.
         setDimensions(dims.length === 3 ? [] : dims);
         setNiveau(null);
@@ -165,14 +193,6 @@ export default function ExplorerClient({ stage, copunPool, customPool }: Props) 
         requestAnimationFrame(() => {
             document.getElementById(`groupe-${groupe.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         });
-    };
-
-    const enregistrer = async () => {
-        setSaving(true);
-        const res = await updateStagePool(stage.id, retenues);
-        setSaving(false);
-        if (res.success) { setEnregistre(true); router.refresh(); }
-        else alert('Erreur : ' + res.error);
     };
 
     return (
@@ -197,70 +217,78 @@ export default function ExplorerClient({ stage, copunPool, customPool }: Props) 
                         </div>
                     </div>
 
-                    <div className="relative mt-3">
-                        <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 text-[19px]">
-                            search
-                        </span>
-                        <input
-                            value={recherche}
-                            onChange={e => setRecherche(e.target.value)}
-                            placeholder="Chercher une question…"
-                            className="w-full h-11 pl-10 pr-9 rounded-xl bg-white text-sm font-medium text-slate-800 placeholder:text-slate-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 transition"
-                        />
-                        {recherche && (
-                            <button
-                                onClick={() => setRecherche('')}
-                                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-300 active:scale-90 transition"
-                            >
-                                <span className="material-symbols-outlined text-[18px]">close</span>
-                            </button>
-                        )}
-                    </div>
+                    {catalogueSujetOuvert && !vueCopun && (
+                        <>
+                            <div className="relative mt-3">
+                                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 text-[19px]">
+                                    search
+                                </span>
+                                <input
+                                    value={recherche}
+                                    onChange={e => setRecherche(e.target.value)}
+                                    placeholder="Chercher une question…"
+                                    className="w-full h-11 pl-10 pr-9 rounded-xl bg-white text-sm font-medium text-slate-800 placeholder:text-slate-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 transition"
+                                />
+                                {recherche && (
+                                    <button
+                                        onClick={() => setRecherche('')}
+                                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-300 active:scale-90 transition"
+                                    >
+                                        <span className="material-symbols-outlined text-[18px]">close</span>
+                                    </button>
+                                )}
+                            </div>
 
-                    {/* Filtres à plat : on voit l'état du tri sans avoir à ouvrir un panneau. */}
-                    <div className="flex items-center gap-1.5 mt-2.5 overflow-x-auto no-scrollbar pb-0.5">
-                        <button
-                            onClick={() => setTagsOuverts(true)}
-                            className={clsx(
-                                'shrink-0 h-8 pl-2.5 pr-3 rounded-full text-[11px] font-black uppercase tracking-wide shadow-sm transition-all active:scale-95 flex items-center gap-1',
-                                tags.length ? 'bg-indigo-600 text-white' : 'bg-white text-slate-500',
-                            )}
-                        >
-                            <span className="material-symbols-outlined text-[15px]">sell</span>
-                            {tags.length ? `${tags.length} mot${tags.length > 1 ? 's' : ''}-clé${tags.length > 1 ? 's' : ''}` : 'Mots-clés'}
-                        </button>
-                        <span className="w-px h-5 bg-slate-300 mx-0.5 shrink-0" />
-                        {NIVEAUX.map(({ n, label }) => (
-                            <Puce key={n} actif={niveau === n} onClick={() => setNiveau(niveau === n ? null : n)}>
-                                {label}
-                            </Puce>
-                        ))}
-                        <span className="w-px h-5 bg-slate-300 mx-1 shrink-0" />
-                        {(['COMPRENDRE', 'OBSERVER', 'PROTÉGER'] as Dimension[]).map(d => {
-                            const p = PILLARS.find(x => x.id === d);
-                            return (
-                                <Puce
-                                    key={d}
-                                    actif={dimensions.includes(d)}
-                                    accent={p?.bg}
-                                    onClick={() =>
-                                        setDimensions(prev =>
-                                            prev.includes(d) ? prev.filter(x => x !== d) : [...prev, d],
-                                        )
-                                    }
+                            {/* Filtres à plat : on voit l'état du tri sans avoir à ouvrir un panneau. */}
+                            <div className="flex items-center gap-1.5 mt-2.5 overflow-x-auto no-scrollbar pb-0.5">
+                                <button
+                                    onClick={() => setTagsOuverts(true)}
+                                    className={clsx(
+                                        'shrink-0 h-8 pl-2.5 pr-3 rounded-full text-[11px] font-black uppercase tracking-wide shadow-sm transition-all active:scale-95 flex items-center gap-1',
+                                        tags.length ? 'bg-indigo-600 text-white' : 'bg-white text-slate-500',
+                                    )}
                                 >
-                                    {p?.label}
-                                </Puce>
-                            );
-                        })}
-                    </div>
+                                    <span className="material-symbols-outlined text-[15px]">sell</span>
+                                    {tags.length ? `${tags.length} mot${tags.length > 1 ? 's' : ''}-clé${tags.length > 1 ? 's' : ''}` : 'Mots-clés'}
+                                </button>
+                                <span className="w-px h-5 bg-slate-300 mx-0.5 shrink-0" />
+                                {NIVEAUX.map(({ n, label }) => (
+                                    <Puce key={n} actif={niveau === n} onClick={() => setNiveau(niveau === n ? null : n)}>
+                                        {label}
+                                    </Puce>
+                                ))}
+                                <span className="w-px h-5 bg-slate-300 mx-1 shrink-0" />
+                                {(['COMPRENDRE', 'OBSERVER', 'PROTÉGER'] as Dimension[]).map(d => {
+                                    const p = PILLARS.find(x => x.id === d);
+                                    return (
+                                        <Puce
+                                            key={d}
+                                            actif={dimensions.includes(d)}
+                                            accent={p?.bg}
+                                            onClick={() =>
+                                                setDimensions(prev =>
+                                                    prev.includes(d) ? prev.filter(x => x !== d) : [...prev, d],
+                                                )
+                                            }
+                                        >
+                                            {p?.label}
+                                        </Puce>
+                                    );
+                                })}
+                            </div>
+                        </>
+                    )}
                 </div>
             </header>
 
             <main className="max-w-2xl mx-auto px-4 pt-1 space-y-2.5">
 
+                {/* Point d'entrée du choix de méthode, inline plutôt qu'en feuille modale :
+                    le bouton est en haut de l'écran, une feuille qui monte depuis le bas
+                    forçait un aller-retour visuel absurde. Voir ChoixMethodeInline pour le
+                    contexte du double chemin (COP'UN vs par sujet de terrain). */}
                 <button
-                    onClick={() => setAideOuverte(true)}
+                    onClick={() => setChoixMethodeOuvert(o => !o)}
                     className="w-full flex items-center gap-3 px-4 py-4 rounded-2xl bg-slate-900 text-white text-left active:scale-[0.99] transition shadow-sm"
                 >
                     <span className="size-10 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
@@ -268,47 +296,129 @@ export default function ExplorerClient({ stage, copunPool, customPool }: Props) 
                     </span>
                     <span className="flex-1 min-w-0">
                         <span className="block text-sm font-black leading-tight">Par où commencer ?</span>
-                        <span className="block text-[11px] text-white/60 mt-0.5">Trois questions et je cible pour toi</span>
+                        <span className="block text-[11px] text-white/60 mt-0.5">
+                            {vueCopun
+                                ? 'Vue COP’UN — change ici'
+                                : catalogueSujetOuvert
+                                    ? 'Catalogue par sujet — change ici'
+                                    : retenues.length > 0
+                                        ? 'Ajouter ou changer des questions'
+                                        : 'Choisis ton outil de filtre'}
+                        </span>
                     </span>
-                    <span className="material-symbols-outlined text-white/40 shrink-0">chevron_right</span>
+                    <span className={clsx('material-symbols-outlined text-white/40 shrink-0 transition-transform', choixMethodeOuvert && 'rotate-90')}>
+                        chevron_right
+                    </span>
                 </button>
 
-                <div className="flex items-center justify-between px-1 pt-1.5 pb-0.5">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                        {total} question{total > 1 ? 's' : ''}{filtresActifs > 0 && ' · filtré'}
-                    </p>
-                    {filtresActifs > 0 && (
-                        <button
-                            onClick={() => { setNiveau(null); setDimensions([]); setTags([]); setRecherche(''); }}
-                            className="text-[11px] font-bold text-indigo-500 hover:text-indigo-700 transition"
+                <AnimatePresence initial={false}>
+                    {choixMethodeOuvert && (
+                        <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="overflow-hidden"
                         >
-                            Tout afficher
-                        </button>
-                    )}
-                </div>
+                            <div className="space-y-2 pb-0.5">
+                                <button
+                                    onClick={() => { setChoixMethodeOuvert(false); setVueCopun(true); }}
+                                    className="w-full text-left px-4 py-3.5 rounded-2xl bg-linear-to-br from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/30 active:scale-[0.99] transition flex items-center gap-3"
+                                >
+                                    <span className="size-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+                                        <span className="material-symbols-outlined text-[19px]">psychology</span>
+                                    </span>
+                                    <span className="flex-1 min-w-0">
+                                        <span className="block text-sm font-black leading-tight">Méthode COP&apos;UN</span>
+                                        <span className="block text-[11px] text-white/70 mt-0.5">Comprendre, observer, protéger</span>
+                                    </span>
+                                    <span className="material-symbols-outlined text-white/60 shrink-0">chevron_right</span>
+                                </button>
 
-                {blocs.length === 0 ? (
-                    <div className="text-center py-16 text-slate-400">
-                        <span className="material-symbols-outlined text-4xl">search_off</span>
-                        <p className="text-sm font-black uppercase tracking-wide mt-2">Rien ne correspond</p>
-                        <p className="text-xs mt-1">Essayez d&apos;élargir les filtres.</p>
-                    </div>
-                ) : (
-                    blocs.map(({ groupe, fiches }) => (
-                        <div key={groupe.id} id={`groupe-${groupe.id}`} className="scroll-mt-48">
-                            <GroupeBloc
-                                groupe={groupe}
-                                fiches={fiches}
-                                retenues={retenues}
-                                ouvert={ouverts.includes(groupe.id)}
-                                onToggleOuvert={() =>
-                                    setOuverts(p => (p.includes(groupe.id) ? p.filter(x => x !== groupe.id) : [...p, groupe.id]))
-                                }
-                                onToggleFiche={toggleFiche}
-                                onVoirFiche={setFicheDetail}
-                            />
+                                <button
+                                    onClick={() => { setChoixMethodeOuvert(false); setVueCopun(false); setAideSujetOuverte(true); }}
+                                    className="w-full text-left px-4 py-3 rounded-2xl bg-white shadow-sm active:scale-[0.99] transition flex items-center gap-3"
+                                >
+                                    <span className="size-9 rounded-xl bg-[#EBF0F7] flex items-center justify-center shrink-0">
+                                        <span className="material-symbols-outlined text-[17px] text-slate-500">explore</span>
+                                    </span>
+                                    <span className="flex-1 min-w-0">
+                                        <span className="block text-sm font-black text-slate-900 leading-snug">Par sujet de terrain</span>
+                                        <span className="block text-xs text-slate-400 mt-0.5">Ce que tu observes : marées, vent, oiseaux…</span>
+                                    </span>
+                                    <span className="material-symbols-outlined text-slate-300 shrink-0">chevron_right</span>
+                                </button>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                {vueCopun ? (
+                    <FiltresCopun
+                        pool={pool}
+                        retenues={retenues}
+                        onToggleFiche={toggleFiche}
+                        onFicheInfo={setFicheDetail}
+                    />
+                ) : catalogueSujetOuvert ? (
+                    <>
+                        <div className="flex items-center justify-between px-1 pt-1.5 pb-0.5">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                                {total} question{total > 1 ? 's' : ''}{filtresActifs > 0 && ' · filtré'}
+                            </p>
+                            {filtresActifs > 0 && (
+                                <button
+                                    onClick={() => { setNiveau(null); setDimensions([]); setTags([]); setRecherche(''); }}
+                                    className="text-[11px] font-bold text-indigo-500 hover:text-indigo-700 transition"
+                                >
+                                    Tout afficher
+                                </button>
+                            )}
                         </div>
-                    ))
+
+                        {blocs.length === 0 ? (
+                            <div className="text-center py-16 text-slate-400">
+                                <span className="material-symbols-outlined text-4xl">search_off</span>
+                                <p className="text-sm font-black uppercase tracking-wide mt-2">Rien ne correspond</p>
+                                <p className="text-xs mt-1">Essayez d&apos;élargir les filtres.</p>
+                            </div>
+                        ) : (
+                            blocs.map(({ groupe, fiches }) => (
+                                <div key={groupe.id} id={`groupe-${groupe.id}`} className="scroll-mt-48">
+                                    <GroupeBloc
+                                        groupe={groupe}
+                                        fiches={fiches}
+                                        retenues={retenues}
+                                        ouvert={ouverts.includes(groupe.id)}
+                                        onToggleOuvert={() =>
+                                            setOuverts(p => (p.includes(groupe.id) ? p.filter(x => x !== groupe.id) : [...p, groupe.id]))
+                                        }
+                                        onToggleFiche={toggleFiche}
+                                        onVoirFiche={setFicheDetail}
+                                    />
+                                </div>
+                            ))
+                        )}
+                    </>
+                ) : retenues.length > 0 ? (
+                    /* Arrivée par défaut sur une semaine déjà préparée : seulement la
+                       sélection en cours, par pilier COP — jamais le catalogue par
+                       phénomène tant qu'on n'est pas passé par l'entonnoir dédié. */
+                    <SelectionRecapCopun
+                        pool={pool}
+                        retenues={retenues}
+                        onToggleFiche={toggleFiche}
+                        onFicheInfo={setFicheDetail}
+                    />
+                ) : (
+                    /* Rien tant qu'aucun outil de filtre n'a été choisi — 131 fiches à plat
+                       sans repère ne sont pas une arrivée utile. */
+                    <div className="text-center py-20 text-slate-400">
+                        <span className="material-symbols-outlined text-5xl">filter_alt</span>
+                        <p className="text-sm font-black uppercase tracking-wide mt-3 text-slate-500">Choisis un outil de filtre</p>
+                        <p className="text-xs mt-1.5 max-w-[240px] mx-auto leading-relaxed">
+                            Utilise « Par où commencer ? » pour trouver tes questions.
+                        </p>
+                    </div>
                 )}
             </main>
 
@@ -319,21 +429,28 @@ export default function ExplorerClient({ stage, copunPool, customPool }: Props) 
                 </div>
             )}
 
-            {retenues.length > 0 && (
+            {/* Affichée aussi à 0 fiche retenue tant que ce n'est pas encore enregistré :
+                vider une sélection existante doit rester une action qu'on peut valider,
+                pas un état invisible qui fait disparaître le bouton Enregistrer. */}
+            {(retenues.length > 0 || !dejaEnBase) && (
                 <div className="above-nav fixed left-0 right-0 z-40 px-4 pt-10 pb-4 bg-linear-to-t from-[#EBF0F7] via-[#EBF0F7] to-transparent pointer-events-none">
                     <div className="max-w-2xl mx-auto flex items-center gap-3 pointer-events-auto">
                         <button
                             onClick={() => setVoirSelection(true)}
-                            className="flex-1 min-w-0 h-14 px-4 rounded-2xl bg-white shadow-sm flex items-center gap-2 active:scale-[0.98] transition"
+                            disabled={retenues.length === 0}
+                            className="flex-1 min-w-0 h-14 px-4 rounded-2xl bg-white shadow-sm flex items-center gap-2 active:scale-[0.98] transition disabled:opacity-60"
                         >
                             <span className="text-base font-black text-slate-900">{retenues.length}</span>
                             <span className="text-xs font-bold text-slate-400">/ {MAX_OBJECTIFS} retenue{retenues.length > 1 ? 's' : ''}</span>
-                            <span className="material-symbols-outlined text-slate-300 text-lg ml-auto">expand_less</span>
+                            {retenues.length > 0 && (
+                                <span className="material-symbols-outlined text-slate-300 text-lg ml-auto">expand_less</span>
+                            )}
                         </button>
                         {/* Une fois la sélection enregistrée, l'écran ne doit pas être un
                             cul-de-sac : choisir des fiches n'est pas préparer, l'étape
-                            suivante est le vrai bénéfice pour le moniteur. */}
-                        {enregistre || dejaEnBase ? (
+                            suivante est le vrai bénéfice pour le moniteur. Mais si tout a
+                            été retiré, il n'y a plus de « préparer » qui tienne. */}
+                        {retenues.length > 0 && (enregistre || dejaEnBase) ? (
                             <Link
                                 href={`/stages/${stage.id}/preparer`}
                                 className="h-14 px-7 rounded-2xl bg-indigo-600 text-white text-xs font-black tracking-[0.15em] uppercase shadow-xl active:scale-95 transition-all flex items-center gap-2"
@@ -424,12 +541,16 @@ export default function ExplorerClient({ stage, copunPool, customPool }: Props) 
                 resultCount={total}
             />
 
-            <AideChoix open={aideOuverte} onClose={() => setAideOuverte(false)} onResultat={appliquerAide} />
-
             <CardDetailModal
                 isOpen={!!ficheDetail}
                 content={ficheDetail}
                 onClose={() => setFicheDetail(null)}
+            />
+
+            <AideChoixSujet
+                open={aideSujetOuverte}
+                onClose={() => setAideSujetOuverte(false)}
+                onResultat={appliquerAideSujet}
             />
         </div>
     );

@@ -402,6 +402,8 @@ type Props = {
     suggestedThematics: string[];
     quizDone: boolean;
     totalPoints: number;
+    /** Rituels transversaux choisis pour la semaine (`src/data/actions-semaine.ts`). */
+    actionsSemaine: string[];
 };
 
 export function WeekDashboardClient({
@@ -409,7 +411,7 @@ export function WeekDashboardClient({
     preparations, initialObservations, initialExploits, clubObservationTargets,
     greeting, firstName, seasonGradient, seasonIcon,
     contentCount, archivedStages, upcomingStages,
-    suggestedThematics, quizDone, totalPoints,
+    suggestedThematics, quizDone, totalPoints, actionsSemaine,
 }: Props) {
     const [technicalObjectiveList, setTechnicalObjectiveList] = useState<PedagogicalContent[]>(technicalObjectives);
     const [showSportPicker, setShowSportPicker] = useState(false);
@@ -694,7 +696,7 @@ export function WeekDashboardClient({
                             Modifier
                         </Link>
                     </div>
-                    <ProgrammeCondense stageId={stageId} contents={objectives} preparations={preparations} />
+                    <ProgrammeCondense stageId={stageId} contents={objectives} preparations={preparations} actionsSemaine={actionsSemaine} />
                 </section>
 
                 {/* Objectifs sportifs — fiches créées par le moniteur, indépendantes du programme environnemental COP'UN */}
