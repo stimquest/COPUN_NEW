@@ -32,7 +32,8 @@ function pilierDe(c: PedagogicalContent) {
  * Le glisser est déclenché depuis la poignée seule (`useDragControls`) et non depuis
  * toute la carte : sur téléphone, une carte entièrement draggable capture le geste de
  * défilement et rend la liste impossible à parcourir. `touch-none` sur la poignée
- * neutralise le scroll natif une fois le doigt dessus.
+ * neutralise le scroll natif une fois le doigt dessus ; au clavier-souris, c'est la
+ * sélection de texte qu'il faut neutraliser, d'où le `preventDefault` à la saisie.
  *
  * Composant partagé entre l'écran de sélection et l'écran de préparation, pour que le
  * geste soit identique aux deux endroits.
@@ -44,29 +45,42 @@ export default function OrdreSujets({ contents, onReordonner, repliable = false 
 
     return (
         <section>
+            {/* Replié, l'en-tête doit se suffire : « Mes sujets, dans l'ordre » ne disait ni
+                ce que le bloc contient, ni qu'on peut y agir. Il annonce donc le nombre de
+                sujets, les premiers titres, et nomme l'action possible — de quoi décider de
+                l'ouvrir sans avoir à l'ouvrir pour comprendre. */}
             {repliable ? (
                 <button
                     onClick={() => setOuvert(o => !o)}
                     aria-expanded={ouvert}
-                    className="w-full flex items-center justify-between gap-3 text-left"
+                    className="w-full flex items-start justify-between gap-3 text-left group"
                 >
-                    <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">
-                        Mes sujets, dans l&apos;ordre
-                    </h3>
+                    <div className="flex-1 min-w-0">
+                        <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">
+                            Mes {contents.length} sujets, dans l&apos;ordre
+                        </h3>
+                        {!ouvert && (
+                            <p className="text-[12px] font-semibold text-slate-400 leading-snug mt-1 truncate">
+                                {contents.map(c => c.question).join(' · ')}
+                            </p>
+                        )}
+                        <p className="text-[11px] font-semibold text-slate-300 group-hover:text-slate-400 transition-colors mt-1">
+                            {ouvert ? 'Glissez la poignée pour réorganiser.' : 'Ouvrir pour changer l’ordre'}
+                        </p>
+                    </div>
                     <span className="material-symbols-outlined text-[20px] text-slate-300 shrink-0">
                         {ouvert ? 'expand_less' : 'expand_more'}
                     </span>
                 </button>
             ) : (
-                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">
-                    Dans quel ordre&nbsp;?
-                </h3>
-            )}
-
-            {ouvert && (
-                <p className="text-[11px] font-semibold text-slate-400 mt-1">
-                    Glissez la poignée pour réorganiser.
-                </p>
+                <>
+                    <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">
+                        Dans quel ordre&nbsp;?
+                    </h3>
+                    <p className="text-[11px] font-semibold text-slate-400 mt-1">
+                        Glissez la poignée pour réorganiser.
+                    </p>
+                </>
             )}
 
             {ouvert && (
@@ -98,7 +112,7 @@ function Ligne({ content, rang }: { content: PedagogicalContent; rang: number })
             onDragStart={() => setSaisi(true)}
             onDragEnd={() => setSaisi(false)}
             className={clsx(
-                'flex items-center gap-2 rounded-2xl bg-white border pl-3 pr-1 py-3 transition-shadow',
+                'flex items-center gap-2 rounded-2xl bg-white border pl-3 pr-1 py-3 transition-shadow select-none',
                 saisi ? 'border-indigo-300 shadow-lg shadow-indigo-500/10' : 'border-slate-200/80',
             )}
         >
@@ -125,8 +139,12 @@ function Ligne({ content, rang }: { content: PedagogicalContent; rang: number })
                 </p>
             </div>
 
+            {/* `preventDefault` sur la saisie : sans lui, la souris déclenche en parallèle la
+                sélection de texte native du navigateur, et déplacer une ligne surligne en bleu
+                tout ce que le curseur traverse. `select-none` sur la ligne empêche le même
+                effet quand le geste démarre légèrement à côté de la poignée. */}
             <span
-                onPointerDown={e => controls.start(e)}
+                onPointerDown={e => { e.preventDefault(); controls.start(e); }}
                 aria-label={`Déplacer : ${content.question}`}
                 className="size-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-400 hover:text-indigo-600 hover:bg-indigo-100 cursor-grab active:cursor-grabbing touch-none shrink-0 transition-colors"
             >
