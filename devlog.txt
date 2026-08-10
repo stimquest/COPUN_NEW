@@ -4743,3 +4743,153 @@ https://nextjs.org/docs/messages/module-not-found
 ✓ Compiled in 96ms
 ✓ Compiled in 79ms
 ✓ Compiled in 73ms
+ GET /stages 200 in 816ms (compile: 20ms, proxy.ts: 296ms, render: 500ms)
+ GET /ressources 200 in 327ms (compile: 78ms, proxy.ts: 104ms, render: 145ms)
+ GET /ressources/f8737ce6-efff-45fa-81b9-5e855680fc4e 200 in 932ms (compile: 696ms, proxy.ts: 98ms, render: 138ms)
+ GET /ressources/f8737ce6-efff-45fa-81b9-5e855680fc4e/edit 200 in 1437ms (compile: 1043ms, proxy.ts: 185ms, render: 209ms)
+ GET /ressources/f8737ce6-efff-45fa-81b9-5e855680fc4e 200 in 335ms (compile: 11ms, proxy.ts: 165ms, render: 159ms)
+ POST /ressources/f8737ce6-efff-45fa-81b9-5e855680fc4e/edit 200 in 1035ms (compile: 9ms, proxy.ts: 219ms, render: 807ms)
+ GET /ressources/f8737ce6-efff-45fa-81b9-5e855680fc4e 200 in 306ms (compile: 7ms, proxy.ts: 164ms, render: 134ms)
+ GET /ressources/f8737ce6-efff-45fa-81b9-5e855680fc4e/edit 200 in 316ms (compile: 10ms, proxy.ts: 176ms, render: 130ms)
+ POST /ressources/f8737ce6-efff-45fa-81b9-5e855680fc4e/edit 200 in 519ms (compile: 8ms, proxy.ts: 149ms, render: 362ms)
+ GET /ressources/f8737ce6-efff-45fa-81b9-5e855680fc4e 200 in 300ms (compile: 13ms, proxy.ts: 163ms, render: 124ms)
+ GET /ressources/f8737ce6-efff-45fa-81b9-5e855680fc4e 200 in 245ms (compile: 4ms, proxy.ts: 105ms, render: 136ms)
+ GET /ressources 200 in 366ms (compile: 4ms, proxy.ts: 205ms, render: 157ms)
+ GET /ressources/eee4de44-035c-48dc-b4d0-88255b63a958 200 in 1735ms (compile: 10ms, proxy.ts: 1239ms, render: 486ms)
+ GET /ressources/eee4de44-035c-48dc-b4d0-88255b63a958/edit 200 in 512ms (compile: 9ms, proxy.ts: 272ms, render: 231ms)
+ POST /ressources/eee4de44-035c-48dc-b4d0-88255b63a958/edit 200 in 878ms (compile: 10ms, proxy.ts: 193ms, render: 675ms)
+ GET /ressources/eee4de44-035c-48dc-b4d0-88255b63a958 200 in 532ms (compile: 10ms, proxy.ts: 272ms, render: 251ms)
+ GET /ressources/eee4de44-035c-48dc-b4d0-88255b63a958 200 in 379ms (compile: 15ms, proxy.ts: 178ms, render: 186ms)
+ GET /ressources 200 in 377ms (compile: 5ms, proxy.ts: 181ms, render: 191ms)
+ GET /ressources/jeux 200 in 616ms (compile: 311ms, proxy.ts: 186ms, render: 120ms)
+ GET /jeux/9e1abdab-6fd2-42b4-b4fd-8fb21ac47423 200 in 236ms (compile: 19ms, proxy.ts: 139ms, render: 78ms)
+ GET /ressources 200 in 331ms (compile: 9ms, proxy.ts: 149ms, render: 172ms)
+ GET /ressources/jeux 200 in 185ms (compile: 6ms, proxy.ts: 99ms, render: 79ms)
+ POST /ressources/jeux 200 in 571ms (compile: 5ms, proxy.ts: 160ms, render: 406ms)
+ GET /ressources/jeux 200 in 302ms (compile: 5ms, proxy.ts: 143ms, render: 154ms)
+ POST /ressources/jeux 200 in 446ms (compile: 4ms, proxy.ts: 114ms, render: 328ms)
+ GET /ressources/jeux 200 in 260ms (compile: 4ms, proxy.ts: 124ms, render: 132ms)
+ POST /ressources/jeux 200 in 466ms (compile: 4ms, proxy.ts: 128ms, render: 334ms)
+ GET /ressources/jeux 200 in 253ms (compile: 4ms, proxy.ts: 115ms, render: 135ms)
+ POST /ressources/jeux 200 in 432ms (compile: 4ms, proxy.ts: 108ms, render: 321ms)
+ GET /ressources/jeux 200 in 246ms (compile: 5ms, proxy.ts: 107ms, render: 134ms)
+ GET /stages 200 in 467ms (compile: 4ms, proxy.ts: 102ms, render: 360ms)
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/program 200 in 685ms (compile: 303ms, proxy.ts: 141ms, render: 241ms)
+ GET /stages 200 in 406ms (compile: 5ms, proxy.ts: 92ms, render: 309ms)
+ GET /stages/new 200 in 140ms (compile: 23ms, proxy.ts: 106ms, render: 12ms)
+ GET /stages 200 in 458ms (compile: 5ms, proxy.ts: 101ms, render: 352ms)
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/program 200 in 283ms (compile: 11ms, proxy.ts: 102ms, render: 170ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/program 200 in 570ms (compile: 9ms, proxy.ts: 196ms, render: 365ms)
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/program 200 in 366ms (compile: 5ms, proxy.ts: 182ms, render: 180ms)
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 385ms (compile: 23ms, proxy.ts: 106ms, render: 256ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 686ms (compile: 9ms, proxy.ts: 192ms, render: 484ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 560ms (compile: 8ms, proxy.ts: 182ms, render: 370ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 454ms (compile: 8ms, proxy.ts: 110ms, render: 336ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 555ms (compile: 9ms, proxy.ts: 142ms, render: 405ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 473ms (compile: 6ms, proxy.ts: 134ms, render: 333ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 899ms (compile: 12ms, proxy.ts: 427ms, render: 460ms)
+✓ Compiled in 62ms
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 849ms (compile: 11ms, proxy.ts: 109ms, render: 729ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 1087ms (compile: 330ms, proxy.ts: 113ms, render: 644ms)
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+✓ Compiled in 63ms
+⨯ ReferenceError: EmplacementVide is not defined
+    at Sujet (src\app\stages\[id]\preparer\PreparerClient.tsx:457:30)
+  455 |                             </button>
+  456 |                         ) : !deplie ? (
+> 457 |                             <EmplacementVide
+      |                              ^
+  458 |                                 invite="Choisir mon accroche"
+  459 |                                 nombre={variantes.length}
+  460 |                                 onClick={() => setDeplie(true)} {
+  digest: '2091120602'
+}
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 500 in 770ms (compile: 154ms, proxy.ts: 152ms, render: 464ms)
+ GET /manifest.webmanifest 200 in 7ms (compile: 2ms, render: 4ms)
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+✓ Compiled in 101ms
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 644ms (compile: 162ms, proxy.ts: 136ms, render: 346ms)
+ GET /manifest.webmanifest 200 in 7ms (compile: 3ms, render: 4ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 526ms (compile: 9ms, proxy.ts: 138ms, render: 379ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 522ms (compile: 6ms, proxy.ts: 138ms, render: 378ms)
+✓ Compiled in 64ms
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+✓ Compiled in 60ms
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 721ms (compile: 184ms, proxy.ts: 149ms, render: 389ms)
+ GET /manifest.webmanifest 200 in 6ms (compile: 3ms, render: 3ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 1362ms (compile: 96ms, proxy.ts: 219ms, render: 1047ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 1124ms (compile: 10ms, proxy.ts: 96ms, render: 1017ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 652ms (compile: 9ms, proxy.ts: 94ms, render: 549ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 710ms (compile: 8ms, proxy.ts: 134ms, render: 567ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 588ms (compile: 6ms, proxy.ts: 142ms, render: 440ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 692ms (compile: 11ms, proxy.ts: 248ms, render: 433ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 524ms (compile: 13ms, proxy.ts: 138ms, render: 372ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 607ms (compile: 9ms, proxy.ts: 168ms, render: 430ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 553ms (compile: 6ms, proxy.ts: 152ms, render: 395ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 924ms (compile: 11ms, proxy.ts: 331ms, render: 582ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 633ms (compile: 22ms, proxy.ts: 236ms, render: 375ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 743ms (compile: 10ms, proxy.ts: 187ms, render: 546ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 533ms (compile: 8ms, proxy.ts: 182ms, render: 342ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 715ms (compile: 11ms, proxy.ts: 237ms, render: 468ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 840ms (compile: 9ms, proxy.ts: 374ms, render: 456ms)
+✓ Compiled in 53ms
+✓ Compiled in 58ms
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 906ms (compile: 297ms, proxy.ts: 143ms, render: 465ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 519ms (compile: 9ms, proxy.ts: 164ms, render: 346ms)
+✓ Compiled in 57ms
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 758ms (compile: 171ms, proxy.ts: 183ms, render: 405ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 477ms (compile: 5ms, proxy.ts: 128ms, render: 344ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 439ms (compile: 9ms, proxy.ts: 92ms, render: 339ms)
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+✓ Compiled in 55ms
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 652ms (compile: 170ms, proxy.ts: 94ms, render: 388ms)
+ GET /manifest.webmanifest 200 in 7ms (compile: 3ms, render: 5ms)
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+✓ Compiled in 100ms
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 696ms (compile: 197ms, proxy.ts: 138ms, render: 361ms)
+ GET /manifest.webmanifest 200 in 6ms (compile: 3ms, render: 4ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 500ms (compile: 9ms, proxy.ts: 130ms, render: 361ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 513ms (compile: 9ms, proxy.ts: 138ms, render: 366ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 437ms (compile: 9ms, proxy.ts: 95ms, render: 333ms)
+✓ Compiled in 60ms
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 718ms (compile: 185ms, proxy.ts: 136ms, render: 397ms)
+✓ Compiled in 60ms
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 756ms (compile: 179ms, proxy.ts: 163ms, render: 414ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 496ms (compile: 5ms, proxy.ts: 146ms, render: 346ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 616ms (compile: 9ms, proxy.ts: 189ms, render: 418ms)
+✓ Compiled in 51ms
+✓ Compiled in 51ms
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 807ms (compile: 183ms, proxy.ts: 559ms, render: 64ms)
+✓ Compiled in 81ms
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 1257ms (compile: 215ms, proxy.ts: 398ms, render: 644ms)
+✓ Compiled in 60ms
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 935ms (compile: 291ms, proxy.ts: 221ms, render: 422ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 475ms (compile: 6ms, proxy.ts: 136ms, render: 333ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 423ms (compile: 8ms, proxy.ts: 119ms, render: 296ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 377ms (compile: 5ms, proxy.ts: 98ms, render: 274ms)
+✓ Compiled in 54ms
+✓ Compiled in 87ms
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 600ms (compile: 181ms, proxy.ts: 97ms, render: 322ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 400ms (compile: 8ms, proxy.ts: 103ms, render: 289ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 405ms (compile: 9ms, proxy.ts: 107ms, render: 290ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 434ms (compile: 5ms, proxy.ts: 102ms, render: 327ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 490ms (compile: 8ms, proxy.ts: 149ms, render: 333ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 415ms (compile: 9ms, proxy.ts: 118ms, render: 288ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 414ms (compile: 9ms, proxy.ts: 99ms, render: 306ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 404ms (compile: 5ms, proxy.ts: 98ms, render: 301ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 414ms (compile: 8ms, proxy.ts: 100ms, render: 306ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 383ms (compile: 8ms, proxy.ts: 99ms, render: 276ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 474ms (compile: 10ms, proxy.ts: 134ms, render: 330ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 397ms (compile: 10ms, proxy.ts: 92ms, render: 295ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 395ms (compile: 9ms, proxy.ts: 94ms, render: 292ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 374ms (compile: 9ms, proxy.ts: 90ms, render: 275ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 373ms (compile: 8ms, proxy.ts: 89ms, render: 276ms)
+✓ Compiled in 75ms
+✓ Compiled in 51ms
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 721ms (compile: 192ms, proxy.ts: 154ms, render: 376ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 455ms (compile: 5ms, proxy.ts: 132ms, render: 318ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 471ms (compile: 9ms, proxy.ts: 143ms, render: 319ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 553ms (compile: 8ms, proxy.ts: 158ms, render: 386ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 563ms (compile: 9ms, proxy.ts: 174ms, render: 379ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 574ms (compile: 9ms, proxy.ts: 144ms, render: 422ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 507ms (compile: 10ms, proxy.ts: 112ms, render: 386ms)

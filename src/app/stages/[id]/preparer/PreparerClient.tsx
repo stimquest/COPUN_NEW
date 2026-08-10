@@ -274,46 +274,64 @@ export default function PreparerClient({
                     />
                 ))}
 
-                {/* Le rituel de semaine reste hors du flux — c'est un réglage de stage, pas
-                    une étape par sujet — mais il doit se voir. */}
-                <button
-                    onClick={() => setOuvrirSemaine(true)}
-                    className={clsx(
-                        'w-full flex items-center gap-3 mt-10 rounded-2xl px-5 py-4 text-left transition-all active:scale-[0.99]',
-                        semaine.length === 0
-                            ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20'
-                            : 'bg-white border border-indigo-200',
+                {/* ══ SI VOUS VOULEZ ALLER PLUS LOIN ══
+                    Facultatif, et présenté comme tel : pas de bouton plein indigo en fin de
+                    page — le traitement d'une étape obligatoire — mais une suggestion posée à
+                    plat, qu'on peut traverser sans rien faire. L'outil propose des idées
+                    d'animation, il n'impose pas un rituel de plus à tenir. */}
+                <div className="mt-12 pt-6 border-t border-slate-200/70">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                        Si vous voulez aller plus loin
+                    </p>
+                    <p className="text-[14px] font-medium text-slate-500 leading-relaxed mt-1.5">
+                        Certains moniteurs tiennent un même petit geste chaque jour de la semaine.
+                        C&apos;est une idée à prendre ou à laisser — votre programme est complet sans.
+                    </p>
+
+                    {semaine.length > 0 && (
+                        <div className="space-y-2 mt-4">
+                            {semaine.map(id => {
+                                const rituel = actionSemaineParId(id);
+                                if (!rituel) return null;
+                                return (
+                                    <div
+                                        key={id}
+                                        className="flex items-start gap-3 rounded-xl bg-white border border-slate-200 px-4 py-3.5"
+                                    >
+                                        <span className="material-symbols-outlined text-slate-400 text-[19px] mt-0.5 shrink-0">
+                                            repeat
+                                        </span>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-[14px] font-bold text-slate-800 leading-snug">
+                                                {rituel.label}
+                                            </p>
+                                            <p className="text-[13px] font-medium text-slate-500 leading-relaxed mt-0.5">
+                                                {rituel.consigne}
+                                            </p>
+                                        </div>
+                                        <button
+                                            onClick={() => basculerSemaine(id)}
+                                            aria-label={`Retirer : ${rituel.label}`}
+                                            className="size-6 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-300 hover:text-slate-600 transition-colors shrink-0"
+                                        >
+                                            <span className="material-symbols-outlined text-[16px]">close</span>
+                                        </button>
+                                    </div>
+                                );
+                            })}
+                        </div>
                     )}
-                >
-                    <span className={clsx(
-                        'material-symbols-outlined text-[22px] shrink-0',
-                        semaine.length === 0 ? 'text-white/70' : 'text-indigo-600',
-                    )}>
-                        repeat
-                    </span>
-                    <span className="flex-1 min-w-0">
-                        <span className={clsx(
-                            'block text-[10px] font-black uppercase tracking-widest',
-                            semaine.length === 0 ? 'text-white/60' : 'text-indigo-500',
-                        )}>
-                            Pour toute la semaine
+
+                    <button
+                        onClick={() => setOuvrirSemaine(true)}
+                        className="mt-3 inline-flex items-center gap-1.5 text-[13px] font-black text-slate-500 hover:text-slate-800 transition-colors"
+                    >
+                        <span className="material-symbols-outlined text-[17px]">
+                            {semaine.length > 0 ? 'edit' : 'add'}
                         </span>
-                        <span className={clsx(
-                            'block text-[15px] font-black leading-snug mt-0.5',
-                            semaine.length === 0 ? 'text-white' : 'text-slate-900',
-                        )}>
-                            {semaine.length === 0
-                                ? 'Choisir un rituel à tenir chaque jour'
-                                : semaine.map(id => actionSemaineParId(id)?.label).filter(Boolean).join(' · ')}
-                        </span>
-                    </span>
-                    <span className={clsx(
-                        'material-symbols-outlined text-[20px] shrink-0',
-                        semaine.length === 0 ? 'text-white/60' : 'text-indigo-300',
-                    )}>
-                        chevron_right
-                    </span>
-                </button>
+                        {semaine.length > 0 ? 'Changer' : 'Voir les idées de rituel'}
+                    </button>
+                </div>
 
                 <div className="mt-6 flex items-center gap-2.5">
                     <Link
@@ -361,6 +379,13 @@ function Sujet({
     onBasculer: (id: string) => void;
 }) {
     const [changeAccroche, setChangeAccroche] = useState(false);
+    /**
+     * Les propositions restent repliées tant que le moniteur ne les demande pas : un sujet
+     * qui s'ouvre en déballant ses trois formulations donne une page à trier, alors que
+     * l'emplacement vide pose une décision à prendre — plus court à lire, plus clair à faire.
+     */
+    const [deplie, setDeplie] = useState(false);
+    const [deplieActions, setDeplieActions] = useState(false);
 
     const choisie = prep?.accroche_choisie ?? null;
     const actions = prep?.actions ?? [];
@@ -411,29 +436,30 @@ function Sujet({
                 </div>
             )}
 
-            {/* ══ CE QUE JE VAIS DIRE ══
-                Le cadre distingue trois natures de contenu, pas une seule teinte plate :
-                - DÉCIDÉ (accroche choisie, actions retenues) : carte blanche nette, c'est
-                  le cœur vivant du bloc, ce que le moniteur a produit ;
-                - À CHOISIR : contour pointillé fin, clairement « pas encore rempli » ;
-                - DONNÉ PAR LA FICHE (à observer, à retenir) : texte simple sans carte,
-                  posé sur le fond ambre — c'est du contexte à lire, pas un choix à faire. */}
+            {/* ══ LE DÉROULÉ DE LA SÉANCE ══
+                Deux cadres ambre pour les deux moments qui demandent une décision (j'ouvre,
+                je leur fais faire) ; entre et après, ce que la fiche fournit déjà — observer,
+                repartir avec — en texte simple hors cadre. Un seul cadre englobant les
+                quatre faisait deux écrans de haut et rangeait sous « ce que je vais dire »
+                des choses qui ne se disent pas.
+
+                Trois natures de contenu, trois traitements :
+                - DÉCIDÉ (accroche choisie, actions retenues) : carte ambre à liseré plein ;
+                - À CHOISIR : emplacement vide en pointillé ambre, puis propositions en
+                  cartes blanches à trait plein — le pointillé ambre ne désigne que le trou ;
+                - DONNÉ PAR LA FICHE : texte simple, sans carte, avec une icône. */}
             <div className="mt-6 rounded-2xl bg-white border border-amber-100 shadow-sm shadow-amber-900/5 overflow-hidden">
                 <div className="flex items-center gap-2 px-6 pt-5 pb-4 bg-amber-50/70 border-b border-amber-100">
                     <span className="material-symbols-outlined text-amber-600 text-[20px]">record_voice_over</span>
                     <h3 className="text-xs font-black text-amber-900 uppercase tracking-widest">
-                        Ce que je vais dire
+                        J&apos;ouvre la séance
                     </h3>
                 </div>
 
-                <div className="px-6 py-5 space-y-5">
+                <div className="px-6 py-5">
 
                     {/* J'ouvre avec — décision 1 */}
                     <div>
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">
-                            J&apos;ouvre avec
-                        </span>
-
                         {choisie && !changeAccroche ? (
                             <button
                                 onClick={() => setChangeAccroche(true)}
@@ -447,88 +473,94 @@ function Sujet({
                                     Changer
                                 </span>
                             </button>
+                        ) : !deplie ? (
+                            <EmplacementVide
+                                invite="Choisir mon accroche"
+                                nombre={variantes.length}
+                                onClick={() => setDeplie(true)}
+                            />
                         ) : (
                             <div className="space-y-2">
                                 {variantes.map((v, i) => (
                                     <CartePop key={v} delai={i * 0.06}>
-                                        <BoutonChoix onClick={() => { onChoisirAccroche(v); setChangeAccroche(false); }}>
+                                        <BoutonChoix onClick={() => {
+                                            onChoisirAccroche(v);
+                                            setChangeAccroche(false);
+                                            setDeplie(false);
+                                        }}>
                                             «&nbsp;{v}&nbsp;»
                                         </BoutonChoix>
                                     </CartePop>
                                 ))}
-                                {choisie && (
-                                    <button
-                                        onClick={() => setChangeAccroche(false)}
-                                        className="text-[11px] font-black text-slate-400 hover:text-slate-600 uppercase tracking-widest transition-colors pt-1"
-                                    >
-                                        Annuler
-                                    </button>
-                                )}
+                                <BoutonRefermer
+                                    onClick={() => { setChangeAccroche(false); setDeplie(false); }}
+                                    libelle="Annuler"
+                                    valide={false}
+                                />
                             </div>
                         )}
                     </div>
+                </div>
+            </div>
 
-                    {/* Je leur fais observer — donné par la fiche */}
-                    {content.a_observer && (
-                        <div>
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1.5">
-                                Je leur fais observer
-                            </span>
-                            <p className="text-[15px] font-semibold text-slate-700 leading-relaxed">{content.a_observer}</p>
-                        </div>
-                    )}
+            {/* Je leur fais observer — donné par la fiche, hors cadre : ce n'est pas une
+                décision à prendre, et ça n'a jamais relevé de « ce que je vais dire ». */}
+            {content.a_observer && (
+                <div className="mt-4 flex items-start gap-3 px-1">
+                    <span className="material-symbols-outlined text-slate-400 text-[20px] mt-0.5 shrink-0">visibility</span>
+                    <div>
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">
+                            Je leur fais observer
+                        </span>
+                        <p className="text-[15px] font-semibold text-slate-700 leading-relaxed">{content.a_observer}</p>
+                    </div>
+                </div>
+            )}
 
-                    {/* Je leur fais faire — décision 2, choix et résultat au même endroit :
-                        avant, les propositions vivaient hors du cadre, plus bas dans la
-                        page, pendant que le résultat s'affichait ici. */}
-                    {choisie && proposees.length > 0 && (
-                        <div>
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">
-                                Je leur fais faire
-                            </span>
+            {/* Je leur fais faire — décision 2, dans son propre cadre : c'est un second
+                moment de séance, pas une suite de la parole d'ouverture. */}
+            {choisie && proposees.length > 0 && (
+                <div className="mt-4 rounded-2xl bg-white border border-amber-100 shadow-sm shadow-amber-900/5 overflow-hidden">
+                    <div className="flex items-center gap-2 px-6 pt-5 pb-4 bg-amber-50/70 border-b border-amber-100">
+                        <span className="material-symbols-outlined text-amber-600 text-[20px]">back_hand</span>
+                        <h3 className="text-xs font-black text-amber-900 uppercase tracking-widest">
+                            Je leur fais faire
+                        </h3>
+                    </div>
 
-                            <AnimatePresence initial={false}>
-                                {retenues.length > 0 && (
+                    <div className="px-6 py-5">
+                        {/* Pas d'animation de hauteur sur le conteneur : combinée au `layout`
+                            des cartes, elle laissait la hauteur se figer avant la fin de la
+                            transition et le texte débordait du cadre. Chaque carte porte sa
+                            propre entrée, ça suffit. */}
+                        {retenues.length > 0 && (
+                            <div className="space-y-2 pb-2">
+                                {retenues.map(a => (
                                     <motion.div
-                                        initial={{ opacity: 0, height: 0 }}
-                                        animate={{ opacity: 1, height: 'auto' }}
-                                        exit={{ opacity: 0, height: 0 }}
-                                        className="overflow-hidden"
+                                        key={a.id}
+                                        initial={{ opacity: 0, scale: 0.85 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        transition={{ type: 'spring', stiffness: 500, damping: 22 }}
+                                        className="flex items-start gap-3 rounded-xl bg-amber-50 border-l-4 border-amber-500 px-4 py-3.5"
                                     >
-                                        <div className="space-y-2 pb-2">
-                                            {retenues.map(a => (
-                                                <motion.div
-                                                    key={a.id}
-                                                    layout
-                                                    initial={{ opacity: 0, scale: 0.85 }}
-                                                    animate={{ opacity: 1, scale: 1 }}
-                                                    transition={{ type: 'spring', stiffness: 500, damping: 22 }}
-                                                    className="flex items-start gap-3 rounded-xl bg-amber-50 border-l-4 border-amber-500 px-4 py-3.5"
-                                                >
-                                                    <p className="flex-1 text-[15px] font-bold text-amber-950 leading-snug">
-                                                        {a.consigne}
-                                                    </p>
-                                                    <button
-                                                        onClick={() => onBasculer(a.id)}
-                                                        aria-label={`Retirer : ${a.label}`}
-                                                        className="size-6 rounded-full hover:bg-white/70 flex items-center justify-center text-amber-500/60 hover:text-amber-800 transition-colors shrink-0"
-                                                    >
-                                                        <span className="material-symbols-outlined text-[16px]">close</span>
-                                                    </button>
-                                                </motion.div>
-                                            ))}
-                                        </div>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-
-                            {restantes.length > 0 && (
-                                <div className="space-y-2">
-                                    {retenues.length === 0 && (
-                                        <p className="text-[11px] font-semibold text-slate-400 mb-1">
-                                            Touchez une ou plusieurs propositions.
+                                        <p className="flex-1 text-[15px] font-bold text-amber-950 leading-snug">
+                                            {a.consigne}
                                         </p>
-                                    )}
+                                        <button
+                                            onClick={() => onBasculer(a.id)}
+                                            aria-label={`Retirer : ${a.label}`}
+                                            className="size-6 rounded-full hover:bg-white/70 flex items-center justify-center text-amber-500/60 hover:text-amber-800 transition-colors shrink-0"
+                                        >
+                                            <span className="material-symbols-outlined text-[16px]">close</span>
+                                        </button>
+                                    </motion.div>
+                                ))}
+                            </div>
+                        )}
+
+                        {restantes.length > 0 && (
+                            deplieActions ? (
+                                <div className="space-y-2">
                                     {restantes.map((a, i) => (
                                         <CartePop key={a.id} delai={i * 0.06}>
                                             <BoutonChoix onClick={() => onBasculer(a.id)} compact>
@@ -536,22 +568,37 @@ function Sujet({
                                             </BoutonChoix>
                                         </CartePop>
                                     ))}
+                                    <BoutonRefermer
+                                        onClick={() => setDeplieActions(false)}
+                                        libelle={retenues.length > 0 ? 'Terminé' : 'Annuler'}
+                                        valide={retenues.length > 0}
+                                    />
                                 </div>
-                            )}
-                        </div>
-                    )}
-
-                    {/* Ils repartent avec — donné par la fiche */}
-                    {content.a_retenir && (
-                        <div className="pt-1 border-t border-slate-100">
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1.5 mt-4">
-                                Ils repartent avec
-                            </span>
-                            <p className="text-[15px] font-semibold text-slate-700 leading-relaxed">{content.a_retenir}</p>
-                        </div>
-                    )}
+                            ) : (
+                                <EmplacementVide
+                                    invite={retenues.length > 0 ? 'Ajouter une autre activité' : 'Choisir une activité'}
+                                    nombre={restantes.length}
+                                    onClick={() => setDeplieActions(true)}
+                                />
+                            )
+                        )}
+                    </div>
                 </div>
-            </div>
+            )}
+
+            {/* Ils repartent avec — la conclusion du sujet, donnée par la fiche. Sortie du
+                cadre pour la même raison que « je leur fais observer ». */}
+            {content.a_retenir && (
+                <div className="mt-4 flex items-start gap-3 px-1">
+                    <span className="material-symbols-outlined text-slate-400 text-[20px] mt-0.5 shrink-0">backpack</span>
+                    <div>
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">
+                            Ils repartent avec
+                        </span>
+                        <p className="text-[15px] font-semibold text-slate-700 leading-relaxed">{content.a_retenir}</p>
+                    </div>
+                </div>
+            )}
         </section>
     );
 }
@@ -570,6 +617,82 @@ function CartePop({ children, delai = 0 }: { children: React.ReactNode; delai?: 
         >
             {children}
         </motion.div>
+    );
+}
+
+/**
+ * Referme une liste de propositions dépliée.
+ *
+ * Dessiné comme un bouton — fond, bordure, hauteur de frappe — et non comme le libellé gris
+ * en petites capitales qu'il était : posé sous une liste, ce libellé se lisait comme un
+ * titre de section alors qu'il portait la seule action permettant de refermer le bloc.
+ */
+function BoutonRefermer({
+    onClick,
+    libelle,
+    valide,
+}: {
+    onClick: () => void;
+    libelle: string;
+    valide: boolean;
+}) {
+    return (
+        <button
+            type="button"
+            onClick={onClick}
+            className={clsx(
+                'mt-1 inline-flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-[12px] font-black transition-colors active:scale-[0.97]',
+                valide
+                    ? 'bg-amber-500 text-white hover:bg-amber-600'
+                    : 'bg-white border border-slate-200 text-slate-500 hover:text-slate-800 hover:border-slate-300',
+            )}
+        >
+            {valide && <span className="material-symbols-outlined text-[15px]">check</span>}
+            {libelle}
+        </button>
+    );
+}
+
+/**
+ * Le trou à combler — un emplacement vide, en pointillé, qui montre qu'une décision manque
+ * ici et déplie les propositions au clic.
+ *
+ * Il occupe la place que prendra le choix une fois fait : la carte ne se réorganise pas
+ * sous les yeux du moniteur, elle se remplit. Le halo qui pulse lentement signale que c'est
+ * l'endroit où agir sans réclamer l'attention comme le ferait une couleur vive.
+ */
+function EmplacementVide({
+    invite,
+    nombre,
+    onClick,
+}: {
+    invite: string;
+    nombre: number;
+    onClick: () => void;
+}) {
+    return (
+        <motion.button
+            type="button"
+            onClick={onClick}
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            whileTap={{ scale: 0.985 }}
+            className="group w-full flex items-center gap-3 rounded-xl border-2 border-dashed border-amber-300/70 bg-amber-50/30 hover:bg-amber-50/70 hover:border-amber-400 px-4 py-4 transition-colors"
+        >
+            <motion.span
+                animate={{ scale: [1, 1.12, 1], opacity: [0.75, 1, 0.75] }}
+                transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
+                className="size-7 rounded-full bg-amber-100 flex items-center justify-center shrink-0"
+            >
+                <span className="material-symbols-outlined text-amber-600 text-[17px]">add</span>
+            </motion.span>
+            <span className="flex-1 text-left text-[15px] font-bold text-amber-900/70 group-hover:text-amber-900 transition-colors">
+                {invite}
+            </span>
+            <span className="text-[11px] font-black text-amber-600/60 uppercase tracking-widest shrink-0">
+                {nombre} propositions
+            </span>
+        </motion.button>
     );
 }
 
@@ -597,7 +720,10 @@ function BoutonChoix({
             animate={pris ? { scale: [1, 1.06, 0.9] } : { scale: 1 }}
             transition={{ duration: 0.16 }}
             className={clsx(
-                'w-full text-left rounded-xl bg-white border-2 border-dashed border-slate-200 hover:border-amber-400 hover:bg-amber-50/40 transition-colors active:scale-[0.98]',
+                // Trait plein, jamais pointillé : le pointillé ambre est le vocabulaire de
+                // l'emplacement vide (« il manque une décision ici »). L'employer aussi sur
+                // les propositions faisait lire la carte survolée comme déjà choisie.
+                'w-full text-left rounded-xl bg-white border border-slate-200 shadow-sm hover:border-slate-300 hover:shadow-md transition-all active:scale-[0.98]',
                 compact ? 'px-4 py-3' : 'px-4 py-3.5',
             )}
         >
@@ -612,11 +738,12 @@ function BoutonChoix({
 }
 
 /**
- * Les rituels de semaine, dans une feuille montante.
+ * Le catalogue d'idées de geste quotidien, dans une feuille montante.
  *
- * Ce choix se fait une seule fois pour tout le stage : le laisser dans le flux de
- * préparation en faisait un obstacle massif à franchir avant d'arriver au contenu, alors
- * qu'il n'est consulté qu'exceptionnellement.
+ * Ce choix se fait une seule fois pour tout le stage, et il est facultatif : le laisser
+ * dans le flux de préparation en faisait un obstacle massif à franchir avant d'arriver au
+ * contenu, alors qu'il n'est consulté qu'exceptionnellement. La feuille est ouverte depuis
+ * une suggestion, jamais imposée au passage.
  */
 function FeuilleSemaine({
     ouverte,
@@ -646,13 +773,18 @@ function FeuilleSemaine({
                         <div className="px-5 pt-5 pb-3 flex items-start gap-3 shrink-0">
                             <div className="flex-1 min-w-0">
                                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                                    Pour toute la semaine
+                                    Facultatif
                                 </p>
                                 <p className="text-lg font-black text-slate-900 leading-tight">
-                                    Un rituel tenu chaque jour
+                                    Des idées de geste quotidien
                                 </p>
+                                {/* Pas de compteur « 0/2 retenu » quand rien n'est pris : un
+                                    quota affiché sur une liste facultative se lit comme un
+                                    objectif manqué. */}
                                 <p className="text-[12px] font-bold text-slate-400 mt-0.5">
-                                    {retenues.length}/{MAX_SEMAINE} retenu{retenues.length > 1 ? 's' : ''}
+                                    {retenues.length === 0
+                                        ? `À piocher si l'envie vous en dit — ${MAX_SEMAINE} au maximum`
+                                        : `${retenues.length}/${MAX_SEMAINE} retenu${retenues.length > 1 ? 's' : ''}`}
                                 </p>
                             </div>
                             <button
