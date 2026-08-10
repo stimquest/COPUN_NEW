@@ -1,14 +1,34 @@
 import Link from 'next/link';
 import { getAllFichesMemo } from '@/actions/fiche-memo-actions';
 import { getProfile } from '@/actions/user-actions';
+import type { ThematicTag } from '@/data/seasonal-context';
 import FicheCard from '@/components/fiches/FicheCard';
 import FichesBrowser from '@/components/fiches/FichesBrowser';
+import { ALL_THEMATIC_TAGS } from '@/components/fiches/fiche-constants';
 
-export default async function RessourcesPage() {
-    const [fiches, profile] = await Promise.all([
+export default async function RessourcesPage({
+    searchParams,
+}: {
+    searchParams: Promise<{ theme?: string; retour?: string }>;
+}) {
+    const [fiches, profile, params] = await Promise.all([
         getAllFichesMemo(),
         getProfile(),
+        searchParams,
     ]);
+
+    // `?theme=` arrive depuis l'écran de choix des sujets. Validé contre la liste connue :
+    // une valeur inventée dans l'URL ne doit pas produire une liste vide inexplicable.
+    const themeInitial = (ALL_THEMATIC_TAGS as readonly string[]).includes(params.theme ?? '')
+        ? (params.theme as ThematicTag)
+        : null;
+
+    // `?retour=` : chemin de retour quand on arrive depuis une autre page de l'app. Sans lui,
+    // le seul moyen de revenir est le bouton de l'OS — invisible sur mobile en plein écran.
+    // Restreint aux chemins internes : une URL absolue permettrait une redirection ouverte.
+    const retour = params.retour?.startsWith('/') && !params.retour.startsWith('//')
+        ? params.retour
+        : null;
 
     const isAdmin = profile?.role === 'admin';
     const isModerator = profile?.role === 'admin' || profile?.role === 'instructor';
@@ -22,6 +42,16 @@ export default async function RessourcesPage() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 pb-32">
             {/* Header */}
             <header className="mb-10">
+                {retour && (
+                    <Link
+                        href={retour}
+                        className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-800 font-semibold mb-5"
+                    >
+                        <span className="material-symbols-outlined text-base">arrow_back</span>
+                        Retour
+                    </Link>
+                )}
+
                 <div className="flex items-start justify-between gap-4 mb-6">
                     <div>
                         <h1 className="text-4xl font-black text-slate-900 uppercase tracking-tighter italic mb-2">
@@ -88,6 +118,7 @@ export default async function RessourcesPage() {
                         currentUserId={currentUserId}
                         isAdmin={isAdmin}
                         isModerator={isModerator}
+                        themeInitial={themeInitial}
                     />
                 </section>
             ) : (

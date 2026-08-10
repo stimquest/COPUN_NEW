@@ -4914,3 +4914,478 @@ https://nextjs.org/docs/messages/module-not-found
  POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 560ms (compile: 10ms, proxy.ts: 274ms, render: 276ms)
  POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 390ms (compile: 18ms, proxy.ts: 93ms, render: 280ms)
  POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 391ms (compile: 8ms, proxy.ts: 108ms, render: 274ms)
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 960ms (compile: 14ms, proxy.ts: 309ms, render: 637ms)
+ GET /manifest.webmanifest 200 in 6ms (compile: 3ms, render: 4ms)
+ GET /stages 200 in 552ms (compile: 5ms, proxy.ts: 186ms, render: 361ms)
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/program 200 in 317ms (compile: 9ms, proxy.ts: 120ms, render: 188ms)
+ GET /stages 200 in 1179ms (compile: 5ms, proxy.ts: 519ms, render: 654ms)
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/program 200 in 441ms (compile: 9ms, proxy.ts: 135ms, render: 297ms)
+✓ Compiled in 110ms
+✓ Compiled in 63ms
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/program 200 in 356ms (compile: 10ms, proxy.ts: 293ms, render: 54ms)
+✓ Compiled in 61ms
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/program 200 in 233ms (compile: 10ms, proxy.ts: 182ms, render: 41ms)
+✓ Compiled in 57ms
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+✓ Compiled in 69ms
+⨯ ReferenceError: ChoixThemes is not defined
+    at ExplorerClient (src\app\stages\[id]\program\ExplorerClient.tsx:298:22)
+  296 |                     vers l'éparpillement au lieu de tenir la semaine sur trois couleurs. */}
+  297 |                 {!vueCopun && (
+> 298 |                     <ChoixThemes choisis={themesChoisis} onChoisir={choisirTheme} />
+      |                      ^
+  299 |                 )}
+  300 |
+  301 |                 {/* ══ ÉTAPE 2 : LES QUESTIONS ══ {
+  digest: '2152732532'
+}
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/program 500 in 1099ms (compile: 342ms, proxy.ts: 359ms, render: 398ms)
+ GET /manifest.webmanifest 200 in 7ms (compile: 3ms, render: 4ms)
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+✓ Compiled in 50ms
+⨯ ReferenceError: ChoixThemes is not defined
+    at ExplorerClient (src\app\stages\[id]\program\ExplorerClient.tsx:298:22)
+  296 |                     vers l'éparpillement au lieu de tenir la semaine sur trois couleurs. */}
+  297 |                 {!vueCopun && (
+> 298 |                     <ChoixThemes choisis={themesChoisis} onChoisir={choisirTheme} />
+      |                      ^
+  299 |                 )}
+  300 |
+  301 |                 {/* ══ ÉTAPE 2 : LES QUESTIONS ══ {
+  digest: '2152732532'
+}
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/program 500 in 675ms (compile: 186ms, proxy.ts: 138ms, render: 351ms)
+ GET /manifest.webmanifest 200 in 6ms (compile: 3ms, render: 4ms)
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+✓ Compiled in 59ms
+⨯ ReferenceError: ChoixThemes is not defined
+    at ExplorerClient (src\app\stages\[id]\program\ExplorerClient.tsx:298:22)
+  296 |                     vers l'éparpillement au lieu de tenir la semaine sur trois couleurs. */}
+  297 |                 {!vueCopun && (
+> 298 |                     <ChoixThemes choisis={themesChoisis} onChoisir={choisirTheme} />
+      |                      ^
+  299 |                 )}
+  300 |
+  301 |                 {/* ══ ÉTAPE 2 : LES QUESTIONS ══ {
+  digest: '2152732532'
+}
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/program 500 in 664ms (compile: 170ms, proxy.ts: 148ms, render: 346ms)
+ GET /manifest.webmanifest 200 in 6ms (compile: 3ms, render: 3ms)
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+✓ Compiled in 61ms
+⨯ ReferenceError: ChoixThemes is not defined
+    at ExplorerClient (src\app\stages\[id]\program\ExplorerClient.tsx:298:22)
+  296 |                     vers l'éparpillement au lieu de tenir la semaine sur trois couleurs. */}
+  297 |                 {!vueCopun && (
+> 298 |                     <ChoixThemes choisis={themesChoisis} onChoisir={choisirTheme} />
+      |                      ^
+  299 |                 )}
+  300 |
+  301 |                 {/* ══ ÉTAPE 2 : LES QUESTIONS ══ {
+  digest: '1841390993'
+}
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/program 500 in 662ms (compile: 187ms, proxy.ts: 139ms, render: 336ms)
+ GET /manifest.webmanifest 200 in 6ms (compile: 3ms, render: 3ms)
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+✓ Compiled in 79ms
+⨯ ReferenceError: ChoixThemes is not defined
+    at ExplorerClient (src\app\stages\[id]\program\ExplorerClient.tsx:298:22)
+  296 |                     vers l'éparpillement au lieu de tenir la semaine sur trois couleurs. */}
+  297 |                 {!vueCopun && (
+> 298 |                     <ChoixThemes choisis={themesChoisis} onChoisir={choisirTheme} />
+      |                      ^
+  299 |                 )}
+  300 |
+  301 |                 {/* ══ ÉTAPE 2 : LES QUESTIONS ══ {
+  digest: '1978475859'
+}
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/program 500 in 673ms (compile: 217ms, proxy.ts: 132ms, render: 324ms)
+ GET /manifest.webmanifest 200 in 6ms (compile: 3ms, render: 4ms)
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+✓ Compiled in 55ms
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/program 200 in 709ms (compile: 198ms, proxy.ts: 133ms, render: 378ms)
+ GET /manifest.webmanifest 200 in 6ms (compile: 2ms, render: 3ms)
+✓ Compiled in 82ms
+ GET /ressources?theme=caracteristiques_littoral 200 in 656ms (compile: 208ms, proxy.ts: 190ms, render: 259ms)
+ GET /ressources?theme=caracteristiques_littoral 200 in 379ms (compile: 4ms, proxy.ts: 175ms, render: 199ms)
+ GET /ressources/877ee652-9496-438e-b0db-0196c7bf67c2 200 in 550ms (compile: 15ms, proxy.ts: 258ms, render: 278ms)
+ GET /ressources 200 in 350ms (compile: 4ms, proxy.ts: 194ms, render: 152ms)
+✓ Compiled in 58ms
+✓ Compiled in 56ms
+✓ Compiled in 63ms
+✓ Compiled in 65ms
+✓ Compiled in 65ms
+ GET /ressources?theme=activites_humaines 200 in 854ms (compile: 5ms, proxy.ts: 578ms, render: 271ms)
+ GET /ressources?theme=reperes_spatio_temporels 200 in 451ms (compile: 4ms, proxy.ts: 244ms, render: 203ms)
+✓ Compiled in 85ms
+⨯ ./src/app/stages/[id]/program/ExplorerClient.tsx:16:1
+Module not found: Can't resolve '@/components/explorer/FiltresCopun'
+[0m [90m 14 |[39m [36mimport[39m [33mTagsPanel[39m [36mfrom[39m [32m'@/components/explorer/TagsPanel'[39m[33m;[39m
+ [90m 15 |[39m [36mimport[39m [33mChoixThemes[39m [36mfrom[39m [32m'@/components/explorer/ChoixThemes'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 16 |[39m [36mimport[39m [33mFiltresCopun[39m [36mfrom[39m [32m'@/components/explorer/FiltresCopun'[39m[33m;[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 17 |[39m [36mimport[39m [33mSelectionRecapCopun[39m [36mfrom[39m [32m'@/components/explorer/SelectionRecapCopun'[39m[33m;[39m
+ [90m 18 |[39m [36mimport[39m [33mCardDetailModal[39m [36mfrom[39m [32m'@/components/CardDetailModal'[39m[33m;[39m
+ [90m 19 |[39m[0m
+
+Import map: aliased to relative './src/components/explorer/FiltresCopun' inside of [project]/
+
+
+Import trace:
+  Server Component:
+    ./src/app/stages/[id]/program/ExplorerClient.tsx
+    ./src/app/stages/[id]/program/page.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./src/app/stages/[id]/program/ExplorerClient.tsx:16:1
+Module not found: Can't resolve '@/components/explorer/FiltresCopun'
+[0m [90m 14 |[39m [36mimport[39m [33mTagsPanel[39m [36mfrom[39m [32m'@/components/explorer/TagsPanel'[39m[33m;[39m
+ [90m 15 |[39m [36mimport[39m [33mChoixThemes[39m [36mfrom[39m [32m'@/components/explorer/ChoixThemes'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 16 |[39m [36mimport[39m [33mFiltresCopun[39m [36mfrom[39m [32m'@/components/explorer/FiltresCopun'[39m[33m;[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 17 |[39m [36mimport[39m [33mSelectionRecapCopun[39m [36mfrom[39m [32m'@/components/explorer/SelectionRecapCopun'[39m[33m;[39m
+ [90m 18 |[39m [36mimport[39m [33mCardDetailModal[39m [36mfrom[39m [32m'@/components/CardDetailModal'[39m[33m;[39m
+ [90m 19 |[39m[0m
+
+Import map: aliased to relative './src/components/explorer/FiltresCopun' inside of [project]/
+
+
+Import trace:
+  Server Component:
+    ./src/app/stages/[id]/program/ExplorerClient.tsx
+    ./src/app/stages/[id]/program/page.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./src/app/stages/[id]/program/ExplorerClient.tsx:16:1
+Module not found: Can't resolve '@/components/explorer/FiltresCopun'
+[0m [90m 14 |[39m [36mimport[39m [33mTagsPanel[39m [36mfrom[39m [32m'@/components/explorer/TagsPanel'[39m[33m;[39m
+ [90m 15 |[39m [36mimport[39m [33mChoixThemes[39m [36mfrom[39m [32m'@/components/explorer/ChoixThemes'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 16 |[39m [36mimport[39m [33mFiltresCopun[39m [36mfrom[39m [32m'@/components/explorer/FiltresCopun'[39m[33m;[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 17 |[39m [36mimport[39m [33mSelectionRecapCopun[39m [36mfrom[39m [32m'@/components/explorer/SelectionRecapCopun'[39m[33m;[39m
+ [90m 18 |[39m [36mimport[39m [33mCardDetailModal[39m [36mfrom[39m [32m'@/components/CardDetailModal'[39m[33m;[39m
+ [90m 19 |[39m[0m
+
+Import map: aliased to relative './src/components/explorer/FiltresCopun' inside of [project]/
+
+
+Import trace:
+  Server Component:
+    ./src/app/stages/[id]/program/ExplorerClient.tsx
+    ./src/app/stages/[id]/program/page.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./src/app/stages/[id]/program/ExplorerClient.tsx:16:1
+Module not found: Can't resolve '@/components/explorer/FiltresCopun'
+[0m [90m 14 |[39m [36mimport[39m [33mTagsPanel[39m [36mfrom[39m [32m'@/components/explorer/TagsPanel'[39m[33m;[39m
+ [90m 15 |[39m [36mimport[39m [33mChoixThemes[39m [36mfrom[39m [32m'@/components/explorer/ChoixThemes'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 16 |[39m [36mimport[39m [33mFiltresCopun[39m [36mfrom[39m [32m'@/components/explorer/FiltresCopun'[39m[33m;[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 17 |[39m [36mimport[39m [33mSelectionRecapCopun[39m [36mfrom[39m [32m'@/components/explorer/SelectionRecapCopun'[39m[33m;[39m
+ [90m 18 |[39m [36mimport[39m [33mCardDetailModal[39m [36mfrom[39m [32m'@/components/CardDetailModal'[39m[33m;[39m
+ [90m 19 |[39m[0m
+
+Import map: aliased to relative './src/components/explorer/FiltresCopun' inside of [project]/
+
+
+Import trace:
+  Server Component:
+    ./src/app/stages/[id]/program/ExplorerClient.tsx
+    ./src/app/stages/[id]/program/page.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./src/app/stages/[id]/program/ExplorerClient.tsx:16:1
+Module not found: Can't resolve '@/components/explorer/FiltresCopun'
+[0m [90m 14 |[39m [36mimport[39m [33mTagsPanel[39m [36mfrom[39m [32m'@/components/explorer/TagsPanel'[39m[33m;[39m
+ [90m 15 |[39m [36mimport[39m [33mChoixThemes[39m [36mfrom[39m [32m'@/components/explorer/ChoixThemes'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 16 |[39m [36mimport[39m [33mFiltresCopun[39m [36mfrom[39m [32m'@/components/explorer/FiltresCopun'[39m[33m;[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 17 |[39m [36mimport[39m [33mSelectionRecapCopun[39m [36mfrom[39m [32m'@/components/explorer/SelectionRecapCopun'[39m[33m;[39m
+ [90m 18 |[39m [36mimport[39m [33mCardDetailModal[39m [36mfrom[39m [32m'@/components/CardDetailModal'[39m[33m;[39m
+ [90m 19 |[39m[0m
+
+Import map: aliased to relative './src/components/explorer/FiltresCopun' inside of [project]/
+
+
+Import trace:
+  Server Component:
+    ./src/app/stages/[id]/program/ExplorerClient.tsx
+    ./src/app/stages/[id]/program/page.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./src/app/stages/[id]/program/ExplorerClient.tsx:16:1
+Module not found: Can't resolve '@/components/explorer/FiltresCopun'
+[0m [90m 14 |[39m [36mimport[39m [33mTagsPanel[39m [36mfrom[39m [32m'@/components/explorer/TagsPanel'[39m[33m;[39m
+ [90m 15 |[39m [36mimport[39m [33mChoixThemes[39m [36mfrom[39m [32m'@/components/explorer/ChoixThemes'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 16 |[39m [36mimport[39m [33mFiltresCopun[39m [36mfrom[39m [32m'@/components/explorer/FiltresCopun'[39m[33m;[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 17 |[39m [36mimport[39m [33mSelectionRecapCopun[39m [36mfrom[39m [32m'@/components/explorer/SelectionRecapCopun'[39m[33m;[39m
+ [90m 18 |[39m [36mimport[39m [33mCardDetailModal[39m [36mfrom[39m [32m'@/components/CardDetailModal'[39m[33m;[39m
+ [90m 19 |[39m[0m
+
+Import map: aliased to relative './src/components/explorer/FiltresCopun' inside of [project]/
+
+
+Import trace:
+  Server Component:
+    ./src/app/stages/[id]/program/ExplorerClient.tsx
+    ./src/app/stages/[id]/program/page.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./src/app/stages/[id]/program/ExplorerClient.tsx:16:1
+Module not found: Can't resolve '@/components/explorer/FiltresCopun'
+[0m [90m 14 |[39m [36mimport[39m [33mTagsPanel[39m [36mfrom[39m [32m'@/components/explorer/TagsPanel'[39m[33m;[39m
+ [90m 15 |[39m [36mimport[39m [33mChoixThemes[39m [36mfrom[39m [32m'@/components/explorer/ChoixThemes'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 16 |[39m [36mimport[39m [33mFiltresCopun[39m [36mfrom[39m [32m'@/components/explorer/FiltresCopun'[39m[33m;[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 17 |[39m [36mimport[39m [33mSelectionRecapCopun[39m [36mfrom[39m [32m'@/components/explorer/SelectionRecapCopun'[39m[33m;[39m
+ [90m 18 |[39m [36mimport[39m [33mCardDetailModal[39m [36mfrom[39m [32m'@/components/CardDetailModal'[39m[33m;[39m
+ [90m 19 |[39m[0m
+
+Import map: aliased to relative './src/components/explorer/FiltresCopun' inside of [project]/
+
+
+Import trace:
+  Server Component:
+    ./src/app/stages/[id]/program/ExplorerClient.tsx
+    ./src/app/stages/[id]/program/page.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./src/app/stages/[id]/program/ExplorerClient.tsx:16:1
+Module not found: Can't resolve '@/components/explorer/FiltresCopun'
+[0m [90m 14 |[39m [36mimport[39m [33mTagsPanel[39m [36mfrom[39m [32m'@/components/explorer/TagsPanel'[39m[33m;[39m
+ [90m 15 |[39m [36mimport[39m [33mChoixThemes[39m [36mfrom[39m [32m'@/components/explorer/ChoixThemes'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 16 |[39m [36mimport[39m [33mFiltresCopun[39m [36mfrom[39m [32m'@/components/explorer/FiltresCopun'[39m[33m;[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 17 |[39m [36mimport[39m [33mSelectionRecapCopun[39m [36mfrom[39m [32m'@/components/explorer/SelectionRecapCopun'[39m[33m;[39m
+ [90m 18 |[39m [36mimport[39m [33mCardDetailModal[39m [36mfrom[39m [32m'@/components/CardDetailModal'[39m[33m;[39m
+ [90m 19 |[39m[0m
+
+Import map: aliased to relative './src/components/explorer/FiltresCopun' inside of [project]/
+
+
+Import trace:
+  Server Component:
+    ./src/app/stages/[id]/program/ExplorerClient.tsx
+    ./src/app/stages/[id]/program/page.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./src/app/stages/[id]/program/ExplorerClient.tsx:16:1
+Module not found: Can't resolve '@/components/explorer/FiltresCopun'
+[0m [90m 14 |[39m [36mimport[39m [33mTagsPanel[39m [36mfrom[39m [32m'@/components/explorer/TagsPanel'[39m[33m;[39m
+ [90m 15 |[39m [36mimport[39m [33mChoixThemes[39m [36mfrom[39m [32m'@/components/explorer/ChoixThemes'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 16 |[39m [36mimport[39m [33mFiltresCopun[39m [36mfrom[39m [32m'@/components/explorer/FiltresCopun'[39m[33m;[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 17 |[39m [36mimport[39m [33mSelectionRecapCopun[39m [36mfrom[39m [32m'@/components/explorer/SelectionRecapCopun'[39m[33m;[39m
+ [90m 18 |[39m [36mimport[39m [33mCardDetailModal[39m [36mfrom[39m [32m'@/components/CardDetailModal'[39m[33m;[39m
+ [90m 19 |[39m[0m
+
+Import map: aliased to relative './src/components/explorer/FiltresCopun' inside of [project]/
+
+
+Import trace:
+  Server Component:
+    ./src/app/stages/[id]/program/ExplorerClient.tsx
+    ./src/app/stages/[id]/program/page.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./src/app/stages/[id]/program/ExplorerClient.tsx:16:1
+Module not found: Can't resolve '@/components/explorer/FiltresCopun'
+[0m [90m 14 |[39m [36mimport[39m [33mTagsPanel[39m [36mfrom[39m [32m'@/components/explorer/TagsPanel'[39m[33m;[39m
+ [90m 15 |[39m [36mimport[39m [33mChoixThemes[39m [36mfrom[39m [32m'@/components/explorer/ChoixThemes'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 16 |[39m [36mimport[39m [33mFiltresCopun[39m [36mfrom[39m [32m'@/components/explorer/FiltresCopun'[39m[33m;[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 17 |[39m [36mimport[39m [33mSelectionRecapCopun[39m [36mfrom[39m [32m'@/components/explorer/SelectionRecapCopun'[39m[33m;[39m
+ [90m 18 |[39m [36mimport[39m [33mCardDetailModal[39m [36mfrom[39m [32m'@/components/CardDetailModal'[39m[33m;[39m
+ [90m 19 |[39m[0m
+
+Import map: aliased to relative './src/components/explorer/FiltresCopun' inside of [project]/
+
+
+Import trace:
+  Server Component:
+    ./src/app/stages/[id]/program/ExplorerClient.tsx
+    ./src/app/stages/[id]/program/page.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./src/app/stages/[id]/program/ExplorerClient.tsx:16:1
+Module not found: Can't resolve '@/components/explorer/FiltresCopun'
+[0m [90m 14 |[39m [36mimport[39m [33mTagsPanel[39m [36mfrom[39m [32m'@/components/explorer/TagsPanel'[39m[33m;[39m
+ [90m 15 |[39m [36mimport[39m [33mChoixThemes[39m [36mfrom[39m [32m'@/components/explorer/ChoixThemes'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 16 |[39m [36mimport[39m [33mFiltresCopun[39m [36mfrom[39m [32m'@/components/explorer/FiltresCopun'[39m[33m;[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 17 |[39m [36mimport[39m [33mSelectionRecapCopun[39m [36mfrom[39m [32m'@/components/explorer/SelectionRecapCopun'[39m[33m;[39m
+ [90m 18 |[39m [36mimport[39m [33mCardDetailModal[39m [36mfrom[39m [32m'@/components/CardDetailModal'[39m[33m;[39m
+ [90m 19 |[39m[0m
+
+Import map: aliased to relative './src/components/explorer/FiltresCopun' inside of [project]/
+
+
+Import trace:
+  Server Component:
+    ./src/app/stages/[id]/program/ExplorerClient.tsx
+    ./src/app/stages/[id]/program/page.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./src/app/stages/[id]/program/ExplorerClient.tsx:16:1
+Module not found: Can't resolve '@/components/explorer/FiltresCopun'
+[0m [90m 14 |[39m [36mimport[39m [33mTagsPanel[39m [36mfrom[39m [32m'@/components/explorer/TagsPanel'[39m[33m;[39m
+ [90m 15 |[39m [36mimport[39m [33mChoixThemes[39m [36mfrom[39m [32m'@/components/explorer/ChoixThemes'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 16 |[39m [36mimport[39m [33mFiltresCopun[39m [36mfrom[39m [32m'@/components/explorer/FiltresCopun'[39m[33m;[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 17 |[39m [36mimport[39m [33mSelectionRecapCopun[39m [36mfrom[39m [32m'@/components/explorer/SelectionRecapCopun'[39m[33m;[39m
+ [90m 18 |[39m [36mimport[39m [33mCardDetailModal[39m [36mfrom[39m [32m'@/components/CardDetailModal'[39m[33m;[39m
+ [90m 19 |[39m[0m
+
+Import map: aliased to relative './src/components/explorer/FiltresCopun' inside of [project]/
+
+
+Import trace:
+  Server Component:
+    ./src/app/stages/[id]/program/ExplorerClient.tsx
+    ./src/app/stages/[id]/program/page.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+✓ Compiled in 57ms
+✓ Compiled in 58ms
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/program 200 in 586ms (compile: 330ms, proxy.ts: 194ms, render: 62ms)
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+✓ Compiled in 79ms
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/program 200 in 842ms (compile: 164ms, proxy.ts: 221ms, render: 458ms)
+ GET /manifest.webmanifest 200 in 7ms (compile: 3ms, render: 4ms)
+✓ Compiled in 53ms
+✓ Compiled in 81ms
+✓ Compiled in 99ms
+✓ Compiled in 51ms
+✓ Compiled in 60ms
+✓ Compiled in 54ms
+✓ Compiled in 59ms
+✓ Compiled in 63ms
+✓ Compiled in 76ms
+✓ Compiled in 53ms
+✓ Compiled in 117ms
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/program 200 in 780ms (compile: 348ms, proxy.ts: 267ms, render: 165ms)
+✓ Compiled in 56ms
+✓ Compiled in 60ms
+✓ Compiled in 67ms
+✓ Compiled in 60ms
+ GET /ressources?theme=reperes_spatio_temporels 200 in 520ms (compile: 11ms, proxy.ts: 259ms, render: 250ms)
+ GET /ressources?theme=lecture_paysage 200 in 366ms (compile: 4ms, proxy.ts: 163ms, render: 199ms)
+ GET /ressources?theme=lecture_paysage 200 in 362ms (compile: 5ms, proxy.ts: 156ms, render: 201ms)
+✓ Compiled in 55ms
+✓ Compiled in 68ms
+✓ Compiled in 83ms
+✓ Compiled in 78ms
+✓ Compiled in 104ms
+✓ Compiled in 64ms
+✓ Compiled in 52ms
+✓ Compiled in 94ms
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+✓ Compiled in 84ms
+ GET /manifest.webmanifest 200 in 7ms (compile: 3ms, render: 4ms)
+ GET /ressources?theme=lecture_paysage 200 in 947ms (compile: 9ms, proxy.ts: 572ms, render: 367ms)
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/program 200 in 759ms (compile: 356ms, proxy.ts: 155ms, render: 247ms)
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+✓ Compiled in 52ms
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/program 200 in 1173ms (compile: 178ms, proxy.ts: 195ms, render: 800ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/program 200 in 573ms (compile: 9ms, proxy.ts: 445ms, render: 119ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/program 200 in 574ms (compile: 9ms, proxy.ts: 163ms, render: 402ms)
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/program 200 in 451ms (compile: 8ms, proxy.ts: 229ms, render: 213ms)
+✓ Compiled in 59ms
+✓ Compiled in 82ms
+✓ Compiled in 52ms
+✓ Compiled in 88ms
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/program 200 in 1465ms (compile: 328ms, proxy.ts: 757ms, render: 380ms)
+✓ Compiled in 95ms
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+✓ Compiled in 76ms
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/program 200 in 1151ms (compile: 269ms, proxy.ts: 349ms, render: 532ms)
+ GET /manifest.webmanifest 200 in 6ms (compile: 2ms, render: 4ms)
+ GET /stages 200 in 1113ms (compile: 263ms, proxy.ts: 270ms, render: 580ms)
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/program 200 in 297ms (compile: 10ms, proxy.ts: 106ms, render: 181ms)
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/program 200 in 462ms (compile: 12ms, proxy.ts: 178ms, render: 273ms)
+ GET /manifest.webmanifest 200 in 10ms (compile: 4ms, render: 6ms)
+✓ Compiled in 65ms
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+✓ Compiled in 68ms
+ GET /manifest.webmanifest 200 in 7ms (compile: 3ms, render: 4ms)
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/program 200 in 1133ms (compile: 255ms, proxy.ts: 295ms, render: 583ms)
+✓ Compiled in 73ms
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+✓ Compiled in 71ms
+ GET /manifest.webmanifest 200 in 7ms (compile: 3ms, render: 4ms)
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/program 200 in 1013ms (compile: 216ms, proxy.ts: 196ms, render: 601ms)
+✓ Compiled in 87ms
+✓ Compiled in 77ms
+ GET /stages 200 in 1591ms (compile: 7ms, proxy.ts: 764ms, render: 820ms)
+✓ Compiled in 72ms
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/program 200 in 884ms (compile: 239ms, proxy.ts: 369ms, render: 276ms)
+✓ Compiled in 117ms
+✓ Compiled in 78ms
+✓ Compiled in 57ms
+✓ Compiled in 72ms
+✓ Compiled in 74ms
+✓ Compiled in 72ms
+✓ Compiled in 88ms
+ GET /stages 200 in 754ms (compile: 9ms, proxy.ts: 239ms, render: 506ms)
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/program 200 in 642ms (compile: 230ms, proxy.ts: 117ms, render: 295ms)
+✓ Compiled in 79ms
+✓ Compiled in 99ms
+✓ Compiled in 83ms
+✓ Compiled in 86ms
+✓ Compiled in 82ms
+✓ Compiled in 67ms
+ GET /ressources?theme=caracteristiques_littoral 200 in 1161ms (compile: 42ms, proxy.ts: 722ms, render: 397ms)
+✓ Compiled in 64ms
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/program 200 in 565ms (compile: 258ms, proxy.ts: 212ms, render: 95ms)
+ GET /ressources?theme=activites_humaines 200 in 634ms (compile: 179ms, proxy.ts: 186ms, render: 269ms)
+✓ Compiled in 79ms
+ GET /ressources?theme=activites_humaines 200 in 458ms (compile: 195ms, proxy.ts: 183ms, render: 79ms)
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/program 200 in 449ms (compile: 10ms, proxy.ts: 158ms, render: 280ms)
+✓ Compiled in 68ms
+✓ Compiled in 71ms
+✓ Compiled in 69ms
+✓ Compiled in 63ms
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/program 200 in 583ms (compile: 260ms, proxy.ts: 243ms, render: 81ms)
+✓ Compiled in 75ms
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/program 200 in 416ms (compile: 9ms, proxy.ts: 345ms, render: 62ms)
+✓ Compiled in 72ms
+✓ Compiled in 97ms
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/program 200 in 330ms (compile: 9ms, proxy.ts: 183ms, render: 138ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/program 200 in 667ms (compile: 11ms, proxy.ts: 170ms, render: 487ms)
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/program 200 in 520ms (compile: 18ms, proxy.ts: 270ms, render: 233ms)
+ GET /ressources?theme=activites_humaines&retour=%2Fstages%2F08809f3b-dce3-4822-952f-1df6200a6532%2Fprogram 200 in 698ms (compile: 289ms, proxy.ts: 198ms, render: 211ms)
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/program 200 in 452ms (compile: 11ms, proxy.ts: 161ms, render: 280ms)
+ GET /stages 200 in 865ms (compile: 6ms, proxy.ts: 186ms, render: 674ms)
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/program 200 in 399ms (compile: 11ms, proxy.ts: 149ms, render: 239ms)
+ GET /stages 200 in 934ms (compile: 6ms, proxy.ts: 303ms, render: 625ms)
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 468ms (compile: 62ms, proxy.ts: 151ms, render: 254ms)
+ GET /stages 200 in 515ms (compile: 5ms, proxy.ts: 101ms, render: 408ms)
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 392ms (compile: 22ms, proxy.ts: 134ms, render: 235ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 674ms (compile: 10ms, proxy.ts: 165ms, render: 498ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 667ms (compile: 34ms, proxy.ts: 187ms, render: 445ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 453ms (compile: 10ms, proxy.ts: 101ms, render: 343ms)

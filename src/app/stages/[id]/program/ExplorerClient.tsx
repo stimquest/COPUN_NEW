@@ -12,8 +12,9 @@ import { NIVEAUX } from '@/data/niveaux';
 import { updateStagePool } from '@/actions/stage-actions';
 import GroupeBloc from '@/components/explorer/GroupeBloc';
 import TagsPanel from '@/components/explorer/TagsPanel';
-import AideChoixSujet from '@/components/explorer/AideChoixSujet';
-import FiltresCopun from '@/components/explorer/FiltresCopun';
+import ChoixThemes from '@/components/explorer/ChoixThemes';
+import ParSujetTerrain from '@/components/explorer/ParSujetTerrain';
+import QuestionsDuSujet from '@/components/explorer/QuestionsDuSujet';
 import SelectionRecapCopun from '@/components/explorer/SelectionRecapCopun';
 import CardDetailModal from '@/components/CardDetailModal';
 
@@ -61,22 +62,26 @@ export default function ExplorerClient({ stage, copunPool, customPool }: Props) 
     // Stockés en minuscules : les tags existent en plusieurs casses en base.
     const [tags, setTags] = useState<string[]>([]);
 
-    // Double entrée « Par où commencer ? », en A/B faute d'accord sur laquelle est la
-    // bonne — panneau inline juste sous le bouton (pas de feuille modale : le bouton est
-    // en haut de l'écran, une feuille qui monte du bas forçait un aller-retour visuel).
-    // « sujet » rouvre l'entonnoir angle → milieu → groupe
-    // (préconfigure les filtres du catalogue phénomène ci-dessous) ; « copun » bascule
-    // l'écran entier sur la vue FiltresCopun (Comprendre/Observer/Protéger → thème),
-    // qui n'a pas de notion de phénomène donc pas de sens à combiner avec le catalogue.
-    const [choixMethodeOuvert, setChoixMethodeOuvert] = useState(false);
-    const [aideSujetOuverte, setAideSujetOuverte] = useState(false);
+    // Parcours en deux temps : on choisit d'abord un sujet par couleur (ChoixThemes), puis
+    // on ouvre les questions qui y mènent (QuestionsDuSujet). L'entrée « par sujet de terrain »
+    // a été supprimée — elle éparpillait au lieu de tenir la semaine sur trois couleurs.
     const [vueCopun, setVueCopun] = useState(false);
-    // Le catalogue par phénomène ne s'affiche qu'après un passage explicite par
-    // l'entonnoir « Par sujet de terrain » — jamais par défaut, même sur une semaine déjà
-    // préparée : la créatrice de la méthode ne veut pas que cette organisation par sujet
-    // de terrain reste visible en permanence. Une semaine déjà préparée affiche à la place
-    // SelectionRecapCopun (voir plus bas), qui ne montre que la sélection, par pilier COP.
-    const [catalogueSujetOuvert, setCatalogueSujetOuvert] = useState(false);
+    const [sujetTerrainOuvert, setSujetTerrainOuvert] = useState(false);
+    // Au plus un thème par pilier : la consigne est « un sujet pour chaque couleur ».
+    const [themesChoisis, setThemesChoisis] = useState<Partial<Record<Dimension, string>>>({});
+
+    const choisirTheme = (pilier: Dimension, themeId: string) => {
+        setThemesChoisis(p => (p[pilier] === themeId
+            ? Object.fromEntries(Object.entries(p).filter(([k]) => k !== pilier))
+            : { ...p, [pilier]: themeId }));
+    };
+
+    const nbThemesChoisis = Object.keys(themesChoisis).length;
+    // Le catalogue par phénomène (marées, vent, oiseaux…) n'a plus de point d'entrée : il
+    // repartait vers l'éparpillement, alors que la semaine doit tenir sur trois sujets, un
+    // par couleur. Son rendu reste en place plus bas mais n'est plus atteignable — laissé
+    // le temps de confirmer que la nouvelle entrée par thèmes couvre bien tous les usages.
+    const catalogueSujetOuvert = false;
 
     const pool = useMemo(() => [...copunPool, ...customPool], [copunPool, customPool]);
 
@@ -182,19 +187,6 @@ export default function ExplorerClient({ stage, copunPool, customPool }: Props) 
 
     // Résultat de l'entonnoir « par sujet » : préconfigure le catalogue phénomène
     // ci-dessous (dimensions COP + groupe ouvert), reprend le comportement d'origine.
-    const appliquerAideSujet = (groupe: Groupe, dims: Dimension[]) => {
-        setVueCopun(false);
-        setCatalogueSujetOuvert(true);
-        // Trois dimensions retenues = aucune restriction utile, on n'affiche pas de filtre.
-        setDimensions(dims.length === 3 ? [] : dims);
-        setNiveau(null);
-        setRecherche('');
-        setOuverts([groupe.id]);
-        requestAnimationFrame(() => {
-            document.getElementById(`groupe-${groupe.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        });
-    };
-
     return (
         <div className="min-h-screen bg-[#EBF0F7] pb-40">
 
@@ -283,82 +275,93 @@ export default function ExplorerClient({ stage, copunPool, customPool }: Props) 
 
             <main className="max-w-2xl mx-auto px-4 pt-1 space-y-2.5">
 
-                {/* Point d'entrée du choix de méthode, inline plutôt qu'en feuille modale :
-                    le bouton est en haut de l'écran, une feuille qui monte depuis le bas
-                    forçait un aller-retour visuel absurde. Voir ChoixMethodeInline pour le
-                    contexte du double chemin (COP'UN vs par sujet de terrain). */}
-                <button
-                    onClick={() => setChoixMethodeOuvert(o => !o)}
-                    className="w-full flex items-center gap-3 px-4 py-4 rounded-2xl bg-slate-900 text-white text-left active:scale-[0.99] transition shadow-sm"
-                >
-                    <span className="size-10 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
-                        <span className="material-symbols-outlined text-[20px]">auto_awesome</span>
-                    </span>
-                    <span className="flex-1 min-w-0">
-                        <span className="block text-sm font-black leading-tight">Par où commencer ?</span>
-                        <span className="block text-[11px] text-white/60 mt-0.5">
-                            {vueCopun
-                                ? 'Vue COP’UN — change ici'
-                                : catalogueSujetOuvert
-                                    ? 'Catalogue par sujet — change ici'
-                                    : retenues.length > 0
-                                        ? 'Ajouter ou changer des questions'
-                                        : 'Choisis ton outil de filtre'}
-                        </span>
-                    </span>
-                    <span className={clsx('material-symbols-outlined text-white/40 shrink-0 transition-transform', choixMethodeOuvert && 'rotate-90')}>
-                        chevron_right
-                    </span>
-                </button>
+                {/* ══ ÉTAPE 1 : LES SUJETS ══
+                    Les neuf thèmes, visibles d'emblée : c'est l'arrivée, pas une option
+                    derrière un menu. L'écran s'ouvrait avant sur « choisis un outil de
+                    filtre », qui demandait de comprendre l'outillage avant de voir le moindre
+                    contenu. */}
+                {!vueCopun && !sujetTerrainOuvert && (
+                    <ChoixThemes choisis={themesChoisis} onChoisir={choisirTheme} />
+                )}
 
-                <AnimatePresence initial={false}>
-                    {choixMethodeOuvert && (
-                        <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            exit={{ opacity: 0, height: 0 }}
-                            className="overflow-hidden"
+                {/* ══ L'AUTRE PORTE ══
+                    Entrée par centre d'intérêt, ouverte depuis le lien de l'en-tête. Elle
+                    remplace l'écran de choix plutôt que de s'y ajouter : c'est un autre
+                    chemin vers les mêmes questions, pas une étape de plus. Contrairement au
+                    regroupement « par phénomène » de l'écran suivant, qui réordonne une liste
+                    déjà découpée par les paliers retenus, celle-ci attaque tout le catalogue. */}
+                {!vueCopun && sujetTerrainOuvert && (
+                    <>
+                        <button
+                            onClick={() => setSujetTerrainOuvert(false)}
+                            className="inline-flex items-center gap-1.5 text-[12px] font-black text-slate-500 hover:text-slate-800 transition-colors px-1 pb-1"
                         >
-                            <div className="space-y-2 pb-0.5">
-                                <button
-                                    onClick={() => { setChoixMethodeOuvert(false); setVueCopun(true); }}
-                                    className="w-full text-left px-4 py-3.5 rounded-2xl bg-linear-to-br from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/30 active:scale-[0.99] transition flex items-center gap-3"
-                                >
-                                    <span className="size-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
-                                        <span className="material-symbols-outlined text-[19px]">psychology</span>
-                                    </span>
-                                    <span className="flex-1 min-w-0">
-                                        <span className="block text-sm font-black leading-tight">Méthode COP&apos;UN</span>
-                                        <span className="block text-[11px] text-white/70 mt-0.5">Comprendre, observer, protéger</span>
-                                    </span>
-                                    <span className="material-symbols-outlined text-white/60 shrink-0">chevron_right</span>
-                                </button>
+                            <span className="material-symbols-outlined text-[17px]">arrow_back</span>
+                            Revenir aux paliers
+                        </button>
+                        <ParSujetTerrain
+                            pool={pool}
+                            retenues={retenues}
+                            onToggleFiche={toggleFiche}
+                            onFicheInfo={setFicheDetail}
+                        />
+                    </>
+                )}
 
-                                <button
-                                    onClick={() => { setChoixMethodeOuvert(false); setVueCopun(false); setAideSujetOuverte(true); }}
-                                    className="w-full text-left px-4 py-3 rounded-2xl bg-white shadow-sm active:scale-[0.99] transition flex items-center gap-3"
-                                >
-                                    <span className="size-9 rounded-xl bg-[#EBF0F7] flex items-center justify-center shrink-0">
-                                        <span className="material-symbols-outlined text-[17px] text-slate-500">explore</span>
-                                    </span>
-                                    <span className="flex-1 min-w-0">
-                                        <span className="block text-sm font-black text-slate-900 leading-snug">Par sujet de terrain</span>
-                                        <span className="block text-xs text-slate-400 mt-0.5">Ce que tu observes : marées, vent, oiseaux…</span>
-                                    </span>
-                                    <span className="material-symbols-outlined text-slate-300 shrink-0">chevron_right</span>
-                                </button>
-                            </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                {/* ══ ÉTAPE 2 : LES QUESTIONS ══
+                    N'apparaît qu'une fois au moins un sujet choisi — sans sujet, il n'y a
+                    rien pour entrer. */}
+                {!vueCopun && !sujetTerrainOuvert && nbThemesChoisis > 0 && (
+                    <motion.button
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        onClick={() => setVueCopun(true)}
+                        className="w-full flex items-center gap-3 mt-2 px-4 py-4 rounded-2xl bg-slate-900 text-white text-left active:scale-[0.99] transition shadow-sm"
+                    >
+                        <span className="size-10 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
+                            <span className="material-symbols-outlined text-[20px]">auto_awesome</span>
+                        </span>
+                        <span className="flex-1 min-w-0">
+                            <span className="block text-sm font-black leading-tight">Par où commencer ?</span>
+                            <span className="block text-[11px] text-white/60 mt-0.5">
+                                Voici des questions pour entrer dans le sujet, fais ton choix
+                            </span>
+                        </span>
+                        <span className="material-symbols-outlined text-white/40 shrink-0">chevron_right</span>
+                    </motion.button>
+                )}
+
+                {/* Dernière proposition, après le chemin principal : une action possible,
+                    jamais celle qu'on suggère en premier. */}
+                {!vueCopun && !sujetTerrainOuvert && (
+                    <button
+                        onClick={() => setSujetTerrainOuvert(true)}
+                        className="group inline-flex items-center gap-1.5 px-1 pt-1 text-[12px] font-bold text-slate-400 hover:text-slate-700 transition-colors"
+                    >
+                        <span className="material-symbols-outlined text-[16px]">explore</span>
+                        <span className="underline decoration-slate-300 underline-offset-2 group-hover:decoration-slate-500">
+                            Chercher par centre d&apos;intérêt
+                        </span>
+                    </button>
+                )}
 
                 {vueCopun ? (
-                    <FiltresCopun
-                        pool={pool}
-                        retenues={retenues}
-                        onToggleFiche={toggleFiche}
-                        onFicheInfo={setFicheDetail}
-                    />
+                    <>
+                        <button
+                            onClick={() => setVueCopun(false)}
+                            className="inline-flex items-center gap-1.5 text-[12px] font-black text-slate-500 hover:text-slate-800 transition-colors px-1 pb-1"
+                        >
+                            <span className="material-symbols-outlined text-[17px]">arrow_back</span>
+                            Changer de sujet
+                        </button>
+                        <QuestionsDuSujet
+                            pool={pool}
+                            retenues={retenues}
+                            onToggleFiche={toggleFiche}
+                            onFicheInfo={setFicheDetail}
+                            themesInitiaux={themesChoisis}
+                        />
+                    </>
                 ) : catalogueSujetOuvert ? (
                     <>
                         <div className="flex items-center justify-between px-1 pt-1.5 pb-0.5">
@@ -399,27 +402,19 @@ export default function ExplorerClient({ stage, copunPool, customPool }: Props) 
                             ))
                         )}
                     </>
-                ) : retenues.length > 0 ? (
-                    /* Arrivée par défaut sur une semaine déjà préparée : seulement la
-                       sélection en cours, par pilier COP — jamais le catalogue par
-                       phénomène tant qu'on n'est pas passé par l'entonnoir dédié. */
-                    <SelectionRecapCopun
-                        pool={pool}
-                        retenues={retenues}
-                        onToggleFiche={toggleFiche}
-                        onFicheInfo={setFicheDetail}
-                    />
-                ) : (
-                    /* Rien tant qu'aucun outil de filtre n'a été choisi — 131 fiches à plat
-                       sans repère ne sont pas une arrivée utile. */
-                    <div className="text-center py-20 text-slate-400">
-                        <span className="material-symbols-outlined text-5xl">filter_alt</span>
-                        <p className="text-sm font-black uppercase tracking-wide mt-3 text-slate-500">Choisis un outil de filtre</p>
-                        <p className="text-xs mt-1.5 max-w-[240px] mx-auto leading-relaxed">
-                            Utilise « Par où commencer ? » pour trouver tes questions.
-                        </p>
+                ) : retenues.length > 0 && !sujetTerrainOuvert ? (
+                    /* Semaine déjà préparée : la sélection en cours, sous les sujets, par
+                       pilier COP. Masquée dans la vue par centre d'intérêt, qui marque déjà
+                       les questions retenues à même ses listes. */
+                    <div className="pt-2">
+                        <SelectionRecapCopun
+                            pool={pool}
+                            retenues={retenues}
+                            onToggleFiche={toggleFiche}
+                            onFicheInfo={setFicheDetail}
+                        />
                     </div>
-                )}
+                ) : null}
             </main>
 
             {plafond && (
@@ -547,11 +542,6 @@ export default function ExplorerClient({ stage, copunPool, customPool }: Props) 
                 onClose={() => setFicheDetail(null)}
             />
 
-            <AideChoixSujet
-                open={aideSujetOuverte}
-                onClose={() => setAideSujetOuverte(false)}
-                onResultat={appliquerAideSujet}
-            />
         </div>
     );
 }

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useTransition } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { deleteFicheMemo, publierFicheMemo, depublierFicheMemo } from '@/actions/fiche-memo-actions';
 import type { FicheMemo } from '@/actions/fiche-memo-actions';
 import { THEMATIC_TAG_LABELS, SAISON_LABELS } from './fiche-constants';
@@ -16,7 +16,19 @@ interface FicheCardProps {
 
 export default function FicheCard({ fiche, currentUserId, isAdmin, isModerator }: FicheCardProps) {
     const router = useRouter();
+    const params = useSearchParams();
     const [isPending, startTransition] = useTransition();
+
+    // Le contexte d'arrivée (thème filtré, page d'origine) suit jusqu'à la fiche, pour que
+    // son bouton retour rejoue la liste telle qu'on l'a quittée.
+    const contexte = new URLSearchParams();
+    const theme = params.get('theme');
+    const retour = params.get('retour');
+    if (theme) contexte.set('theme', theme);
+    if (retour) contexte.set('retour', retour);
+    const versFiche = contexte.size
+        ? `/ressources/${fiche.id}?${contexte}`
+        : `/ressources/${fiche.id}`;
 
     // Droits alignés sur les policies RLS
     const isAuthor = !!currentUserId && fiche.auteur_id === currentUserId;
@@ -50,7 +62,7 @@ export default function FicheCard({ fiche, currentUserId, isAdmin, isModerator }
             fiche.statut === 'brouillon' ? 'border-amber-200 bg-amber-50/30' : 'border-slate-200 hover:border-teal-400'
         }`}>
             {/* Zone cliquable → détail */}
-            <Link href={`/ressources/${fiche.id}`} className="block flex-1">
+            <Link href={versFiche} className="block flex-1">
                 {fiche.statut === 'brouillon' && (
                     <span className="inline-block mb-2 px-2 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-bold uppercase rounded-full tracking-widest">
                         Brouillon

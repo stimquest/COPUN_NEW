@@ -11,14 +11,19 @@ interface Props {
     currentUserId?: string | null;
     isAdmin?: boolean;
     isModerator?: boolean;
+    /** Thème présélectionné (`?theme=` dans l'URL) — permet d'arriver ici depuis un thème
+     *  de l'écran de choix des sujets et de tomber directement sur le mémo concerné. */
+    themeInitial?: ThematicTag | null;
 }
 
-export default function FichesBrowser({ fiches, currentUserId, isAdmin, isModerator }: Props) {
+export default function FichesBrowser({ fiches, currentUserId, isAdmin, isModerator, themeInitial = null }: Props) {
     const [search, setSearch] = useState('');
-    const [theme, setTheme] = useState<ThematicTag | null>(null);
+    const [theme, setTheme] = useState<ThematicTag | null>(themeInitial);
     const [saison, setSaison] = useState<string | null>(null);
     const [tag, setTag] = useState<string | null>(null);
-    const [showFilters, setShowFilters] = useState(false);
+    // Filtres dépliés d'emblée quand on arrive avec un thème imposé : sinon le filtre actif
+    // est invisible et la liste paraît incomplète sans raison.
+    const [showFilters, setShowFilters] = useState(!!themeInitial);
 
     // Tags libres réellement présents dans les fiches
     const allTags = useMemo(() => {

@@ -6,12 +6,26 @@ import { THEMATIC_TAG_LABELS, SAISON_LABELS } from '@/components/fiches/fiche-co
 import FicheActions from '@/components/fiches/FicheActions';
 import FicheContent from '@/components/fiches/FicheContent';
 
-export default async function FicheDetailPage({ params }: { params: Promise<{ ficheId: string }> }) {
+export default async function FicheDetailPage({
+    params,
+    searchParams,
+}: {
+    params: Promise<{ ficheId: string }>;
+    searchParams: Promise<{ theme?: string; retour?: string }>;
+}) {
     const { ficheId } = await params;
-    const [fiche, profile] = await Promise.all([
+    const [fiche, profile, query] = await Promise.all([
         getFicheMemoById(ficheId),
         getProfile(),
+        searchParams,
     ]);
+
+    // Le retour rejoue la liste telle qu'on l'a quittée — même thème filtré, même chemin
+    // d'origine — plutôt que de retomber sur une liste nue et de perdre le fil.
+    const liste = new URLSearchParams();
+    if (query.theme) liste.set('theme', query.theme);
+    if (query.retour?.startsWith('/') && !query.retour.startsWith('//')) liste.set('retour', query.retour);
+    const versListe = liste.size ? `/ressources?${liste}` : '/ressources';
 
     if (!fiche) notFound();
 
@@ -26,7 +40,7 @@ export default async function FicheDetailPage({ params }: { params: Promise<{ fi
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10 pb-32">
             {/* Breadcrumb */}
             <Link
-                href="/ressources"
+                href={versListe}
                 className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-800 font-semibold mb-6"
             >
                 <span className="material-symbols-outlined text-base">arrow_back</span>

@@ -616,7 +616,7 @@ export function WeekDashboardClient({
                                         </span>
                                         <span className="flex-1 min-w-0">
                                             <span className="block text-[9px] font-black uppercase tracking-widest text-slate-400">Fin de semaine</span>
-                                            <span className="block text-sm font-black text-slate-900 leading-snug">Fais le quiz avec ton groupe</span>
+                                            <span className="block text-sm font-black text-slate-900 leading-snug">Qu&apos;est-ce que ton groupe a perçu, vu et entendu grâce à toi&nbsp;?</span>
                                         </span>
                                         <span className="material-symbols-outlined text-slate-300 shrink-0">arrow_forward</span>
                                     </Link>
@@ -1170,7 +1170,7 @@ export function WeekDashboardClient({
                         </span>
                         <span className="flex-1 min-w-0">
                             <span className="block text-sm font-black text-slate-900 leading-snug">Quiz de la semaine</span>
-                            <span className="block text-[11px] text-slate-400 mt-0.5">{quizDone ? 'Déjà fait — revoir ou refaire' : 'À faire avec ton groupe'}</span>
+                            <span className="block text-[11px] text-slate-400 mt-0.5">{quizDone ? 'Déjà fait — revoir ou refaire' : 'Qu’est-ce que ton groupe a perçu, vu et entendu grâce à toi ?'}</span>
                         </span>
                         <span className="material-symbols-outlined text-slate-300 shrink-0">arrow_forward</span>
                     </Link>
