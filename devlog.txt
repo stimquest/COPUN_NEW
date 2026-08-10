@@ -4675,3 +4675,71 @@ https://nextjs.org/docs/messages/module-not-found
  GET /stages 200 in 509ms (compile: 165ms, proxy.ts: 285ms, render: 59ms)
  GET /stages/5ae9e7dd-5de4-448b-a790-186e08fb375f/bilan 200 in 1392ms (compile: 243ms, proxy.ts: 168ms, render: 981ms)
  GET /stages 200 in 377ms (compile: 4ms, proxy.ts: 151ms, render: 223ms)
+ GET /stages/new 200 in 528ms (compile: 24ms, proxy.ts: 465ms, render: 39ms)
+ POST /stages/new 200 in 947ms (compile: 10ms, proxy.ts: 366ms, render: 572ms)
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/program 200 in 546ms (compile: 13ms, proxy.ts: 164ms, render: 370ms)
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/program 200 in 534ms (compile: 9ms, proxy.ts: 293ms, render: 232ms)
+✓ Compiled in 66ms
+✓ Compiled in 57ms
+✓ Compiled in 85ms
+✓ Compiled in 62ms
+✓ Compiled in 67ms
+✓ Compiled in 68ms
+✓ Compiled in 59ms
+✓ Compiled in 67ms
+✓ Compiled in 108ms
+✓ Compiled in 57ms
+✓ Compiled in 71ms
+✓ Compiled in 67ms
+✓ Compiled in 108ms
+✓ Compiled in 130ms
+✓ Compiled in 73ms
+✓ Compiled in 59ms
+✓ Compiled in 101ms
+✓ Compiled in 101ms
+✓ Compiled in 104ms
+✓ Compiled in 122ms
+✓ Compiled in 51ms
+✓ Compiled in 122ms
+✓ Compiled in 61ms
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+✓ Compiled in 78ms
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/program 200 in 3.0s (compile: 489ms, proxy.ts: 1813ms, render: 675ms)
+ GET /manifest.webmanifest 200 in 8ms (compile: 3ms, render: 5ms)
+✓ Compiled in 57ms
+✓ Compiled in 96ms
+✓ Compiled in 64ms
+✓ Compiled in 95ms
+✓ Compiled in 86ms
+✓ Compiled in 94ms
+✓ Compiled in 64ms
+✓ Compiled in 63ms
+✓ Compiled in 93ms
+✓ Compiled in 58ms
+✓ Compiled in 64ms
+✓ Compiled in 67ms
+✓ Compiled in 104ms
+✓ Compiled in 82ms
+✓ Compiled in 64ms
+✓ Compiled in 58ms
+✓ Compiled in 53ms
+✓ Compiled in 80ms
+✓ Compiled in 59ms
+✓ Compiled in 67ms
+✓ Compiled in 49ms
+✓ Compiled in 77ms
+✓ Compiled in 53ms
+✓ Compiled in 75ms
+✓ Compiled in 73ms
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+✓ Compiled in 53ms
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/program 200 in 2.3s (compile: 489ms, proxy.ts: 1146ms, render: 667ms)
+ GET /manifest.webmanifest 200 in 7ms (compile: 3ms, render: 5ms)
+✓ Compiled in 64ms
+✓ Compiled in 118ms
+✓ Compiled in 62ms
+✓ Compiled in 68ms
+✓ Compiled in 66ms
+✓ Compiled in 96ms
+✓ Compiled in 79ms
+✓ Compiled in 73ms
