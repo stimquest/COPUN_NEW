@@ -5389,3 +5389,239 @@ https://nextjs.org/docs/messages/module-not-found
  POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 674ms (compile: 10ms, proxy.ts: 165ms, render: 498ms)
  POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 667ms (compile: 34ms, proxy.ts: 187ms, render: 445ms)
  POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 453ms (compile: 10ms, proxy.ts: 101ms, render: 343ms)
+ GET /stages 200 in 721ms (compile: 6ms, proxy.ts: 241ms, render: 474ms)
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/program 200 in 284ms (compile: 11ms, proxy.ts: 97ms, render: 176ms)
+ GET /stages 200 in 1232ms (compile: 8ms, proxy.ts: 722ms, render: 501ms)
+✓ Compiled in 118ms
+✓ Compiled in 86ms
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 687ms (compile: 10ms, proxy.ts: 269ms, render: 408ms)
+ GET /stages 200 in 967ms (compile: 380ms, proxy.ts: 129ms, render: 458ms)
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 374ms (compile: 10ms, proxy.ts: 116ms, render: 249ms)
+ GET /stages 200 in 668ms (compile: 7ms, proxy.ts: 230ms, render: 431ms)
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 492ms (compile: 12ms, proxy.ts: 234ms, render: 246ms)
+ GET /stages 200 in 772ms (compile: 5ms, proxy.ts: 255ms, render: 512ms)
+✓ Compiled in 75ms
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/program 200 in 322ms (compile: 12ms, proxy.ts: 135ms, render: 176ms)
+ GET /stages 200 in 2.3s (compile: 255ms, proxy.ts: 96ms, render: 1997ms)
+✓ Compiled in 73ms
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/program 200 in 399ms (compile: 10ms, proxy.ts: 155ms, render: 234ms)
+ GET /stages 200 in 1097ms (compile: 325ms, proxy.ts: 244ms, render: 527ms)
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/program 200 in 360ms (compile: 31ms, proxy.ts: 124ms, render: 206ms)
+ GET /stages 200 in 542ms (compile: 5ms, proxy.ts: 121ms, render: 416ms)
+✓ Compiled in 81ms
+ POST /stages 200 in 1219ms (compile: 262ms, proxy.ts: 208ms, render: 750ms)
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/program 200 in 409ms (compile: 12ms, proxy.ts: 152ms, render: 244ms)
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/program 200 in 1620ms (compile: 12ms, proxy.ts: 601ms, render: 1007ms)
+ GET /manifest.webmanifest 200 in 18ms (compile: 3ms, render: 14ms)
+ GET /stages 200 in 1569ms (compile: 12ms, proxy.ts: 830ms, render: 727ms)
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 588ms (compile: 18ms, proxy.ts: 140ms, render: 430ms)
+ GET /stages 200 in 653ms (compile: 5ms, proxy.ts: 97ms, render: 550ms)
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/program 200 in 317ms (compile: 18ms, proxy.ts: 106ms, render: 193ms)
+ GET /stages 200 in 1232ms (compile: 6ms, proxy.ts: 467ms, render: 759ms)
+✓ Compiled in 184ms
+✓ Compiled in 86ms
+✓ Compiled in 103ms
+✓ Compiled in 78ms
+✓ Compiled in 80ms
+✓ Compiled in 68ms
+✓ Compiled in 75ms
+✓ Compiled in 102ms
+ POST /stages 200 in 3.1s (compile: 1189ms, proxy.ts: 998ms, render: 963ms)
+ POST /stages 200 in 608ms (compile: 6ms, proxy.ts: 99ms, render: 503ms)
+ POST /stages 200 in 665ms (compile: 13ms, proxy.ts: 116ms, render: 536ms)
+ POST /stages 200 in 596ms (compile: 5ms, proxy.ts: 100ms, render: 491ms)
+ POST /stages 200 in 671ms (compile: 5ms, proxy.ts: 139ms, render: 527ms)
+ POST /stages 200 in 714ms (compile: 6ms, proxy.ts: 212ms, render: 496ms)
+ POST /stages 200 in 534ms (compile: 5ms, proxy.ts: 107ms, render: 422ms)
+ POST /stages 200 in 584ms (compile: 6ms, proxy.ts: 103ms, render: 475ms)
+✓ Compiled in 132ms
+✓ Compiled in 87ms
+✓ Compiled in 80ms
+ POST /stages 200 in 1179ms (compile: 240ms, proxy.ts: 231ms, render: 707ms)
+ GET /stages 200 in 948ms (compile: 7ms, proxy.ts: 153ms, render: 787ms)
+ GET /manifest.webmanifest 200 in 8ms (compile: 3ms, render: 5ms)
+✓ Compiled in 109ms
+✓ Compiled in 82ms
+✓ Compiled in 75ms
+✓ Compiled in 74ms
+ POST /stages 200 in 2.6s (compile: 329ms, proxy.ts: 1268ms, render: 1027ms)
+ POST /stages 200 in 972ms (compile: 6ms, proxy.ts: 304ms, render: 661ms)
+✓ Compiled in 70ms
+✓ Compiled in 93ms
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+✓ Compiled in 89ms
+ GET /stages 200 in 1110ms (compile: 235ms, proxy.ts: 198ms, render: 677ms)
+ GET /manifest.webmanifest 200 in 7ms (compile: 4ms, render: 4ms)
+✓ Compiled in 121ms
+✓ Compiled in 155ms
+ POST /stages 200 in 5.0s (compile: 251ms, proxy.ts: 804ms, render: 3.9s)
+✓ Compiled in 128ms
+ GET /stages 200 in 948ms (compile: 278ms, proxy.ts: 482ms, render: 188ms)
+✓ Compiled in 68ms
+✓ Compiled in 119ms
+✓ Compiled in 64ms
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/program 200 in 1361ms (compile: 26ms, proxy.ts: 912ms, render: 423ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/program 200 in 474ms (compile: 10ms, proxy.ts: 221ms, render: 243ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/program 200 in 944ms (compile: 18ms, proxy.ts: 186ms, render: 740ms)
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/program 200 in 557ms (compile: 28ms, proxy.ts: 209ms, render: 320ms)
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 534ms (compile: 47ms, proxy.ts: 136ms, render: 351ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 682ms (compile: 12ms, proxy.ts: 198ms, render: 472ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 575ms (compile: 10ms, proxy.ts: 170ms, render: 395ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 634ms (compile: 12ms, proxy.ts: 169ms, render: 453ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 565ms (compile: 59ms, proxy.ts: 147ms, render: 359ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 538ms (compile: 11ms, proxy.ts: 108ms, render: 419ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 573ms (compile: 11ms, proxy.ts: 166ms, render: 396ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 531ms (compile: 11ms, proxy.ts: 132ms, render: 388ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 611ms (compile: 11ms, proxy.ts: 145ms, render: 455ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 532ms (compile: 10ms, proxy.ts: 118ms, render: 405ms)
+ POST /stages/08809f3b-dce3-4822-952f-1df6200a6532/preparer 200 in 653ms (compile: 10ms, proxy.ts: 132ms, render: 512ms)
+ GET /stages 200 in 1011ms (compile: 345ms, proxy.ts: 160ms, render: 506ms)
+✓ Compiled in 71ms
+✓ Compiled in 85ms
+✓ Compiled in 81ms
+ GET /stages 200 in 1366ms (compile: 261ms, proxy.ts: 678ms, render: 427ms)
+ GET /stages 200 in 2.1s (compile: 52ms, proxy.ts: 510ms, render: 1572ms)
+✓ Compiled in 99ms
+✓ Compiled in 80ms
+✓ Compiled in 77ms
+ POST /stages 200 in 1492ms (compile: 291ms, proxy.ts: 269ms, render: 931ms)
+ POST /stages 200 in 810ms (compile: 5ms, proxy.ts: 121ms, render: 684ms)
+ POST /stages 200 in 580ms (compile: 5ms, proxy.ts: 104ms, render: 472ms)
+ POST /stages 200 in 613ms (compile: 6ms, proxy.ts: 101ms, render: 506ms)
+✓ Compiled in 138ms
+ POST /stages 200 in 613ms (compile: 5ms, proxy.ts: 109ms, render: 498ms)
+✓ Compiled in 80ms
+✓ Compiled in 76ms
+ GET /stages 200 in 607ms (compile: 230ms, proxy.ts: 156ms, render: 220ms)
+ GET /stages 200 in 395ms (compile: 5ms, proxy.ts: 219ms, render: 170ms)
+✓ Compiled in 90ms
+✓ Compiled in 83ms
+✓ Compiled in 91ms
+ POST /stages 200 in 2.5s (compile: 252ms, proxy.ts: 940ms, render: 1311ms)
+ POST /stages 200 in 1276ms (compile: 6ms, proxy.ts: 449ms, render: 821ms)
+✓ Compiled in 95ms
+✓ Compiled in 93ms
+✓ Compiled in 69ms
+✓ Compiled in 70ms
+ POST /stages 200 in 1059ms (compile: 206ms, proxy.ts: 189ms, render: 664ms)
+ POST /stages 200 in 558ms (compile: 5ms, proxy.ts: 104ms, render: 449ms)
+ POST /stages 200 in 1285ms (compile: 6ms, proxy.ts: 107ms, render: 1172ms)
+ POST /stages 200 in 993ms (compile: 6ms, proxy.ts: 461ms, render: 526ms)
+ POST /stages 200 in 648ms (compile: 5ms, proxy.ts: 170ms, render: 474ms)
+✓ Compiled in 151ms
+ POST /stages 200 in 535ms (compile: 16ms, proxy.ts: 102ms, render: 416ms)
+✓ Compiled in 97ms
+ POST /stages 200 in 989ms (compile: 206ms, proxy.ts: 228ms, render: 555ms)
+ POST /stages 200 in 641ms (compile: 4ms, proxy.ts: 137ms, render: 500ms)
+ POST /stages 200 in 673ms (compile: 6ms, proxy.ts: 135ms, render: 532ms)
+ POST /stages 200 in 557ms (compile: 5ms, proxy.ts: 97ms, render: 455ms)
+✓ Compiled in 81ms
+✓ Compiled in 88ms
+ POST /stages 200 in 1193ms (compile: 206ms, proxy.ts: 192ms, render: 795ms)
+ POST /stages 200 in 581ms (compile: 6ms, proxy.ts: 108ms, render: 467ms)
+✓ Compiled in 116ms
+ POST /stages 200 in 985ms (compile: 194ms, proxy.ts: 183ms, render: 609ms)
+✓ Compiled in 162ms
+✓ Compiled in 65ms
+✓ Compiled in 102ms
+✓ Compiled in 73ms
+✓ Compiled in 95ms
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+✓ Compiled in 139ms
+ GET /stages 200 in 1048ms (compile: 271ms, proxy.ts: 190ms, render: 587ms)
+ GET /manifest.webmanifest 200 in 7ms (compile: 3ms, render: 4ms)
+ POST /stages 200 in 549ms (compile: 6ms, proxy.ts: 105ms, render: 439ms)
+ POST /stages 200 in 2.9s (compile: 4ms, proxy.ts: 635ms, render: 2.2s)
+ POST /stages 200 in 2.1s (compile: 7ms, proxy.ts: 455ms, render: 1620ms)
+✓ Compiled in 126ms
+✓ Compiled in 61ms
+✓ Compiled in 156ms
+✓ Compiled in 158ms
+✓ Compiled in 78ms
+✓ Compiled in 157ms
+✓ Compiled in 147ms
+✓ Compiled in 65ms
+✓ Compiled in 82ms
+ POST /stages 200 in 1529ms (compile: 218ms, proxy.ts: 475ms, render: 836ms)
+ POST /stages 200 in 1023ms (compile: 211ms, proxy.ts: 239ms, render: 573ms)
+ POST /stages 200 in 602ms (compile: 6ms, proxy.ts: 118ms, render: 478ms)
+ POST /stages 200 in 571ms (compile: 5ms, proxy.ts: 107ms, render: 459ms)
+ POST /stages 200 in 719ms (compile: 7ms, proxy.ts: 171ms, render: 542ms)
+ POST /stages 200 in 700ms (compile: 6ms, proxy.ts: 149ms, render: 545ms)
+ POST /stages 200 in 586ms (compile: 25ms, proxy.ts: 119ms, render: 441ms)
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+✓ Compiled in 144ms
+⨯ ReferenceError: Medaille is not defined
+    at <unknown> (src\components\ProgrammeCondense.tsx:121:34)
+    at Array.map (<anonymous>)
+    at ProgrammeCondense (src\components\ProgrammeCondense.tsx:92:23)
+  119 |                             </span>
+  120 |                             <span className="shrink-0" style={{ width: 46, height: 46 }}>
+> 121 |                                 <Medaille />
+      |                                  ^
+  122 |                             </span>
+  123 |                         </motion.button>
+  124 |                     ); {
+  digest: '3192277720'
+}
+ GET /stages 500 in 1568ms (compile: 290ms, proxy.ts: 415ms, render: 863ms)
+ GET /manifest.webmanifest 200 in 7ms (compile: 3ms, render: 4ms)
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+✓ Compiled in 80ms
+ GET /stages 200 in 1855ms (compile: 190ms, proxy.ts: 195ms, render: 1470ms)
+ GET /manifest.webmanifest 200 in 8ms (compile: 4ms, render: 4ms)
+ POST /stages 200 in 1142ms (compile: 10ms, proxy.ts: 330ms, render: 802ms)
+✓ Compiled in 92ms
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+✓ Compiled in 92ms
+ GET /stages 200 in 1052ms (compile: 228ms, proxy.ts: 153ms, render: 672ms)
+ GET /manifest.webmanifest 200 in 7ms (compile: 3ms, render: 4ms)
+✓ Compiled in 112ms
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+✓ Compiled in 93ms
+ GET /stages 200 in 1181ms (compile: 316ms, proxy.ts: 262ms, render: 603ms)
+ GET /manifest.webmanifest 200 in 7ms (compile: 2ms, render: 4ms)
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+✓ Compiled in 79ms
+ GET /stages 200 in 988ms (compile: 205ms, proxy.ts: 175ms, render: 607ms)
+ GET /manifest.webmanifest 200 in 8ms (compile: 4ms, render: 5ms)
+✓ Compiled in 88ms
+✓ Compiled in 81ms
+✓ Compiled in 86ms
+✓ Compiled in 81ms
+✓ Compiled in 149ms
+ POST /stages 200 in 2.2s (compile: 271ms, proxy.ts: 910ms, render: 987ms)
+ POST /stages 200 in 607ms (compile: 6ms, proxy.ts: 124ms, render: 477ms)
+✓ Compiled in 96ms
+✓ Compiled in 74ms
+✓ Compiled in 129ms
+ POST /stages 200 in 1531ms (compile: 283ms, proxy.ts: 380ms, render: 869ms)
+ POST /stages 200 in 644ms (compile: 7ms, proxy.ts: 107ms, render: 530ms)
+✓ Compiled in 75ms
+ POST /stages 200 in 980ms (compile: 223ms, proxy.ts: 170ms, render: 588ms)
+✓ Compiled in 84ms
+ POST /stages 200 in 947ms (compile: 201ms, proxy.ts: 151ms, render: 595ms)
+ POST /stages 200 in 1545ms (compile: 5ms, proxy.ts: 101ms, render: 1439ms)
+ POST /stages 200 in 1111ms (compile: 4ms, proxy.ts: 292ms, render: 815ms)
+ POST /stages 200 in 750ms (compile: 5ms, proxy.ts: 163ms, render: 582ms)
+ POST /stages 200 in 599ms (compile: 5ms, proxy.ts: 128ms, render: 466ms)
+✓ Compiled in 75ms
+✓ Compiled in 100ms
+ POST /stages 200 in 1424ms (compile: 236ms, proxy.ts: 296ms, render: 891ms)
+ POST /stages 200 in 536ms (compile: 6ms, proxy.ts: 113ms, render: 418ms)
+ POST /stages 200 in 561ms (compile: 22ms, proxy.ts: 104ms, render: 435ms)
+ POST /stages 200 in 606ms (compile: 6ms, proxy.ts: 108ms, render: 493ms)
+ POST /stages 200 in 599ms (compile: 6ms, proxy.ts: 103ms, render: 490ms)
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/bilan 200 in 1053ms (compile: 482ms, proxy.ts: 252ms, render: 320ms)
+ GET /stages 200 in 647ms (compile: 9ms, proxy.ts: 256ms, render: 383ms)
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/program 200 in 480ms (compile: 60ms, proxy.ts: 183ms, render: 237ms)
+✓ Compiled in 74ms
+ GET /stages 200 in 1117ms (compile: 317ms, proxy.ts: 303ms, render: 496ms)
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/program 200 in 1282ms (compile: 10ms, proxy.ts: 762ms, render: 511ms)
+ GET /stages 200 in 1438ms (compile: 6ms, proxy.ts: 772ms, render: 660ms)
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/bilan 200 in 831ms (compile: 304ms, proxy.ts: 203ms, render: 324ms)
+ GET /stages 200 in 659ms (compile: 5ms, proxy.ts: 154ms, render: 500ms)
+ GET /stages/08809f3b-dce3-4822-952f-1df6200a6532/program 200 in 271ms (compile: 11ms, proxy.ts: 92ms, render: 167ms)
+ GET /stages 200 in 2.0s (compile: 6ms, proxy.ts: 1301ms, render: 700ms)
+ GET /stages 200 in 2.3s (compile: 14ms, proxy.ts: 1533ms, render: 768ms)
+ POST /stages 200 in 1273ms (compile: 8ms, proxy.ts: 360ms, render: 906ms)

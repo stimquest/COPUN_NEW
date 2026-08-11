@@ -690,12 +690,10 @@ export function WeekDashboardClient({
                     pas fait) : ce modèle traitait les fiches comme des tâches, alors
                     qu'elles servent à construire un discours. Voir ProgrammeCondense. */}
                 <section id="programme" className="scroll-mt-4">
-                    <div className="flex items-center justify-between mb-3">
-                        <h2 className="text-lg font-black tracking-tight text-slate-900">Le fil de ma semaine</h2>
-                        <Link href={`/stages/${stageId}/program`} className="text-xs font-bold text-indigo-500 hover:text-indigo-700 transition-colors">
-                            Modifier
-                        </Link>
-                    </div>
+                    {/* Pas de « Modifier » ici : le bouton en pied de fil mène au même écran
+                        de choix des questions, et deux entrées vers la même page encadrant la
+                        liste ne font que la brouiller. */}
+                    <h2 className="text-lg font-black tracking-tight text-slate-900 mb-3">Le fil de ma semaine</h2>
                     <ProgrammeCondense stageId={stageId} contents={objectives} preparations={preparations} actionsSemaine={actionsSemaine} />
                 </section>
 
