@@ -6,6 +6,8 @@ import { getStageExploits, getClubObservationTargets } from '@/actions/defi-acti
 import { getUserContent } from '@/actions/content-actions';
 import { getStageQuiz, getMyTotalPoints } from '@/actions/quiz-actions';
 import { getStagePreparations } from '@/actions/preparation-actions';
+import { getResumeFormation } from '@/actions/formation-actions';
+import { DashboardFormation } from '@/components/DashboardFormation';
 import { getPeriodForMonth } from '@/data/seasonal-context';
 import { pickCurrentStage, parseStageDateRange, ymdAParis, heureAParis } from '@/lib/stage-dates';
 import { WeekDashboardClient } from './WeekDashboardClient';
@@ -33,9 +35,10 @@ export default async function StagesPage() {
     const seasonStyle = SEASON_STYLES[period.id] ?? SEASON_STYLES['haute_saison'];
     const greeting = hour < 12 ? 'Bonjour' : hour < 18 ? 'Bon après-midi' : 'Bonsoir';
 
-    const [profile, stages] = await Promise.all([
+    const [profile, stages, resumeFormation] = await Promise.all([
         getProfile(),
         getStages(),
+        getResumeFormation(),
     ]);
 
     const firstName = profile?.full_name?.split(' ')[0] ?? 'Moniteur';
@@ -68,6 +71,11 @@ export default async function StagesPage() {
                         <p className="text-white/60 text-sm font-semibold">{greeting},</p>
                         <h1 className="text-4xl font-black text-white italic mt-1">{firstName}.</h1>
                     </div>
+                    {/* Carte Formation — avant la carte semaine, même zone colorée que
+                        l'accueil avec stage actif. */}
+                    <div className="max-w-xs w-full">
+                        <DashboardFormation resume={resumeFormation} />
+                    </div>
                     <div className="bg-white/15 backdrop-blur-sm rounded-3xl p-8 border border-white/20 max-w-xs w-full">
                         <span className="material-symbols-outlined text-4xl text-white/60 block mb-3">sailing</span>
                         <p className="text-white font-bold mb-1">Aucune semaine en cours</p>
@@ -93,13 +101,17 @@ export default async function StagesPage() {
                 <header className={`bg-linear-to-br ${seasonStyle.gradient} px-5 pt-12 pb-8`}>
                     <p className="text-white/60 text-sm font-semibold">{greeting},</p>
                     <h1 className="text-3xl font-black text-white italic mt-0.5">{firstName}.</h1>
-                    <p className="text-white/50 text-sm mt-2">
+                    <p className="text-white/50 text-sm mt-2 mb-4">
                         {pastUnclosedStages.length > 0
                             ? `${pastUnclosedStages.length} semaine${pastUnclosedStages.length > 1 ? 's' : ''} en attente de bilan.`
                             : hasOpenNonActiveStages
                                 ? "Aucune semaine prévue à la date d'aujourd'hui."
                                 : 'Toutes vos semaines sont archivées.'}
                     </p>
+
+                    {/* Carte Formation — dans la même zone colorée que la salutation,
+                        avant le reste de l'écran. */}
+                    <DashboardFormation resume={resumeFormation} />
                 </header>
                 <main className="max-w-2xl mx-auto px-4 pt-5 space-y-4">
                     <Link
@@ -247,6 +259,7 @@ export default async function StagesPage() {
             actionsSemaine={activeStage.actions_semaine ?? []}
             archivedStages={archivedStages.map(s => ({ id: s.id, title: s.title, dates: s.dates ?? '' }))}
             upcomingStages={upcomingStages.map(s => ({ id: s.id, title: s.title, dates: s.dates ?? '' }))}
+            resumeFormation={resumeFormation}
         />
     );
 }

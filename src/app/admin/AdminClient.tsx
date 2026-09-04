@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { createUserAccount, inviteUser } from '@/actions/admin-actions';
 import { FichesAdminTab } from './FichesAdminTab';
 import { ReportingTab } from './ReportingTab';
+import { ActiviteTab } from './ActiviteTab';
 import { UserEditModal } from './UserEditModal';
 import type { PedagogicalContent } from '@/types';
 import type { FicheMemo } from '@/actions/fiche-memo-actions';
@@ -33,7 +34,7 @@ function lastSignInLabel(iso: string | null | undefined): string {
 
 type Club = { id: string; name: string };
 
-type Tab = 'users' | 'create' | 'invite' | 'fiches' | 'reporting';
+type Tab = 'users' | 'create' | 'invite' | 'fiches' | 'reporting' | 'activite';
 
 export function AdminClient({ users: initialUsers, clubs, fiches, fichesMemo, error, userRole }: {
     users: User[];
@@ -111,6 +112,7 @@ export function AdminClient({ users: initialUsers, clubs, fiches, fichesMemo, er
                         { key: 'users', label: 'Utilisateurs', icon: 'group', count: users.length },
                         { key: 'fiches', label: 'Fiches péda.', icon: 'auto_stories', count: fiches.length },
                         { key: 'reporting', label: 'Reporting', icon: 'analytics', count: null },
+                        { key: 'activite', label: 'Activité', icon: 'timeline', count: null },
                         { key: 'create', label: 'Créer un compte', icon: 'person_add', count: null },
                         { key: 'invite', label: 'Invitation', icon: 'mail', count: null },
                     ] as const).map(t => (
@@ -149,7 +151,14 @@ export function AdminClient({ users: initialUsers, clubs, fiches, fichesMemo, er
                 </main>
             )}
 
-            <main className={`flex-1 px-4 py-6 max-w-2xl mx-auto w-full space-y-6 pb-36 ${tab === 'fiches' || tab === 'reporting' ? 'hidden' : ''}`}>
+            {/* Onglet Activité — qui se sert de l'app, depuis quand et à quel rythme */}
+            {tab === 'activite' && (
+                <main className="flex-1 px-4 py-6 max-w-2xl mx-auto w-full pb-36">
+                    <ActiviteTab />
+                </main>
+            )}
+
+            <main className={`flex-1 px-4 py-6 max-w-2xl mx-auto w-full space-y-6 pb-36 ${tab === 'fiches' || tab === 'reporting' || tab === 'activite' ? 'hidden' : ''}`}>
 
                 {error && (
                     <div className="p-4 rounded-2xl bg-red-50 text-red-700 border border-red-100 text-sm font-semibold">

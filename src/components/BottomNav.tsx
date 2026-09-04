@@ -7,6 +7,7 @@ import { SPORT_FEATURES_ENABLED } from '@/lib/feature-flags';
 
 const baseNavItems = [
     { name: 'Accueil', href: '/stages', icon: 'dashboard', fill: true },
+    { name: 'Formation', href: '/formation', icon: 'school', fill: false },
     { name: 'Ressources', href: '/ressources', icon: 'menu_book', fill: false },
     { name: 'Fiches', href: '/fiches', icon: 'sports', fill: false },
     { name: 'Stats', href: '/stats', icon: 'leaderboard', fill: false },
@@ -15,7 +16,7 @@ const baseNavItems = [
 
 const adminNavItem = { name: 'Admin', href: '/admin', icon: 'admin_panel_settings', fill: false };
 
-export function BottomNav({ role }: { role?: string | null }) {
+export function BottomNav({ role, formationEnCours }: { role?: string | null; formationEnCours?: boolean }) {
     const pathname = usePathname();
     const navItems = ((role === 'admin' || role === 'club_admin') ? [...baseNavItems, adminNavItem] : baseNavItems)
         .filter(i => SPORT_FEATURES_ENABLED || i.href !== '/fiches');
@@ -30,7 +31,7 @@ export function BottomNav({ role }: { role?: string | null }) {
                             key={item.name}
                             href={item.href}
                             className={clsx(
-                                "flex flex-col items-center gap-1 transition-colors active:scale-95 p-2 rounded-xl",
+                                "relative flex flex-col items-center gap-1 transition-colors active:scale-95 p-2 rounded-xl",
                                 isActive
                                     ? item.href === '/admin' ? "text-violet-600 bg-violet-50" : "text-indigo-600 bg-indigo-50"
                                     : "text-slate-400 hover:text-slate-600"
@@ -39,6 +40,14 @@ export function BottomNav({ role }: { role?: string | null }) {
                             <span className={clsx("material-symbols-outlined", isActive && item.fill && "font-variation-fill-1")}>
                                 {item.icon}
                             </span>
+                            {/* Tant que la formation n'est pas terminée, un point la signale
+                                depuis n'importe quel écran — c'est ça, la présence continue
+                                demandée : un rappel discret et permanent dans la nav, pas un
+                                dashboard dupliqué sur l'accueil. Disparaît de lui-même une
+                                fois tous les modules acquis. */}
+                            {item.href === '/formation' && formationEnCours && !isActive && (
+                                <span className="absolute top-1 right-2.5 size-2 rounded-full bg-indigo-500 border-2 border-white" />
+                            )}
                             <span className="text-[10px] font-black uppercase tracking-widest hidden sm:block">{item.name}</span>
                         </Link>
                     );

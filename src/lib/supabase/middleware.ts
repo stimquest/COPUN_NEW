@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr';
 import { type NextRequest, NextResponse } from 'next/server';
+import { cheminSuivi, enregistrerNavigation } from '@/lib/suivi-navigation';
 
 const PUBLIC_PATHS = ['/', '/login', '/auth/callback', '/auth/reset-password'];
 
@@ -71,6 +72,13 @@ export async function updateSession(request: NextRequest) {
         if (!profile || !['admin', 'club_admin'].includes(profile.role)) {
             return NextResponse.redirect(new URL('/stages', request.url));
         }
+    }
+
+    // Journalisation de l'usage — posée ici, après tous les contrôles, pour ne compter
+    // que les navigations effectivement servies : une requête qui finit en redirection
+    // n'est pas un écran consulté. Volontairement non attendue (voir suivi-navigation.ts).
+    if (user && cheminSuivi(path)) {
+        enregistrerNavigation(supabase, path, request.headers.get('user-agent'));
     }
 
     return response;

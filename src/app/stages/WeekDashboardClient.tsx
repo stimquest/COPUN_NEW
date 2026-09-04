@@ -23,6 +23,8 @@ import { HelpGuideModal } from '@/components/HelpGuideModal';
 import { PointsGainedBadge, usePointsGainedBadge } from '@/components/PointsGainedBadge';
 import { compressImage } from '@/lib/image-compression';
 import { getStageObjectiveImpactOptions, getStageObjectiveReasonOptions } from '@/lib/stage-objective-review';
+import type { ResumeFormation } from '@/actions/formation-actions';
+import { DashboardFormation } from '@/components/DashboardFormation';
 
 type DefiInfo = {
     id: string;
@@ -404,6 +406,7 @@ type Props = {
     totalPoints: number;
     /** Rituels transversaux choisis pour la semaine (`src/data/actions-semaine.ts`). */
     actionsSemaine: string[];
+    resumeFormation: ResumeFormation;
 };
 
 export function WeekDashboardClient({
@@ -411,7 +414,7 @@ export function WeekDashboardClient({
     preparations, initialObservations, initialExploits, clubObservationTargets,
     greeting, firstName, seasonGradient, seasonIcon,
     contentCount, archivedStages, upcomingStages,
-    suggestedThematics, quizDone, totalPoints, actionsSemaine,
+    suggestedThematics, quizDone, totalPoints, actionsSemaine, resumeFormation,
 }: Props) {
     const [technicalObjectiveList, setTechnicalObjectiveList] = useState<PedagogicalContent[]>(technicalObjectives);
     const [showSportPicker, setShowSportPicker] = useState(false);
@@ -566,116 +569,111 @@ export function WeekDashboardClient({
                     </div>
                 </div>
 
+                {/* Carte Formation — dans la même zone colorée que « Cette semaine »,
+                    juste au-dessus. Toute cette zone dégradée est l'accueil ; la formation
+                    en est la première carte tant qu'elle n'est pas terminée. */}
+                <div className="relative z-10 mx-4 mb-3">
+                    <DashboardFormation resume={resumeFormation} />
+                </div>
+
+                {/* Refonte de style : la version précédente traitait l'identité de la
+                    semaine, l'action du jour, et deux indicateurs (Programme, Défi) comme
+                    des lignes de même poids visuel — même fond, même hauteur, même
+                    disposition icône-texte-flèche — alors que ce sont trois natures
+                    différentes de contenu. Ici : l'identité de la semaine en tête (léger,
+                    sur le dégradé), UNE action dominante en carte translucide (le même
+                    effet verre dépoli que la carte Formation au-dessus, pour une identité
+                    visuelle cohérente), puis Programme/Défi réduits à une simple ligne de
+                    texte discrète — des indicateurs à consulter, pas des boutons à
+                    cliquer en priorité. */}
                 <div className="relative z-10 mx-4 mb-5">
-                    <div className="bg-white/15 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-                        <div className="flex items-center justify-between gap-3 mb-0.5">
-                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/50">Cette semaine</p>
-                            {dayIndex !== null && (
-                                <span className="text-[10px] font-black text-white/80 bg-white/15 px-2 py-0.5 rounded-full shrink-0">
-                                    Jour {dayIndex}/{dayTotal}
-                                </span>
+                    <div className="flex items-center justify-between gap-3 mb-1">
+                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/50">Cette semaine</p>
+                        {dayIndex !== null && (
+                            <span className="text-[10px] font-black text-white/80 bg-white/15 px-2 py-0.5 rounded-full shrink-0">
+                                Jour {dayIndex}/{dayTotal}
+                            </span>
+                        )}
+                    </div>
+                    <p className="text-lg font-black text-white leading-tight">{stageName}</p>
+                    <p className="text-xs text-white/50 mt-0.5 mb-3">{stageDates}</p>
+
+                    {/* L'action du jour — une seule, en carte translucide : c'est elle
+                        que l'œil doit voir en premier dans ce bloc. */}
+                    {contentCount > 0 && todayCard?.kind !== 'quiz' && todayCard?.kind !== 'bilan' && (
+                        <Link
+                            href={`/stages/${stageId}/preparer`}
+                            className="flex items-center gap-3 bg-white/15 backdrop-blur-sm rounded-2xl p-4 border border-white/20 active:scale-[0.99] transition-transform"
+                        >
+                            <div className="flex-1 min-w-0">
+                                <p className="text-[10px] font-black uppercase tracking-widest text-white/50">Avant d&apos;aller sur l&apos;eau</p>
+                                <p className="text-sm font-black text-white leading-snug mt-0.5">Préparer le fil de ma semaine</p>
+                            </div>
+                            <span className="size-9 rounded-full bg-white/20 border border-white/30 flex items-center justify-center text-white shrink-0">
+                                <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+                            </span>
+                        </Link>
+                    )}
+                    {todayCard?.kind === 'quiz' && (
+                        <Link
+                            href={`/stages/${stageId}/quiz`}
+                            className="flex items-center gap-3 bg-white/15 backdrop-blur-sm rounded-2xl p-4 border border-white/20 active:scale-[0.99] transition-transform"
+                        >
+                            <div className="flex-1 min-w-0">
+                                <p className="text-[10px] font-black uppercase tracking-widest text-white/50">Fin de semaine</p>
+                                <p className="text-sm font-black text-white leading-snug mt-0.5">Qu&apos;est-ce que ton groupe a perçu, vu et entendu grâce à toi&nbsp;?</p>
+                            </div>
+                            <span className="size-9 rounded-full bg-white/20 border border-white/30 flex items-center justify-center text-white shrink-0">
+                                <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+                            </span>
+                        </Link>
+                    )}
+                    {todayCard?.kind === 'bilan' && (
+                        <Link
+                            href={`/stages/${stageId}/bilan`}
+                            className="flex items-center gap-3 bg-white/15 backdrop-blur-sm rounded-2xl p-4 border border-white/20 active:scale-[0.99] transition-transform"
+                        >
+                            <div className="flex-1 min-w-0">
+                                <p className="text-[10px] font-black uppercase tracking-widest text-white/50">Fin de semaine</p>
+                                <p className="text-sm font-black text-white leading-snug mt-0.5">Fais le bilan de ta semaine</p>
+                            </div>
+                            <span className="size-9 rounded-full bg-white/20 border border-white/30 flex items-center justify-center text-white shrink-0">
+                                <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+                            </span>
+                        </Link>
+                    )}
+
+                    {/* Programme et Défi : indicateurs à consulter, pas des actions —
+                        d'où un simple texte, sans icône ni flèche, moins présent que la
+                        carte au-dessus. */}
+                    {(contentCount > 0 || initialExploits.length > 0) && (
+                        <div className="flex items-center gap-4 mt-3 px-1">
+                            {contentCount > 0 && (
+                                <a href="#programme" className="flex items-center gap-1.5 text-[11.5px] text-white/70">
+                                    <span className="flex items-center gap-1">
+                                        {objectives.map(o => (
+                                            <span
+                                                key={o.id}
+                                                className={clsx(
+                                                    'size-1.5 rounded-full',
+                                                    preparations[o.id]?.accroche_choisie ? 'bg-emerald-400' : 'bg-white/30'
+                                                )}
+                                            />
+                                        ))}
+                                    </span>
+                                    <span className="font-bold text-white">{validatedCount}/{contentCount}</span> prêt{validatedCount > 1 ? 's' : ''}
+                                </a>
+                            )}
+                            {initialExploits.length > 0 && (
+                                <a href="#defis" className="flex items-center gap-1.5 text-[11.5px] text-white/70">
+                                    Défi ·
+                                    <span className={clsx('font-bold', allDefisDone ? 'text-emerald-300' : 'text-white')}>
+                                        {defiSingle ? defiSingle.defis.description : `${defisDone}/${initialExploits.length} validés`}
+                                    </span>
+                                </a>
                             )}
                         </div>
-                        <p className="text-lg font-black text-white leading-tight">{stageName}</p>
-                        <p className="text-xs text-white/50 mt-0.5">{stageDates}</p>
-
-                        {/* Une seule carte : action du jour (préparer / quiz / bilan) en tête,
-                            puis Programme et Défi en lignes fines juste en dessous si présents.
-                            Avant, ces trois blocs étaient des cartes/pastilles séparées — sur
-                            une semaine sans contenu ça laissait un gros bouton blanc isolé. */}
-                        {(contentCount > 0 || initialExploits.length > 0) && (
-                            <div className="mt-3.5 bg-white/80 backdrop-blur-sm rounded-xl shadow-sm overflow-hidden divide-y divide-slate-900/5">
-                                {/* Préparer : l'app ne suit pas le moniteur sur l'eau (pas de
-                                    téléphone en séance), son travail est donc de lui mettre le
-                                    discours en tête avant. Visible tant que la semaine n'est pas
-                                    en phase de clôture. */}
-                                {contentCount > 0 && todayCard?.kind !== 'quiz' && todayCard?.kind !== 'bilan' && (
-                                    <Link
-                                        href={`/stages/${stageId}/preparer`}
-                                        className="flex items-center gap-3 px-3.5 py-3 active:bg-slate-900/5 transition"
-                                    >
-                                        <span className="size-9 rounded-full bg-violet-600 text-white flex items-center justify-center shrink-0">
-                                            <span className="material-symbols-outlined text-[18px]">psychology</span>
-                                        </span>
-                                        <span className="flex-1 min-w-0">
-                                            <span className="block text-[9px] font-black uppercase tracking-widest text-slate-400">Avant d&apos;aller sur l&apos;eau</span>
-                                            <span className="block text-sm font-black text-slate-900 leading-snug">Préparer le fil de ma semaine</span>
-                                        </span>
-                                        <span className="material-symbols-outlined text-slate-300 shrink-0">arrow_forward</span>
-                                    </Link>
-                                )}
-
-                                {/* Fin de semaine : rappel quiz puis bilan — rien le reste du temps */}
-                                {todayCard?.kind === 'quiz' && (
-                                    <Link
-                                        href={`/stages/${stageId}/quiz`}
-                                        className="flex items-center gap-3 px-3.5 py-3 active:bg-slate-900/5 transition"
-                                    >
-                                        <span className="size-9 rounded-full bg-violet-600 text-white flex items-center justify-center shrink-0">
-                                            <span className="material-symbols-outlined text-[18px]">quiz</span>
-                                        </span>
-                                        <span className="flex-1 min-w-0">
-                                            <span className="block text-[9px] font-black uppercase tracking-widest text-slate-400">Fin de semaine</span>
-                                            <span className="block text-sm font-black text-slate-900 leading-snug">Qu&apos;est-ce que ton groupe a perçu, vu et entendu grâce à toi&nbsp;?</span>
-                                        </span>
-                                        <span className="material-symbols-outlined text-slate-300 shrink-0">arrow_forward</span>
-                                    </Link>
-                                )}
-                                {todayCard?.kind === 'bilan' && (
-                                    <Link
-                                        href={`/stages/${stageId}/bilan`}
-                                        className="flex items-center gap-3 px-3.5 py-3 active:bg-slate-900/5 transition"
-                                    >
-                                        <span className="size-9 rounded-full bg-slate-900 text-white flex items-center justify-center shrink-0">
-                                            <span className="material-symbols-outlined text-[18px]">article</span>
-                                        </span>
-                                        <span className="flex-1 min-w-0">
-                                            <span className="block text-[9px] font-black uppercase tracking-widest text-slate-400">Fin de semaine</span>
-                                            <span className="block text-sm font-black text-slate-900 leading-snug">Fais le bilan de ta semaine</span>
-                                        </span>
-                                        <span className="material-symbols-outlined text-slate-300 shrink-0">arrow_forward</span>
-                                    </Link>
-                                )}
-
-                                {/* Où on en est : objectifs faits / restants (une pastille par fiche) + rappel défi */}
-                                {contentCount > 0 && (
-                                    <a href="#programme" className="flex items-center gap-2.5 px-3.5 py-2.5 active:bg-slate-900/5 transition">
-                                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 shrink-0">Programme</span>
-                                        <span className="flex items-center gap-1.5">
-                                            {objectives.map(o => (
-                                                <span
-                                                    key={o.id}
-                                                    className={clsx(
-                                                        'size-2.5 rounded-full',
-                                                        preparations[o.id]?.accroche_choisie ? 'bg-emerald-400' : 'bg-slate-200'
-                                                    )}
-                                                />
-                                            ))}
-                                        </span>
-                                        <span className="ml-auto text-[11px] font-black text-slate-900 shrink-0">
-                                            {validatedCount}/{contentCount}
-                                            <span className="text-slate-400 font-bold"> prêt{validatedCount > 1 ? 's' : ''}</span>
-                                        </span>
-                                    </a>
-                                )}
-                                {initialExploits.length > 0 && (
-                                    <a href="#defis" className="flex items-center gap-2.5 px-3.5 py-2.5 active:bg-slate-900/5 transition">
-                                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 shrink-0">Défi</span>
-                                        <span className="flex-1 min-w-0 text-[11px] font-bold text-slate-700 truncate">
-                                            {defiSingle ? defiSingle.defis.description : `${defisDone}/${initialExploits.length} validés`}
-                                        </span>
-                                        <span className={clsx(
-                                            'text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full shrink-0',
-                                            allDefisDone ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'
-                                        )}>
-                                            {allDefisDone ? 'Validé' : 'En cours'}
-                                        </span>
-                                    </a>
-                                )}
-                            </div>
-                        )}
-
-                    </div>
+                    )}
                 </div>
 
                 <svg viewBox="0 0 1440 20" className="w-full -mb-px" preserveAspectRatio="none">

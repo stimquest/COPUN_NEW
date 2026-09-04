@@ -7,6 +7,7 @@ import { SPORT_FEATURES_ENABLED } from '@/lib/feature-flags';
 
 const baseNavItems = [
     { name: 'Accueil', href: '/stages', icon: 'dashboard', fill: true },
+    { name: 'Formation', href: '/formation', icon: 'school', fill: false },
     { name: 'Ressources', href: '/ressources', icon: 'menu_book', fill: false },
     { name: 'Mes fiches', href: '/fiches', icon: 'sports', fill: false },
     { name: 'Stats', href: '/stats', icon: 'leaderboard', fill: false },
@@ -20,9 +21,10 @@ type SidebarProps = {
     fullName?: string | null;
     email?: string | null;
     clubName?: string | null;
+    formationEnCours?: boolean;
 };
 
-export function Sidebar({ role, fullName, email, clubName }: SidebarProps) {
+export function Sidebar({ role, fullName, email, clubName, formationEnCours }: SidebarProps) {
     const pathname = usePathname();
     const navItems = ((role === 'admin' || role === 'club_admin')
         ? [...baseNavItems, adminNavItem]
@@ -55,7 +57,7 @@ export function Sidebar({ role, fullName, email, clubName }: SidebarProps) {
                             key={item.name}
                             href={item.href}
                             className={clsx(
-                                "flex items-center gap-4 px-4 py-3 rounded-xl transition-all font-semibold",
+                                "relative flex items-center gap-4 px-4 py-3 rounded-xl transition-all font-semibold",
                                 isActive
                                     ? isAdmin
                                         ? "text-violet-700 bg-violet-50 shadow-sm"
@@ -67,6 +69,11 @@ export function Sidebar({ role, fullName, email, clubName }: SidebarProps) {
                                 {item.icon}
                             </span>
                             <span className="uppercase tracking-wider text-sm">{item.name}</span>
+                            {/* Même principe que sur la nav mobile : un point tant que la
+                                formation n'est pas terminée, visible depuis tout écran. */}
+                            {item.href === '/formation' && formationEnCours && !isActive && (
+                                <span className="absolute top-2.5 left-8 size-2 rounded-full bg-indigo-500 border-2 border-white" />
+                            )}
                         </Link>
                     );
                 })}

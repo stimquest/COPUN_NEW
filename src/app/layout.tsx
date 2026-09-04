@@ -5,6 +5,7 @@ import { BottomNav } from '@/components/BottomNav';
 import { Sidebar } from '@/components/Sidebar';
 import { cn } from "@/lib/utils";
 import { createClient, getCachedUser } from '@/lib/supabase/server';
+import { getResumeFormation } from '@/actions/formation-actions';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
@@ -37,6 +38,11 @@ export default async function RootLayout({
   let fullName: string | null = null;
   let email: string | null = null;
   let clubName: string | null = null;
+  // Tant que la formation n'est pas terminée, un simple point dans la nav la signale
+  // depuis n'importe quel écran — chargé une fois ici plutôt que dupliqué par page, et
+  // c'est tout ce que la nav a besoin de savoir (pas le détail de progression, qui vit
+  // sur /formation lui-même).
+  let formationEnCours = false;
   try {
     const supabase = await createClient();
     const user = await getCachedUser();
@@ -51,6 +57,9 @@ export default async function RootLayout({
       fullName = profile?.full_name ?? null;
       const clubs = profile?.clubs as { name: string } | { name: string }[] | null;
       clubName = clubs ? (Array.isArray(clubs) ? clubs[0]?.name : clubs.name) ?? null : null;
+
+      const resumeFormation = await getResumeFormation();
+      formationEnCours = resumeFormation.nbRediges > 0 && resumeFormation.nbFaits < resumeFormation.nbTotal;
     }
   } catch { /* non connecté ou page publique */ }
 
@@ -61,7 +70,7 @@ export default async function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
       </head>
       <body className={`${inter.variable} font-sans antialiased min-h-screen bg-[#EBF0F7] text-slate-900 md:flex overflow-x-hidden`}>
-        <Sidebar role={role} fullName={fullName} email={email} clubName={clubName} />
+        <Sidebar role={role} fullName={fullName} email={email} clubName={clubName} formationEnCours={formationEnCours} />
         {/*
           Zone de sécurité globale pour la nav flottante mobile :
           - pb réservé en bas pour que la nav (fixed, md:hidden) ne masque jamais le contenu
@@ -71,7 +80,7 @@ export default async function RootLayout({
         <main className="flex-1 mx-auto w-full max-w-md md:max-w-7xl min-h-screen relative md:px-8 md:py-8 pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-8">
           {children}
         </main>
-        <BottomNav role={role} />
+        <BottomNav role={role} formationEnCours={formationEnCours} />
       </body>
     </html>
   );
