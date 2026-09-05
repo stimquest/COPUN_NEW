@@ -15,11 +15,19 @@
  * qu'on veut faire travailler, pas un classement automatique risquant d'être faux sur une
  * technique qu'on vient d'enseigner avec soin.
  */
+export type FormeAccrocheId = 'pari' | 'piege' | 'constat' | 'choix_force';
+
 export type FormeAccroche = {
-    id: 'pari' | 'piege' | 'constat' | 'choix_force';
+    id: FormeAccrocheId;
     nom: string;
     exemple: string;
     pourquoi: string;
+};
+
+/** Une proposition éditorialement reliée à une forme enseignée. */
+export type AccrocheFormee = {
+    forme: FormeAccrocheId;
+    texte: string;
 };
 
 export const FORMES_ACCROCHE: FormeAccroche[] = [

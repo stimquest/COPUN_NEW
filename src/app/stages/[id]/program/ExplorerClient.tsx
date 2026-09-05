@@ -305,10 +305,10 @@ export default function ExplorerClient({ stage, copunPool, customPool, historiqu
                                 </span>
                                 <span className="flex-1 min-w-0">
                                     <span className="block text-[14px] font-black text-white leading-snug">
-                                        Cette semaine, tu veux parler de quoi&nbsp;?
+                                        Qu&apos;as-tu envie de faire vivre au groupe&nbsp;?
                                     </span>
                                     <span className="block text-[11.5px] text-white/50 mt-0.5">
-                                        Choisis une intention à partir de ce que le milieu te tend
+                                        Le terrain t&apos;aide à trouver une porte d&apos;entrée
                                     </span>
                                 </span>
                                 <span className="material-symbols-outlined text-white/30 shrink-0">chevron_right</span>

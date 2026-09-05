@@ -681,7 +681,7 @@ export function WeekDashboardClient({
                 </svg>
             </header>
 
-            <main className="flex-1 px-4 pt-6 space-y-9 max-w-2xl mx-auto w-full">
+            <main className="flex flex-col flex-1 gap-9 px-4 pt-6 max-w-2xl mx-auto w-full">
 
                 {/* Programme de la semaine — condensé, en lecture. Remplace l'ancienne liste
                     par pilier où chaque fiche portait un statut à cocher (fait / partiel /
@@ -775,8 +775,9 @@ export function WeekDashboardClient({
                     </section>
                 )}
 
-                {/* Retours terrain */}
-                <section id="retours" className="scroll-mt-4">
+                {/* Retour d'expérience : utile après les séances, le quiz et le bilan ; il
+                    ne coupe donc pas le parcours « préparer → vivre → mesurer → bilan ». */}
+                <section id="retours" className="scroll-mt-4 order-1">
                     <div className="flex items-center justify-between mb-3">
                         <h2 className="text-lg font-black tracking-tight text-slate-900">Retours terrain</h2>
                         {observations.length > 0 && (
@@ -1156,7 +1157,10 @@ export function WeekDashboardClient({
 
                 {/* Pied de page : accès rapides + création + archives — une seule pile de
                     boutons pleine largeur au rythme uniforme, pas trois sections disjointes */}
-                <section className="space-y-3">
+                <section className="contents">
+                    {/* La clôture de la semaine reste groupée, juste avant le retour
+                        d'expérience. La semaine suivante vient seulement après. */}
+                    <div className="space-y-3">
                     <Link
                         href={`/stages/${stageId}/quiz`}
                         className="flex items-center gap-3 bg-white rounded-2xl px-4 py-3.5 shadow-sm shadow-slate-200/60 hover:bg-slate-50 active:scale-[0.98] transition"
@@ -1183,7 +1187,9 @@ export function WeekDashboardClient({
                         </span>
                         <span className="material-symbols-outlined text-slate-300 shrink-0">arrow_forward</span>
                     </Link>
+                    </div>
 
+                    <div className="order-2 space-y-3">
                     {upcomingStages.length > 0 && (
                         <div className="space-y-1.5">
                             <p className="text-sm font-bold text-slate-500">Semaines préparées à l&apos;avance</p>
@@ -1262,6 +1268,7 @@ export function WeekDashboardClient({
                             </AnimatePresence>
                         </div>
                     )}
+                    </div>
                 </section>
 
             </main>

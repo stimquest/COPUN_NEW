@@ -69,6 +69,8 @@ export type PedagogicalContent = {
   // absente sur la plupart des fiches (l'UI n'affiche le bloc que si accroche existe).
   accroche?: string;
   accroches_variantes?: string[];
+  /** Variantes révisées et rattachées explicitement aux formes de la formation. */
+  accroches_formes?: Array<{ forme: 'pari' | 'piege' | 'constat' | 'choix_force'; texte: string }>;
   a_observer?: string;
   a_retenir?: string;
   erreur_frequente?: string;

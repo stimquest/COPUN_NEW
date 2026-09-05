@@ -28,6 +28,9 @@ const TEINTE: Record<Dimension, { vif: string; sombre: string }> = {
     PROTÉGER: { vif: '#10b981', sombre: '#065f46' },
 };
 
+const PAS_PILE = 60;
+const HAUTEUR_CARTE = 460;
+
 function pilierDe(c: PedagogicalContent) {
     const d = (c.dimension ?? '').toUpperCase();
     const cle = d.startsWith('COMPR') ? 'COMPRENDRE' : d.startsWith('OBSERV') ? 'OBSERVER' : 'PROTÉGER';
@@ -37,12 +40,14 @@ function pilierDe(c: PedagogicalContent) {
 /**
  * Le fil de ma semaine — un jeu de cartes qu'on parcourt, pas une page qu'on lit.
  *
- * Une carte par sujet, à la suite. Le bandeau haut prend la couleur du palier et porte la
- * question ; le panneau blanc en dessous donne le rappel de fond — trois lignes par défaut,
- * dépliable au toucher — puis les décisions du moniteur : l'accroche, ce qu'il fait faire,
- * ce que le groupe emporte, chacune annoncée par son intitulé.
+ * Une carte par sujet, à la suite. Le bandeau haut prend la couleur du pilier et porte la
+ * question ; le panneau blanc montre le fil que le moniteur a réellement construit :
+ * l'accroche, le geste et l'idée clé. L'explication de fond appartient à la fiche, pas à
+ * cette vue de pilotage.
  *
- * Un sujet traité se replie en une ligne barrée : l'espace libéré sert à ceux qui restent.
+ * Le fil est une pile de cartes : la fiche active est devant, les suivantes sont réellement
+ * derrière elle et ne laissent dépasser que leur bandeau-titre. On lit le sujet de devant,
+ * mais on garde le reste de la semaine dans le champ de vision.
  *
  * Vocabulaire : « raconté » entrait en collision avec le vocabulaire de l'app pour l'acte
  * de parler au groupe. L'action de marquer un sujet vu s'appelle donc « traité » côté
@@ -53,12 +58,12 @@ export default function ProgrammeCondense({ stageId, contents, preparations, rea
     const [traites, setTraites] = useState<Record<string, boolean>>(() =>
         Object.fromEntries(contents.map(c => [c.id, !!preparations[c.id]?.raconte])),
     );
-    // Un sujet traité se replie en une ligne barrée : l'espace libéré sert à ceux qui
-    // restent. Rouvert depuis cette ligne, il s'affiche en entier même s'il reste traité —
-    // sinon une simple relecture le referait disparaître.
-    const [ouverts, setOuverts] = useState<Record<string, boolean>>({});
-    /** Explications lues en entier, par sujet. */
-    const [depliees, setDepliees] = useState<Record<string, boolean>>({});
+    const [actif, setActif] = useState<string | null>(() =>
+        contents.find(c => !preparations[c.id]?.raconte)?.id ?? contents[0]?.id ?? null,
+    );
+    /** La carte avant suit le doigt sans re-rendu ; sa légère rotation rend le passage
+        devant/derrière lisible plutôt qu'un simple changement de contenu. */
+    const [passage, setPassage] = useState<{ id: string; sens: -1 | 1; phase: 'sortie' | 'retour' } | null>(null);
     const [, startTransition] = useTransition();
 
     if (contents.length === 0) {
@@ -81,17 +86,49 @@ export default function ProgrammeCondense({ stageId, contents, preparations, rea
         if (readOnly) return;
         const suivant = !traites[contentId];
         setTraites(prev => ({ ...prev, [contentId]: suivant }));
-        // Marquer traité referme le sujet ; l'annuler le laisse ouvert.
-        setOuverts(prev => ({ ...prev, [contentId]: !suivant }));
         startTransition(async () => {
             const r = await toggleSujetRaconte(stageId, contentId, suivant);
             if (!r.success) setTraites(prev => ({ ...prev, [contentId]: !suivant }));
         });
     };
 
+    const prepares = contents.filter(c => {
+        const prep = preparations[c.id];
+        return !!prep?.accroche_choisie && (prep.actions?.length ?? 0) > 0;
+    }).length;
+    const prochains = contents.filter(c => !traites[c.id]).length;
+    const indexActif = Math.max(0, contents.findIndex(c => c.id === actif));
+    // Trois cartes restent visibles ; l'ordre, lui, est circulaire : après la dernière,
+    // la première revient derrière la pile. Ce n'est donc pas un flux qui s'épuise.
+    const profondeurPile = Math.min(3, contents.length);
+    const decalagePile = (profondeurPile - 1) * PAS_PILE;
+    const allerAuSujet = (decalage: -1 | 1) => {
+        if (passage || contents.length < 2) return;
+        const id = decalage === 1 ? contents[indexActif].id
+            : contents[(indexActif - 1 + contents.length) % contents.length].id;
+        setPassage({ id, sens: decalage, phase: 'sortie' });
+    };
+
     return (
         <div className="space-y-3">
-            {contents.map(c => {
+            <div className="flex items-center justify-between px-1 pb-0.5">
+                <p className="text-[11px] font-bold text-slate-400">
+                    {prepares} {prepares > 1 ? 'sujets prêts' : 'sujet prêt'}
+                    {contents.length > prepares && ` · ${contents.length - prepares} à préparer`}
+                    {contents.length > 1 && <span className="text-slate-300"> · glissez pour feuilleter</span>}
+                </p>
+                {prochains > 0 && (
+                    <span className="text-[10px] font-black uppercase tracking-wide text-indigo-500">
+                        Fiche {indexActif + 1}/{contents.length}
+                    </span>
+                )}
+            </div>
+            <div className="relative" style={{ height: HAUTEUR_CARTE + decalagePile }}>
+            {contents.map((c, index) => {
+                const positionPile = (index - indexActif + contents.length) % contents.length;
+                const rang = Math.min(positionPile, profondeurPile - 1);
+                const enPassage = passage?.id === c.id;
+                const sort = enPassage && passage.phase === 'sortie';
                 const prep = preparations[c.id];
                 const pilier = pilierDe(c);
                 const teinte = TEINTE[pilier.id];
@@ -101,49 +138,52 @@ export default function ProgrammeCondense({ stageId, contents, preparations, rea
                     .map(id => actionSujetParId(id, c.actions))
                     .filter((a): a is ActionSujet => !!a);
                 const repere = niveauRepere(c.niveau);
-                const reduit = fait && !ouverts[c.id];
-                const depliee = depliees[c.id];
-
-                // Sujet traité : le bandeau seul, réduit à sa hauteur de titre, avec sa
-                // médaille en petit. Le fond coloré passe à 45 % d'opacité — la couleur du
-                // palier reste reconnaissable sans peser autant qu'un sujet à faire, là où le
-                // gris franc aurait eu l'air désactivé. Le texte et la médaille gardent leur
-                // pleine opacité : c'est le fond qui recule, pas le contenu.
-                if (reduit) {
-                    return (
-                        <motion.button
-                            key={c.id}
-                            onClick={() => setOuverts(prev => ({ ...prev, [c.id]: true }))}
-                            whileTap={{ scale: 0.985 }}
-                            className="relative w-full flex items-center gap-3 rounded-[18px] pl-4 pr-3 py-2.5 text-left overflow-hidden"
-                        >
-                            <span
-                                aria-hidden
-                                className="absolute inset-0 opacity-45"
-                                style={{ background: `linear-gradient(150deg, ${teinte.vif}, ${teinte.sombre})` }}
-                            />
-                            {/* Texte sombre, pas blanc : sur un fond à 45 % le blanc perd son
-                                contraste. */}
-                            <span className="relative flex-1 min-w-0 text-[13.5px] font-bold text-slate-700 leading-snug line-clamp-2">
-                                {c.question}
-                            </span>
-                            {/* Légèrement de travers, comme la grande sur la carte ouverte :
-                                d'aplomb, elle avait l'air d'une icône alignée dans la ligne. */}
-                            <span
-                                className="relative shrink-0"
-                                style={{ width: 46, height: 46, transform: 'rotate(-9deg)' }}
-                            >
-                                <Medaille />
-                            </span>
-                        </motion.button>
-                    );
-                }
+                const estPret = !!prep?.accroche_choisie && actions.length > 0;
+                const estProchain = !fait && c.id === contents.find(sujet => !traites[sujet.id])?.id;
+                const estActif = positionPile === 0;
 
                 return (
                     // `relative` sans `overflow-hidden` : la médaille déborde du coin, elle
                     // serait rognée si la carte coupait à ses bords. Les arrondis sont donc
                     // portés par le bandeau et le pied, pas par l'article.
-                    <article key={c.id} className="relative">
+                    <motion.article
+                        key={c.id}
+                        drag={estActif && !passage && contents.length > 1 ? 'x' : false}
+                        dragConstraints={{ left: 0, right: 0 }}
+                        dragElastic={{ left: 0.6, right: 0.6 }}
+                        dragSnapToOrigin={!passage}
+                        onDragEnd={estActif ? (_, info) => {
+                            if (info.offset.x < -80) allerAuSujet(1);
+                            if (info.offset.x > 80) allerAuSujet(-1);
+                        } : undefined}
+                        initial={false}
+                        animate={{
+                            x: sort ? -passage.sens * 340 : 0,
+                            y: -rang * PAS_PILE,
+                            scale: 1 - rang * 0.045,
+                            rotate: sort ? -passage.sens * 12 : 0,
+                        }}
+                        transition={{ duration: 0.30, ease: [0.22, 0.61, 0.36, 1] }}
+                        onAnimationComplete={() => {
+                            if (!enPassage || !passage) return;
+                            if (passage.phase === 'sortie') {
+                                setActif(contents[(indexActif + passage.sens + contents.length) % contents.length].id);
+                                setPassage({ ...passage, phase: 'retour' });
+                            } else setPassage(null);
+                        }}
+                        className={clsx(
+                            'absolute inset-x-0 top-0 h-[460px] rounded-[22px] bg-white overflow-hidden flex flex-col',
+                            estActif ? 'z-10 touch-pan-y shadow-[var(--shadow-lift)]' : 'pointer-events-none ring-1 ring-slate-900/5',
+                        )}
+                        style={{
+                            zIndex: enPassage && passage?.phase === 'sortie'
+                                ? (passage.sens === 1 ? contents.length + 2 : 0)
+                                : contents.length - positionPile,
+                            top: decalagePile,
+                            transformOrigin: 'center top',
+                        }}
+                        inert={!estActif || !!passage}
+                    >
                         {/* L'ombre est portée par un calque en dessous : l'article ne peut pas
                             la porter lui-même, il n'a pas d'arrondi (la médaille doit pouvoir
                             en déborder). */}
@@ -151,13 +191,13 @@ export default function ProgrammeCondense({ stageId, contents, preparations, rea
                             aria-hidden
                             className="absolute inset-0 rounded-[22px] shadow-sm pointer-events-none"
                         />
-                        {fait && <BadgeTraite />}
+                        {fait && estActif && <BadgeTraite />}
 
                         {/* Le bandeau coloré porte la phrase à prononcer. La couleur du palier
                             baigne toute la zone au lieu d'un filet de 4px : on sait de quel
                             registre on parle avant même d'avoir lu. */}
                         <div
-                            className="relative px-5 pt-4 pb-5 overflow-hidden rounded-t-[22px]"
+                            className="relative flex flex-col shrink-0 px-5 pt-3 pb-4 overflow-hidden rounded-t-[22px]"
                             style={{ background: `linear-gradient(150deg, ${teinte.vif}, ${teinte.sombre})` }}
                         >
                             <span
@@ -168,13 +208,16 @@ export default function ProgrammeCondense({ stageId, contents, preparations, rea
                                 {pilier.icon}
                             </span>
 
-                            <div className="relative flex items-center gap-2">
+                            <div className="relative order-2 flex flex-wrap items-center gap-2 mt-3">
                                 <span className="text-[10px] font-black uppercase tracking-[0.14em] text-white/75">
                                     {pilier.label}
                                 </span>
                                 {repere && (
                                     <span className="text-[10px] font-semibold text-white/45">· {repere}</span>
                                 )}
+                                <span className="ml-auto rounded-full bg-white/15 px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-white/85">
+                                    {fait ? 'Traité' : estPret ? 'Prêt' : estProchain ? 'À poursuivre' : 'À préparer'}
+                                </span>
                             </div>
 
                             {/* La question titre la carte — c'est le sujet dont on parle.
@@ -182,52 +225,21 @@ export default function ProgrammeCondense({ stageId, contents, preparations, rea
                                 avec les siennes, pas à la place du titre. Marge à droite
                                 réservée à la médaille, pour que le texte ne passe pas dessous. */}
                             <h3 className={clsx(
-                                'relative text-[19px] font-black text-white leading-[1.3] mt-2 text-balance',
-                                fait && 'pr-[76px]',
+                                'relative font-black text-white leading-[1.3] text-balance',
+                                'text-[16px] min-h-10',
                             )}>
                                 {c.question}
                             </h3>
                         </div>
 
-                        {/* Le panneau de desserte : le rappel de fond, puis les décisions. */}
-                        <div className={clsx('bg-white px-5 py-4', readOnly && 'rounded-b-[22px]')}>
-                            {/* Trois lignes par défaut, la dernière s'effaçant en dégradé,
-                                puis une action nommée : le masque seul montrait qu'il y avait
-                                une suite sans dire comment l'atteindre. */}
-                            {c.explication && (
-                                <div>
-                                    {/* Pas de `layout` ici : framer-motion mesure alors toutes
-                                        les cartes à chaque changement de hauteur, et l'ouverture
-                                        d'une explication faisait bouger l'ensemble de la liste. */}
-                                    <p
-                                        className="text-[12.5px] leading-relaxed text-slate-400 overflow-hidden text-justify hyphens-auto"
-                                        lang="fr"
-                                        style={depliee ? undefined : {
-                                            maxHeight: 'calc(3 * 1.625em)',
-                                            maskImage: 'linear-gradient(to bottom, #000 calc(100% - 1.2em), transparent 100%)',
-                                            WebkitMaskImage: 'linear-gradient(to bottom, #000 calc(100% - 1.2em), transparent 100%)',
-                                        }}
-                                    >
-                                        {c.explication}
-                                    </p>
-                                    <button
-                                        onClick={() => setDepliees(prev => ({ ...prev, [c.id]: !prev[c.id] }))}
-                                        aria-expanded={depliee}
-                                        className="mt-1 text-[12px] font-bold text-slate-400 hover:text-slate-700 transition-colors"
-                                    >
-                                        {depliee ? 'Réduire' : 'Lire la suite'}
-                                    </button>
-                                </div>
-                            )}
-
+                        {/* Le panneau montre ce qui a été décidé pour la séance ; il ne
+                            répète pas l'explication de la fiche, qui se lit au besoin dans
+                            le détail du sujet. */}
+                        <div className={clsx('bg-white px-5 py-4 flex-1 min-h-0 overflow-y-auto', readOnly && 'rounded-b-[22px]')}>
                             {(prep?.accroche_choisie || actions.length > 0 || chute) && (
-                                <div className={clsx('space-y-3', c.explication && 'mt-4')}>
-                                    {/* Une seule taille de texte pour les trois décisions : ce
-                                        qui distingue l'accroche, c'est le gras et l'italique,
-                                        pas des corps différents empilés. Trois tailles dans un
-                                        même bloc donnaient un escalier illisible. */}
+                                <div className="space-y-3.5">
                                     {prep?.accroche_choisie && (
-                                        <Ligne intitule="J'accroche avec" teinte={teinte.vif}>
+                                        <Ligne intitule="Accroche" icone="record_voice_over" teinte={teinte.vif}>
                                             <span className="font-bold italic text-slate-900">
                                                 «&nbsp;{prep.accroche_choisie}&nbsp;»
                                             </span>
@@ -235,37 +247,40 @@ export default function ProgrammeCondense({ stageId, contents, preparations, rea
                                     )}
 
                                     {actions.length > 0 && (
-                                        <Ligne intitule="Je fais faire" teinte={teinte.vif}>
-                                            {actions.map(a => (
-                                                <span key={a.id} className="block font-medium text-slate-600">
-                                                    {a.consigne}
+                                        <Ligne intitule="Geste" icone="front_hand" teinte={teinte.vif}>
+                                            <span className="block font-medium text-slate-600">
+                                                {actions[0].consigne}
+                                            </span>
+                                            {actions.length > 1 && (
+                                                <span className="block mt-1 text-[11px] font-bold text-slate-400">
+                                                    + {actions.length - 1} autre{actions.length > 2 ? 's' : ''} geste{actions.length > 2 ? 's' : ''}
                                                 </span>
-                                            ))}
+                                            )}
                                         </Ligne>
                                     )}
 
                                     {chute && (
-                                        <Ligne intitule="Ils retiennent" teinte={teinte.vif}>
+                                        <Ligne intitule="Idée clé" icone="lightbulb" teinte={teinte.vif}>
                                             <span className="font-medium text-slate-600">{chute}</span>
                                         </Ligne>
                                     )}
                                 </div>
                             )}
 
-                            {!prep?.accroche_choisie && (
+                            {!estPret && (
                                 <Link
                                     href={`/stages/${stageId}/preparer`}
-                                    className="inline-flex items-center gap-1.5 mt-3 text-[12.5px] font-bold text-amber-600 hover:text-amber-700 transition-colors"
+                                    className="inline-flex items-center gap-1.5 mt-4 text-[12.5px] font-bold hover:opacity-70 transition-opacity"
+                                    style={{ color: teinte.vif }}
                                 >
                                     <span className="material-symbols-outlined text-[16px]">edit_note</span>
-                                    Pas encore préparé
+                                    {prep?.accroche_choisie ? 'Compléter ce fil' : 'Préparer ce sujet'}
                                 </Link>
                             )}
                         </div>
 
-                        {/* Le geste « traité » : une bande pleine largeur en pied de carte.
-                            Un sujet rouvert après coup garde un « Refermer » distinct — sans
-                            lui, le refermer obligerait à le dé-marquer. */}
+                        {/* Le geste « traité » est volontairement séparé du fil : raconter
+                            un sujet est un état de la semaine, pas une étape de préparation. */}
                         {!readOnly && (
                             <div className="flex bg-white border-t border-slate-100 rounded-b-[22px] overflow-hidden">
                                 <motion.button
@@ -276,22 +291,12 @@ export default function ProgrammeCondense({ stageId, contents, preparations, rea
                                 >
                                     {fait ? 'Ce sujet n’est pas traité' : 'Marquer comme traité'}
                                 </motion.button>
-
-                                {fait && (
-                                    <motion.button
-                                        onClick={() => setOuverts(prev => ({ ...prev, [c.id]: false }))}
-                                        whileTap={{ scale: 0.985 }}
-                                        className="px-5 py-3.5 text-[12.5px] font-black border-l border-slate-100 transition-colors"
-                                        style={{ color: teinte.vif }}
-                                    >
-                                        Refermer
-                                    </motion.button>
-                                )}
                             </div>
                         )}
-                    </article>
+                    </motion.article>
                 );
             })}
+            </div>
 
             {/* Le rituel : transversal à tous les sujets, donc hors de la liste. */}
             {actionsSemaine.length > 0 && (
@@ -409,27 +414,31 @@ function BadgeTraite() {
 
 /** Une décision : un filet teinté, son intitulé, son contenu. */
 function Ligne({
-    intitule, teinte, children,
+    intitule, icone, teinte, children,
 }: {
     intitule: string;
+    icone: string;
     teinte: string;
     children: React.ReactNode;
 }) {
     return (
         <div className="flex gap-2.5">
-            <span
-                className="w-[3px] rounded-full shrink-0 mt-0.5 mb-0.5"
-                style={{ background: teinte, opacity: 0.35 }}
-            />
+            <span className="relative flex w-5 shrink-0 justify-center pt-0.5">
+                <span
+                    className="size-5 rounded-full flex items-center justify-center"
+                    style={{ backgroundColor: `${teinte}16`, color: teinte }}
+                >
+                    <span className="material-symbols-outlined text-[12px]">{icone}</span>
+                </span>
+            </span>
             <div className="flex-1 min-w-0">
                 <span className="block text-[10px] font-bold uppercase tracking-wide text-slate-400 mb-0.5">
                     {intitule}
                 </span>
-                <div lang="fr" className="text-[13.5px] leading-[1.5] space-y-1 text-justify hyphens-auto">
+                <div lang="fr" className="text-[13.5px] leading-[1.5] space-y-1">
                     {children}
                 </div>
             </div>
         </div>
     );
 }
-

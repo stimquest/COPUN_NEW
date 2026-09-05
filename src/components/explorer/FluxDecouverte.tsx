@@ -56,6 +56,7 @@ function repereChoixForce(texte: string): boolean {
 }
 
 const SWIPE_THRESHOLD = 80;
+const HAUTEUR_TITRE_PILE = 60;
 
 // Les thèmes héritent du pilier choisi, mais sur une teinte plus douce : ils servent de
 // repère de famille, sans prendre la couleur franche réservée au pilier lui-même.
@@ -224,7 +225,11 @@ function DeckDecouverte({
 
     return (
         <>
-            <div className="relative h-[420px]">
+            <p className="text-center text-[11px] font-bold text-slate-400 tabular-nums">
+                {position} / {ordreInitial.length}
+            </p>
+            <div className="relative" style={{ paddingTop: (Math.min(3, pile.length) - 1) * HAUTEUR_TITRE_PILE }}>
+                <div className="relative" style={{ height: 420 }}>
                 <AnimatePresence mode="popLayout">
                     {pile.slice(-3).map((f, i, arr) => (
                         <CarteFlux
@@ -234,10 +239,8 @@ function DeckDecouverte({
                         />
                     ))}
                 </AnimatePresence>
+                </div>
             </div>
-            <p className="text-center text-[11px] font-bold text-slate-300 tabular-nums">
-                {position} / {ordreInitial.length}
-            </p>
         </>
     );
 }
@@ -299,7 +302,8 @@ function CarteFlux({
                 'absolute inset-0 rounded-[1.75rem] bg-white overflow-hidden',
                 estTop ? 'shadow-[var(--shadow-lift)]' : 'ring-1 ring-slate-900/5',
             )}
-            style={{ zIndex: 10 - rang, x: estTop ? x : 0, rotate: estTop ? rotate : 0 }}
+            style={{ zIndex: 10 - rang, x: estTop ? x : 0, rotate: estTop ? rotate : 0, transformOrigin: 'center top' }}
+            inert={!estTop}
             drag={estTop ? 'x' : false}
             dragConstraints={{ left: 0, right: 0 }}
             dragElastic={{ left: 0.6, right: 0.15 }}
@@ -309,11 +313,20 @@ function CarteFlux({
             // Pleine opacité à tous les rangs : une carte de fond semi-transparente reste
             // visible à travers celle du dessus pendant qu'elle glisse, ce qui donnait
             // l'impression d'un flou sale plutôt que d'une vraie pile nette.
-            initial={{ scale: 1 - rang * 0.04, y: rang * 14 }}
-            animate={{ scale: 1 - rang * 0.04, y: rang * 14 }}
+            initial={{ scale: 1 - rang * 0.05, y: -rang * HAUTEUR_TITRE_PILE }}
+            animate={{ scale: 1 - rang * 0.05, y: -rang * HAUTEUR_TITRE_PILE }}
             exit={{ x: -400, opacity: 0, transition: { duration: 0.2 } }}
             transition={{ type: 'spring', damping: 30, stiffness: 320 }}
         >
+            <motion.div
+                className={clsx('flex shrink-0 items-center gap-2.5 overflow-hidden px-5', estTop ? pilier?.bg : 'bg-white')}
+                initial={false}
+                animate={{ height: HAUTEUR_TITRE_PILE, opacity: 1 }}
+                transition={{ duration: 0.2 }}
+            >
+                {!estTop && <span aria-hidden className={clsx('h-5 w-0.5 shrink-0 rounded-full', pilier?.bg)} />}
+                <h3 className={clsx('leading-[16px] line-clamp-3', estTop ? 'text-[13px] font-bold text-white' : 'text-[12px] font-semibold text-slate-500')}>{fiche.question}</h3>
+            </motion.div>
             {/* Le tap n'ouvre la fiche que si la carte n'est pas en swipe (`enSwipe`) :
                 `onDragStart` de framer-motion ne se déclenche qu'au-delà de son propre
                 seuil de détection, donc dès qu'il se déclenche, c'est un vrai geste de
@@ -323,7 +336,8 @@ function CarteFlux({
                 tabIndex={0}
                 onClick={estTop ? () => { if (!enSwipe.current) onInfo(); } : undefined}
                 onKeyDown={e => { if (estTop && (e.key === 'Enter' || e.key === ' ')) onInfo(); }}
-                className="w-full h-full flex flex-col text-left px-6 pt-6 pb-20 overflow-y-auto touch-pan-y cursor-pointer"
+                className="w-full flex flex-col text-left px-6 pt-6 pb-20 overflow-y-auto touch-pan-y cursor-pointer"
+                style={{ height: 420 - HAUTEUR_TITRE_PILE }}
             >
                 <div className="flex items-center gap-2 shrink-0">
                     <span className={clsx('size-2 rounded-full', pilier?.bg)} />

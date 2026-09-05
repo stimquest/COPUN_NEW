@@ -9,7 +9,7 @@ import { PILLARS } from '@/data/etages';
 import { actionsPourFiche, actionSujetParId } from '@/data/actions-sujets';
 import { PILIERS_ACTION, actionsDuPilier, actionSemaineParId } from '@/data/actions-semaine';
 import { groupeDe } from '@/data/groupes';
-import { FORMES_ACCROCHE } from '@/data/formes-accroche';
+import { AccrocheFormee, FORMES_ACCROCHE } from '@/data/formes-accroche';
 import OrdreSujets from '@/components/OrdreSujets';
 import { updateStagePool } from '@/actions/stage-actions';
 import {
@@ -33,10 +33,11 @@ const MAX_SEMAINE = 2;
 /** Hauteur de l'en-tête collant de la page, sous lequel la barre vient se poser. */
 const HAUTEUR_ENTETE = 68;
 
-function formulations(c: PedagogicalContent): string[] {
-    if (c.accroches_variantes?.length) return c.accroches_variantes;
-    if (c.accroche) return [c.accroche];
-    return [c.question];
+function formulations(c: PedagogicalContent): Array<AccrocheFormee | { texte: string }> {
+    if (c.accroches_formes?.length) return c.accroches_formes;
+    if (c.accroches_variantes?.length) return c.accroches_variantes.map(texte => ({ texte }));
+    if (c.accroche) return [{ texte: c.accroche }];
+    return [{ texte: c.question }];
 }
 
 function pilierDe(c: PedagogicalContent) {
@@ -427,22 +428,6 @@ function Sujet({
             <h2 className="text-[24px] font-black text-slate-900 leading-[1.15] mt-1.5 text-balance">
                 {content.question}
             </h2>
-            {content.explication && (
-                <p className="text-[15px] font-medium text-slate-500 leading-relaxed mt-3">
-                    {content.explication}
-                </p>
-            )}
-
-            {content.erreur_frequente && (
-                <div className="mt-5 rounded-2xl bg-white border border-slate-200/80 p-5">
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1.5">
-                        L&apos;idée fausse à corriger
-                    </span>
-                    <p className="text-[14px] font-medium text-slate-600 leading-relaxed">
-                        {content.erreur_frequente}
-                    </p>
-                </div>
-            )}
 
             {/* ══ LE DÉROULÉ DE LA SÉANCE ══
                 Deux cadres ambre pour les deux moments qui demandent une décision (j'ouvre,
@@ -456,15 +441,14 @@ function Sujet({
                 - À CHOISIR : emplacement vide en pointillé ambre, puis propositions en
                   cartes blanches à trait plein — le pointillé ambre ne désigne que le trou ;
                 - DONNÉ PAR LA FICHE : texte simple, sans carte, avec une icône. */}
-            <div className="mt-6 rounded-2xl bg-white border border-amber-100 shadow-sm shadow-amber-900/5 overflow-hidden">
-                <div className="flex items-center gap-2 px-6 pt-5 pb-4 bg-amber-50/70 border-b border-amber-100">
-                    <span className="material-symbols-outlined text-amber-600 text-[20px]">record_voice_over</span>
-                    <h3 className="text-xs font-black text-amber-900 uppercase tracking-widest">
-                        J&apos;ouvre la séance
-                    </h3>
-                </div>
-
-                <div className="px-6 py-5">
+            <div className="mt-6">
+                <p className="mb-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Le fil de la séance</p>
+                <div className="relative space-y-5 border-l-2 border-slate-200 pl-5">
+                    <div className="relative">
+                        <span className="absolute -left-[31px] top-0 size-7 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center">
+                            <span className="material-symbols-outlined text-[16px]">record_voice_over</span>
+                        </span>
+                        <h3 className="pb-2 text-[10px] font-black text-amber-700 uppercase tracking-widest">J&apos;ouvre avec</h3>
 
                     {/* J'ouvre avec — décision 1 */}
                     <div>
@@ -489,12 +473,9 @@ function Sujet({
                             />
                         ) : (
                             <div className="space-y-2">
-                                {/* Le pont vers la formation : avant de choisir, le moniteur
-                                    revoit les quatre formes enseignées et reconnaît lui-même,
-                                    à l'œil, laquelle des variantes ci-dessous s'en rapproche —
-                                    on ne classe jamais les variantes à sa place. Affiché
-                                    d'emblée, pas derrière un lien : c'est le moment précis où
-                                    ce rappel sert, un lien discret passait inaperçu. */}
+                                {/* Le pont vers la formation : un rappel très court au moment
+                                    du choix. Les exemples sont volontairement absents : les
+                                    propositions de la fiche, juste après, jouent ce rôle. */}
                                 {voirFormes ? (
                                     <RappelFormes onFermer={() => setVoirFormes(false)} />
                                 ) : (
@@ -519,14 +500,19 @@ function Sujet({
                                 )}
 
                                 {variantes.map((v, i) => (
-                                    <CartePop key={v} delai={i * 0.06}>
+                                    <CartePop key={v.texte} delai={i * 0.06}>
                                         <BoutonChoix onClick={() => {
-                                            onChoisirAccroche(v);
+                                            onChoisirAccroche(v.texte);
                                             setChangeAccroche(false);
                                             setDeplie(false);
                                             setVoirFormes(false);
                                         }}>
-                                            «&nbsp;{v}&nbsp;»
+                                            {'forme' in v && (
+                                                <span className="mb-1.5 block text-[9px] font-black uppercase tracking-widest text-amber-600">
+                                                    {FORMES_ACCROCHE.find(f => f.id === v.forme)?.nom}
+                                                </span>
+                                            )}
+                                            «&nbsp;{v.texte}&nbsp;»
                                         </BoutonChoix>
                                     </CartePop>
                                 ))}
@@ -538,14 +524,15 @@ function Sujet({
                             </div>
                         )}
                     </div>
-                </div>
-            </div>
+                    </div>
 
             {/* Je leur fais observer — donné par la fiche, hors cadre : ce n'est pas une
                 décision à prendre, et ça n'a jamais relevé de « ce que je vais dire ». */}
             {content.a_observer && (
-                <div className="mt-4 flex items-start gap-3 px-1">
-                    <span className="material-symbols-outlined text-slate-400 text-[20px] mt-0.5 shrink-0">visibility</span>
+                <div className="relative flex items-start gap-3">
+                    <span className="absolute -left-[31px] top-0 size-7 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center">
+                        <span className="material-symbols-outlined text-[16px]">visibility</span>
+                    </span>
                     <div>
                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">
                             Je leur fais observer
@@ -558,15 +545,11 @@ function Sujet({
             {/* Je leur fais faire — décision 2, dans son propre cadre : c'est un second
                 moment de séance, pas une suite de la parole d'ouverture. */}
             {choisie && proposees.length > 0 && (
-                <div className="mt-4 rounded-2xl bg-white border border-amber-100 shadow-sm shadow-amber-900/5 overflow-hidden">
-                    <div className="flex items-center gap-2 px-6 pt-5 pb-4 bg-amber-50/70 border-b border-amber-100">
-                        <span className="material-symbols-outlined text-amber-600 text-[20px]">back_hand</span>
-                        <h3 className="text-xs font-black text-amber-900 uppercase tracking-widest">
-                            Je leur fais faire
-                        </h3>
-                    </div>
-
-                    <div className="px-6 py-5">
+                <div className="relative">
+                    <span className="absolute -left-[31px] top-0 size-7 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center">
+                        <span className="material-symbols-outlined text-[16px]">back_hand</span>
+                    </span>
+                    <h3 className="pb-2 text-[10px] font-black text-amber-700 uppercase tracking-widest">Je leur fais faire</h3>
                         {/* Pas d'animation de hauteur sur le conteneur : combinée au `layout`
                             des cartes, elle laissait la hauteur se figer avant la fin de la
                             transition et le texte débordait du cadre. Chaque carte porte sa
@@ -620,15 +603,16 @@ function Sujet({
                                 />
                             )
                         )}
-                    </div>
                 </div>
             )}
 
             {/* Ils repartent avec — la conclusion du sujet, donnée par la fiche. Sortie du
                 cadre pour la même raison que « je leur fais observer ». */}
             {content.a_retenir && (
-                <div className="mt-4 flex items-start gap-3 px-1">
-                    <span className="material-symbols-outlined text-slate-400 text-[20px] mt-0.5 shrink-0">backpack</span>
+                <div className="relative flex items-start gap-3">
+                    <span className="absolute -left-[31px] top-0 size-7 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center">
+                        <span className="material-symbols-outlined text-[16px]">backpack</span>
+                    </span>
                     <div>
                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">
                             Ils repartent avec
@@ -636,6 +620,29 @@ function Sujet({
                         <p className="text-[15px] font-semibold text-slate-700 leading-relaxed">{content.a_retenir}</p>
                     </div>
                 </div>
+            )}
+                </div>
+            </div>
+
+            {(content.explication || content.erreur_frequente) && (
+                <details className="mt-7 rounded-2xl bg-white/70 border border-slate-200/80 group">
+                    <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-3.5 text-[12px] font-black text-slate-500">
+                        <span className="material-symbols-outlined text-[17px] text-slate-400">menu_book</span>
+                        Pour moi, avant la séance
+                        <span className="material-symbols-outlined ml-auto text-slate-400 transition-transform group-open:rotate-180">expand_more</span>
+                    </summary>
+                    <div className="space-y-4 border-t border-slate-100 px-4 py-4">
+                        {content.explication && (
+                            <p className="text-[14px] font-medium text-slate-600 leading-relaxed">{content.explication}</p>
+                        )}
+                        {content.erreur_frequente && (
+                            <div className="border-l-2 border-slate-200 pl-3">
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">L&apos;idée fausse à corriger</span>
+                                <p className="text-[13px] font-medium text-slate-600 leading-relaxed">{content.erreur_frequente}</p>
+                            </div>
+                        )}
+                    </div>
+                </details>
             )}
         </section>
     );
@@ -739,9 +746,8 @@ function EmplacementVide({
  * d'une variante — voir `formes-accroche.ts` pour pourquoi ces formes ne servent pas à
  * classer les variantes automatiquement.
  *
- * Le moniteur lit les quatre exemples réels, puis descend faire son choix parmi les
- * variantes de SA fiche en se demandant laquelle s'en rapproche le plus — c'est sa
- * reconnaissance qui compte, pas un verdict de l'app.
+ * Il ne donne pas les exemples de la formation : les propositions réelles de la fiche
+ * viennent juste après. Il sert seulement de boussole avant le choix.
  */
 function RappelFormes({ onFermer }: { onFermer: () => void }) {
     return (
@@ -749,7 +755,7 @@ function RappelFormes({ onFermer }: { onFermer: () => void }) {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="rounded-xl bg-amber-50/70 border border-amber-100 p-3.5 space-y-2.5 overflow-hidden"
+            className="rounded-xl bg-amber-50/70 border border-amber-100 p-3 overflow-hidden"
         >
             <div className="flex items-center justify-between">
                 <p className="text-[10px] font-black text-amber-700 uppercase tracking-widest">
@@ -764,16 +770,16 @@ function RappelFormes({ onFermer }: { onFermer: () => void }) {
                     <span className="material-symbols-outlined text-[16px]">close</span>
                 </button>
             </div>
-            {FORMES_ACCROCHE.map(f => (
-                <div key={f.id} className="text-[12.5px] leading-snug">
-                    <span className="font-black text-amber-900">{f.nom}</span>
-                    <span className="text-amber-800/80"> — « {f.exemple} »</span>
-                    <p className="text-amber-700/70 text-[11.5px] mt-0.5">{f.pourquoi}</p>
-                </div>
-            ))}
-            <p className="text-[11px] text-amber-600/60 pt-1">
-                Laquelle des propositions ci-dessous s&apos;en rapproche le plus ?
-            </p>
+            <div className="space-y-2.5 mt-2.5">
+                {FORMES_ACCROCHE.map(f => (
+                    <div key={f.id} className="text-[12px] leading-snug">
+                        <p className="font-black text-amber-900">{f.nom}</p>
+                        <p className="text-amber-700/70 text-[11.5px] mt-0.5">
+                            {f.pourquoi}
+                        </p>
+                    </div>
+                ))}
+            </div>
         </motion.div>
     );
 }

@@ -7,6 +7,7 @@ import { CoeffType, MeteoType } from '@/data/seasonal-context';
 import { groupesDeLaSemaine } from '@/data/intentions-semaine';
 import { GROUPES } from '@/data/groupes';
 import { PILLARS } from '@/data/etages';
+import { niveauRepere } from '@/data/niveaux';
 import { PedagogicalContent, Dimension } from '@/types';
 import { HistoriqueMoniteur } from '@/lib/historique-moniteur';
 
@@ -93,7 +94,7 @@ export default function AideConditions({
                     className="inline-flex items-center gap-1.5 text-[12px] font-black text-slate-500 hover:text-slate-800 transition-colors px-1"
                 >
                     <span className="material-symbols-outlined text-[17px]">arrow_back</span>
-                    Une autre intention
+                    Une autre porte d&apos;entrée
                 </button>
 
                 <div className="px-1">
@@ -130,6 +131,15 @@ export default function AideConditions({
     // ── L'accueil : la question groupée, puis les intentions à accepter ─────────────────
     return (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
+            <div className="px-1">
+                <h2 className="text-[16px] font-black text-slate-900 leading-tight">
+                    Qu&apos;as-tu envie de faire émerger cette semaine&nbsp;?
+                </h2>
+                <p className="mt-1 text-[12px] leading-snug text-slate-500">
+                    Regarde ce que le milieu rend possible, puis choisis la porte d&apos;entrée qui te parle.
+                </p>
+            </div>
+
             {/* Une seule question, groupée : coefficient ET météo sur le même écran,
                 jamais deux étapes successives. Facultative — sans réponse, la saison
                 seule alimente déjà des propositions. */}
@@ -157,7 +167,7 @@ export default function AideConditions({
             </div>
 
             <p className="text-[12.5px] text-slate-500 px-1">
-                Ça vaudrait le coup, cette semaine&nbsp;:
+                Des portes d&apos;entrée possibles&nbsp;:
             </p>
 
             {proposes.map(g => (
@@ -173,7 +183,7 @@ export default function AideConditions({
 
             <details className="pt-1">
                 <summary className="text-[12px] font-bold text-slate-400 hover:text-slate-600 transition-colors px-1 cursor-pointer">
-                    Les autres sujets
+                    Voir d&apos;autres portes d&apos;entrée
                 </summary>
                 <div className="space-y-2 pt-2">
                     {autres.map(g => (
@@ -270,6 +280,11 @@ function LigneFiche({
                 <span className="block text-[12.5px] font-bold text-slate-800 leading-snug">
                     {fiche.question}
                 </span>
+                {niveauRepere(fiche.niveau) && (
+                    <span className="mt-1 inline-flex rounded-full bg-slate-100 px-1.5 py-0.5 text-[9px] font-bold text-slate-400">
+                        {niveauRepere(fiche.niveau)}
+                    </span>
+                )}
             </button>
             <button
                 onClick={onToggle}
