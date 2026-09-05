@@ -66,102 +66,92 @@ export const SEASONAL_PERIODS: SeasonalPeriod[] = [
     },
 ];
 
-// Weights for each thematic tag based on coefficient + meteo combination
-// Higher number = stronger suggestion
-type ThematicWeights = Partial<Record<ThematicTag, number>>;
+/**
+ * Une suggestion de thème, motivée par une phrase vérifiable — jamais un score.
+ *
+ * Avant, chaque axe (coefficient, météo, saison, activité, niveau) distribuait des
+ * points à plusieurs thèmes à la fois, et le calcul additionnait tout : la suggestion
+ * finale gagnait par accumulation de petits bonus dispersés, sans qu'aucun lien de
+ * cause à conséquence ne soit vérifiable. Exemple constaté : « grande marée » + « vent »
+ * faisait gagner « Repères spatio-temporels », un thème sans rapport direct ni avec la
+ * marée ni avec le vent — juste le sous-produit du calcul.
+ *
+ * Ici, chaque axe répond à UNE seule question : « qu'est-ce que ça change concrètement
+ * sur le terrain, et quel thème en découle directement ? ». Un coefficient moyen ou une
+ * activité neutre ne motivent rien — pas de thème forcé faute de lien réel.
+ */
+export type ThematicSuggestion = { tag: ThematicTag; reason: string };
 
-function getCoeffWeights(coeff: CoeffType): ThematicWeights {
+// Ce que le coefficient de marée change concrètement : l'étendue de l'estran découvert.
+function getCoeffSuggestion(coeff: CoeffType): ThematicSuggestion | null {
     switch (coeff) {
-        case 'morte_eau':
-            return {
-                biodiversite_saisonnalite: 3,
-                lecture_paysage: 2,
-                cohabitation_vivant: 2,
-            };
         case 'vive_eau':
-            return {
-                caracteristiques_littoral: 3,
-                reperes_spatio_temporels: 3,
-                interactions_climatiques: 2,
-            };
+            // L'estran se découvre très largement : on peut aller voir ce qui vit
+            // normalement immergé — lien direct avec le littoral lui-même.
+            return { tag: 'caracteristiques_littoral', reason: 'Grande marée : l\'estran se découvre très largement' };
+        case 'morte_eau':
+            // Peu de mouvement d'eau, plan d'eau calme : propice à observer le vivant
+            // en douceur, sans que la marée elle-même soit le phénomène marquant.
+            return { tag: 'biodiversite_saisonnalite', reason: 'Faible marnage : plan d\'eau calme, propice à l\'observation' };
         case 'entre_deux':
-            return {
-                reperes_spatio_temporels: 2,
-                lecture_paysage: 2,
-            };
+            // Rien de remarquable côté marée cette semaine : pas de thème forcé.
+            return null;
     }
 }
 
-function getMeteoWeights(meteo: MeteoType): ThematicWeights {
+// Ce que la météo change concrètement : ce qui devient visible ou sensible dans l'instant.
+function getMeteoSuggestion(meteo: MeteoType): ThematicSuggestion | null {
     switch (meteo) {
         case 'beau_fixe':
-            return {
-                lecture_paysage: 3,
-                cohabitation_vivant: 3,
-                biodiversite_saisonnalite: 2,
-            };
+            // Grande visibilité, calme : le paysage se lit dans le détail.
+            return { tag: 'lecture_paysage', reason: 'Beau fixe : grande visibilité pour lire le littoral' };
         case 'vent':
-            return {
-                interactions_climatiques: 3,
-                reperes_spatio_temporels: 3,
-                lecture_paysage: 2,
-            };
+            // Le vent lui-même est le phénomène du jour — thermiques, direction, force.
+            return { tag: 'interactions_climatiques', reason: 'Vent au cœur de la semaine : direction, force, thermiques' };
         case 'instable':
-            return {
-                interactions_climatiques: 3,
-                activites_humaines: 2,
-                reperes_spatio_temporels: 2,
-            };
+            // Ciel changeant : même famille de phénomène à décrypter en direct.
+            return { tag: 'interactions_climatiques', reason: 'Ciel changeant : les éléments climatiques se lisent en direct' };
         case 'tempete':
-            return {
-                interactions_climatiques: 3,
-                caracteristiques_littoral: 3,
-                impact_presence_humaine: 2,
-            };
+            // Gros temps : le phénomène météo, en version intense, reste le sujet —
+            // pas un thème sur l'impact humain, qui n'a pas de lien direct ici.
+            return { tag: 'interactions_climatiques', reason: 'Gros temps : houle, rafales, un phénomène à décrypter en direct' };
     }
 }
 
-function getPeriodWeights(periodId: string): ThematicWeights {
+// Ce que la saison rend disponible ou fragile sur le site, indépendamment de la semaine.
+function getPeriodSuggestion(periodId: string): ThematicSuggestion | null {
     switch (periodId) {
         case 'hiver_marin':
-            return {
-                biodiversite_saisonnalite: 2,
-                caracteristiques_littoral: 2,
-                sciences_participatives: 1,
-            };
-        case 'eveil_littoral':
-            return {
-                biodiversite_saisonnalite: 3,
-                cohabitation_vivant: 2,
-                reperes_spatio_temporels: 1,
-            };
-        case 'printemps_actif':
-            return {
-                cohabitation_vivant: 3,
-                biodiversite_saisonnalite: 2,
-                impact_presence_humaine: 1,
-            };
-        case 'haute_saison':
-            return {
-                impact_presence_humaine: 3,
-                cohabitation_vivant: 3,
-                activites_humaines: 2,
-            };
-        case 'transition_automnale':
-            return {
-                biodiversite_saisonnalite: 3,
-                lecture_paysage: 2,
-                sciences_participatives: 2,
-            };
         case 'entree_hiver':
-            return {
-                caracteristiques_littoral: 2,
-                biodiversite_saisonnalite: 2,
-                interactions_climatiques: 2,
-            };
+            // Oiseaux hivernants installés : la biodiversité du moment est le lien direct.
+            return { tag: 'biodiversite_saisonnalite', reason: 'Oiseaux hivernants installés sur le site' };
+        case 'eveil_littoral':
+        case 'printemps_actif':
+            // Nidification en cours : la faune est vulnérable au dérangement.
+            return { tag: 'cohabitation_vivant', reason: 'Nidification en cours : discrétion près des zones sensibles' };
+        case 'haute_saison':
+            // Fréquentation maximale : l'impact humain est le plus visible.
+            return { tag: 'impact_presence_humaine', reason: 'Fréquentation estivale maximale : l\'impact humain est visible' };
+        case 'transition_automnale':
+            // Migrations d'automne : la biodiversité de passage est observable.
+            return { tag: 'biodiversite_saisonnalite', reason: 'Migrations d\'automne : période riche en observations' };
         default:
-            return {};
+            return null;
     }
+}
+
+// Ce que le support nautique change dans ce que le groupe perçoit en pratiquant.
+function getActivitySuggestion(activities: string[]): ThematicSuggestion | null {
+    const lower = activities.map(a => a.toLowerCase());
+    // Vent et allure sont le sujet quotidien de la planche/wing/kite.
+    if (lower.some(a => a.includes('planche') || a.includes('wing') || a.includes('kite'))) {
+        return { tag: 'interactions_climatiques', reason: 'En planche/wing/kite, le vent est au centre de chaque séance' };
+    }
+    // Silencieux et lent : le kayak/SUP amène près de la faune sans la déranger.
+    if (lower.some(a => a.includes('kayak') || a.includes('sup') || a.includes('paddle'))) {
+        return { tag: 'cohabitation_vivant', reason: 'En kayak/SUP, on approche la faune sans la déranger' };
+    }
+    return null;
 }
 
 export const THEMATIC_LABELS: Record<ThematicTag, { label: string; dimension: 'C' | 'O' | 'P'; icon: string }> = {
@@ -183,110 +173,40 @@ export function getPeriodForMonth(month: number): SeasonalPeriod {
     return SEASONAL_PERIODS.find(p => p.months.includes(month)) ?? SEASONAL_PERIODS[0];
 }
 
-// Supports nautiques qui amplifient certaines thématiques
-function getActivityWeights(activities: string[]): ThematicWeights {
-    const w: ThematicWeights = {};
-    const add = (tag: ThematicTag, v: number) => { w[tag] = (w[tag] ?? 0) + v; };
-
-    for (const a of activities) {
-        const lower = a.toLowerCase();
-        if (lower.includes('planche') || lower.includes('wing') || lower.includes('kite')) {
-            add('interactions_climatiques', 2);
-            add('reperes_spatio_temporels', 1);
-        }
-        if (lower.includes('catamaran') || lower.includes('dériveur') || lower.includes('optimist')) {
-            add('reperes_spatio_temporels', 2);
-            add('caracteristiques_littoral', 1);
-        }
-        if (lower.includes('kayak') || lower.includes('sup') || lower.includes('paddle')) {
-            add('cohabitation_vivant', 2);
-            add('lecture_paysage', 1);
-            add('biodiversite_saisonnalite', 1);
-        }
-    }
-    return w;
-}
-
-// Le niveau oriente vers plus ou moins de complexité conceptuelle
-function getLevelWeights(level: string): ThematicWeights {
-    const lower = level.toLowerCase();
-    if (lower.includes('1')) {
-        return {
-            reperes_spatio_temporels: 2,
-            caracteristiques_littoral: 1,
-            lecture_paysage: 1,
-        };
-    }
-    if (lower.includes('2')) {
-        return {
-            interactions_climatiques: 1,
-            biodiversite_saisonnalite: 1,
-            cohabitation_vivant: 1,
-        };
-    }
-    if (lower.includes('3')) {
-        return {
-            impact_presence_humaine: 2,
-            sciences_participatives: 2,
-            activites_humaines: 1,
-        };
-    }
-    return {};
-}
-
-// L'intention principale booste ses voisines thématiques sans s'auto-booster
-const THEMATIC_NEIGHBORS: Record<ThematicTag, ThematicTag[]> = {
-    caracteristiques_littoral:  ['reperes_spatio_temporels', 'interactions_climatiques', 'lecture_paysage'],
-    reperes_spatio_temporels:   ['caracteristiques_littoral', 'lecture_paysage', 'interactions_climatiques'],
-    interactions_climatiques:   ['reperes_spatio_temporels', 'caracteristiques_littoral', 'biodiversite_saisonnalite'],
-    biodiversite_saisonnalite:  ['cohabitation_vivant', 'sciences_participatives', 'lecture_paysage'],
-    activites_humaines:         ['impact_presence_humaine', 'cohabitation_vivant', 'reperes_spatio_temporels'],
-    lecture_paysage:            ['caracteristiques_littoral', 'biodiversite_saisonnalite', 'interactions_climatiques'],
-    cohabitation_vivant:        ['biodiversite_saisonnalite', 'impact_presence_humaine', 'lecture_paysage'],
-    impact_presence_humaine:    ['activites_humaines', 'cohabitation_vivant', 'sciences_participatives'],
-    sciences_participatives:    ['biodiversite_saisonnalite', 'impact_presence_humaine', 'cohabitation_vivant'],
-};
-
-function getMainThematicWeights(main: ThematicTag): ThematicWeights {
-    const w: ThematicWeights = {};
-    for (const neighbor of THEMATIC_NEIGHBORS[main]) {
-        w[neighbor] = (w[neighbor] ?? 0) + 2;
-    }
-    return w;
-}
-
 export type SuggestionContext = {
     periodId: string;
     coeff: CoeffType;
     meteo: MeteoType;
     activities?: string[];
-    level?: string;
-    mainThematic?: ThematicTag | null;
     topN?: number;
 };
 
-export function getSuggestedThematics(ctx: SuggestionContext): ThematicTag[] {
-    const { periodId, coeff, meteo, activities = [], level = '', mainThematic = null, topN = 4 } = ctx;
-    const scores: Partial<Record<ThematicTag, number>> = {};
+/**
+ * Jusqu'à 4 suggestions, une par axe (coefficient, météo, saison, activité), chacune
+ * motivée par sa propre raison — jamais combinées en un score. Un même thème peut
+ * revenir de deux axes différents (ex. météo et activité pointent tous deux vers les
+ * interactions climatiques) : c'est alors un vrai accord entre deux raisons distinctes,
+ * gardé comme une seule suggestion mais avec les deux raisons jointes — pas un hasard de
+ * calcul comme avant.
+ */
+export function getSuggestedThematics(ctx: SuggestionContext): ThematicSuggestion[] {
+    const { periodId, coeff, meteo, activities = [], topN = 4 } = ctx;
 
-    const addWeights = (weights: ThematicWeights) => {
-        for (const [tag, weight] of Object.entries(weights) as [ThematicTag, number][]) {
-            scores[tag] = (scores[tag] ?? 0) + weight;
-        }
-    };
+    const brutes = [
+        getCoeffSuggestion(coeff),
+        getMeteoSuggestion(meteo),
+        getPeriodSuggestion(periodId),
+        getActivitySuggestion(activities),
+    ].filter((s): s is ThematicSuggestion => s !== null);
 
-    addWeights(getPeriodWeights(periodId));
-    addWeights(getCoeffWeights(coeff));
-    addWeights(getMeteoWeights(meteo));
-    addWeights(getActivityWeights(activities));
-    if (level) addWeights(getLevelWeights(level));
-    if (mainThematic) addWeights(getMainThematicWeights(mainThematic));
+    const parTag = new Map<ThematicTag, string[]>();
+    for (const s of brutes) {
+        const raisons = parTag.get(s.tag) ?? [];
+        raisons.push(s.reason);
+        parTag.set(s.tag, raisons);
+    }
 
-    // L'intention principale n'entre jamais dans les suggestions (ouvre les options)
-    if (mainThematic) delete scores[mainThematic];
-
-    return (Object.entries(scores) as [ThematicTag, number][])
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, topN)
-        .map(([tag]) => tag);
+    return [...parTag.entries()]
+        .map(([tag, raisons]) => ({ tag, reason: raisons.join(' — ') }))
+        .slice(0, topN);
 }

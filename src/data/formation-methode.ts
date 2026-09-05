@@ -1362,12 +1362,12 @@ export const LECONS_FORMATION: LeconFormation[] = [
             },
             {
                 genre: 'texte',
-                titre: 'Ce que l\'app garde en mémoire',
-                texte: "Chaque sujet préparé compte ses révisions et la date de la dernière — ce n'est pas juste toi qui dois t'en souvenir, l'app garde la trace pour te le rappeler.",
+                titre: 'Le sujet ne disparaît pas après lundi',
+                texte: "Tes sujets préparés restent affichés sur l'écran de la semaine du premier au dernier jour. Rien ne se referme une fois le sujet raconté une première fois : il est là, prêt à être repris.",
                 points: [
                     "Le sujet reste affiché toute la semaine, pas seulement le jour choisi",
-                    "Chaque reprise est comptée",
-                    "Un rappel réussi sans regarder la fiche vaut plus qu'une relecture",
+                    "Tu rayes un sujet quand tu l'as raconté — pas pour le clore, pour t'y retrouver",
+                    "Une reprise réussie de mémoire vaut mieux que rouvrir la fiche",
                 ],
             },
             ],

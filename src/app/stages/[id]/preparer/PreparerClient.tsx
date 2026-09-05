@@ -9,6 +9,7 @@ import { PILLARS } from '@/data/etages';
 import { actionsPourFiche, actionSujetParId } from '@/data/actions-sujets';
 import { PILIERS_ACTION, actionsDuPilier, actionSemaineParId } from '@/data/actions-semaine';
 import { groupeDe } from '@/data/groupes';
+import { FORMES_ACCROCHE } from '@/data/formes-accroche';
 import OrdreSujets from '@/components/OrdreSujets';
 import { updateStagePool } from '@/actions/stage-actions';
 import {
@@ -386,6 +387,13 @@ function Sujet({
      */
     const [deplie, setDeplie] = useState(false);
     const [deplieActions, setDeplieActions] = useState(false);
+    /**
+     * Rappel des quatre formes d'accroche (voir `formes-accroche.ts`), facultatif et
+     * escamotable : le pont vers la formation, sans jamais s'imposer entre le moniteur et
+     * ses variantes. Fermé par défaut à chaque nouvelle ouverture du choix — un rappel
+     * qu'on doit redemander plutôt qu'un état qui traînerait sujet après sujet.
+     */
+    const [voirFormes, setVoirFormes] = useState(false);
 
     const choisie = prep?.accroche_choisie ?? null;
     const actions = prep?.actions ?? [];
@@ -481,19 +489,49 @@ function Sujet({
                             />
                         ) : (
                             <div className="space-y-2">
+                                {/* Le pont vers la formation : avant de choisir, le moniteur
+                                    revoit les quatre formes enseignées et reconnaît lui-même,
+                                    à l'œil, laquelle des variantes ci-dessous s'en rapproche —
+                                    on ne classe jamais les variantes à sa place. Affiché
+                                    d'emblée, pas derrière un lien : c'est le moment précis où
+                                    ce rappel sert, un lien discret passait inaperçu. */}
+                                {voirFormes ? (
+                                    <RappelFormes onFermer={() => setVoirFormes(false)} />
+                                ) : (
+                                    <button
+                                        type="button"
+                                        onClick={() => setVoirFormes(true)}
+                                        className="w-full flex items-center gap-2.5 rounded-xl bg-amber-100 px-4 py-3 active:scale-[0.99] transition-all"
+                                    >
+                                        <span className="size-8 rounded-lg bg-white flex items-center justify-center shrink-0">
+                                            <span className="material-symbols-outlined text-amber-600 text-[18px]">lightbulb</span>
+                                        </span>
+                                        <span className="flex-1 min-w-0 text-left">
+                                            <span className="block text-[13px] font-black text-amber-900">
+                                                Revoir les formes qui marchent
+                                            </span>
+                                            <span className="block text-[11px] text-amber-700/70">
+                                                Le pari, le piège, le constat, le choix forcé
+                                            </span>
+                                        </span>
+                                        <span className="material-symbols-outlined text-amber-400 shrink-0">chevron_right</span>
+                                    </button>
+                                )}
+
                                 {variantes.map((v, i) => (
                                     <CartePop key={v} delai={i * 0.06}>
                                         <BoutonChoix onClick={() => {
                                             onChoisirAccroche(v);
                                             setChangeAccroche(false);
                                             setDeplie(false);
+                                            setVoirFormes(false);
                                         }}>
                                             «&nbsp;{v}&nbsp;»
                                         </BoutonChoix>
                                     </CartePop>
                                 ))}
                                 <BoutonRefermer
-                                    onClick={() => { setChangeAccroche(false); setDeplie(false); }}
+                                    onClick={() => { setChangeAccroche(false); setDeplie(false); setVoirFormes(false); }}
                                     libelle="Annuler"
                                     valide={false}
                                 />
@@ -693,6 +731,50 @@ function EmplacementVide({
                 {nombre} propositions
             </span>
         </motion.button>
+    );
+}
+
+/**
+ * Rappel des quatre formes d'accroche, entre le module de formation et le choix concret
+ * d'une variante — voir `formes-accroche.ts` pour pourquoi ces formes ne servent pas à
+ * classer les variantes automatiquement.
+ *
+ * Le moniteur lit les quatre exemples réels, puis descend faire son choix parmi les
+ * variantes de SA fiche en se demandant laquelle s'en rapproche le plus — c'est sa
+ * reconnaissance qui compte, pas un verdict de l'app.
+ */
+function RappelFormes({ onFermer }: { onFermer: () => void }) {
+    return (
+        <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="rounded-xl bg-amber-50/70 border border-amber-100 p-3.5 space-y-2.5 overflow-hidden"
+        >
+            <div className="flex items-center justify-between">
+                <p className="text-[10px] font-black text-amber-700 uppercase tracking-widest">
+                    Quatre formes qui marchent
+                </p>
+                <button
+                    type="button"
+                    onClick={onFermer}
+                    aria-label="Masquer le rappel"
+                    className="text-amber-400 hover:text-amber-700 transition-colors"
+                >
+                    <span className="material-symbols-outlined text-[16px]">close</span>
+                </button>
+            </div>
+            {FORMES_ACCROCHE.map(f => (
+                <div key={f.id} className="text-[12.5px] leading-snug">
+                    <span className="font-black text-amber-900">{f.nom}</span>
+                    <span className="text-amber-800/80"> — « {f.exemple} »</span>
+                    <p className="text-amber-700/70 text-[11.5px] mt-0.5">{f.pourquoi}</p>
+                </div>
+            ))}
+            <p className="text-[11px] text-amber-600/60 pt-1">
+                Laquelle des propositions ci-dessous s&apos;en rapproche le plus ?
+            </p>
+        </motion.div>
     );
 }
 

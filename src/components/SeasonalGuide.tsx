@@ -156,7 +156,7 @@ type Props = {
     isSaving?: boolean;
 };
 
-export default function SeasonalGuide({ startDate, activities = [], level = '', initialIntention = null, initialCoeff = null, initialMeteo = null, onSuggestions, onSkip, isSaving = false }: Props) {
+export default function SeasonalGuide({ startDate, activities = [], initialIntention = null, initialCoeff = null, initialMeteo = null, onSuggestions, onSkip, isSaving = false }: Props) {
     const month = startDate ? new Date(startDate).getMonth() + 1 : new Date().getMonth() + 1;
     const period = getPeriodForMonth(month);
 
@@ -165,7 +165,7 @@ export default function SeasonalGuide({ startDate, activities = [], level = '', 
     const [intentionId, setIntentionId] = useState<ObjectifId | null>(initialIntention);
 
     const suggestions = coeff && meteo
-        ? getSuggestedThematics({ periodId: period.id, coeff, meteo, activities, level })
+        ? getSuggestedThematics({ periodId: period.id, coeff, meteo, activities })
         : null;
 
     // Intentions favorisées par les conditions choisies — se mettent à jour dès qu'on
@@ -175,7 +175,7 @@ export default function SeasonalGuide({ startDate, activities = [], level = '', 
     const intentionSuggestions = getSuggestedIntentions({ periodId: period.id, coeff, meteo, weekSeed });
 
     const handleValidate = () => {
-        if (suggestions && !isSaving) onSuggestions(suggestions, intentionId, coeff, meteo);
+        if (suggestions && !isSaving) onSuggestions(suggestions.map(s => s.tag), intentionId, coeff, meteo);
     };
 
     return (
@@ -270,19 +270,21 @@ export default function SeasonalGuide({ startDate, activities = [], level = '', 
                     <p className="text-[10px] font-black uppercase tracking-widest text-indigo-500">
                         Thématiques suggérées
                     </p>
-                    <div className="flex flex-wrap gap-2">
-                        {suggestions.map(tag => {
+                    <div className="space-y-1.5">
+                        {suggestions.map(({ tag, reason }) => {
                             const info = THEMATIC_LABELS[tag];
                             return (
-                                <span
-                                    key={tag}
-                                    className={`text-xs font-bold px-3 py-1.5 rounded-full border ${THEMATIC_COLORS[info.dimension]}`}
-                                >
-                                    <span className={`font-black mr-1 ${DIMENSION_COLORS[info.dimension]}`}>
-                                        {info.dimension}
+                                <div key={tag} className="flex items-start gap-2">
+                                    <span
+                                        className={`shrink-0 text-xs font-bold px-3 py-1.5 rounded-full border ${THEMATIC_COLORS[info.dimension]}`}
+                                    >
+                                        <span className={`font-black mr-1 ${DIMENSION_COLORS[info.dimension]}`}>
+                                            {info.dimension}
+                                        </span>
+                                        {info.label}
                                     </span>
-                                    {info.label}
-                                </span>
+                                    <span className="text-[11px] text-indigo-500/80 leading-snug pt-1.5">{reason}</span>
+                                </div>
                             );
                         })}
                     </div>

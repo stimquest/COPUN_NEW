@@ -29,9 +29,39 @@
   --shadow-nav: 0 10px 40px -10px rgba(0, 0, 0, 0.1);
   --shadow-active: 0 2px 4px rgba(0, 0, 0, 0.1);
 
+  /* ── Ombres teintées ──────────────────────────────────────────────────────
+     Les ombres grises par défaut posent les cartes sur l'écran sans les y
+     rattacher : sur un fond coloré, une ombre prend la teinte du fond. C'est
+     ce qui donne aux apps de référence leur profondeur douce plutôt qu'un
+     empilement de rectangles blancs. */
+  --shadow-soft: 0 2px 8px -2px rgb(30 58 138 / 0.08), 0 8px 24px -8px rgb(30 58 138 / 0.10);
+  --shadow-lift: 0 4px 12px -2px rgb(30 58 138 / 0.10), 0 16px 40px -12px rgb(30 58 138 / 0.18);
+  --shadow-glow-indigo: 0 8px 24px -6px rgb(76 64 231 / 0.45);
+  --shadow-glow-amber: 0 8px 24px -6px rgb(245 158 11 / 0.40);
+  --shadow-glow-blue: 0 8px 24px -6px rgb(37 99 235 / 0.40);
+  --shadow-glow-emerald: 0 8px 24px -6px rgb(16 185 129 / 0.40);
+
   /* Radii */
   --radius-lg: 1.5rem;
   --radius-xl: 2rem;
+}
+
+/* ── Fonds de page ──────────────────────────────────────────────────────────
+   Un aplat gris neutre donnait un rendu de tableau de bord. Le fond porte
+   désormais une teinte et une profondeur : deux halos très diffus en haut
+   d'écran, sous le bandeau, comme une lumière qui vient du ciel. */
+.fond-ciel {
+  background:
+    radial-gradient(1200px 500px at 15% -10%, rgb(199 210 254 / 0.55), transparent 65%),
+    radial-gradient(900px 420px at 95% 0%, rgb(165 243 252 / 0.45), transparent 60%),
+    linear-gradient(180deg, #eef2ff 0%, #eff4fb 28%, #ebf0f7 60%);
+  background-attachment: fixed;
+}
+
+/* Bandeau haut : la zone d'identité de l'écran, colorée et franche, dont les
+   cartes se détachent — au lieu de flotter sur un fond uniforme. */
+.bandeau-ciel {
+  background: linear-gradient(160deg, #4c40e7 0%, #5b56ea 45%, #3f7fd6 100%);
 }
 
 :root {
