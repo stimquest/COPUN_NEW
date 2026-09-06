@@ -66,6 +66,9 @@ function boundsOfCalendarWeek(dateISO: string): { start: string; end: string } {
 
 type Props = {
     existingStage?: Stage;
+    initialSelection?: string[];
+    initialTheme?: string;
+    initialGroup?: string;
 };
 
 /**
@@ -104,7 +107,7 @@ type Props = {
  * connaît vraiment plutôt qu'estimé avant même que le groupe soit constitué — utile plus
  * tard pour mesurer combien de personnes ont été sensibilisées.
  */
-export function NewStageClient({ existingStage }: Props) {
+export function NewStageClient({ existingStage, initialSelection = [], initialTheme, initialGroup }: Props) {
     const router = useRouter();
     const isEditing = !!existingStage;
     const [isSaving, setIsSaving] = useState(false);
@@ -175,7 +178,12 @@ export function NewStageClient({ existingStage }: Props) {
             : await createStage(payload);
 
         if (res.success && res.stageId) {
-            router.push(`/stages/${res.stageId}/program`);
+            const query = new URLSearchParams();
+            if (!isEditing && initialSelection.length) query.set('selection', initialSelection.join(','));
+            if (!isEditing && initialTheme) query.set('theme', initialTheme);
+            if (!isEditing && initialGroup) query.set('group', initialGroup);
+            const suffix = query.size ? `?${query.toString()}` : '';
+            router.push(`/stages/${res.stageId}/program${suffix}`);
         } else {
             alert('Erreur : ' + res.error);
             setIsSaving(false);

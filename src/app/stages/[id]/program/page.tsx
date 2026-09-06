@@ -4,8 +4,9 @@ import ExplorerClient from './ExplorerClient';
 import { construireHistorique } from '@/lib/historique-moniteur';
 import { notFound } from 'next/navigation';
 
-export default async function ProgramPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function ProgramPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ theme?: string; selection?: string; group?: string }> }) {
     const { id } = await params;
+    const { theme, selection, group } = await searchParams;
 
     const [stage, systemPool, userPool, tousLesStages, outcomes] = await Promise.all([
         getStageById(id),
@@ -33,6 +34,9 @@ export default async function ProgramPage({ params }: { params: Promise<{ id: st
             copunPool={systemPool}
             customPool={userPool}
             historique={historique}
+            initialTheme={theme}
+            initialGroup={group}
+            initialSelection={Array.from(new Set((selection ?? '').split(',').filter(id => systemPool.some(card => card.id === id)))).slice(0, 5)}
         />
     );
 }

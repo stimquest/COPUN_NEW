@@ -25,6 +25,7 @@ import { compressImage } from '@/lib/image-compression';
 import { getStageObjectiveImpactOptions, getStageObjectiveReasonOptions } from '@/lib/stage-objective-review';
 import type { ResumeFormation } from '@/actions/formation-actions';
 import { DashboardFormation } from '@/components/DashboardFormation';
+import { RailSuggestions } from '@/components/RailSuggestions';
 
 type DefiInfo = {
     id: string;
@@ -407,7 +408,9 @@ type Props = {
     /** Rituels transversaux choisis pour la semaine (`src/data/actions-semaine.ts`). */
     actionsSemaine: string[];
     resumeFormation: ResumeFormation;
+    discoveryPool: PedagogicalContent[];
 };
+
 
 export function WeekDashboardClient({
     stageId, stageName, stageDates, objectives, technicalObjectives, sportFiches,
@@ -415,6 +418,7 @@ export function WeekDashboardClient({
     greeting, firstName, seasonGradient, seasonIcon,
     contentCount, archivedStages, upcomingStages,
     suggestedThematics, quizDone, totalPoints, actionsSemaine, resumeFormation,
+    discoveryPool,
 }: Props) {
     const [technicalObjectiveList, setTechnicalObjectiveList] = useState<PedagogicalContent[]>(technicalObjectives);
     const [showSportPicker, setShowSportPicker] = useState(false);
@@ -682,6 +686,8 @@ export function WeekDashboardClient({
             </header>
 
             <main className="flex flex-col flex-1 gap-9 px-4 pt-6 max-w-2xl mx-auto w-full">
+
+                <RailSuggestions stageId={stageId} pool={discoveryPool} suggested={suggestedThematics} />
 
                 {/* Programme de la semaine — condensé, en lecture. Remplace l'ancienne liste
                     par pilier où chaque fiche portait un statut à cocher (fait / partiel /

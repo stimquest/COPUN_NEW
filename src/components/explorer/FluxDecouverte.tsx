@@ -5,7 +5,7 @@ import { motion, AnimatePresence, useMotionValue, useTransform, type PanInfo } f
 import clsx from 'clsx';
 import { PedagogicalContent, Dimension } from '@/types';
 import { PILLARS, THEMES_BY_PILLAR } from '@/data/etages';
-import { groupeDe } from '@/data/groupes';
+import { groupeDe, GROUPES } from '@/data/groupes';
 import { NIVEAUX } from '@/data/niveaux';
 import { HistoriqueMoniteur } from '@/lib/historique-moniteur';
 
@@ -37,6 +37,8 @@ type Props = {
     onToggleFiche: (id: string) => void;
     onFicheInfo?: (fiche: PedagogicalContent) => void;
     historique?: HistoriqueMoniteur;
+    initialTheme?: string;
+    initialGroup?: string;
 };
 
 /** Devine la forme d'une accroche par un marqueur structurel net — jamais pour classer
@@ -57,6 +59,7 @@ function repereChoixForce(texte: string): boolean {
 
 const SWIPE_THRESHOLD = 80;
 const HAUTEUR_TITRE_PILE = 60;
+const HAUTEUR_CARTE_DECOUVERTE = 500;
 
 // Les thèmes héritent du pilier choisi, mais sur une teinte plus douce : ils servent de
 // repère de famille, sans prendre la couleur franche réservée au pilier lui-même.
@@ -72,7 +75,8 @@ const THEME_TONES: Record<Dimension, { active: string }> = {
     },
 };
 
-export default function FluxDecouverte({ pool, retenues, onToggleFiche, onFicheInfo, historique }: Props) {
+export default function FluxDecouverte({ pool, retenues, onToggleFiche, onFicheInfo, historique, initialTheme, initialGroup }: Props) {
+    const [group, setGroup] = useState(() => GROUPES.find(item => item.id === initialGroup));
     const dejaVues = useMemo(() => historique?.dejaVues ?? {}, [historique]);
 
     // Orientation COPUN toujours visible : le pilier ouvre ses trois thèmes, jamais
@@ -80,17 +84,18 @@ export default function FluxDecouverte({ pool, retenues, onToggleFiche, onFicheI
     // visible avant cette orientation : c'est le repère de public de la méthode, pas un
     // filtre technique noyé parmi les autres.
     const [pilier, setPilier] = useState<Dimension | null>(null);
-    const [theme, setTheme] = useState<string | null>(null);
+    const [theme, setTheme] = useState<string | null>(initialTheme ?? null);
     const [niveau, setNiveau] = useState<1 | 2 | 3 | null>(null);
 
     const poolFiltre = useMemo(() => {
         return pool.filter(f => {
+            if (group && !group.fiches.includes(Number(f.id))) return false;
             if (pilier && f.dimension !== pilier) return false;
             if (theme && !f.tags_theme?.includes(theme)) return false;
             if (niveau && f.niveau !== niveau) return false;
             return true;
         });
-    }, [pool, pilier, theme, niveau]);
+    }, [pool, pilier, theme, niveau, group]);
 
     // Jamais vues d'abord, puis le reste — mélangé une seule fois par changement de
     // filtre, pas à chaque rendu (sinon la pile change sous les doigts pendant le swipe).
@@ -111,6 +116,7 @@ export default function FluxDecouverte({ pool, retenues, onToggleFiche, onFicheI
 
     return (
         <div className="space-y-3">
+            {group && <button onClick={() => setGroup(undefined)} className="rounded-full bg-white px-4 py-2 text-sm font-bold text-indigo-700">{group.label} · Retirer le filtre ×</button>}
             {/* Visible d'emblée, mais volontairement compact : le niveau calibre le public
                 sans prendre la place des cartes et de leur contenu. */}
             <div className="px-1">
@@ -229,7 +235,7 @@ function DeckDecouverte({
                 {position} / {ordreInitial.length}
             </p>
             <div className="relative" style={{ paddingTop: (Math.min(3, pile.length) - 1) * HAUTEUR_TITRE_PILE }}>
-                <div className="relative" style={{ height: 420 }}>
+                <div className="relative" style={{ height: HAUTEUR_CARTE_DECOUVERTE }}>
                 <AnimatePresence mode="popLayout">
                     {pile.slice(-3).map((f, i, arr) => (
                         <CarteFlux
@@ -337,7 +343,7 @@ function CarteFlux({
                 onClick={estTop ? () => { if (!enSwipe.current) onInfo(); } : undefined}
                 onKeyDown={e => { if (estTop && (e.key === 'Enter' || e.key === ' ')) onInfo(); }}
                 className="w-full flex flex-col text-left px-6 pt-6 pb-20 overflow-y-auto touch-pan-y cursor-pointer"
-                style={{ height: 420 - HAUTEUR_TITRE_PILE }}
+                style={{ height: HAUTEUR_CARTE_DECOUVERTE - HAUTEUR_TITRE_PILE }}
             >
                 <div className="flex items-center gap-2 shrink-0">
                     <span className={clsx('size-2 rounded-full', pilier?.bg)} />
@@ -349,9 +355,12 @@ function CarteFlux({
                     )}
                 </div>
 
-                <p className="text-[19px] font-black text-slate-900 leading-snug mt-3">
-                    «&nbsp;{accroche}&nbsp;»
-                </p>
+                <div className="mt-3">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">J&apos;ouvre avec</p>
+                    <p className="text-[17px] font-black text-slate-900 leading-snug mt-1.5">
+                        «&nbsp;{accroche}&nbsp;»
+                    </p>
+                </div>
 
                 {forme && (
                     <span className="inline-flex self-start items-center gap-1 mt-2 px-2.5 py-1 rounded-full bg-indigo-50 text-[10.5px] font-black text-indigo-600 uppercase tracking-wide">
@@ -370,12 +379,26 @@ function CarteFlux({
                     </div>
                 )}
 
+                {fiche.a_observer && (
+                    <div className="mt-3 rounded-xl bg-sky-50 px-3 py-2.5">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-sky-600">À leur faire observer</p>
+                        <p className="text-[12.5px] text-slate-600 leading-snug mt-1">{fiche.a_observer}</p>
+                    </div>
+                )}
+
                 {fiche.actions?.[0] && (
                     <div className="mt-3 rounded-xl bg-slate-50 px-3 py-2.5">
                         <p className="text-[12.5px] text-slate-600 leading-snug">
                             <span className="font-black">{fiche.actions[0].label} — </span>
                             {fiche.actions[0].consigne}
                         </p>
+                    </div>
+                )}
+
+                {fiche.a_retenir && (
+                    <div className="mt-3 rounded-xl bg-emerald-50 px-3 py-2.5">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600">Ils repartent avec</p>
+                        <p className="text-[12.5px] text-slate-600 leading-snug mt-1">{fiche.a_retenir}</p>
                     </div>
                 )}
             </div>

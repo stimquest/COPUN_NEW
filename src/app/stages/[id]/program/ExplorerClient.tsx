@@ -24,6 +24,9 @@ type Props = {
     customPool: PedagogicalContent[];
     /** Ce que ce moniteur a déjà traité les semaines passées. */
     historique?: HistoriqueMoniteur;
+    initialTheme?: string;
+    initialGroup?: string;
+    initialSelection?: string[];
 };
 
 // 2-3 notions par semaine = bon rythme de transmission ; 5 max pour les très motivés.
@@ -41,9 +44,9 @@ const MAX_OBJECTIFS = 5;
  * Le mode guidé devient une aide au choix appelable (« Par où commencer ? ») qui
  * pré-règle les filtres au lieu d'imposer un parcours parallèle.
  */
-export default function ExplorerClient({ stage, copunPool, customPool, historique }: Props) {
+export default function ExplorerClient({ stage, copunPool, customPool, historique, initialTheme, initialGroup, initialSelection = [] }: Props) {
     const router = useRouter();
-    const [retenues, setRetenues] = useState<string[]>(stage.selected_content ?? []);
+    const [retenues, setRetenues] = useState<string[]>(() => Array.from(new Set([...(stage.selected_content ?? []), ...initialSelection])).slice(0, MAX_OBJECTIFS));
     // Les groupes contenant déjà une sélection s'ouvrent d'emblée : en arrivant sur une
     // semaine préparée, le moniteur doit voir ses choix, pas des accordéons fermés.
     const [ouverts, setOuverts] = useState<string[]>(() => {
@@ -294,6 +297,8 @@ export default function ExplorerClient({ stage, copunPool, customPool, historiqu
                                 onToggleFiche={toggleFiche}
                                 onFicheInfo={setFicheDetail}
                                 historique={historique}
+                                initialTheme={initialTheme}
+                                initialGroup={initialGroup}
                             />
                         ) : (
                             <button

@@ -8,6 +8,7 @@ import { getStageQuiz, getMyTotalPoints } from '@/actions/quiz-actions';
 import { getStagePreparations } from '@/actions/preparation-actions';
 import { getResumeFormation } from '@/actions/formation-actions';
 import { DashboardFormation } from '@/components/DashboardFormation';
+import { RailSuggestions } from '@/components/RailSuggestions';
 import { getPeriodForMonth } from '@/data/seasonal-context';
 import { pickCurrentStage, parseStageDateRange, ymdAParis, heureAParis } from '@/lib/stage-dates';
 import { WeekDashboardClient } from './WeekDashboardClient';
@@ -32,13 +33,22 @@ export default async function StagesPage() {
     const month = ymdAParis(now).month + 1;
     const hour = heureAParis(now);
     const period = getPeriodForMonth(month);
+    const seasonalThemeByPeriod: Record<string, string> = {
+        hiver_marin: 'biodiversite_saisonnalite',
+        eveil_littoral: 'cohabitation_vivant',
+        printemps_actif: 'cohabitation_vivant',
+        haute_saison: 'impact_presence_humaine',
+        transition_automnale: 'biodiversite_saisonnalite',
+        entree_hiver: 'lecture_paysage',
+    };
     const seasonStyle = SEASON_STYLES[period.id] ?? SEASON_STYLES['haute_saison'];
     const greeting = hour < 12 ? 'Bonjour' : hour < 18 ? 'Bon après-midi' : 'Bonsoir';
 
-    const [profile, stages, resumeFormation] = await Promise.all([
+    const [profile, stages, resumeFormation, copunPool] = await Promise.all([
         getProfile(),
         getStages(),
         getResumeFormation(),
+        getPedagogicalPool(),
     ]);
 
     const firstName = profile?.full_name?.split(' ')[0] ?? 'Moniteur';
@@ -65,8 +75,8 @@ export default async function StagesPage() {
     // Écran vide — aucun stage
     if (stages.length === 0) {
         return (
-            <div className={`flex flex-col min-h-screen bg-linear-to-br ${seasonStyle.gradient}`}>
-                <div className="flex-1 flex flex-col items-center justify-center px-6 text-center gap-6">
+            <div className="min-h-screen bg-slate-50 pb-32">
+                <header className={`bg-linear-to-br ${seasonStyle.gradient} px-5 pt-12 pb-8 space-y-6`}>
                     <div>
                         <p className="text-white/60 text-sm font-semibold">{greeting},</p>
                         <h1 className="text-4xl font-black text-white italic mt-1">{firstName}.</h1>
@@ -76,10 +86,13 @@ export default async function StagesPage() {
                     <div className="max-w-xs w-full">
                         <DashboardFormation resume={resumeFormation} />
                     </div>
-                    <div className="bg-white/15 backdrop-blur-sm rounded-3xl p-8 border border-white/20 max-w-xs w-full">
+                </header>
+                <main className="max-w-2xl mx-auto px-4 pt-6 space-y-8">
+                    <RailSuggestions pool={copunPool} suggested={[seasonalThemeByPeriod[period.id]]} />
+                    <div className="bg-slate-900 rounded-3xl p-6">
                         <span className="material-symbols-outlined text-4xl text-white/60 block mb-3">sailing</span>
                         <p className="text-white font-bold mb-1">Aucune semaine en cours</p>
-                        <p className="text-white/50 text-sm mb-5">Créez votre première semaine pour commencer.</p>
+                        <p className="text-white/70 text-sm mb-5">Explorez les idées, puis rassemblez vos questions pour la semaine.</p>
                         <Link
                             href="/stages/new"
                             className="w-full h-12 bg-white text-slate-900 rounded-2xl font-black text-sm flex items-center justify-center gap-2"
@@ -88,7 +101,7 @@ export default async function StagesPage() {
                             Nouvelle semaine
                         </Link>
                     </div>
-                </div>
+                </main>
             </div>
         );
     }
@@ -114,6 +127,7 @@ export default async function StagesPage() {
                     <DashboardFormation resume={resumeFormation} />
                 </header>
                 <main className="max-w-2xl mx-auto px-4 pt-5 space-y-4">
+                    <RailSuggestions pool={copunPool} suggested={[seasonalThemeByPeriod[period.id]]} />
                     <Link
                         href="/stages/new"
                         className="flex items-center justify-between bg-slate-900 text-white rounded-2xl px-4 py-4 hover:bg-slate-800 transition active:scale-95"
@@ -216,8 +230,7 @@ export default async function StagesPage() {
     }
 
     // Stage actif — tableau de bord principal
-    const [copunPool, observations, preparations, assignedExploits, clubObservationTargets, sportFiches, quizData, totalPoints] = await Promise.all([
-        getPedagogicalPool(),
+    const [observations, preparations, assignedExploits, clubObservationTargets, sportFiches, quizData, totalPoints] = await Promise.all([
         getObservationsForStage(activeStage.id),
         getStagePreparations(activeStage.id),
         getStageExploits(activeStage.id),
@@ -253,13 +266,17 @@ export default async function StagesPage() {
             seasonGradient={seasonStyle.gradient}
             seasonIcon={seasonStyle.icon}
             contentCount={objectives.length}
-            suggestedThematics={activeStage.suggested_thematics ?? []}
+            suggestedThematics={Array.from(new Set([
+                seasonalThemeByPeriod[period.id],
+                ...(activeStage.suggested_thematics ?? []),
+            ].filter(Boolean)))}
             quizDone={!!quizData?.completed_at}
             totalPoints={totalPoints}
             actionsSemaine={activeStage.actions_semaine ?? []}
             archivedStages={archivedStages.map(s => ({ id: s.id, title: s.title, dates: s.dates ?? '' }))}
             upcomingStages={upcomingStages.map(s => ({ id: s.id, title: s.title, dates: s.dates ?? '' }))}
             resumeFormation={resumeFormation}
+            discoveryPool={copunPool}
         />
     );
 }
