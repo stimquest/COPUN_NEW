@@ -463,19 +463,31 @@ export function WeekDashboardClient({
     if (weekRange) {
         const startDay = new Date(weekRange.start);
         startDay.setHours(0, 0, 0, 0);
-        dayTotal = Math.round((weekRange.end.getTime() - weekRange.start.getTime()) / DAY_MS) + 1;
+        // `end` est à 23:59:59 du dernier jour : l'écart brut fait 6,99 jours pour une
+        // semaine de 7. Sans `floor` sur des jours entiers, `Math.round(...) + 1` donnait
+        // un jour fantôme — « Jour 7/8 » le dimanche d'une semaine lundi-dimanche.
+        const endDay = new Date(weekRange.end);
+        endDay.setHours(0, 0, 0, 0);
+        dayTotal = Math.floor((endDay.getTime() - startDay.getTime()) / DAY_MS) + 1;
         const diff = Math.floor((now.getTime() - startDay.getTime()) / DAY_MS);
         if (diff >= 0 && diff < dayTotal) dayIndex = diff + 1;
         weekOver = diff >= dayTotal;
     }
 
-    // Sur les deux derniers jours de la semaine, le header rappelle le quiz puis le bilan.
-    // Le reste du temps il reste compact : les objectifs sont juste en dessous.
-    const isLateWeek = dayIndex !== null && dayTotal !== null && dayIndex >= dayTotal - 1;
-    const todayCard: { kind: 'quiz' | 'bilan' } | null =
-        (isLateWeek || weekOver) && !quizDone
+    /**
+     * Fin de semaine qui approche : le quiz puis le bilan sont proposés à partir du
+     * vendredi (5e jour), sans que la semaine cesse d'être en cours pour autant.
+     *
+     * L'ancienne version confondait les deux : `todayCard` étant exclusif, afficher le
+     * quiz faisait disparaître « Préparer le fil de ma semaine ». Sur une semaine
+     * calendaire lundi-dimanche, le seuil (`dayTotal - 1`) tombait dès le samedi — donc
+     * tout le week-end sans accès à la préparation, alors qu'il restait des séances.
+     */
+    const finDeSemaineProche = dayIndex !== null && dayIndex >= 5;
+    const invitationFin: { kind: 'quiz' | 'bilan' } | null =
+        (finDeSemaineProche || weekOver) && !quizDone
             ? { kind: 'quiz' }
-        : weekOver || (isLateWeek && quizDone)
+        : (finDeSemaineProche || weekOver)
             ? { kind: 'bilan' }
             : null;
 
@@ -604,7 +616,10 @@ export function WeekDashboardClient({
 
                     {/* L'action du jour — une seule, en carte translucide : c'est elle
                         que l'œil doit voir en premier dans ce bloc. */}
-                    {contentCount > 0 && todayCard?.kind !== 'quiz' && todayCard?.kind !== 'bilan' && (
+                    {/* La préparation reste accessible tant que la semaine n'est pas finie —
+                        même le vendredi, où l'invitation au bilan s'ajoute en dessous
+                        plutôt que de la remplacer : il reste des séances à encadrer. */}
+                    {contentCount > 0 && !weekOver && (
                         <Link
                             href={`/stages/${stageId}/preparer`}
                             className="flex items-center gap-3 bg-white/15 backdrop-blur-sm rounded-2xl p-4 border border-white/20 active:scale-[0.99] transition-transform"
@@ -618,10 +633,10 @@ export function WeekDashboardClient({
                             </span>
                         </Link>
                     )}
-                    {todayCard?.kind === 'quiz' && (
+                    {invitationFin?.kind === 'quiz' && (
                         <Link
                             href={`/stages/${stageId}/quiz`}
-                            className="flex items-center gap-3 bg-white/15 backdrop-blur-sm rounded-2xl p-4 border border-white/20 active:scale-[0.99] transition-transform"
+                            className="flex items-center gap-3 mt-2 bg-white/15 backdrop-blur-sm rounded-2xl p-4 border border-white/20 active:scale-[0.99] transition-transform"
                         >
                             <div className="flex-1 min-w-0">
                                 <p className="text-[10px] font-black uppercase tracking-widest text-white/50">Fin de semaine</p>
@@ -632,10 +647,10 @@ export function WeekDashboardClient({
                             </span>
                         </Link>
                     )}
-                    {todayCard?.kind === 'bilan' && (
+                    {invitationFin?.kind === 'bilan' && (
                         <Link
                             href={`/stages/${stageId}/bilan`}
-                            className="flex items-center gap-3 bg-white/15 backdrop-blur-sm rounded-2xl p-4 border border-white/20 active:scale-[0.99] transition-transform"
+                            className="flex items-center gap-3 mt-2 bg-white/15 backdrop-blur-sm rounded-2xl p-4 border border-white/20 active:scale-[0.99] transition-transform"
                         >
                             <div className="flex-1 min-w-0">
                                 <p className="text-[10px] font-black uppercase tracking-widest text-white/50">Fin de semaine</p>
@@ -687,19 +702,74 @@ export function WeekDashboardClient({
 
             <main className="flex flex-col flex-1 gap-9 px-4 pt-6 max-w-2xl mx-auto w-full">
 
-                <RailSuggestions stageId={stageId} pool={discoveryPool} suggested={suggestedThematics} />
+                {/* L'ordre suit l'état de la semaine, il n'est pas fixe.
+                    — Semaine vide : la découverte occupe la page, c'est la seule chose à
+                      faire et elle doit donner envie d'y entrer.
+                    — Semaine préparée : ce qu'on a préparé passe devant, et la découverte
+                      se replie en une simple invitation. Elle prenait toute la hauteur au
+                      détriment du fil de la semaine, qu'il fallait aller chercher en bas. */}
+                {contentCount === 0 && (
+                    <>
+                        <RailSuggestions stageId={stageId} pool={discoveryPool} suggested={suggestedThematics} />
+
+                        {/* Sans sujet retenu, le header n'affiche aucune action : sans ce
+                            lien, la découverte serait la seule issue de l'écran et celui
+                            qui sait déjà quoi choisir n'aurait nulle part où aller. */}
+                        <Link
+                            href={`/stages/${stageId}/program`}
+                            className="flex items-center gap-3 rounded-2xl bg-white border border-slate-200/80 px-4 py-3.5 active:scale-[0.99] transition"
+                        >
+                            <span className="size-9 rounded-xl bg-slate-100 flex items-center justify-center shrink-0">
+                                <span className="material-symbols-outlined text-[19px] text-slate-500">checklist</span>
+                            </span>
+                            <span className="flex-1 min-w-0">
+                                <span className="block text-[13.5px] font-black text-slate-900 leading-snug">
+                                    Je sais déjà quoi choisir
+                                </span>
+                                <span className="block text-[11.5px] text-slate-400 mt-0.5">
+                                    Aller directement aux sujets
+                                </span>
+                            </span>
+                            <span className="material-symbols-outlined text-slate-300 shrink-0">chevron_right</span>
+                        </Link>
+                    </>
+                )}
 
                 {/* Programme de la semaine — condensé, en lecture. Remplace l'ancienne liste
                     par pilier où chaque fiche portait un statut à cocher (fait / partiel /
                     pas fait) : ce modèle traitait les fiches comme des tâches, alors
                     qu'elles servent à construire un discours. Voir ProgrammeCondense. */}
-                <section id="programme" className="scroll-mt-4">
-                    {/* Pas de « Modifier » ici : le bouton en pied de fil mène au même écran
-                        de choix des questions, et deux entrées vers la même page encadrant la
-                        liste ne font que la brouiller. */}
-                    <h2 className="text-lg font-black tracking-tight text-slate-900 mb-3">Le fil de ma semaine</h2>
-                    <ProgrammeCondense stageId={stageId} contents={objectives} preparations={preparations} actionsSemaine={actionsSemaine} />
-                </section>
+                {contentCount > 0 && (
+                    <section id="programme" className="scroll-mt-4">
+                        {/* Pas de « Modifier » ici : le bouton en pied de fil mène au même écran
+                            de choix des questions, et deux entrées vers la même page encadrant la
+                            liste ne font que la brouiller. */}
+                        <h2 className="text-lg font-black tracking-tight text-slate-900 mb-3">Le fil de ma semaine</h2>
+                        <ProgrammeCondense stageId={stageId} contents={objectives} preparations={preparations} actionsSemaine={actionsSemaine} />
+                    </section>
+                )}
+
+                {/* Découvrir reste accessible une fois la semaine faite, mais en une ligne :
+                    c'est une envie ponctuelle, plus l'action principale de l'écran. */}
+                {contentCount > 0 && (
+                    <Link
+                        href="/stages/decouvrir"
+                        className="flex items-center gap-3 rounded-2xl bg-white border border-slate-200/80 px-4 py-3.5 active:scale-[0.99] transition"
+                    >
+                        <span className="size-9 rounded-xl bg-indigo-50 flex items-center justify-center shrink-0">
+                            <span className="material-symbols-outlined text-[19px] text-indigo-600">explore</span>
+                        </span>
+                        <span className="flex-1 min-w-0">
+                            <span className="block text-[13.5px] font-black text-slate-900 leading-snug">
+                                Découvrir d&apos;autres sujets
+                            </span>
+                            <span className="block text-[11.5px] text-slate-400 mt-0.5">
+                                Sans rien changer à ta semaine
+                            </span>
+                        </span>
+                        <span className="material-symbols-outlined text-slate-300 shrink-0">chevron_right</span>
+                    </Link>
+                )}
 
                 {/* Objectifs sportifs — fiches créées par le moniteur, indépendantes du programme environnemental COP'UN */}
                 {SPORT_FEATURES_ENABLED && (technicalObjectiveList.length > 0 || sportFiches.length > 0) && (

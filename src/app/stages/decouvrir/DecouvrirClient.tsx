@@ -10,6 +10,13 @@ import { THEMATIC_LABELS, ThematicTag } from '@/data/seasonal-context';
 export default function DecouvrirClient({ pool, theme, group }: { pool: PedagogicalContent[]; theme?: ThematicTag; group?: string }) {
     const [retenues, setRetenues] = useState<string[]>([]);
     const [detail, setDetail] = useState<PedagogicalContent | null>(null);
+
+    /** Partagée entre le flux de cartes et la fiche ouverte, pour un plafond unique. */
+    const basculer = (id: string) => setRetenues(previous =>
+        previous.includes(id)
+            ? previous.filter(item => item !== id)
+            : previous.length < 5 ? [...previous, id] : previous,
+    );
     return (
         <div className="min-h-screen fond-ciel pb-52">
             <header className="px-4 pt-6 pb-4 max-w-2xl mx-auto">
@@ -19,7 +26,7 @@ export default function DecouvrirClient({ pool, theme, group }: { pool: Pedagogi
             </header>
             <main className="max-w-2xl mx-auto px-4">
                 <FluxDecouverte pool={pool} initialTheme={theme} initialGroup={group} retenues={retenues}
-                    onToggleFiche={id => setRetenues(previous => previous.includes(id) ? previous.filter(item => item !== id) : previous.length < 5 ? [...previous, id] : previous)}
+                    onToggleFiche={basculer}
                     onFicheInfo={setDetail} />
                 <p className="text-xs text-slate-500 mt-4">Gardez jusqu’à 5 questions pour votre semaine.</p>
             </main>
@@ -31,7 +38,14 @@ export default function DecouvrirClient({ pool, theme, group }: { pool: Pedagogi
                     </Link>
                 </div>
             )}
-            <CardDetailModal isOpen={!!detail} content={detail} onClose={() => setDetail(null)} />
+            <CardDetailModal
+                isOpen={!!detail}
+                content={detail}
+                onClose={() => setDetail(null)}
+                retenue={!!detail && retenues.includes(detail.id)}
+                onGarder={detail ? () => basculer(detail.id) : undefined}
+                plafondAtteint={retenues.length >= 5}
+            />
         </div>
     );
 }

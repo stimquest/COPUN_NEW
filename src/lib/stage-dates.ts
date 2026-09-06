@@ -34,19 +34,30 @@ export function heureAParis(date: Date): number {
 }
 
 /**
- * Instant UTC correspondant à une date/heure civile donnée À PARIS. Calculé par
- * approximation successive : on construit un instant UTC "naïf" avec les mêmes chiffres,
- * on lit l'heure qu'il donnerait à Paris, et on corrige l'écart — stable dès la première
- * itération pour un décalage fixe (CET/CEST), robuste au changement d'heure d'été/hiver.
+ * Instant UTC correspondant à une date/heure civile donnée À PARIS.
+ *
+ * On mesure le décalage réel du fuseau à cet instant — en relisant la date ET l'heure
+ * complètes, puis en comparant à ce qu'on visait — et on l'applique.
+ *
+ * L'implémentation précédente itérait en ne comparant que la DATE (`ymdAParis`), jamais
+ * l'heure : elle convergeait donc sur un instant du bon jour mais pouvant être à
+ * n'importe quelle heure. Concrètement, « 6 sept. 23:59:59 » produisait un instant qui se
+ * lisait « 6 sept. 01:59 » à Paris — la semaine se terminait 22 h trop tôt, et une semaine
+ * courant jusqu'au dimanche basculait en « bilan en attente » dès le dimanche matin.
  */
 function instantAParis(year: number, month: number, day: number, hours: number, minutes: number, seconds: number): Date {
-    let utc = Date.UTC(year, month, day, hours, minutes, seconds);
-    for (let i = 0; i < 2; i++) {
-        const lu = ymdAParis(new Date(utc));
-        const luUtc = Date.UTC(lu.year, lu.month, lu.day, hours, minutes, seconds);
-        utc += Date.UTC(year, month, day, hours, minutes, seconds) - luUtc;
-    }
-    return new Date(utc);
+    const vise = Date.UTC(year, month, day, hours, minutes, seconds);
+    // Ce que l'instant « naïf » (mêmes chiffres, lus en UTC) donne réellement à Paris.
+    const parts = new Intl.DateTimeFormat('en-US', {
+        timeZone: FUSEAU_APP, hour12: false,
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit',
+    }).formatToParts(new Date(vise));
+    const get = (type: string) => Number(parts.find(p => p.type === type)?.value);
+    // `hour` peut valoir 24 à minuit selon l'implémentation — ramené à 0.
+    const luUtc = Date.UTC(get('year'), get('month') - 1, get('day'), get('hour') % 24, get('minute'), get('second'));
+    // L'écart entre lecture et instant naïf EST le décalage du fuseau : on le retranche.
+    return new Date(vise - (luUtc - vise));
 }
 
 /**

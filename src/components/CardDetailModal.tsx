@@ -14,13 +14,26 @@ type CardDetailModalProps = {
     isOpen: boolean;
     onClose: () => void;
     content: PedagogicalContent | null;
+    /**
+     * Retenir la question depuis la fiche ouverte. Optionnel : la modale sert aussi de
+     * simple lecture (accueil, bilan) où garder n'a pas de sens. Quand elle est fournie,
+     * le pied propose « Garder » (qui retient et ferme) à côté de « Fermer ».
+     */
+    onGarder?: () => void;
+    /** Déjà retenue pour la semaine : le bouton devient un retrait. */
+    retenue?: boolean;
+    /**
+     * Plafond de sélection atteint : le bouton est désactivé et le dit, plutôt que de
+     * fermer la fiche sur une action sans effet.
+     */
+    plafondAtteint?: boolean;
 };
 
 function subscribe() {
     return () => { };
 }
 
-export default function CardDetailModal({ isOpen, onClose, content }: CardDetailModalProps) {
+export default function CardDetailModal({ isOpen, onClose, content, onGarder, retenue = false, plafondAtteint = false }: CardDetailModalProps) {
     const isClient = useSyncExternalStore(subscribe, () => true, () => false);
     const [relatedFiches, setRelatedFiches] = useState<FicheMemo[]>([]);
     // Fiche wiki actuellement ouverte à l'intérieur du modal — reste dans le même
@@ -105,38 +118,42 @@ export default function CardDetailModal({ isOpen, onClose, content }: CardDetail
                                 </h2>
                             </div>
                         ) : (
-                            <div className={clsx(
-                                "px-8 py-6 border-b",
-                                content.dimension === 'COMPRENDRE' ? "bg-amber-50 border-amber-100" :
-                                    content.dimension === 'OBSERVER' ? "bg-blue-50 border-blue-100" :
-                                        "bg-emerald-50 border-emerald-100"
-                            )}>
-                                <div className="flex items-start justify-between gap-4">
-                                    <div>
-                                        <span className={clsx(
-                                            "inline-block px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mb-3",
-                                            content.dimension === 'COMPRENDRE' ? "bg-amber-100 text-amber-700" :
-                                                content.dimension === 'OBSERVER' ? "bg-blue-100 text-blue-700" :
-                                                    "bg-emerald-100 text-emerald-700"
-                                        )}>
-                                            {content.dimension}
+                            /* En-tête sobre : fond blanc, pas d'aplat coloré qui écrase le
+                               titre. La couleur du pilier tient dans un point et un mot,
+                               pas dans un bandeau et une pastille encadrée. */
+                            <div className="px-5 sm:px-7 pt-5 pb-4 border-b border-slate-100">
+                                <div className="flex items-start justify-between gap-3">
+                                    <div className="min-w-0">
+                                        <span className="flex items-center gap-1.5">
+                                            <span className={clsx(
+                                                "size-1.5 rounded-full",
+                                                content.dimension === 'COMPRENDRE' ? "bg-amber-500" :
+                                                    content.dimension === 'OBSERVER' ? "bg-blue-500" : "bg-emerald-500"
+                                            )} />
+                                            <span className={clsx(
+                                                "text-[10px] font-black uppercase tracking-widest",
+                                                content.dimension === 'COMPRENDRE' ? "text-amber-600" :
+                                                    content.dimension === 'OBSERVER' ? "text-blue-600" : "text-emerald-600"
+                                            )}>
+                                                {content.dimension}
+                                            </span>
                                         </span>
-                                        <h2 className="text-2xl font-black text-slate-900 leading-tight italic">
+                                        <h2 className="text-[21px] sm:text-2xl font-black text-slate-900 leading-[1.2] mt-1.5 text-balance">
                                             {content.question}
                                         </h2>
                                     </div>
                                     <button
                                         onClick={onClose}
-                                        className="size-10 rounded-full bg-white/50 hover:bg-white flex items-center justify-center text-slate-400 hover:text-slate-900 transition-colors"
+                                        className="size-9 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 transition-colors shrink-0"
                                     >
-                                        <span className="material-symbols-outlined">close</span>
+                                        <span className="material-symbols-outlined text-[20px]">close</span>
                                     </button>
                                 </div>
                             </div>
                         )}
 
                         {/* Scrollable Body */}
-                        <div className="p-8 overflow-y-auto custom-scrollbar">
+                        <div className="px-5 sm:px-7 py-6 overflow-y-auto custom-scrollbar">
                             {viewingFicheId ? (
                                 loadingFiche ? (
                                     <div className="flex items-center justify-center py-20">
@@ -171,115 +188,70 @@ export default function CardDetailModal({ isOpen, onClose, content }: CardDetail
                                     <p className="text-center text-sm text-slate-400 py-20">Fiche introuvable.</p>
                                 )
                             ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                                {/* LEFT COLUMN: Basic Info */}
-                                <div className="space-y-6">
-                                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide leading-snug">
-                                        {content.objectif}
+                            /* Un seul fil de lecture, pas deux colonnes qui s'empilent sur
+                               mobile en une suite de blocs encadrés. Une seule zone est
+                               accentuée — celle que le moniteur vient chercher : quoi dire.
+                               Tout le reste est du texte simple, hiérarchisé par la taille
+                               et la graisse, pas par un fond de couleur de plus. */
+                            <div className="max-w-xl mx-auto space-y-7">
+
+                                {content.explication && (
+                                    <p className="text-[16px] text-slate-700 leading-relaxed">
+                                        {content.explication}
                                     </p>
+                                )}
 
-                                    {content.explication && (
-                                        <div>
-                                            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Ce qu&apos;il faut savoir</h3>
-                                            <p className="text-lg font-medium text-slate-700 leading-relaxed">
-                                                {content.explication}
+                                {/* Le besoin n°1 remonté par les moniteurs : ils savent quoi
+                                    savoir, pas quoi dire. Seul bloc mis en avant. */}
+                                {content.accroche && (
+                                    <div className="rounded-2xl bg-amber-50/70 border border-amber-100 p-5 space-y-4">
+                                        <p className="text-[10px] font-black text-amber-700 uppercase tracking-widest">
+                                            Comment en parler
+                                        </p>
+
+                                        <p className="text-[18px] font-bold text-amber-950 leading-snug">
+                                            «&nbsp;{content.accroche}&nbsp;»
+                                        </p>
+
+                                        {content.a_observer && (
+                                            <p className="text-[14px] text-amber-900/90 leading-relaxed">
+                                                <span className="font-black">À faire observer — </span>
+                                                {content.a_observer}
                                             </p>
-                                        </div>
-                                    )}
-
-                                    {/* Comment en parler aux enfants — le besoin n°1 remonté par les
-                                        moniteurs : ils savent quoi savoir, pas quoi dire. Placé avant le
-                                        conseil d'animation car c'est ce qu'ils viennent chercher. */}
-                                    {content.accroche && (
-                                        <div className="bg-amber-50 rounded-2xl p-6 border border-amber-200 space-y-4">
-                                            <div className="flex items-center gap-2">
-                                                <span className="material-symbols-outlined text-amber-600">record_voice_over</span>
-                                                <h3 className="text-xs font-black text-amber-900 uppercase tracking-widest">Comment en parler aux enfants</h3>
-                                            </div>
-
-                                            <div>
-                                                <span className="text-[10px] font-black text-amber-700/70 uppercase tracking-widest block mb-1">On lance comme ça</span>
-                                                <p className="text-base font-bold text-amber-950 leading-relaxed italic">
-                                                    «&nbsp;{content.accroche}&nbsp;»
-                                                </p>
-                                            </div>
-
-                                            {content.a_observer && (
-                                                <div>
-                                                    <span className="text-[10px] font-black text-amber-700/70 uppercase tracking-widest block mb-1">À leur faire observer</span>
-                                                    <p className="text-sm font-medium text-amber-900 leading-relaxed">{content.a_observer}</p>
-                                                </div>
-                                            )}
-
-                                            {content.a_retenir && (
-                                                <div>
-                                                    <span className="text-[10px] font-black text-amber-700/70 uppercase tracking-widest block mb-1">Ce qu&apos;ils doivent retenir</span>
-                                                    <p className="text-sm font-bold text-amber-950 leading-relaxed">{content.a_retenir}</p>
-                                                </div>
-                                            )}
-
-                                            {content.erreur_frequente && (
-                                                <div className="pt-3 border-t border-amber-200">
-                                                    <span className="text-[10px] font-black text-amber-700/70 uppercase tracking-widest block mb-1">L&apos;erreur classique à corriger</span>
-                                                    <p className="text-sm font-medium text-amber-900 leading-relaxed">{content.erreur_frequente}</p>
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-
-                                    {content.tip && (
-                                        <div className="bg-indigo-50 rounded-2xl p-6 border border-indigo-100">
-                                            <div className="flex items-center gap-2 mb-3">
-                                                <span className="material-symbols-outlined text-indigo-500">lightbulb</span>
-                                                <h3 className="text-xs font-black text-indigo-800 uppercase tracking-widest">Le Conseil du Coach</h3>
-                                            </div>
-                                            <p className="text-sm font-medium text-indigo-900 leading-relaxed">
-                                                {content.tip}
-                                            </p>
-                                        </div>
-                                    )}
-
-                                    <div className="space-y-4 pt-4 border-t border-slate-100">
-                                        {content.tags_theme?.length > 0 && (
-                                            <div>
-                                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Thèmes</span>
-                                                <div className="flex flex-wrap gap-2">
-                                                    {content.tags_theme.map(tag => (
-                                                        <span key={`theme-${tag}`} className="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 text-xs font-bold uppercase tracking-wide">
-                                                            {tag}
-                                                        </span>
-                                                    ))}
-                                                </div>
-                                            </div>
                                         )}
-                                        {content.tags_filtre?.length > 0 && (
-                                            <div>
-                                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Mots-clés</span>
-                                                <div className="flex flex-wrap gap-2">
-                                                    {content.tags_filtre.map(tag => (
-                                                        <span key={`filtre-${tag}`} className="px-3 py-1.5 rounded-lg border border-slate-200 text-slate-500 text-[10px] font-bold uppercase tracking-wide">
-                                                            #{tag}
-                                                        </span>
-                                                    ))}
-                                                </div>
-                                            </div>
+
+                                        {content.a_retenir && (
+                                            <p className="text-[14px] text-amber-900/90 leading-relaxed">
+                                                <span className="font-black">À retenir — </span>
+                                                {content.a_retenir}
+                                            </p>
+                                        )}
+
+                                        {content.erreur_frequente && (
+                                            <p className="text-[14px] text-amber-900/90 leading-relaxed pt-3 border-t border-amber-200/70">
+                                                <span className="font-black">Ils croient souvent que — </span>
+                                                {content.erreur_frequente}
+                                            </p>
                                         )}
                                     </div>
-                                </div>
+                                )}
 
+                                {content.tip && (
+                                    <p className="text-[14px] text-slate-600 leading-relaxed border-l-2 border-slate-200 pl-4">
+                                        {content.tip}
+                                    </p>
+                                )}
 
-                                {/* RIGHT COLUMN: Ressources */}
-                                <div className="space-y-10">
+                                {/* Ressources et wiki : à la suite du fil, plus dans une
+                                    colonne parallèle qui se retrouvait tout en bas sur mobile. */}
+                                <div className="space-y-6">
                                     {/* RESSOURCES SECTION — liens posés à la main */}
                                     {content.ressources && content.ressources.length > 0 && (
                                         <section>
-                                            <div className="flex items-center gap-2 mb-4">
-                                                <div className="size-8 rounded-lg bg-teal-600 text-white flex items-center justify-center">
-                                                    <span className="material-symbols-outlined text-lg">menu_book</span>
-                                                </div>
-                                                <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Ressources</h3>
-                                            </div>
-                                            <div className="space-y-2">
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
+                                                Ressources
+                                            </p>
+                                            <div className="space-y-1.5">
                                                 {content.ressources.map((r, idx) => (
                                                     r.type === 'url' ? (
                                                         <a
@@ -312,13 +284,10 @@ export default function CardDetailModal({ isOpen, onClose, content }: CardDetail
                                     {/* FICHES MÉMO LIÉES — retrouvées automatiquement via les tags de la carte */}
                                     {relatedFiches.length > 0 && (
                                         <section>
-                                            <div className="flex items-center gap-2 mb-4">
-                                                <div className="size-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center">
-                                                    <span className="material-symbols-outlined text-lg">auto_stories</span>
-                                                </div>
-                                                <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">À lire dans le wiki</h3>
-                                            </div>
-                                            <div className="space-y-2">
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
+                                                À lire dans le wiki
+                                            </p>
+                                            <div className="space-y-1.5">
                                                 {relatedFiches.map(fiche => (
                                                     <button
                                                         key={fiche.id}
@@ -339,13 +308,39 @@ export default function CardDetailModal({ isOpen, onClose, content }: CardDetail
                         </div>
 
                         {/* Footer (Actions) */}
-                        <div className="p-6 bg-slate-50 border-t border-slate-100 flex justify-end">
+                        {/* « Garder » retient ET ferme : depuis une fiche ouverte, décider
+                            de la garder termine la lecture — rester sur la fiche après coup
+                            obligerait à un second geste pour rien. */}
+                        <div className="px-5 sm:px-7 py-4 bg-slate-50 border-t border-slate-100 flex items-center gap-3">
                             <button
                                 onClick={onClose}
-                                className="px-8 py-3 bg-white border border-slate-200 text-slate-700 rounded-xl font-bold text-sm hover:bg-slate-100 transition-colors"
+                                className={clsx(
+                                    'py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl font-bold text-sm hover:bg-slate-100 transition-colors',
+                                    onGarder ? 'px-5 shrink-0' : 'px-6 ml-auto',
+                                )}
                             >
                                 Fermer
                             </button>
+
+                            {onGarder && (
+                                <button
+                                    onClick={() => { onGarder(); onClose(); }}
+                                    disabled={plafondAtteint && !retenue}
+                                    className={clsx(
+                                        'flex-1 py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-1.5 transition-colors',
+                                        plafondAtteint && !retenue
+                                            ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                                            : retenue
+                                                ? 'bg-emerald-500 text-white hover:bg-emerald-600'
+                                                : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100',
+                                    )}
+                                >
+                                    <span className="material-symbols-outlined text-[19px]">
+                                        {retenue ? 'check' : 'favorite'}
+                                    </span>
+                                    {retenue ? 'Gardée' : plafondAtteint ? 'Semaine complète' : 'Garder'}
+                                </button>
+                            )}
                         </div>
                     </motion.div>
                 </div>

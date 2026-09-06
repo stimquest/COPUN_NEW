@@ -13,6 +13,14 @@ type Rail = {
     icon: string;
     tone: string;
     cardTone: string;
+    /**
+     * L'angle de lecture qui titre les cartes de ce rail. Déclaré explicitement : il était
+     * déduit de l'icône (`icon === 'eco' ? 'proteger' : …`), or aucun rail n'utilisait les
+     * icônes attendues — deux des trois colonnes de `ANGLES` n'étaient jamais lues et le
+     * premier rail retombait silencieusement sur l'accroche du groupe.
+     * `null` = on affiche la première question du groupe telle quelle.
+     */
+    angle: 'comprendre' | 'observer' | 'proteger' | null;
     select: (card: PedagogicalContent) => boolean;
 };
 
@@ -36,12 +44,21 @@ const ANGLES: Record<string, { comprendre: string; proteger: string; observer: s
     protection: { comprendre: 'Pourquoi protéger un site', proteger: 'Agir pour le territoire', observer: 'Reconnaître les zones sensibles' },
 };
 
+/** Le titre d'une carte : l'angle du rail s'il en a un, sinon la première question. */
+function titreDe(
+    slide: { id: string; accroche: string; questions: PedagogicalContent[] },
+    angle: Rail['angle'],
+): string {
+    if (angle) return ANGLES[slide.id]?.[angle] ?? slide.accroche;
+    return slide.questions[0]?.question ?? slide.accroche;
+}
+
 function RailRow({ rail, cards, destination }: { rail: Rail; cards: PedagogicalContent[]; destination: string }) {
     const slides = GROUPES.map(group => ({
         ...group,
         questions: cards.filter(card => group.fiches.includes(Number(card.id))),
     })).filter(group => group.questions.length > 0);
-    const angle = rail.icon === 'eco' ? 'proteger' : rail.icon === 'waves' ? 'comprendre' : rail.icon === 'visibility' ? 'observer' : null;
+    const angle = rail.angle;
     const [index, setIndex] = useState(0);
     const trackRef = useRef<HTMLDivElement>(null);
     if (!slides.length) return null;
@@ -84,11 +101,11 @@ function RailRow({ rail, cards, destination }: { rail: Rail; cards: PedagogicalC
                                     <span aria-hidden="true" className="material-symbols-outlined text-[18px]">{card.icon}</span>
                                     <span className="text-[10px] font-semibold">{card.label}</span>
                                 </div>
-                                <h3 className="relative mt-2 text-[17px] font-extrabold leading-tight tracking-tight">{angle ? ANGLES[card.id]?.[angle] ?? card.accroche : rail.icon === 'forum' ? card.questions[0].question : card.accroche}</h3>
+                                <h3 className="relative mt-2 text-[17px] font-extrabold leading-tight tracking-tight">{titreDe(card, angle)}</h3>
                             </div>
                             <div className="flex flex-1 flex-col px-4 pb-4">
                                 <div className="space-y-2 border-t border-white/20 pt-3">
-                                    {card.questions.filter(question => question.question !== (angle ? ANGLES[card.id]?.[angle] ?? card.accroche : rail.icon === 'forum' ? card.questions[0].question : card.accroche)).slice(0, 2).map(question => (
+                                    {card.questions.filter(question => question.question !== titreDe(card, angle)).slice(0, 2).map(question => (
                                         <p key={question.id} className="text-xs leading-snug text-white/90">
                                             {question.question}
                                         </p>
@@ -132,16 +149,20 @@ export function RailSuggestions({ stageId, pool, suggested }: { stageId?: string
         {
             title: 'Ce que le terrain montre en ce moment', subtitle: 'Des sujets qui font écho à la saison', theme: currentTheme,
             icon: 'wb_sunny', tone: 'text-orange-600', cardTone: 'bg-gradient-to-br from-orange-400 to-amber-600',
+            angle: 'comprendre',
             select: card => hasTheme(card, currentTheme),
         },
         {
             title: 'Pour lancer une discussion', subtitle: 'Des questions qui donnent envie de réagir', theme: 'biodiversite_saisonnalite',
             icon: 'forum', tone: 'text-violet-600', cardTone: 'bg-gradient-to-br from-violet-500 to-indigo-700',
+            // Pas d'angle : ce rail montre la question elle-même, c'est son propos.
+            angle: null,
             select: card => hasTheme(card, 'biodiversite_saisonnalite'),
         },
         {
             title: 'À observer ou protéger cette semaine', subtitle: 'Partir de ce qui est visible et agir sur le terrain', theme: 'cohabitation_vivant',
             icon: 'visibility', tone: 'text-emerald-600', cardTone: 'bg-gradient-to-br from-sky-500 to-emerald-600',
+            angle: 'proteger',
             select: card => hasTheme(card, 'lecture_paysage') || hasTheme(card, 'cohabitation_vivant') || hasTheme(card, 'impact_presence_humaine'),
         },
     ];

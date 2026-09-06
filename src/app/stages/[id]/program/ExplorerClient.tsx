@@ -77,6 +77,15 @@ export default function ExplorerClient({ stage, copunPool, customPool, historiqu
     // Le flux est l'arrivée naturelle : on rencontre d'abord la matière, l'intention
     // reste un autre chemin possible quand le moniteur sait déjà ce qu'il cherche.
     const [modeDecouverte, setModeDecouverte] = useState(true);
+    /**
+     * Arriver avec une sélection déjà faite (depuis /stages/decouvrir, via l'URL) ne doit
+     * pas rouvrir le catalogue : on vient justement de le parcourir. L'écran s'ouvre alors
+     * sur la semaine constituée, et chercher d'autres sujets redevient une action à
+     * demander — sinon on boucle sur l'outil de sélection sans jamais avancer.
+     */
+    const [chercherOuvert, setChercherOuvert] = useState(
+        () => (stage.selected_content ?? []).length === 0 && initialSelection.length === 0,
+    );
     // Le catalogue par phénomène (marées, vent, oiseaux…) n'a plus de point d'entrée : il
     // repartait vers l'éparpillement, alors que la semaine doit tenir sur trois sujets, un
     // par couleur. Son rendu reste en place plus bas mais n'est plus atteignable — laissé
@@ -84,6 +93,9 @@ export default function ExplorerClient({ stage, copunPool, customPool, historiqu
     const catalogueSujetOuvert = false;
 
     const pool = useMemo(() => [...copunPool, ...customPool], [copunPool, customPool]);
+
+    /** Le groupe d'où vient le moniteur, quand il arrive depuis une suggestion d'accueil. */
+    const groupeOrigine = initialGroup ? GROUPES.find(g => g.id === initialGroup) : undefined;
 
 
     // Rien à enregistrer si la sélection est identique à celle déjà en base : on propose
@@ -217,11 +229,16 @@ export default function ExplorerClient({ stage, copunPool, customPool, historiqu
                             </Link>
                         )}
                         <div className="min-w-0 flex-1">
+                            {/* Le sujet d'où l'on vient (choisi sur l'accueil) reste affiché :
+                                il se perdait entre la découverte, la création de semaine et
+                                cet écran, et on ne savait plus pourquoi on était là. */}
                             <p className="text-[11px] font-bold text-white/60 leading-tight truncate">
-                                {stage.title}
+                                {groupeOrigine?.label ?? stage.title}
                             </p>
                             <h1 className="text-[19px] font-black text-white leading-tight truncate mt-0.5">
-                                {aideConditionsOuverte ? 'Ton intention' : 'Choisir les sujets'}
+                                {aideConditionsOuverte
+                                    ? 'Ton intention'
+                                    : chercherOuvert ? 'Choisir les sujets' : 'Ta semaine'}
                             </h1>
                         </div>
                     </div>
@@ -267,8 +284,52 @@ export default function ExplorerClient({ stage, copunPool, customPool, historiqu
                     — « Découvrir » : le catalogue entier, en cartes qu'on swipe façon
                       /formation — la matière (accroche, forme, idée reçue) directement
                       visible, « garder » comme seul geste, jamais de préparation forcée. */}
-                {!vueCopun && !aideConditionsOuverte && (
+                {/* Ce qui est déjà retenu passe en tête : arriver ici avec une sélection
+                    veut dire qu'on a fini de chercher, pas qu'on recommence. */}
+                {!vueCopun && !aideConditionsOuverte && retenues.length > 0 && (
+                    <div className="space-y-3">
+                        <div className="flex items-baseline justify-between gap-2 px-1">
+                            <p className="text-[13px] font-black text-slate-900">
+                                Ta semaine
+                            </p>
+                            <p className="text-[11px] font-bold text-slate-400 tabular-nums">
+                                {retenues.length} sujet{retenues.length > 1 ? 's' : ''}
+                            </p>
+                        </div>
+
+                        <SelectionRecapCopun
+                            pool={pool}
+                            retenues={retenues}
+                            onToggleFiche={toggleFiche}
+                            onFicheInfo={setFicheDetail}
+                        />
+
+                        {!chercherOuvert && retenues.length < MAX_OBJECTIFS && (
+                            <button
+                                onClick={() => setChercherOuvert(true)}
+                                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-white/70 text-[12.5px] font-bold text-slate-500 hover:text-slate-700 hover:bg-white transition-colors"
+                            >
+                                <span className="material-symbols-outlined text-[17px]">add</span>
+                                Ajouter un autre sujet
+                            </button>
+                        )}
+                    </div>
+                )}
+
+                {!vueCopun && !aideConditionsOuverte && chercherOuvert && (
                     <>
+                        {/* Refermer la recherche pour revenir à sa semaine : sans ça, ouvrir
+                            « ajouter un sujet » enferme dans le catalogue sans retour. */}
+                        {retenues.length > 0 && (
+                            <button
+                                onClick={() => setChercherOuvert(false)}
+                                className="inline-flex items-center gap-1.5 text-[12px] font-black text-slate-500 hover:text-slate-800 transition-colors px-1"
+                            >
+                                <span className="material-symbols-outlined text-[17px]">arrow_back</span>
+                                Revenir à ma semaine
+                            </button>
+                        )}
+
                         <div className="grid grid-cols-2 gap-1 p-1 rounded-2xl bg-black/5">
                             <button
                                 onClick={() => setModeDecouverte(true)}
@@ -322,19 +383,6 @@ export default function ExplorerClient({ stage, copunPool, customPool, historiqu
                     </>
                 )}
 
-                {!aideConditionsOuverte && retenues.length > 0 ? (
-                    /* Semaine déjà préparée : la sélection en cours, sous les sujets, par
-                       pilier COP. Masquée dans la vue par centre d'intérêt, qui marque déjà
-                       les questions retenues à même ses listes. */
-                    <div className="pt-2">
-                        <SelectionRecapCopun
-                            pool={pool}
-                            retenues={retenues}
-                            onToggleFiche={toggleFiche}
-                            onFicheInfo={setFicheDetail}
-                        />
-                    </div>
-                ) : null}
             </main>
 
             {plafond && (
@@ -467,6 +515,9 @@ export default function ExplorerClient({ stage, copunPool, customPool, historiqu
                 isOpen={!!ficheDetail}
                 content={ficheDetail}
                 onClose={() => setFicheDetail(null)}
+                retenue={!!ficheDetail && retenues.includes(ficheDetail.id)}
+                onGarder={ficheDetail ? () => toggleFiche(ficheDetail.id) : undefined}
+                plafondAtteint={retenues.length >= MAX_OBJECTIFS}
             />
 
         </div>
