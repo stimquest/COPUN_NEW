@@ -140,19 +140,9 @@ export function RailSuggestions({ stageId, pool, suggested }: { stageId?: string
             select: card => hasTheme(card, 'biodiversite_saisonnalite'),
         },
         {
-            title: 'À observer cette semaine', subtitle: 'Partir de ce qui est déjà visible dehors', theme: 'lecture_paysage',
-            icon: 'visibility', tone: 'text-sky-600', cardTone: 'bg-gradient-to-br from-sky-500 to-blue-700',
-            select: card => hasTheme(card, 'lecture_paysage'),
-        },
-        {
-            title: 'Comprendre les phénomènes du littoral', subtitle: 'Marées, vent, nuages et mouvements de la mer', theme: 'interactions_climatiques',
-            icon: 'waves', tone: 'text-amber-600', cardTone: 'bg-gradient-to-br from-amber-500 to-orange-700',
-            select: card => hasTheme(card, 'interactions_climatiques') || hasTheme(card, 'caracteristiques_littoral'),
-        },
-        {
-            title: 'Protéger ce qui est fragile', subtitle: 'Faire attention à ce qui vit autour de nous', theme: 'cohabitation_vivant',
-            icon: 'eco', tone: 'text-emerald-600', cardTone: 'bg-gradient-to-br from-emerald-500 to-teal-700',
-            select: card => hasTheme(card, 'cohabitation_vivant') || hasTheme(card, 'impact_presence_humaine'),
+            title: 'À observer ou protéger cette semaine', subtitle: 'Partir de ce qui est visible et agir sur le terrain', theme: 'cohabitation_vivant',
+            icon: 'visibility', tone: 'text-emerald-600', cardTone: 'bg-gradient-to-br from-sky-500 to-emerald-600',
+            select: card => hasTheme(card, 'lecture_paysage') || hasTheme(card, 'cohabitation_vivant') || hasTheme(card, 'impact_presence_humaine'),
         },
     ];
 
