@@ -77,7 +77,7 @@ export default async function RootLayout({
           - inclut le safe-area iOS
           - annulé en desktop (md:pb-8) où il n'y a pas de bottom nav
         */}
-        <main className="flex-1 mx-auto w-full max-w-md md:max-w-7xl min-h-screen relative md:px-8 md:py-8 pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-8">
+        <main className="flex-1 mx-auto w-full md:max-w-7xl min-h-screen relative md:px-8 md:py-8 pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-8">
           {children}
         </main>
         <BottomNav role={role} formationEnCours={formationEnCours} />

@@ -83,7 +83,7 @@ export default async function StagesPage() {
                     </div>
                     {/* Carte Formation — avant la carte semaine, même zone colorée que
                         l'accueil avec stage actif. */}
-                    <div className="max-w-xs w-full">
+                    <div className="w-full">
                         <DashboardFormation resume={resumeFormation} />
                     </div>
                 </header>
