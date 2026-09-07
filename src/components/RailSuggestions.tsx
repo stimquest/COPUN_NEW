@@ -140,8 +140,10 @@ function RailRow({ rail, cards, destination }: { rail: Rail; cards: PedagogicalC
 }
 
 /** Accueil éditorial : cinq portes d'entrée, pas un catalogue de thèmes. */
-export function RailSuggestions({ stageId, pool, suggested }: { stageId?: string; pool: PedagogicalContent[]; suggested: string[] }) {
-    const destination = stageId ? `/stages/${stageId}/program` : '/stages/decouvrir';
+export function RailSuggestions({ pool, suggested }: { pool: PedagogicalContent[]; suggested: string[] }) {
+    // Une suggestion reste toujours une porte vers le feuilletage libre. La selection
+    // d'une semaine a son propre ecran : elle ne doit jamais se substituer a cette entree.
+    const destination = '/stages/decouvrir';
     const currentTheme = suggested.find(tag => THEMATIC_LABELS[tag as ThematicTag]) as ThematicTag | undefined
         ?? 'biodiversite_saisonnalite';
     const cleanPool = pool.filter(card => card.source !== 'custom');

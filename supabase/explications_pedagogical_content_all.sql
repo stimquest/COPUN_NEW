@@ -1,6 +1,11 @@
 -- =============================================
 -- Champ "explication" — les 128 cartes objectifs COP'UN
 -- =============================================
+-- Révision marées du 07/09/2026 : explications synchronisées avec la base
+-- pour les fiches 1-16, 24, 25, 27, 30, 47, 50, 52, 68, 89, 91 et 106.
+-- Les autres champs corrigés figurent dans editorial/marees-20260907.json.
+-- Sources et contrôle : editorial/README-marees-20260907.md.
+-- Le sourcing historique ci-dessous ne vaut pas nouvel audit des autres thèmes.
 -- 2-3 phrases qui répondent vraiment à la question posée (façon livre
 -- "les pourquoi"), distinctes de :
 -- - objectif : ce que le mono doit viser pédagogiquement (déjà en base)
@@ -26,19 +31,19 @@
 -- base des connaissances déjà présentes et validées dans le projet (quiz, wiki).
 -- =============================================
 
--- 5 [COMPRENDRE] Pourquoi le moment entre deux marées s'appelle l'étale ?
+-- 5 [COMPRENDRE] Qu’est-ce que l’étale de marée ?
 UPDATE pedagogical_content SET explication =
-'Quand la mer arrête de monter, avant de redescendre, l''eau ne bouge presque plus pendant quelques minutes — comme une respiration entre deux mouvements. C''est l''étale : le courant y est quasi nul.'
+'Autour de la pleine mer ou de la basse mer, le niveau varie peu pendant un certain temps : on parle d’étale de marée. L’étale de courant désigne, elle, un moment où le courant devient très faible. Les deux ne coïncident pas nécessairement : un niveau presque stable ne signifie donc pas que toute l’eau est immobile.'
 WHERE id = '5';
 
 -- 7 [COMPRENDRE] Pourquoi il est important de connaître l'amplitude de la marée ?
 UPDATE pedagogical_content SET explication =
-'Le coefficient de marée (de 20 à 120) mesure l''écart entre marée haute et marée basse. Plus il est élevé, plus l''eau monte et descend fort — et plus les courants sont puissants.'
+'Le marnage est l’écart de hauteur entre une basse mer et une pleine mer successives ; le coefficient indique l’importance de la marée, sans donner une hauteur en mètres. De 85 à 90, on va vers une marée plus ample ; de 90 à 85, vers une marée moins ample : au même endroit, les pleines mers tendent alors à être moins hautes et les basses mers moins basses. Cette tendance aide à comprendre ce qui se couvre ou se découvre, mais ce sont les hauteurs prévues au port qui précisent les niveaux attendus.'
 WHERE id = '7';
 
 -- 11 [COMPRENDRE] Pourquoi le rythme des marées a des incidences sur le « vivant » et les activités humaines ?
 UPDATE pedagogical_content SET explication =
-'Chaque espèce de l''estran a appris à vivre avec l''alternance immersion/émersion : certaines se nourrissent à marée basse, d''autres se reproduisent à marée haute. Les activités humaines suivent le même rythme : horaires de pêche, accès aux ports, sorties en mer.'
+'Quand la mer se retire, elle rend accessibles des zones où des oiseaux de rivage cherchent leur nourriture ; quand elle revient, les moules immergées peuvent filtrer l’eau pour se nourrir. L’alternance entre immersion et exposition à l’air change donc les possibilités de chaque espèce. Elle organise aussi certains usages humains : pêche à pied à basse mer, accès à une cale ou passage d’un bateau quand la hauteur d’eau le permet.'
 WHERE id = '11';
 
 -- 17 [COMPRENDRE] Comment se forme le vent ?
@@ -63,12 +68,12 @@ WHERE id = '44';
 
 -- 13 [OBSERVER] Comment sait-on que l'eau monte et descend ?
 UPDATE pedagogical_content SET explication =
-'À l''œil nu, la marée est trop lente pour se voir en direct — il faut comparer le niveau de l''eau à un repère fixe (rocher, poteau) à quelques minutes d''intervalle pour voir la différence.'
+'Pour savoir si le niveau monte ou descend, on le compare à un support fixe à plusieurs moments. Le va-et-vient des vagues peut masquer cette évolution : il faut regarder la tendance au-delà d’une seule vague. Près de l’étale, la différence peut rester faible, alors qu’ailleurs la progression ou le retrait de l’eau est bien visible.'
 WHERE id = '13';
 
 -- 27 [OBSERVER] Comment repère-t-on le sens du courant ?
 UPDATE pedagogical_content SET explication =
-'L''eau qui s''écoule autour d''un obstacle fixe — une bouée, un poteau — forme un petit remous ou une traînée d''écume du côté vers lequel elle pousse. Cette « moustache » indique directement le sens du courant.'
+'Autour d’un poteau fixe, le courant peut produire des remous et entraîner l’écume déjà présente. Suivre le déplacement de plusieurs traces d’écume par rapport au poteau aide à repérer le sens de l’écoulement local. Une zone d’écume immobile ou un tourbillon ne suffit pas : le vent, les vagues et les contre-courants peuvent compliquer la lecture.'
 WHERE id = '27';
 
 -- 46 [OBSERVER] Comment décrirais-tu l'état de la plage ?
@@ -78,7 +83,7 @@ WHERE id = '46';
 
 -- 16 [PROTÉGER] Pourquoi respecter les zones de reproduction selon les cycles de marée ?
 UPDATE pedagogical_content SET explication =
-'L''estran découvert à marée basse abrite des œufs, des larves et de jeunes animaux enfouis dans le sable ou cachés sous les rochers. Un pas suffit parfois à écraser une ponte entière — invisible mais bien présente sous la surface.'
+'La baisse du niveau rend accessibles aux visiteurs des zones qui peuvent abriter des pontes ou de jeunes animaux, selon les espèces et la saison. Les plus grandes marées découvrent parfois des secteurs rarement accessibles : cette occasion d’observer n’autorise pas à fouiller, déplacer les rochers ou piétiner une zone sensible. Les protections suivent les besoins des espèces présentes, et ne disparaissent pas lorsque l’eau se retire.'
 WHERE id = '16';
 
 -- 63 [PROTÉGER] Pourquoi je peux observer tout en étant discret ?
@@ -105,35 +110,35 @@ WHERE id = '118';
 -- ENSEEIHT/Wikipédia (déferlement, déjà vérifié dans l'échantillon précédent)
 
 UPDATE pedagogical_content SET explication =
-'Deux fois par jour environ, la Lune (et un peu le Soleil) attirent les masses d''eau vers eux. La Terre tournant plus vite que la Lune ne se déplace sur son orbite, chaque point du globe passe deux fois sous cette attraction en un peu plus de 24h : d''où deux marées hautes et deux marées basses.'
+'La Lune et le Soleil exercent une attraction qui varie d’un point à l’autre de la Terre et déforme les masses d’eau. Dans un modèle simplifié, l’effet de la Lune produit deux renflements opposés ; la rotation terrestre explique ainsi le rythme de deux pleines mers et deux basses mers par jour lunaire, soit environ 24 h 50. Ce rythme domine sur les côtes normandes, mais la forme des bassins océaniques et des fonds le transforme : il n’est pas identique partout.'
 WHERE id = '1';
 
 UPDATE pedagogical_content SET explication =
-'Les marées suivent un cycle astronomique parfaitement régulier, calculable à l''avance. Le SHOM (Service Hydrographique et Océanographique de la Marine) publie des annuaires officiels donnant les horaires pour tous les ports français, des années à l''avance.'
+'Les annuaires et les services de marée donnent les heures prévues de pleine mer et de basse mer pour une date et un port. On peut donc connaître la prochaine marée même sans voir la mer. Il faut choisir le bon lieu et vérifier l’heure utilisée par le document, notamment le décalage avec l’heure locale.'
 WHERE id = '2';
 
 UPDATE pedagogical_content SET explication =
-'La marée n''est pas un simple "niveau qui monte" partout en même temps : c''est une onde qui se propage depuis l''océan et doit contourner les caps, entrer dans les baies, remonter les estuaires. Chaque obstacle géographique retarde ou accélère son passage, d''où des horaires différents d''une plage à l''autre.'
+'La Lune et le Soleil déforment légèrement les masses d’eau en créant des zones où le niveau de la mer est plus élevé. Avec la rotation de la Terre, ces bourrelets se déplacent par rapport aux côtes : c’est ce mouvement qui produit les marées. Mais les océans ne sont pas un bassin uniforme ; la profondeur, les continents, les baies et les estuaires ralentissent ou décalent localement cette onde. C’est pourquoi la pleine mer n’arrive pas à la même heure partout.'
 WHERE id = '3';
 
 UPDATE pedagogical_content SET explication =
-'L''estran est soumis à des conditions extrêmes : immergé puis à l''air libre, chaud puis froid, humide puis desséché — parfois plusieurs fois par jour. Peu d''organismes supportent un tel grand écart, ce qui en fait un milieu à la fois pauvre en espèces généralistes et riche en espèces hyper-spécialisées.'
+'L’estran est la partie du rivage située entre les niveaux des plus hautes et des plus basses mers. Toute cette zone n’est pas découverte puis recouverte à chaque marée : les secteurs les plus hauts et les plus bas ne connaissent cette alternance que lors de marées suffisamment grandes. Les organismes y vivent donc des durées d’immersion et d’exposition à l’air différentes selon leur position.'
 WHERE id = '4';
 
 UPDATE pedagogical_content SET explication =
-'La position de la Lune et du Soleil suit des lois de mécanique céleste connues avec une précision extrême. C''est ce qui permet de calculer, des années à l''avance, l''heure et la hauteur de chaque marée dans n''importe quel port, à quelques minutes près.'
+'Les mouvements de la Terre, de la Lune et du Soleil suivent des cycles que l’on sait calculer. Les mesures du niveau marin permettent de connaître la réponse de chaque port à ces cycles : on peut ainsi prédire la marée astronomique longtemps à l’avance. Le vent et la pression peuvent ensuite modifier le niveau réellement observé par rapport à cette prédiction.'
 WHERE id = '6';
 
 UPDATE pedagogical_content SET explication =
-'La marée ne monte pas à vitesse constante. Elle est lente au début et à la fin du flot, et beaucoup plus rapide entre la 2ᵉ et la 4ᵉ heure : c''est la règle des douzièmes (1/12, 2/12, 3/12, 3/12, 2/12, 1/12 du marnage total, heure par heure).'
+'Pendant une même marée montante de forme régulière, le niveau s’élève lentement près de la basse mer, plus vite vers le milieu, puis ralentit près de la pleine mer. La règle des douzièmes représente approximativement cette variation : elle concerne la hauteur d’eau, pas la vitesse du courant. Sur une plage plate, une petite hausse de niveau peut aussi recouvrir une grande distance de sable.'
 WHERE id = '8';
 
 UPDATE pedagogical_content SET explication =
-'C''est pendant les heures où la marée monte ou descend le plus vite (règle des douzièmes) que le débit d''eau est maximal — donc que les courants sont les plus forts. À l''étale, à l''inverse, le courant tombe presque à zéro.'
+'Dans une marée de forme régulière, le niveau varie le plus rapidement vers le milieu de la montée ou de la descente. Le courant, lui, dépend aussi des différences de niveau entre les zones reliées et de la forme des passages : son maximum peut coïncider avec la mi-marée ou être décalé. La courbe de hauteur et l’atlas de courants décrivent donc deux choses à comparer, pas à confondre.'
 WHERE id = '9';
 
 UPDATE pedagogical_content SET explication =
-'Ce vocabulaire vient de la marine traditionnelle : le "flot" est la marée montante, le "jusant" la marée descendante. Entre les deux se glisse l''étale, ce bref moment où le courant s''arrête avant de repartir dans l''autre sens.'
+'Flot et jusant sont les mots marins associés au cycle de marée : le flot à la montée et le jusant à la descente. On parle aussi de courant de flot et de courant de jusant pour les déplacements d’eau correspondants. Ces mots permettent de préciser de quel mouvement on parle ; le courant local peut toutefois être décalé par rapport à la montée ou à la baisse du niveau.'
 WHERE id = '10';
 
 UPDATE pedagogical_content SET explication =
@@ -141,11 +146,11 @@ UPDATE pedagogical_content SET explication =
 WHERE id = '18';
 
 UPDATE pedagogical_content SET explication =
-'Trois forces mettent l''eau en mouvement : l''attraction de la Lune et du Soleil (courants de marée), le vent qui pousse la surface (courants de dérive), et de grandes circulations océaniques permanentes liées aux différences de température et de densité de l''eau.'
+'Les courants sont des déplacements de masses d’eau. Ils peuvent être entraînés par la marée, par le vent qui transmet son mouvement à la surface, ou par des différences de densité liées à la température et au sel. Les côtes et les fonds dirigent ces déplacements et peuvent les accélérer dans un passage resserré.'
 WHERE id = '24';
 
 UPDATE pedagogical_content SET explication =
-'Les courants de marée changent de sens toutes les 6h, les courants de dérive suivent le vent du moment, et les courants généraux (comme le Gulf Stream) circulent presque toujours dans la même direction, sur des milliers de kilomètres.'
+'Les courants de marée varient avec le cycle des marées ; selon le lieu, ils s’inversent ou tournent progressivement. Les courants entraînés par le vent évoluent avec celui-ci. À une autre échelle, les grandes circulations océaniques transportent de l’eau sur de longues distances sous l’action du vent et des différences de densité, comme le système auquel appartient le Gulf Stream.'
 WHERE id = '25';
 
 UPDATE pedagogical_content SET explication =
@@ -177,7 +182,7 @@ UPDATE pedagogical_content SET explication =
 WHERE id = '45';
 
 UPDATE pedagogical_content SET explication =
-'C''est la laisse de mer : elle marque l''endroit où l''eau s''est arrêtée à la dernière marée haute, en y déposant tout ce qu''elle transportait — algues, coquillages, bois flotté, et parfois des déchets humains.'
+'La laisse de mer est un dépôt laissé sur le rivage par l’eau : algues, fragments de coquilles ou bois, parfois mêlés à des déchets humains. Les vagues peuvent déposer, reprendre ou déplacer ces éléments ; plusieurs laisses d’âges différents peuvent donc rester visibles. La ligne la plus haute n’est pas nécessairement celle de la dernière pleine mer.'
 WHERE id = '50';
 
 UPDATE pedagogical_content SET explication =
@@ -185,11 +190,11 @@ UPDATE pedagogical_content SET explication =
 WHERE id = '51';
 
 UPDATE pedagogical_content SET explication =
-'La position et la forme de la laisse de mer changent d''une marée à l''autre selon la force du vent, l''amplitude de la marée et le sens des courants. En l''observant, on peut deviner jusqu''où la mer est montée et d''où venaient les éléments transportés.'
+'Les courants transportent des éléments flottants, et les vagues peuvent les déposer sur le rivage ou les reprendre. Si les pleines mers suivantes atteignent moins haut, une ancienne laisse peut rester au sec tandis que de nouveaux dépôts se forment plus bas ; si l’eau l’atteint à nouveau, elle peut la remanier. La position des dépôts dépend aussi du vent, des vagues et de la plage : elle ne permet pas à elle seule de retrouver le trajet des débris.'
 WHERE id = '52';
 
 UPDATE pedagogical_content SET explication =
-'Parce que la marée se décale d''environ 50 minutes chaque jour : l''horaire de navigation d''aujourd''hui ne sera plus le bon demain. Ce décalage suit la Lune, comme le cycle des coefficients qui revient toutes les deux semaines — la nature impose son calendrier, et le programme de la semaine s''y ajuste.'
+'Sur un site soumis aux marées, un accès peut demander une certaine hauteur d’eau ou un courant adapté. D’un jour à l’autre, les horaires de pleine et de basse mer se décalent, mais les hauteurs changent aussi avec des marées qui gagnent ou perdent de l’ampleur. On ne peut donc pas toujours reprendre le créneau de la veille en le décalant simplement : la plage horaire utilisable peut s’allonger, se raccourcir ou disparaître.'
 WHERE id = '68';
 
 UPDATE pedagogical_content SET explication =
@@ -213,7 +218,7 @@ UPDATE pedagogical_content SET explication =
 WHERE id = '85';
 
 UPDATE pedagogical_content SET explication =
-'Contrairement à un fleuve, un courant marin n''a ni lit ni berges visibles — c''est un déplacement d''eau au sein même de l''océan, entraîné par le vent, les marées ou de grandes circulations liées à la température et à la salinité de l''eau.'
+'Un courant marin est un déplacement de masses d’eau, souvent décrit par sa direction et sa vitesse. Il peut être entraîné par les marées, le vent ou des différences de densité liées à la température et à la salinité. Certains courants circulent au large, d’autres sont guidés par un chenal ou un détroit : l’image d’une rivière dans la mer est utile, mais ne décrit pas toutes les situations.'
 WHERE id = '89';
 
 UPDATE pedagogical_content SET explication =
@@ -221,7 +226,7 @@ UPDATE pedagogical_content SET explication =
 WHERE id = '90';
 
 UPDATE pedagogical_content SET explication =
-'La Lune met environ 24h50 à repasser au-dessus d''un même point de la Terre (un peu plus qu''une journée solaire, car elle avance elle-même sur son orbite pendant ce temps). C''est ce léger décalage qui retarde chaque marée d''environ 50 minutes par rapport à la veille.'
+'Pendant que la Terre effectue un tour sur elle-même, la Lune avance sur son orbite dans le même sens. La Terre doit donc tourner un peu davantage pour retrouver la Lune dans la même direction : le jour lunaire dure environ 24 h 50. Cela explique le décalage moyen des marées, même si l’écart entre deux jours n’est pas exactement de cinquante minutes dans chaque port.'
 WHERE id = '91';
 
 UPDATE pedagogical_content SET explication =
@@ -264,11 +269,11 @@ WHERE id = '119';
 -- pratiques d'observation), connaissances générales de vulgarisation scientifique
 
 UPDATE pedagogical_content SET explication =
-'La ligne de débris déposée par la mer (laisse de mer) marque exactement le niveau atteint par la dernière marée haute. En repérant cette ligne dès l''arrivée, on sait jusqu''où l''eau est déjà montée aujourd''hui — et donc jusqu''où elle risque de monter encore.'
+'Une laisse de mer témoigne d’un dépôt passé ; elle ne donne à elle seule ni sa date ni la limite de la prochaine pleine mer. Celle-ci peut rester en dessous ou atteindre plus haut : on compare les hauteurs prévues au même port, sans supposer que chaque marée dépasse la précédente. La pente de plage, les vagues et les surcotes ou décotes météorologiques modifient aussi la limite réellement atteinte.'
 WHERE id = '14';
 
 UPDATE pedagogical_content SET explication =
-'La laisse de mer d''aujourd''hui n''indique que la marée précédente : si le coefficient augmente, la mer montera plus haut que la fois d''avant. Poser ses affaires nettement au-dessus de cette ligne évite la mauvaise surprise du matériel emporté.'
+'Le matériel doit rester hors d’atteinte de l’eau pendant toute la séance, pas seulement au départ et au retour. Même si les coefficients diminuent, une marée montante peut encore recouvrir l’emplacement ; inversement, la prochaine pleine mer ne dépassera pas forcément la précédente. On choisit donc l’emplacement à partir du niveau maximal attendu pendant l’absence, avec une marge pour les vagues et les conditions du site.'
 WHERE id = '15';
 
 UPDATE pedagogical_content SET explication =
@@ -292,7 +297,7 @@ UPDATE pedagogical_content SET explication =
 WHERE id = '42';
 
 UPDATE pedagogical_content SET explication =
-'Les vagues et le vent grignotent le sable de la dune côté mer pendant les tempêtes, créant parfois une petite falaise verticale. Entre deux épisodes agités, le vent redépose du sable et la végétation le refixe peu à peu — la dune respire au fil des saisons.'
+'La dune ne se déplace pas automatiquement à chaque marée. Lorsque le niveau d’eau et les vagues permettent à la mer d’atteindre son pied, celle-ci peut emporter du sable et tailler une falaise d’érosion. À d’autres moments, le vent apporte ou redistribue du sable : une reconstitution est possible si le sable est disponible, mais elle n’est ni immédiate ni garantie.'
 WHERE id = '47';
 
 UPDATE pedagogical_content SET explication =
@@ -375,7 +380,7 @@ UPDATE pedagogical_content SET explication =
 WHERE id = '105';
 
 UPDATE pedagogical_content SET explication =
-'Avant de partir, trois questions concrètes sur la marée : à quelle heure est la prochaine haute ou basse mer, quelle est l''amplitude prévue (coefficient), et où se trouvent les zones connues de courant fort ou de ressac sur le site.'
+'Pour préparer le parcours, on regarde si la mer monte ou descend, les hauteurs disponibles pendant toute la sortie et l’évolution du courant dans les passages. Un coefficient en baisse ne signifie pas que le niveau baisse à cet instant ; il n’indique pas non plus, à lui seul, le courant rencontré. Les prévisions locales permettent de suivre ces évolutions, et l’observation aide à les confronter aux conditions présentes.'
 WHERE id = '106';
 
 UPDATE pedagogical_content SET explication =
@@ -575,5 +580,5 @@ WHERE id = '120';
 -- Lot 8 — Fiche complémentaire (oubliée du découpage par tags_theme initial)
 
 UPDATE pedagogical_content SET explication =
-'En vive-eau, l''estran découvre très loin et les courants sont puissants : certaines espèces synchronisent justement leur ponte sur ces grandes marées pour que leurs larves profitent d''un fort courant de dispersion. En morte-eau, l''amplitude réduite offre au contraire des conditions plus calmes pour d''autres activités.'
+'Les vives-eaux correspondent à un grand marnage, les mortes-eaux à un petit : au même endroit, les basses mers de vives-eaux découvrent généralement davantage d’estran. Lorsque les marées perdent de l’ampleur, certaines zones basses restent à nouveau immergées, tandis que des zones hautes ne sont plus atteintes par les pleines mers. Cela change le temps passé dans l’eau pour les organismes fixés, les secteurs où les oiseaux peuvent se nourrir et les accès possibles pour la pêche à pied ou les bateaux.'
 WHERE id = '12';

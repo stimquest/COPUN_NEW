@@ -33,6 +33,12 @@
 .DS_Store
 *.pem
 
+# outils locaux Codex et captures de vérification UI
+/.agents/
+/.tmp-lecture-ui/
+/skills-lock.json
+/AGENTS.md
+
 # debug
 npm-debug.log*
 yarn-debug.log*

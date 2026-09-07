@@ -27,6 +27,8 @@ type Props = {
     initialTheme?: string;
     initialGroup?: string;
     initialSelection?: string[];
+    savedIds?: string[];
+    savedError?: string;
 };
 
 // 2-3 notions par semaine = bon rythme de transmission ; 5 max pour les très motivés.
@@ -44,9 +46,10 @@ const MAX_OBJECTIFS = 5;
  * Le mode guidé devient une aide au choix appelable (« Par où commencer ? ») qui
  * pré-règle les filtres au lieu d'imposer un parcours parallèle.
  */
-export default function ExplorerClient({ stage, copunPool, customPool, historique, initialTheme, initialGroup, initialSelection = [] }: Props) {
+export default function ExplorerClient({ stage, copunPool, customPool, historique, initialTheme, initialGroup, initialSelection = [], savedIds = [], savedError }: Props) {
     const router = useRouter();
     const [retenues, setRetenues] = useState<string[]>(() => Array.from(new Set([...(stage.selected_content ?? []), ...initialSelection])).slice(0, MAX_OBJECTIFS));
+    const [savedOpen, setSavedOpen] = useState(false);
     // Les groupes contenant déjà une sélection s'ouvrent d'emblée : en arrivant sur une
     // semaine préparée, le moniteur doit voir ses choix, pas des accordéons fermés.
     const [ouverts, setOuverts] = useState<string[]>(() => {
@@ -93,6 +96,7 @@ export default function ExplorerClient({ stage, copunPool, customPool, historiqu
     const catalogueSujetOuvert = false;
 
     const pool = useMemo(() => [...copunPool, ...customPool], [copunPool, customPool]);
+    const savedCards = useMemo(() => savedIds.map(id => pool.find(card => card.id === id)).filter((card): card is PedagogicalContent => !!card), [savedIds, pool]);
 
     /** Le groupe d'où vient le moniteur, quand il arrive depuis une suggestion d'accueil. */
     const groupeOrigine = initialGroup ? GROUPES.find(g => g.id === initialGroup) : undefined;
@@ -254,6 +258,36 @@ export default function ExplorerClient({ stage, copunPool, customPool, historiqu
                 d'un bloc. Tout était à 2.5 — rien ne distinguait « deux sections » de « un
                 titre et sa grille », d'où un écran sans respiration ni groupement lisible. */}
             <main className="max-w-2xl mx-auto px-4 pt-6 space-y-5">
+                {!aideConditionsOuverte && <section className="rounded-2xl border border-indigo-100 bg-white overflow-hidden">
+                    <button onClick={() => setSavedOpen(open => !open)} aria-expanded={savedOpen} aria-controls="saved-preparation-cards" className="w-full flex items-center gap-3 p-4 text-left">
+                        <span className="material-symbols-outlined text-indigo-500" aria-hidden>bookmarks</span>
+                        <span className="flex-1"><span className="block text-sm font-bold text-slate-900">Mes cartes mises de côté</span><span className="block mt-0.5 text-xs text-slate-500">Retrouver les idées qui vous ont intéressé</span></span>
+                        {!savedError && <span className="text-sm font-bold text-indigo-600">{savedCards.length}</span>}
+                        <span className="material-symbols-outlined text-slate-400" aria-hidden>{savedOpen ? 'expand_less' : 'expand_more'}</span>
+                    </button>
+                    {savedOpen && <div id="saved-preparation-cards" className="border-t border-indigo-50 p-4 space-y-3">
+                        {savedError ? <p role="alert" className="text-sm text-amber-800">{savedError} <button onClick={() => router.refresh()} className="font-bold underline">Réessayer</button></p>
+                        : savedCards.length ? <>
+                            <p className="text-sm text-slate-500">Choisissez celles que vous souhaitez utiliser cette semaine. Elles resteront dans vos cartes mises de côté.</p>
+                            {savedCards.map(card => {
+                                const chosen = retenues.includes(card.id);
+                                return <article key={card.id} className="rounded-xl border border-slate-100 p-3">
+                                    <button onClick={() => setFicheDetail(card)} className="w-full text-left">
+                                        <span className="text-[10px] uppercase tracking-wide font-bold text-indigo-500">{card.dimension}</span>
+                                        <h3 className="mt-1 text-sm font-bold text-slate-900">{card.question}</h3>
+                                    </button>
+                                    <div className="flex flex-wrap items-center justify-between gap-2 mt-3">
+                                        <button onClick={() => setFicheDetail(card)} className="text-xs font-bold text-slate-500 py-2">Relire</button>
+                                        <button onClick={() => toggleFiche(card.id)} aria-pressed={chosen} disabled={!chosen && retenues.length >= MAX_OBJECTIFS} className={clsx('rounded-full px-4 py-2.5 text-xs font-bold disabled:opacity-40', chosen ? 'bg-emerald-500 text-white' : 'bg-indigo-50 text-indigo-700')}>
+                                            {chosen ? 'Choisie pour cette semaine' : 'Choisir pour cette semaine'}
+                                        </button>
+                                    </div>
+                                </article>;
+                            })}
+                        </> : <p className="text-sm text-slate-500">Dans Découvrir, mettez de côté les cartes qui vous intéressent. Vous les retrouverez ici quand vous préparerez une semaine.</p>}
+                        <Link href="/stages/decouvrir?saved=1" className="inline-block py-2 text-sm font-bold text-indigo-600">Relire mes cartes dans Découvrir →</Link>
+                    </div>}
+                </section>}
 
                 {/* L'aide au choix remplace le contenu de l'écran — elle vivait dans un
                     tiroir venu du bas, format qui convient à une action courte, pas à un
@@ -338,7 +372,7 @@ export default function ExplorerClient({ stage, copunPool, customPool, historiqu
                                     modeDecouverte ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500',
                                 )}
                             >
-                                Découvrir
+                                Explorer
                             </button>
                             <button
                                 onClick={() => setModeDecouverte(false)}
@@ -354,6 +388,7 @@ export default function ExplorerClient({ stage, copunPool, customPool, historiqu
                         {modeDecouverte ? (
                             <FluxDecouverte
                                 pool={pool}
+                                mode="catalogue"
                                 retenues={retenues}
                                 onToggleFiche={toggleFiche}
                                 onFicheInfo={setFicheDetail}

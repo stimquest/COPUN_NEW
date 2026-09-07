@@ -3,17 +3,19 @@ import { getUserContent } from '@/actions/content-actions';
 import ExplorerClient from './ExplorerClient';
 import { construireHistorique } from '@/lib/historique-moniteur';
 import { notFound } from 'next/navigation';
+import { getSavedCards } from '@/actions/saved-card-actions';
 
 export default async function ProgramPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ theme?: string; selection?: string; group?: string }> }) {
     const { id } = await params;
     const { theme, selection, group } = await searchParams;
 
-    const [stage, systemPool, userPool, tousLesStages, outcomes] = await Promise.all([
+    const [stage, systemPool, userPool, tousLesStages, outcomes, bookmarks] = await Promise.all([
         getStageById(id),
         getPedagogicalPool(),
         getUserContent(),
         getStages(),
         getMyFicheOutcomes(),
+        getSavedCards(),
     ]);
 
     if (!stage) return notFound();
@@ -34,6 +36,8 @@ export default async function ProgramPage({ params, searchParams }: { params: Pr
             copunPool={systemPool}
             customPool={userPool}
             historique={historique}
+            savedIds={bookmarks.ids}
+            savedError={bookmarks.error}
             initialTheme={theme}
             initialGroup={group}
             initialSelection={Array.from(new Set((selection ?? '').split(',').filter(id => systemPool.some(card => card.id === id)))).slice(0, 5)}

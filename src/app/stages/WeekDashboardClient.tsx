@@ -710,7 +710,7 @@ export function WeekDashboardClient({
                       détriment du fil de la semaine, qu'il fallait aller chercher en bas. */}
                 {contentCount === 0 && (
                     <>
-                        <RailSuggestions stageId={stageId} pool={discoveryPool} suggested={suggestedThematics} />
+                        <RailSuggestions pool={discoveryPool} suggested={suggestedThematics} />
 
                         {/* Sans sujet retenu, le header n'affiche aucune action : sans ce
                             lien, la découverte serait la seule issue de l'écran et celui
