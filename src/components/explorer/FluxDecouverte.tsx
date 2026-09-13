@@ -391,9 +391,9 @@ function DeckDecouverte({
 
     return (
         <>
-            {mode !== 'lecture' && <p className="text-center text-[11px] font-bold text-slate-400 tabular-nums">
-                {position} / {ordreInitial.length}
-            </p>}
+            <p className={clsx('text-[11px] font-bold text-slate-400 tabular-nums', mode === 'lecture' ? 'px-1 text-right' : 'text-center')}>
+                {position} / {ordreInitial.length} {ordreInitial.length > 1 ? 'cartes' : 'carte'}
+            </p>
             <div ref={pileRef} className="relative scroll-mt-4" style={{ paddingTop: (Math.min(3, pile.length) - 1) * HAUTEUR_TITRE_PILE }}>
                 <div className="relative" style={mode === 'lecture' ? undefined : { height: HAUTEUR_CARTE_DECOUVERTE }}>
                 <AnimatePresence mode="popLayout">
@@ -526,7 +526,7 @@ function CarteFlux({
                     ><span className="material-symbols-outlined" aria-hidden>{saving ? 'hourglass_top' : retenue ? 'bookmark_added' : 'bookmark_add'}</span></button>}
                 </div>
 
-                {mode === 'lecture' ? <LectureCarte fiche={fiche} accroche={accroche} /> : <>
+                {mode === 'lecture' ? <LectureCarte fiche={fiche} /> : <>
                 <div className="mt-3">
                     <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">J&apos;ouvre avec</p>
                     <p className="text-[17px] font-black text-slate-900 leading-snug mt-1.5">

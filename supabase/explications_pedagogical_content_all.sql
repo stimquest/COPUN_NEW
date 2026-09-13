@@ -36,9 +36,9 @@ UPDATE pedagogical_content SET explication =
 'Autour de la pleine mer ou de la basse mer, le niveau varie peu pendant un certain temps : on parle d’étale de marée. L’étale de courant désigne, elle, un moment où le courant devient très faible. Les deux ne coïncident pas nécessairement : un niveau presque stable ne signifie donc pas que toute l’eau est immobile.'
 WHERE id = '5';
 
--- 7 [COMPRENDRE] Pourquoi il est important de connaître l'amplitude de la marée ?
+-- 7 [COMPRENDRE] Pourquoi deux basses mers ne découvrent-elles pas toujours le même paysage ?
 UPDATE pedagogical_content SET explication =
-'Le marnage est l’écart de hauteur entre une basse mer et une pleine mer successives ; le coefficient indique l’importance de la marée, sans donner une hauteur en mètres. De 85 à 90, on va vers une marée plus ample ; de 90 à 85, vers une marée moins ample : au même endroit, les pleines mers tendent alors à être moins hautes et les basses mers moins basses. Cette tendance aide à comprendre ce qui se couvre ou se découvre, mais ce sont les hauteurs prévues au port qui précisent les niveaux attendus.'
+'Le marnage est l’écart de hauteur entre une pleine mer et la basse mer qui lui est liée. Lorsqu’il est plus grand, la mer découvre généralement davantage de rivage à basse mer et le recouvre plus haut à pleine mer ; lorsqu’il est plus petit, cet écart se resserre. Le coefficient donne un repère sur cette ampleur, mais pour savoir ce qui sera réellement découvert ici, on lit les hauteurs prévues au port.'
 WHERE id = '7';
 
 -- 11 [COMPRENDRE] Pourquoi le rythme des marées a des incidences sur le « vivant » et les activités humaines ?

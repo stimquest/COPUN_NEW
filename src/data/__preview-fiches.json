@@ -1,0 +1,51 @@
+[
+ {
+  "id": "7",
+  "question": "Pourquoi est-il important de connaître l’amplitude de la marée ?",
+  "objectif": "Distinguer le coefficient, le marnage et les hauteurs d’eau, et comprendre l’augmentation puis la diminution de l’importance des marées.",
+  "tip": "Faites lire les coefficients avant et après celui du jour : 85 peut être atteint en augmentant ou en diminuant. L’augmentation s’appelle le revif, la diminution le déchet ; aucun écart de coefficient ne se convertit directement en centimètres.",
+  "explication": "Le marnage est l’écart de hauteur entre une basse mer et une pleine mer successives ; le coefficient indique l’importance de la marée, sans donner une hauteur en mètres. De 85 à 90, on va vers une marée plus ample ; de 90 à 85, vers une marée moins ample : au même endroit, les pleines mers tendent alors à être moins hautes et les basses mers moins basses. Cette tendance aide à comprendre ce qui se couvre ou se découvre, mais ce sont les hauteurs prévues au port qui précisent les niveaux attendus.",
+  "accroche": "Le coefficient passe de 90 à 85. À la prochaine basse mer, ce rocher sera-t-il davantage découvert, ou moins ?",
+  "accroches_variantes": [
+   "Le coefficient passe de 90 à 85. À la prochaine basse mer, ce rocher sera-t-il davantage découvert, ou moins ?"
+  ],
+  "accroches_formes": null,
+  "erreur_frequente": null,
+  "a_observer": "Une suite de coefficients croissants puis décroissants, et les hauteurs de pleine et de basse mer correspondantes au même port.",
+  "a_retenir": "Les marées gagnent puis perdent de l’ampleur : un coefficient encore élevé peut déjà être en baisse.",
+  "actions": [
+   {
+    "id": "f7_croiser_infos",
+    "label": "Dans les deux sens",
+    "consigne": "Dans un annuaire local, choisissez une période de coefficients croissants puis une période décroissante. Faites comparer les hautes mers et les basses mers séparément, puis reliez ces différences à un rocher ou à un accès du site."
+   }
+  ]
+ },
+ {
+  "id": "11",
+  "question": "Pourquoi le rythme des marées a des incidences sur le « vivant » et les activités humaines ?",
+  "objectif": "Comprendre l'interaction marées-biodiversité-activités.",
+  "tip": "Partez d’une espèce et d’un usage identifiés sur le site, plutôt que d’attribuer le même rythme à tout le vivant.",
+  "explication": "Quand la mer se retire, elle rend accessibles des zones où des oiseaux de rivage cherchent leur nourriture ; quand elle revient, les moules immergées peuvent filtrer l’eau pour se nourrir. L’alternance entre immersion et exposition à l’air change donc les possibilités de chaque espèce. Elle organise aussi certains usages humains : pêche à pied à basse mer, accès à une cale ou passage d’un bateau quand la hauteur d’eau le permet.",
+  "accroche": "Au même endroit, la marée basse permet à l’oiseau de manger ; l’eau qui revient permet à la moule de filtrer. Pourquoi n’ont-ils pas le même horaire ?",
+  "accroches_variantes": [
+   "Au même endroit, la marée basse permet à l’oiseau de manger ; l’eau qui revient permet à la moule de filtrer. Pourquoi n’ont-ils pas le même horaire ?"
+  ],
+  "accroches_formes": null,
+  "erreur_frequente": null,
+  "a_observer": "Un secteur d’estran utilisé par des oiseaux à basse mer et des organismes fixés qui seront recouverts.",
+  "a_retenir": "La marée change l’accès à l’eau et à la nourriture : chaque espèce et chaque activité en dépendent à leur façon.",
+  "actions": [
+   {
+    "id": "f11_qui_travaille_maintenant",
+    "label": "Qui peut se nourrir maintenant ?",
+    "consigne": "Faites décrire ce que permet le niveau actuel à un oiseau de rivage, à une moule et à un pêcheur à pied. Expliquez les différences sans chercher une réponse identique pour les trois."
+   },
+   {
+    "id": "f11_meme_endroit_six_heures",
+    "label": "Quand l’eau aura changé de niveau",
+    "consigne": "À partir des prévisions, choisissez un moment où le niveau sera différent. Demandez quels accès et quelles possibilités de nourrissage auront changé à cet endroit."
+   }
+  ]
+ }
+]

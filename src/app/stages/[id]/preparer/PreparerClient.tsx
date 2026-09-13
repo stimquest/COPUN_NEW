@@ -10,6 +10,7 @@ import { actionsPourFiche, actionSujetParId } from '@/data/actions-sujets';
 import { PILIERS_ACTION, actionsDuPilier, actionSemaineParId } from '@/data/actions-semaine';
 import { groupeDe } from '@/data/groupes';
 import { AccrocheFormee, FORMES_ACCROCHE } from '@/data/formes-accroche';
+import { formulationsFiche } from '@/data/formulations-fiche';
 import OrdreSujets from '@/components/OrdreSujets';
 import { updateStagePool } from '@/actions/stage-actions';
 import {
@@ -34,10 +35,7 @@ const MAX_SEMAINE = 2;
 const HAUTEUR_ENTETE = 68;
 
 function formulations(c: PedagogicalContent): Array<AccrocheFormee | { texte: string }> {
-    if (c.accroches_formes?.length) return c.accroches_formes;
-    if (c.accroches_variantes?.length) return c.accroches_variantes.map(texte => ({ texte }));
-    if (c.accroche) return [{ texte: c.accroche }];
-    return [{ texte: c.question }];
+    return formulationsFiche(c);
 }
 
 function pilierDe(c: PedagogicalContent) {
