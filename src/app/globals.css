@@ -699,3 +699,28 @@ body {
   .cv-saut { margin-top: 0; break-before: page; }
   .cv-carton { border-color: #d5dcd9; }
 }
+
+/* ── Lecture des cartons par la caméra ─────────────────────────────────────────
+   Le moniteur tient son téléphone devant le groupe : la vue doit occuper l'écran,
+   et le décompte se lire d'un coup d'œil sans quitter les enfants des yeux. */
+.co-capture { display: grid; gap: 12px; padding: 14px; border-radius: 20px; background: var(--co-ink); color: var(--co-paper); }
+.co-capture-head { display: flex; align-items: center; justify-content: space-between; }
+.co-capture-head p { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #ffffff9e; }
+.co-capture-head button { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; background: #ffffff1f; color: var(--co-paper); }
+.co-capture-vue { position: relative; overflow: hidden; border-radius: 15px; background: #000; aspect-ratio: 4 / 3; }
+.co-capture-vue video { width: 100%; height: 100%; object-fit: cover; }
+/* La vue se fige une fois la photo analysée : le décompte affiché correspond à
+   cette image-là, pas à ce que la caméra voit encore. */
+.co-capture-fige { filter: brightness(.55); }
+.co-capture-resultat { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.co-capture-resultat div { display: grid; gap: 2px; padding: 11px 9px; border-radius: 13px; background: #ffffff14; text-align: center; }
+.co-capture-resultat span { font-size: 9.5px; font-weight: 700; letter-spacing: .04em; color: #ffffffa8; line-height: 1.2; }
+.co-capture-resultat strong { font-size: 27px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.co-capture-note { font-size: 12.5px; line-height: 1.45; color: #ffffffb0; }
+.co-capture-erreur { padding: 10px 13px; border-radius: 12px; background: var(--co-coral); color: var(--co-ink); font-size: 12.5px; }
+.co-capture-actions { display: flex; flex-wrap: wrap; gap: 9px; }
+.co-capture-actions .co-vote-primary,
+.co-capture-actions .co-vote-secondary { flex: 1 1 140px; min-height: 48px; gap: 8px; }
+.co-capture-actions .co-vote-secondary { border-color: #ffffff3d; color: var(--co-paper); }
+/* Entrée discrète vers la caméra : elle assiste la saisie, elle ne la remplace pas. */
+.co-vote-camera { display: inline-flex; align-items: center; justify-content: center; gap: 9px; width: 100%; min-height: 50px; border: 1px solid #193d3b29; border-radius: 15px; font-size: 13.5px; font-weight: 650; color: var(--co-ink); }

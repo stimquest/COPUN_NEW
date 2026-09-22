@@ -2,9 +2,11 @@
 
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Camera, Check } from 'lucide-react';
 import type { AffirmationVote } from '@/data/vote-fin-de-stage';
 import { enregistrerVote, type ResultatAffirmation } from '@/actions/vote-actions';
+import CaptureCartons from './CaptureCartons';
+import type { LectureCartons } from '@/lib/detection-cartons';
 
 /**
  * Le vote de fin de stage, côté moniteur.
@@ -36,6 +38,9 @@ export default function VoteClient({ stageId, affirmations, dejaFait }: {
 }) {
     const [index, setIndex] = useState(0);
     const [reponses, setReponses] = useState<Record<string, Reponse>>({});
+    /** Décompte réel quand la caméra a lu les cartons ; absent en saisie manuelle. */
+    const [decomptes, setDecomptes] = useState<Record<string, LectureCartons['decompte']>>({});
+    const [camera, setCamera] = useState(false);
     const [termine, setTermine] = useState(false);
     const [error, setError] = useState('');
     const [isPending, startTransition] = useTransition();
@@ -51,6 +56,19 @@ export default function VoteClient({ stageId, affirmations, dejaFait }: {
     const repondre = (valeur: Reponse) => {
         setReponses(prev => ({ ...prev, [courante.id]: valeur }));
         if (!dernier) window.setTimeout(() => setIndex(i => i + 1), 180);
+    };
+
+    /**
+     * La caméra donne un décompte, pas un verdict : on en déduit la réponse majoritaire pour
+     * faire avancer le vote, tout en gardant les nombres réels — ce sont eux qui partent en
+     * base, bien plus solides que le 1/0/0 de la saisie manuelle.
+     */
+    const appliquerLecture = (lecture: LectureCartons) => {
+        const { vrai, faux, incertain } = lecture.decompte;
+        const majoritaire: Reponse = vrai >= faux && vrai >= incertain ? 'oui' : faux >= incertain ? 'non' : 'partage';
+        setDecomptes(prev => ({ ...prev, [courante.id]: lecture.decompte }));
+        setCamera(false);
+        repondre(majoritaire);
     };
 
     const enregistrer = () => {
@@ -69,9 +87,11 @@ export default function VoteClient({ stageId, affirmations, dejaFait }: {
                         contentId: a.contentId,
                         actionId: a.type === 'action' ? a.actionId : null,
                         attendu: a.type === 'savoir' ? a.reponse : null,
-                        votesVrai: r === 'oui' ? 1 : 0,
-                        votesFaux: r === 'non' ? 1 : 0,
-                        votesIncertain: r === 'partage' ? 1 : 0,
+                        // Le décompte de la caméra prime : c'est une mesure, là où le
+                        // verdict saisi à la main n'est qu'un 1/0/0 conventionnel.
+                        votesVrai: decomptes[a.id]?.vrai ?? (r === 'oui' ? 1 : 0),
+                        votesFaux: decomptes[a.id]?.faux ?? (r === 'non' ? 1 : 0),
+                        votesIncertain: decomptes[a.id]?.incertain ?? (r === 'partage' ? 1 : 0),
                         participants: null,
                     };
                 });
@@ -146,6 +166,14 @@ export default function VoteClient({ stageId, affirmations, dejaFait }: {
 
             « Partagé » existe pour que l'hésitation d'un groupe ne se déverse pas dans VRAI :
             c'est elle qui empêche de valider une action qui n'a pas eu lieu. */}
+        {camera && <CaptureCartons onLu={appliquerLecture} onFermer={() => setCamera(false)}/>}
+
+        {/* La caméra compte, la saisie manuelle reste disponible : réseau, lumière, cartons
+            oubliés — le moniteur doit toujours pouvoir trancher d'un tap. */}
+        {!camera && <button type="button" className="co-vote-camera" onClick={() => setCamera(true)}>
+            <Camera size={18}/> Lire les cartons avec la caméra
+        </button>}
+
         <div className="co-vote-tally">
             <button type="button" className="co-vote-choice co-vote-true" aria-pressed={reponse === 'oui'} onClick={() => repondre('oui')}>
                 <span className="co-vote-label">Vrai</span>

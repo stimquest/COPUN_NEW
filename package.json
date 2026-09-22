@@ -24,6 +24,7 @@
     "dompurify": "^3.4.11",
     "framer-motion": "^12.33.0",
     "isomorphic-dompurify": "4.2.0",
+    "js-aruco2": "^2.0.0",
     "lucide-react": "^0.563.0",
     "next": "16.3.5",
     "react": "19.2.3",
