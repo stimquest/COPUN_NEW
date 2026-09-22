@@ -1,8 +1,7 @@
-import { createClient, getCachedUser } from '@/lib/supabase/server';
-import type { User } from '@supabase/supabase-js';
+import { createClient, getCachedUser, type AuthenticatedUser } from '@/lib/supabase/server';
 
 type AuthResult =
-    | { user: User; supabase: Awaited<ReturnType<typeof createClient>> }
+    | { user: AuthenticatedUser; supabase: Awaited<ReturnType<typeof createClient>> }
     | null;
 
 export async function requireAuth(): Promise<AuthResult> {

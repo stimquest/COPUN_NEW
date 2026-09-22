@@ -3,9 +3,10 @@
 import { revalidatePath } from 'next/cache';
 import { requireAuth } from '@/lib/auth';
 import { PLAN_FORMATION, tousLesModules } from '@/data/formation-methode';
+import { cache } from 'react';
 
 /** Identifiants des leçons terminées par le moniteur connecté. */
-export async function getFormationProgression(): Promise<string[]> {
+const loadFormationProgression = cache(async (): Promise<string[]> => {
     const ctx = await requireAuth();
     if (!ctx) return [];
 
@@ -19,6 +20,10 @@ export async function getFormationProgression(): Promise<string[]> {
         return [];
     }
     return (data ?? []).map(r => r.lecon_id as string);
+});
+
+export async function getFormationProgression(): Promise<string[]> {
+    return loadFormationProgression();
 }
 
 /**

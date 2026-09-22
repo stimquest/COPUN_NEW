@@ -1,17 +1,17 @@
 import { getProfile } from '@/actions/user-actions';
 import { getResumeFormation } from '@/actions/formation-actions';
 import { HomeLearning } from '@/components/design/HomeLearning';
-import { getSequenceProgress } from '@/actions/parcours-formation-actions';
+import { getSequencesProgress } from '@/actions/parcours-formation-actions';
 import { getStages } from '@/services/data-service';
 import { pickCurrentStage } from '@/lib/stage-dates';
 import { PARCOURS_FORMATION } from '@/data/parcours-formation';
 
 export default async function StagesPage() {
-    const [profile, resume, stages, ...progressions] = await Promise.all([
+    const [profile, resume, stages, progressions] = await Promise.all([
         getProfile(),
         getResumeFormation(),
         getStages(),
-        ...PARCOURS_FORMATION.map(parcours => getSequenceProgress(parcours.id)),
+        getSequencesProgress(PARCOURS_FORMATION.map(parcours => parcours.id)),
     ]);
 
     // Une semaine « en cours » est celle dont les dates couvrent aujourd'hui — jamais la plus
@@ -21,7 +21,7 @@ export default async function StagesPage() {
     return <HomeLearning
         firstName={profile?.full_name?.split(' ')[0] || 'à toi'}
         resume={resume}
-        progressions={Object.fromEntries(PARCOURS_FORMATION.map((parcours, index) => [parcours.id, progressions[index]]))}
+        progressions={progressions}
         semaineEnCours={semaineEnCours}
     />;
 }

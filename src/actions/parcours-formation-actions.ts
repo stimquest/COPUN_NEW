@@ -11,19 +11,47 @@ const practiceSchema = z.object({ sequenceId: sequenceSchema, stageId: z.string(
 
 export type SequenceProgress = { parcouru: boolean; acquisVerifie: boolean; mission: { stageId: string; actionId: string; cardIds: string[]; completed: boolean } | null };
 
+const progressionVide = (): SequenceProgress => ({ parcouru: false, acquisVerifie: false, mission: null });
+
 function sequenceById(sequenceId: string) {
     return PARCOURS_FORMATION.find(sequence => sequence.id === sequenceId);
 }
 
 export async function getSequenceProgress(sequenceId: string): Promise<SequenceProgress> {
-    if (!sequenceSchema.safeParse(sequenceId).success) return { parcouru: false, acquisVerifie: false, mission: null };
+    if (!sequenceSchema.safeParse(sequenceId).success) return progressionVide();
+    const progressions = await getSequencesProgress([sequenceId]);
+    return progressions[sequenceId] ?? progressionVide();
+}
+
+/** Charge tous les parcours demandés en deux requêtes, quel que soit leur nombre. */
+export async function getSequencesProgress(sequenceIds: readonly string[]): Promise<Record<string, SequenceProgress>> {
+    const ids = Array.from(new Set(sequenceIds.filter(id => sequenceSchema.safeParse(id).success)));
+    const resultat = Object.fromEntries(ids.map(id => [id, progressionVide()])) as Record<string, SequenceProgress>;
+    if (ids.length === 0) return resultat;
     const ctx = await requireAuth();
-    if (!ctx) return { parcouru: false, acquisVerifie: false, mission: null };
-    const [{ data }, { data: mission }] = await Promise.all([
-        ctx.supabase.from('formation_sequence_progress').select('parcouru_le, acquis_verifie_le').eq('user_id', ctx.user.id).eq('sequence_id', sequenceId).maybeSingle(),
-        ctx.supabase.from('formation_practice_missions').select('stage_id, action_id, card_ids, completed_at').eq('user_id', ctx.user.id).eq('sequence_id', sequenceId).maybeSingle(),
+    if (!ctx) return resultat;
+    const [{ data: progressions }, { data: missions }] = await Promise.all([
+        ctx.supabase.from('formation_sequence_progress')
+            .select('sequence_id, parcouru_le, acquis_verifie_le')
+            .eq('user_id', ctx.user.id).in('sequence_id', ids),
+        ctx.supabase.from('formation_practice_missions')
+            .select('sequence_id, stage_id, action_id, card_ids, completed_at')
+            .eq('user_id', ctx.user.id).in('sequence_id', ids),
     ]);
-    return { parcouru: !!data?.parcouru_le, acquisVerifie: !!data?.acquis_verifie_le, mission: mission ? { stageId: mission.stage_id, actionId: mission.action_id, cardIds: mission.card_ids, completed: !!mission.completed_at } : null };
+    for (const progression of progressions ?? []) {
+        resultat[progression.sequence_id] = {
+            ...resultat[progression.sequence_id],
+            parcouru: !!progression.parcouru_le,
+            acquisVerifie: !!progression.acquis_verifie_le,
+        };
+    }
+    for (const mission of missions ?? []) {
+        resultat[mission.sequence_id] = {
+            ...resultat[mission.sequence_id],
+            mission: { stageId: mission.stage_id, actionId: mission.action_id, cardIds: mission.card_ids, completed: !!mission.completed_at },
+        };
+    }
+    return resultat;
 }
 
 export async function marquerSequenceParcourue(sequenceId: string) {

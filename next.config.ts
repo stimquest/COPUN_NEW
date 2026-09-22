@@ -9,6 +9,13 @@ const nextConfig: NextConfig = {
 const withPWA = withPWAInit({
   dest: "public",
   disable: process.env.NODE_ENV === "development",
+  // Les médias lourds restent disponibles via le cache à la demande. Les précacher
+  // faisait télécharger toutes les anciennes illustrations à chaque mise à jour PWA.
+  publicExcludes: [
+    "!illustrations/**/*",
+    "!formation/**/*",
+    "!specialisation/**/*",
+  ],
   cacheOnFrontEndNav: true,
   aggressiveFrontEndNavCaching: true,
   reloadOnOnline: true,

@@ -3,6 +3,12 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { cache } from 'react';
 
+export type AuthenticatedUser = {
+    id: string;
+    email?: string;
+    user_metadata: { full_name?: string; [key: string]: unknown };
+};
+
 export async function createClient() {
     const cookieStore = await cookies();
 
@@ -30,14 +36,17 @@ export async function createClient() {
     );
 }
 
-/**
- * getUser() fait un aller-retour réseau vers Supabase Auth à chaque appel — sans cache,
- * une seule requête (ex. la page /stages) pouvait en déclencher 10+ (layout + chaque
- * fonction de data-service appelée). React.cache() déduplique automatiquement les appels
- * identiques au sein du rendu d'une même requête (jamais partagé entre requêtes/utilisateurs).
- */
-export const getCachedUser = cache(async () => {
+/** Vérifie le JWT localement lorsque le projet utilise ses clés asymétriques ES256. */
+export const getCachedUser = cache(async (): Promise<AuthenticatedUser | null> => {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    return user;
+    const { data, error } = await supabase.auth.getClaims();
+    const claims = data?.claims;
+    if (error || !claims?.sub) return null;
+    return {
+        id: claims.sub,
+        email: typeof claims.email === 'string' ? claims.email : undefined,
+        user_metadata: typeof claims.user_metadata === 'object' && claims.user_metadata
+            ? claims.user_metadata as AuthenticatedUser['user_metadata']
+            : {},
+    };
 });

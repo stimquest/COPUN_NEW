@@ -4,8 +4,8 @@ import './globals.css';
 import { BottomNav } from '@/components/BottomNav';
 import { Sidebar } from '@/components/Sidebar';
 import { cn } from "@/lib/utils";
-import { createClient, getCachedUser } from '@/lib/supabase/server';
 import { getResumeFormation } from '@/actions/formation-actions';
+import { getProfile } from '@/actions/user-actions';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
@@ -44,15 +44,9 @@ export default async function RootLayout({
   // sur /formation lui-même).
   let formationEnCours = false;
   try {
-    const supabase = await createClient();
-    const user = await getCachedUser();
-    if (user) {
-      email = user.email ?? null;
-      const [{ data: profile }, resumeFormation] = await Promise.all([supabase
-        .from('profiles')
-        .select('role, full_name, club_id, clubs(name)')
-        .eq('id', user.id)
-        .single(), getResumeFormation()]);
+    const [profile, resumeFormation] = await Promise.all([getProfile(), getResumeFormation()]);
+    if (profile) {
+      email = profile.email ?? null;
       role = profile?.role ?? null;
       fullName = profile?.full_name ?? null;
       const clubs = profile?.clubs as { name: string } | { name: string }[] | null;

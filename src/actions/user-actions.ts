@@ -1,8 +1,9 @@
 'use server';
 
 import { requireAuth } from '@/lib/auth';
+import { cache } from 'react';
 
-export async function getProfile() {
+const loadProfile = cache(async () => {
     const ctx = await requireAuth();
     if (!ctx) return null;
 
@@ -19,10 +20,15 @@ export async function getProfile() {
             email: ctx.user.email,
             full_name: ctx.user.user_metadata.full_name || ctx.user.email?.split('@')[0],
             role: 'instructor',
+            clubs: null,
         };
     }
 
     return profile;
+});
+
+export async function getProfile() {
+    return loadProfile();
 }
 
 export async function getUserStats() {

@@ -33,29 +33,34 @@ export async function updateSession(request: NextRequest) {
         }
     );
 
-    const { data: { user } } = await supabase.auth.getUser();
+    // Avec les clés asymétriques ES256 du projet, getClaims vérifie le JWT localement
+    // depuis les JWK en cache. getUser imposait un aller-retour Auth à chaque navigation.
+    const { data: claimsData } = await supabase.auth.getClaims();
+    const userId = claimsData?.claims?.sub;
     const path = request.nextUrl.pathname;
     const isPublic = PUBLIC_PATHS.some(p => path === p || path.startsWith(p + '/'));
 
     // Non connecté → page publique seulement
-    if (!user && !isPublic) {
+    if (!userId && !isPublic) {
         return NextResponse.redirect(new URL('/', request.url));
     }
 
     // Déjà connecté → pas besoin de rester sur login/landing
-    if (user && (path === '/' || path === '/login')) {
+    if (userId && (path === '/' || path === '/login')) {
         return NextResponse.redirect(new URL('/stages', request.url));
     }
 
     // Compte créé par invitation/magic link : tant que le mot de passe n'a pas été défini,
     // on bloque tout accès au reste de l'app pour éviter une session "orpheline" sans
     // moyen de se reconnecter une fois expirée.
-    if (user && path !== '/auth/reset-password' && !path.startsWith('/auth/callback')) {
-        const { data: profile } = await supabase
+    let profile: { password_set: boolean | null; role: string | null } | null = null;
+    if (userId && path !== '/auth/reset-password' && !path.startsWith('/auth/callback')) {
+        const { data } = await supabase
             .from('profiles')
-            .select('password_set')
-            .eq('id', user.id)
+            .select('password_set, role')
+            .eq('id', userId)
             .single();
+        profile = data;
 
         if (profile && profile.password_set === false) {
             return NextResponse.redirect(new URL('/auth/reset-password', request.url));
@@ -63,13 +68,7 @@ export async function updateSession(request: NextRequest) {
     }
 
     // Route /admin → vérifier le rôle admin
-    if (user && path.startsWith('/admin')) {
-        const { data: profile } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', user.id)
-            .single();
-
+    if (userId && path.startsWith('/admin')) {
         if (!profile || !['admin', 'club_admin'].includes(profile.role ?? '')) {
             return NextResponse.redirect(new URL('/stages', request.url));
         }
@@ -78,7 +77,7 @@ export async function updateSession(request: NextRequest) {
     // Journalisation de l'usage — posée ici, après tous les contrôles, pour ne compter
     // que les navigations effectivement servies : une requête qui finit en redirection
     // n'est pas un écran consulté. Volontairement non attendue (voir suivi-navigation.ts).
-    if (user && cheminSuivi(path)) {
+    if (userId && cheminSuivi(path)) {
         enregistrerNavigation(supabase, path, request.headers.get('user-agent'));
     }
 
