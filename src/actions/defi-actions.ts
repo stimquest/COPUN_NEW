@@ -1,9 +1,13 @@
 'use server';
 
-import { createClient, getCachedUser } from '@/lib/supabase/server';
+import { defiModel, exploitModel, jsonValue } from '@/lib/data-models';
+import { createClient } from '@/lib/supabase/server';
+import { createPrivilegedClient } from '@/lib/supabase/privileged';
 import { revalidatePath } from 'next/cache';
-import { requireAuth } from '@/lib/auth';
+import { requireStageOwner, requireAuth } from '@/lib/auth';
+import { MAX_PHOTO_BYTES, photoFormat } from '@/lib/upload-validation';
 import { DEFAULT_LITTORAL_SPECIES } from '@/data/littoral-species';
+import type { Database } from '@/types/database';
 
 // ==========================================
 // DEFIS (Base défis catalog)
@@ -13,7 +17,7 @@ export async function getDefis() {
     const supabase = await createClient();
     const { data, error } = await supabase.from('defis').select('*').eq('actif', true).order('id');
     if (error) { console.error('[getDefis]', error.message); return []; }
-    return data;
+    return data.map(defiModel);
 }
 
 // ==========================================
@@ -21,19 +25,17 @@ export async function getDefis() {
 // ==========================================
 
 export async function uploadDefiPhoto(formData: FormData) {
-    const supabase = await createClient();
-    const file = formData.get('file') as File;
-    if (!file) return { success: false, error: 'No file provided' };
-
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Math.random().toString(36).slice(2)}.${fileExt}`;
-    const filePath = `preuves/${fileName}`;
-
-    const { error } = await supabase.storage.from('defis').upload(filePath, file);
-    if (error) { console.error('[uploadDefiPhoto]', error.message); return { success: false, error: error.message }; }
-
-    const { data: { publicUrl } } = supabase.storage.from('defis').getPublicUrl(filePath);
-    return { success: true, url: publicUrl };
+    const ctx = await requireAuth();
+    if (!ctx) return { success: false, error: 'Connexion requise.' };
+    const file = formData.get('file');
+    if (!(file instanceof File) || file.size === 0 || file.size > MAX_PHOTO_BYTES) return { success: false, error: 'Photo attendue (5 Mo maximum).' };
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    const format = photoFormat(bytes);
+    if (!format || file.type !== 'image/' + format) return { success: false, error: 'Formats acceptés : JPEG, PNG, WebP.' };
+    const path = ctx.user.id + '/' + crypto.randomUUID() + '.' + format;
+    const { error } = await ctx.supabase.storage.from('defis').upload(path, bytes, { contentType: file.type, upsert: false });
+    if (error) return { success: false, error: error.message };
+    return { success: true, url: ctx.supabase.storage.from('defis').getPublicUrl(path).data.publicUrl };
 }
 
 // ==========================================
@@ -41,7 +43,9 @@ export async function uploadDefiPhoto(formData: FormData) {
 // ==========================================
 
 export async function addStageExploit(stageId: string, defiId: string) {
-    const supabase = await createClient();
+    const ctx = await requireStageOwner(stageId);
+    if (!ctx) return { success: false, error: 'Stage inaccessible.' };
+    const supabase = ctx.supabase;
     const { error } = await supabase
         .from('stage_exploits').insert({ stage_id: stageId, exploit_id: defiId, status: 'en_cours' });
 
@@ -57,11 +61,13 @@ export async function addStageExploit(stageId: string, defiId: string) {
 }
 
 export async function getStageExploits(stageId: string) {
-    const supabase = await createClient();
+    const ctx = await requireStageOwner(stageId);
+    if (!ctx) return [];
+    const supabase = ctx.supabase;
     const { data, error } = await supabase
         .from('stage_exploits').select('*, defis(*)').eq('stage_id', stageId).order('created_at', { ascending: true });
     if (error) { console.error('[getStageExploits]', error.message); return []; }
-    return data;
+    return data.map(exploitModel);
 }
 
 export async function updateStageExploitStatus(
@@ -70,9 +76,11 @@ export async function updateStageExploitStatus(
     status: 'en_cours' | 'complete',
     preuveUrl?: string
 ) {
-    const supabase = await createClient();
+    const ctx = await requireStageOwner(stageId);
+    if (!ctx) return { success: false, error: 'Stage inaccessible.' };
+    const supabase = ctx.supabase;
 
-    const updateData: Record<string, unknown> = { status };
+    const updateData: Database['public']['Tables']['stage_exploits']['Update'] = { status };
     if (status === 'complete') updateData.completed_at = new Date().toISOString();
     if (preuveUrl) {
         const { data: existing } = await supabase
@@ -88,7 +96,7 @@ export async function updateStageExploitStatus(
     if (status === 'complete') {
         const { data: defi } = await supabase.from('defis').select('spot_fixe').eq('id', defiId).single();
         const points = defi?.spot_fixe ? 3 : 2;
-        const awarded = await awardPointsForDefiInternal(supabase, stageId, defiId, points);
+        const awarded = await awardPointsForDefiInternal(supabase, stageId, defiId);
         if (awarded) pointsAwarded = points;
     } else {
         // Défi dévalidé : on reprend les points pour que le total reste honnête.
@@ -105,17 +113,20 @@ export async function removeDefiPhoto(
     defiId: string,
     photoUrl: string,
 ): Promise<{ success: boolean; error?: string }> {
-    const supabase = await createClient();
+    const ctx = await requireStageOwner(stageId);
+    if (!ctx) return { success: false, error: 'Stage inaccessible.' };
+    const supabase = ctx.supabase;
 
-    const marker = '/object/public/defis/';
-    const markerIdx = photoUrl.indexOf(marker);
-    if (markerIdx !== -1) {
-        const storagePath = decodeURIComponent(photoUrl.slice(markerIdx + marker.length));
-        await supabase.storage.from('defis').remove([storagePath]);
-    }
-
-    const { data: existing } = await supabase
+    const { data: existing, error: readError } = await supabase
         .from('stage_exploits').select('preuves_url').eq('stage_id', stageId).eq('exploit_id', defiId).single();
+    if (readError || !existing?.preuves_url?.includes(photoUrl)) return { success: false, error: 'Photo inaccessible.' };
+    let url: URL;
+    try { url = new URL(photoUrl); } catch { return { success: false, error: 'URL invalide.' }; }
+    const prefix = '/storage/v1/object/public/defis/';
+    if (url.origin !== new URL(process.env.NEXT_PUBLIC_SUPABASE_URL!).origin || !url.pathname.startsWith(prefix)) return { success: false, error: 'URL invalide.' };
+    const storagePath = decodeURIComponent(url.pathname.slice(prefix.length));
+    const { error: removeError } = await createPrivilegedClient().storage.from('defis').remove([storagePath]);
+    if (removeError) return { success: false, error: removeError.message };
 
     const remaining = (existing?.preuves_url ?? []).filter((u: string) => u !== photoUrl);
 
@@ -142,7 +153,9 @@ export async function removeDefiPhoto(
 }
 
 export async function removeStageExploit(stageId: string, defiId: string) {
-    const supabase = await createClient();
+    const ctx = await requireStageOwner(stageId);
+    if (!ctx) return { success: false, error: 'Stage inaccessible.' };
+    const supabase = ctx.supabase;
     const { error } = await supabase
         .from('stage_exploits').delete().eq('stage_id', stageId).eq('exploit_id', defiId);
     if (error) { console.error('[removeStageExploit]', error.message); return { success: false, error: error.message }; }
@@ -156,55 +169,25 @@ export async function removeStageExploit(stageId: string, defiId: string) {
 // ==========================================
 
 async function awardPointsForDefiInternal(
-    supabase: Awaited<ReturnType<typeof createClient>>,
-    stageId: string,
-    defiId: string,
-    points: number
+    supabase: Awaited<ReturnType<typeof createClient>>, stageId: string, defiId: string
 ): Promise<boolean> {
-    const user = await getCachedUser();
-    if (!user) return false;
-
-    // Un seul gain par défi et par semaine : revalider (photo supplémentaire, relevé
-    // modifié, dévalidation/revalidation) ne doit jamais créditer de nouveaux points.
-    const { data: existing } = await supabase
-        .from('leaderboard_points')
-        .select('id')
-        .eq('monitor_id', user.id)
-        .eq('stage_id', stageId)
-        .eq('defi_id', defiId)
-        .limit(1)
-        .maybeSingle();
-    if (existing) return false;
-
-    // Le club vient du profil du moniteur : les stages n'ont pas de club_id renseigné,
-    // s'appuyer dessus laissait toutes les lignes de points sans club.
-    const { data: profile } = await supabase
-        .from('profiles').select('club_id').eq('id', user.id).maybeSingle();
-
-    await supabase.from('leaderboard_points').insert({
-        monitor_id: user.id,
-        club_id: profile?.club_id ?? null,
-        stage_id: stageId,
-        defi_id: defiId,
-        points,
-        reason: `Défi validé: ${defiId}`,
-    });
-    return true;
+    const { data, error } = await supabase.rpc('award_verified_points', { p_stage_id: stageId, p_kind: 'defi', p_reference: defiId });
+    if (error) throw new Error('Attribution des points impossible', { cause: error });
+    return Number(data) > 0;
 }
 
-/** Retire les points d'un défi dévalidé (nécessite la policy DELETE sur leaderboard_points). */
+/** Retire les points d'un défi dévalidé après vérification du propriétaire du stage en BDD. */
 async function revokePointsForDefiInternal(
     supabase: Awaited<ReturnType<typeof createClient>>,
     stageId: string,
     defiId: string,
 ) {
-    const user = await getCachedUser();
-    if (!user) return;
-    await supabase.from('leaderboard_points')
-        .delete()
-        .eq('monitor_id', user.id)
-        .eq('stage_id', stageId)
-        .eq('defi_id', defiId);
+    const { error } = await supabase.rpc('revoke_verified_points', {
+        p_stage_id: stageId,
+        p_kind: 'defi',
+        p_reference: defiId,
+    });
+    if (error) throw new Error('Retrait des points impossible', { cause: error });
 }
 
 export async function awardPointsForDefi(stageId: string, defiId: string) {
@@ -214,7 +197,7 @@ export async function awardPointsForDefi(stageId: string, defiId: string) {
     const { data: defi } = await ctx.supabase.from('defis').select('points').eq('id', defiId).single();
     const points = defi?.points ?? 2;
 
-    await awardPointsForDefiInternal(ctx.supabase, stageId, defiId, points);
+    await awardPointsForDefiInternal(ctx.supabase, stageId, defiId);
     return { success: true, points };
 }
 
@@ -251,14 +234,14 @@ export async function getLeaderboard(type: 'monitors' | 'clubs' = 'monitors', li
         if (monitorIds.length === 0) return [];
 
         const { data: profiles } = await supabase
-            .from('profiles').select('id, full_name, clubs(name)').in('id', monitorIds);
+            .from('profile_directory').select('id, full_name, club_id, club_name').in('id', monitorIds);
 
         const profileMap = new Map<string, { full_name: string | null; club_name: string | null }>();
         (profiles ?? []).forEach((p: Record<string, unknown>) => {
-            const club = p.clubs as { name?: string } | null;
+            const club = { name: p.club_name as string | null };
             profileMap.set(p.id as string, {
                 full_name: (p.full_name as string) ?? null,
-                club_name: club?.name ?? null,
+                club_name: club.name ?? null,
             });
         });
 
@@ -278,7 +261,7 @@ export async function getLeaderboard(type: 'monitors' | 'clubs' = 'monitors', li
         // moniteur au club de son profil.
         const [{ data: points, error }, { data: profiles }] = await Promise.all([
             supabase.from('leaderboard_points').select('monitor_id, points'),
-            supabase.from('profiles').select('id, club_id, clubs(name)').not('club_id', 'is', null),
+            supabase.from('profile_directory').select('id, club_id, club_name').not('club_id', 'is', null),
         ]);
         if (error || !points) return [];
 
@@ -322,7 +305,7 @@ export async function getClubObservationTargets() {
     if (!data || data.length === 0) {
         return DEFAULT_LITTORAL_SPECIES.map((s, i) => ({
             id: `default-${i}`,
-            club_id: profile.club_id,
+            club_id: profile.club_id!,
             name: s.name,
             categorie: s.categorie,
             sort_order: i,
@@ -338,11 +321,13 @@ export async function saveClubObservationTargets(targets: { name: string; catego
     const { data: profile } = await ctx.supabase.from('profiles').select('club_id').eq('id', ctx.user.id).single();
     if (!profile?.club_id) return { success: false, error: 'No club' };
 
-    await ctx.supabase.from('club_observation_targets').delete().eq('club_id', profile.club_id);
+    const clubId = profile.club_id;
+    const { error: deleteError } = await ctx.supabase.from('club_observation_targets').delete().eq('club_id', clubId);
+    if (deleteError) return { success: false, error: deleteError.message };
     if (targets.length === 0) return { success: true };
 
     const { data: inserted, error } = await ctx.supabase.from('club_observation_targets').insert(
-        targets.map((t, i) => ({ club_id: profile.club_id, name: t.name, categorie: t.categorie, sort_order: i }))
+        targets.map((t, i) => ({ club_id: clubId, name: t.name, categorie: t.categorie, sort_order: i }))
     ).select('id, name, categorie');
 
     if (error) return { success: false, error: error.message };
@@ -355,12 +340,14 @@ export async function completeFilRougeDefi(
     structuredData: Record<string, unknown>,
     photoUrl?: string
 ) {
-    const supabase = await createClient();
+    const ctx = await requireStageOwner(stageId);
+    if (!ctx) return { success: false, error: 'Stage inaccessible.' };
+    const supabase = ctx.supabase;
 
-    const updateData: Record<string, unknown> = {
+    const updateData: Database['public']['Tables']['stage_exploits']['Update'] = {
         status: 'complete',
         completed_at: new Date().toISOString(),
-        structured_data: structuredData,
+        structured_data: jsonValue(structuredData),
     };
 
     if (photoUrl) {
@@ -378,7 +365,7 @@ export async function completeFilRougeDefi(
     let pointsAwarded = 0;
     const { data: defi } = await supabase.from('defis').select('points').eq('id', defiId).single();
     if (defi) {
-        const awarded = await awardPointsForDefiInternal(supabase, stageId, defiId, defi.points);
+        const awarded = await awardPointsForDefiInternal(supabase, stageId, defiId);
         if (awarded) pointsAwarded = defi.points;
     }
 
@@ -419,7 +406,7 @@ export async function getFilRougeDefis(): Promise<FilRougeDefi[]> {
     const supabase = await createClient();
     const { data } = await supabase
         .from('defis').select('id, description, instruction, icon, tags_theme, points').eq('fil_rouge', true).order('id');
-    return data ?? [];
+    return (data ?? []).map(row => ({ ...row, tags_theme: row.tags_theme ?? [] }));
 }
 
 export async function getMonitorFilRouge(): Promise<string | null> {
@@ -486,7 +473,7 @@ export async function getFilRougeHistory(): Promise<{ entries: FilRougeEntry[]; 
         stage_title: stageMap[e.stage_id]?.title ?? 'Stage',
         stage_dates: stageMap[e.stage_id]?.dates ?? '',
         exploit_id: e.exploit_id,
-        status: e.status,
+        status: e.status === 'complete' ? 'complete' as const : 'en_cours' as const,
         completed_at: e.completed_at,
         preuves_url: e.preuves_url ?? [],
         notes: e.notes ?? null,

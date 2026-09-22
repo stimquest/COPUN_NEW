@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { getAllGameCards, createGame, GameData } from '@/actions/game-actions';
+import { createGame, GameData } from '@/actions/game-actions';
 import clsx from 'clsx';
 
 type GameCard = {
@@ -17,11 +17,6 @@ const GAME_TYPES = [
     { value: 'triage', label: 'Le Triage Côtier', icon: 'rule', color: 'bg-green-500' },
     { value: 'mots', label: 'Les Mots en Rafale', icon: 'edit_note', color: 'bg-amber-500' },
     { value: 'dilemme', label: 'Le Dilemme du Marin', icon: 'call_split', color: 'bg-purple-500' },
-];
-
-const THEMES = [
-    'Marées', 'Météo', 'Navigation', 'Sécurité', 'Biodiversité',
-    'Environnement', 'Matériel', 'Réglementation', 'Général'
 ];
 
 export default function GeneratorClient({ initialCards }: { initialCards: GameCard[] }) {

@@ -84,8 +84,8 @@ export default function DefisTab({ stageId, availableDefis, assignedExploits, su
         const suggested: Defi[] = [];
         const others: Defi[] = [];
         unassignedDefis.forEach(d => {
-            (d.tags_theme?.some(t => suggestedThemes.includes(t)) && suggestedThemes.length > 0)
-                ? suggested.push(d) : others.push(d);
+            if (d.tags_theme?.some(t => suggestedThemes.includes(t)) && suggestedThemes.length > 0) suggested.push(d);
+            else others.push(d);
         });
         return { suggestedUnassigned: suggested, otherUnassigned: others };
     }, [unassignedDefis, suggestedThemes]);

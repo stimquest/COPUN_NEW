@@ -3,15 +3,14 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-    createPedagogicalContent,
+    createAdminPedagogicalContent,
     updatePedagogicalContent,
     deletePedagogicalContent,
 } from '@/actions/content-actions';
 import { PILLARS, THEMES_BY_PILLAR } from '@/data/etages';
 import { NIVEAU_LABELS_LONGS } from '@/data/niveaux';
 import type { PedagogicalContent, PedagogicalRessource, Dimension } from '@/types';
-import { getAllFichesMemo } from '@/actions/fiche-memo-actions';
-import type { FicheMemo } from '@/actions/fiche-memo-actions';
+import type { FichePreview } from '@/actions/fiche-memo-actions';
 
 const DIMENSION_COLORS: Record<Dimension, { bg: string; text: string; badge: string }> = {
     'COMPRENDRE': { bg: 'bg-amber-50', text: 'text-amber-700', badge: 'bg-amber-100 text-amber-700' },
@@ -61,7 +60,7 @@ function formFromFiche(f: PedagogicalContent): FicheFormState {
 
 export function FichesAdminTab({ initialFiches, fichesMemo }: {
     initialFiches: PedagogicalContent[];
-    fichesMemo: FicheMemo[];
+    fichesMemo: FichePreview[];
 }) {
     const router = useRouter();
     const [isPending, startTransition] = useTransition();
@@ -134,7 +133,7 @@ export function FichesAdminTab({ initialFiches, fichesMemo }: {
         setError(null);
         startTransition(async () => {
             if (mode === 'create') {
-                const result = await createPedagogicalContent({ ...form, is_public: true });
+                const result = await createAdminPedagogicalContent({ ...form, is_public: true });
                 if (!result.success) { setError(result.error ?? 'Erreur'); return; }
                 flash('Fiche créée.');
             } else if (mode === 'edit' && selected) {

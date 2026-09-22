@@ -1,0 +1,772 @@
+[
+  {
+    "id": "1",
+    "question": "Pourquoi la mer monte-t-elle et descend-elle, même sans vent ?",
+    "objectif": "Distinguer le mouvement de marée, lié surtout à la Lune et au Soleil, de l'état de surface créé par le vent.",
+    "tip": "Partir de deux observations : un jour calme où la mer monte quand même, et un jour venteux où les vagues bougent sans que l'horaire de marée change.",
+    "explication": "Le vent ride la surface et crée les vagues ; la marée fait monter et descendre l'ensemble du niveau de la mer. Ce mouvement suit principalement l'attraction de la Lune, renforcée ou atténuée par celle du Soleil. Vent et pression peuvent modifier le niveau réellement observé près de la côte, mais ils ne remplacent pas le cycle de marée.",
+    "accroche": "Aujourd'hui, même si le vent tombait complètement, est-ce que la mer arrêterait de monter ?",
+    "accroches_variantes": [
+      "Aujourd'hui, même si le vent tombait complètement, est-ce que la mer arrêterait de monter ?"
+    ],
+    "accroches_formes": null,
+    "erreur_frequente": "Ce qu'on peut facilement confondre : les vagues bougent avec le vent, tandis que le niveau de la mer suit la marée. Ce sont deux mouvements différents qui se superposent.",
+    "a_observer": "Le niveau de l'eau contre un rocher ou un poteau, puis l'état de surface : calme, rides ou vagues.",
+    "a_retenir": "Le vent fait surtout bouger la surface ; la marée fait varier le niveau de la mer.",
+    "actions": [
+      {
+        "id": "f1_deux_mouvements",
+        "label": "Deux mouvements à distinguer",
+        "consigne": "Montrez le niveau de l'eau sur un repère puis les vagues à sa surface. Demandez ce qui changerait si le vent tombait, et ce qui continuerait quand même."
+      }
+    ]
+  },
+  {
+    "id": "2",
+    "question": "Comment lire un horaire de marée pour préparer une sortie ?",
+    "objectif": "Savoir trouver l'heure et la hauteur prévues de pleine ou basse mer, puis les relier au site et à l'activité.",
+    "tip": "Faire chercher l'information utile du jour : pas seulement « l'heure de la marée », mais la pleine ou basse mer concernée et ce qu'elle change pour le groupe.",
+    "explication": "Les marées astronomiques sont calculées à l'avance à partir des mouvements de la Lune et du Soleil. Un annuaire ou une application donne des prévisions pour un port de référence ; elles servent à organiser la sortie, mais l'état réel de la mer dépend aussi localement du vent, de la pression et de la houle.",
+    "accroche": "Nous voulons être sur l'eau à 14 h : quelle information de marée faut-il vérifier avant de décider ?",
+    "accroches_variantes": [
+      "Nous voulons être sur l'eau à 14 h : quelle information de marée faut-il vérifier avant de décider ?"
+    ],
+    "accroches_formes": null,
+    "erreur_frequente": "Un horaire de marée n'est pas une autorisation automatique de sortir. Il faut encore le relier au lieu, à la météo et au niveau du groupe.",
+    "a_observer": "L'annuaire ou l'application : heure, hauteur prévue et port de référence.",
+    "a_retenir": "Les horaires se prévoient ; une sortie se décide en croisant cette prévision avec les conditions réelles.",
+    "actions": [
+      {
+        "id": "f2_lire_prevision",
+        "label": "Trouver l'information utile",
+        "consigne": "Donnez une heure de départ et faites rechercher la prochaine pleine ou basse mer, sa hauteur et le port concerné. Puis demandez ce que cela change concrètement pour la séance."
+      }
+    ]
+  },
+  {
+    "id": "5",
+    "question": "Qu'est-ce que l'étale, et pourquoi est-elle importante ?",
+    "objectif": "Comprendre que les courants changent de sens entre flot et jusant, avec un moment de faiblesse variable selon le site.",
+    "tip": "Ne pas donner une durée universelle : l'étale et le changement de courant ne coïncident pas partout exactement avec la pleine ou basse mer.",
+    "explication": "Entre le flot et le jusant, le courant ralentit avant de repartir dans l'autre sens : c'est l'étale. Son heure et sa durée dépendent beaucoup du lieu ; dans une baie, un chenal ou près d'un cap, le courant peut changer avant ou après la pleine mer affichée au port.",
+    "accroche": "Quand la marée change de sens, le courant fait-il demi-tour immédiatement ?",
+    "accroches_variantes": [
+      "Quand la marée change de sens, le courant fait-il demi-tour immédiatement ?"
+    ],
+    "accroches_formes": null,
+    "erreur_frequente": "Pleine mer, basse mer et étale ne sont pas toujours le même moment. Sur un site donné, on vérifie le courant local plutôt que de le deviner.",
+    "a_observer": "Le courant autour d'une bouée, d'un poteau ou dans un chenal, à plusieurs moments de la marée.",
+    "a_retenir": "L'étale est le passage entre deux sens de courant ; son horaire est local.",
+    "actions": [
+      {
+        "id": "f5_sens_courant",
+        "label": "Quand le courant change-t-il ?",
+        "consigne": "Repérez le sens du courant près d'un amer fixe, puis consultez l'information locale du site. Comparez le changement observé avec l'horaire de pleine ou basse mer."
+      }
+    ]
+  },
+  {
+    "id": "6",
+    "question": "Pourquoi les marées peuvent-elles être prévues longtemps à l'avance ?",
+    "objectif": "Comprendre la différence entre la marée astronomique prédite et le niveau d'eau réellement observé.",
+    "tip": "Dire « prévision de marée » plutôt que « certitude à la minute » : elle est calculée avec précision, mais la météo peut créer une surcote ou une décote.",
+    "explication": "Les positions de la Lune et du Soleil obéissent à des mouvements calculables : c'est ce qui permet de prévoir les marées astronomiques longtemps à l'avance. Sur le terrain, le niveau d'eau réel peut toutefois s'écarter de cette prévision sous l'effet du vent et de la pression atmosphérique, surtout lors de conditions agitées.",
+    "accroche": "Si la marée est calculée des années à l'avance, pourquoi regarde-t-on encore la météo avant de sortir ?",
+    "accroches_variantes": [
+      "Si la marée est calculée des années à l'avance, pourquoi regarde-t-on encore la météo avant de sortir ?"
+    ],
+    "accroches_formes": null,
+    "erreur_frequente": "La marée astronomique est prévisible ; la hauteur d'eau réellement observée n'est jamais séparée des conditions météorologiques.",
+    "a_observer": "La prévision de marée, puis le vent, la pression et l'état de mer annoncés.",
+    "a_retenir": "On calcule la marée ; on vérifie les conditions qui peuvent modifier le niveau réel.",
+    "actions": [
+      {
+        "id": "f6_prevision_et_reel",
+        "label": "Prévision et réalité",
+        "consigne": "Comparez l'horaire de marée prévu avec les prévisions de vent et de pression du jour. Faites nommer ce que chaque information permet — ou ne permet pas — d'anticiper."
+      }
+    ]
+  },
+  {
+    "id": "7",
+    "question": "Que nous indique le coefficient de marée ?",
+    "objectif": "Comprendre que le coefficient décrit l'ampleur de la marée, sans remplacer les hauteurs prévues ni les informations locales de courant.",
+    "tip": "Toujours lire le coefficient avec les heures et hauteurs prévues du port, puis les particularités du site.",
+    "explication": "Le coefficient donne une indication sur l'amplitude de la marée : plus il est élevé, plus l'écart entre basse et pleine mer est important dans les ports où il est utilisé. Il ne donne ni une hauteur d'eau en mètres ni, à lui seul, la force du courant sur chaque site.",
+    "accroche": "Le coefficient est de 95 : qu'est-ce que ce nombre nous apprend vraiment — et qu'est-ce qu'il ne nous apprend pas ?",
+    "accroches_variantes": [
+      "Le coefficient est de 95 : qu'est-ce que ce nombre nous apprend vraiment — et qu'est-ce qu'il ne nous apprend pas ?"
+    ],
+    "accroches_formes": null,
+    "erreur_frequente": "Le coefficient n'est pas une hauteur d'eau et ne suffit pas à décider si un courant est adapté au groupe.",
+    "a_observer": "Les heures, hauteurs et coefficient du jour, ainsi que la zone découverte sur le site.",
+    "a_retenir": "Un fort coefficient annonce une grande amplitude ; pour décider, on le croise avec les hauteurs, le lieu et les conditions.",
+    "actions": [
+      {
+        "id": "f7_croiser_infos",
+        "label": "Ce que dit le coefficient",
+        "consigne": "Comparez deux journées dans l'annuaire : coefficient, heures et hauteurs. Faites distinguer ce que donne le nombre seul de ce que donne la prévision complète."
+      }
+    ]
+  },
+  {
+    "id": "8",
+    "question": "Pourquoi la mer ne progresse-t-elle pas toujours à la même vitesse ?",
+    "objectif": "Observer que la vitesse apparente de montée ou de descente varie et comprendre que les règles simplifiées ne remplacent pas l'observation locale.",
+    "tip": "La règle des douzièmes peut servir d'ordre de grandeur sur certains sites, mais pas de règle de sécurité universelle.",
+    "explication": "La hauteur de l'eau ne varie pas toujours de façon régulière : elle peut sembler avancer plus vite à certains moments, selon la forme de la côte, la pente de plage et le site observé. La règle des douzièmes est un repère théorique utile pour comprendre une marée semi-diurne régulière ; elle ne décrit pas exactement toutes les côtes.",
+    "accroche": "Si la mer avance de dix pas pendant la première heure, avancera-t-elle forcément de dix pas pendant la suivante ?",
+    "accroches_variantes": [
+      "Si la mer avance de dix pas pendant la première heure, avancera-t-elle forcément de dix pas pendant la suivante ?"
+    ],
+    "accroches_formes": null,
+    "erreur_frequente": "Une règle de calcul ne remplace pas les repères du terrain : sur une plage plate ou dans une baie, l'eau peut sembler gagner très vite du terrain.",
+    "a_observer": "La position de l'eau par rapport à deux repères fixes, relevée à intervalles réguliers.",
+    "a_retenir": "La marée n'avance pas toujours au même rythme ; on garde des repères et on anticipe.",
+    "actions": [
+      {
+        "id": "f8_reperes_reguliers",
+        "label": "Mesurer plutôt que supposer",
+        "consigne": "Choisissez deux repères fixes et notez la position de l'eau à intervalles réguliers. Comparez les écarts au lieu de chercher une vitesse théorique."
+      }
+    ]
+  },
+  {
+    "id": "9",
+    "question": "Pourquoi le courant ne suit-il pas exactement l'heure de pleine ou basse mer ?",
+    "objectif": "Comprendre que la force et le changement de sens du courant sont des phénomènes locaux.",
+    "tip": "Pour une activité nautique, s'appuyer sur les informations locales de courant et sur l'observation, pas sur une règle unique de « mi-marée ».",
+    "explication": "Le courant dépend du volume d'eau qui passe, mais aussi de la forme des caps, baies, chenaux et estuaires. Il peut être très fort à un moment différent de la mi-marée théorique, et son changement de sens peut être décalé par rapport à l'horaire de pleine ou basse mer du port.",
+    "accroche": "La pleine mer est à 15 h. Peut-on en déduire exactement le moment où le courant sera le plus fort ici ?",
+    "accroches_variantes": [
+      "La pleine mer est à 15 h. Peut-on en déduire exactement le moment où le courant sera le plus fort ici ?"
+    ],
+    "accroches_formes": null,
+    "erreur_frequente": "« À mi-marée, le courant est toujours maximal » est une simplification. Le courant se lit et se prépare à l'échelle du site.",
+    "a_observer": "Les zones où l'eau accélère, les remous autour des obstacles et les informations locales de navigation.",
+    "a_retenir": "Le courant est local : l'horaire de marée aide à l'anticiper, mais ne suffit pas à le décrire.",
+    "actions": [
+      {
+        "id": "f9_courant_local",
+        "label": "Où l'eau accélère-t-elle ?",
+        "consigne": "Depuis le bord, repérez une zone calme et une zone accélérée. Reliez-les à la forme du site avant de consulter le créneau de courant local."
+      }
+    ]
+  },
+  {
+    "id": "10",
+    "question": "Comment nomme-t-on la marée montante et la marée descendante ?",
+    "objectif": "Employer le vocabulaire marin avec précision, en le reliant à une observation du sens de l'eau.",
+    "tip": "Le mot ne doit pas être un quiz de vocabulaire : faire nommer le mouvement réellement observé.",
+    "explication": "En vocabulaire maritime, le flot désigne la marée montante et le jusant la marée descendante. L'étale est le moment de transition où le courant ralentit avant de repartir dans l'autre sens.",
+    "accroche": "Regardons le repère : l'eau gagne-t-elle du terrain ou en laisse-t-elle ? Les marins ont un mot pour chacun de ces mouvements.",
+    "accroches_variantes": [
+      "Regardons le repère : l'eau gagne-t-elle du terrain ou en laisse-t-elle ? Les marins ont un mot pour chacun de ces mouvements."
+    ],
+    "accroches_formes": null,
+    "erreur_frequente": "Flot, jusant et étale ne sont pas trois synonymes : ils décrivent trois moments différents du cycle.",
+    "a_observer": "Le niveau d'eau et le sens du courant au moment présent.",
+    "a_retenir": "Flot : la mer monte. Jusant : elle descend. Étale : le courant change de sens.",
+    "actions": [
+      {
+        "id": "f10_nommer_mouvement",
+        "label": "Nommer ce qui se passe",
+        "consigne": "À partir d'un repère fixe, faites décrire le mouvement de l'eau puis introduisez le mot précis : flot, jusant ou étale."
+      }
+    ]
+  },
+  {
+    "id": "12",
+    "question": "Que changent les vives-eaux et les mortes-eaux sur un site ?",
+    "objectif": "Relier l'amplitude de la marée aux zones accessibles, aux courants et aux usages du site, sans généraliser un comportement biologique.",
+    "tip": "Partir du site : jusqu'où l'estran se découvre, quels passages deviennent possibles ou risqués, qui utilise cet espace aujourd'hui ?",
+    "explication": "En vives-eaux, l'écart entre basse et pleine mer est plus grand : l'estran peut se découvrir davantage et les courants peuvent être plus marqués dans certains passages. En mortes-eaux, les variations sont plus modestes. Ces différences changent l'accès au site, les activités possibles et les conditions rencontrées par les espèces de l'estran.",
+    "accroche": "Aujourd'hui la plage découvre très loin ; que pourrions-nous voir ou faire différemment lors d'une morte-eau ?",
+    "accroches_variantes": [
+      "Aujourd'hui la plage découvre très loin ; que pourrions-nous voir ou faire différemment lors d'une morte-eau ?"
+    ],
+    "accroches_formes": null,
+    "erreur_frequente": "Toutes les marées ne se ressemblent pas, mais aucune règle ne dispense de regarder les caractéristiques locales du site.",
+    "a_observer": "La limite de l'estran découverte, les accès, les chenaux et les usages présents.",
+    "a_retenir": "Vives-eaux et mortes-eaux changent l'amplitude de la marée ; sur le terrain, on regarde ce que cela transforme ici.",
+    "actions": [
+      {
+        "id": "f12_comparer_marees",
+        "label": "Ce qui change ici",
+        "consigne": "À partir de deux journées de l'annuaire, comparez la zone qui découvrira et les accès possibles. Faites formuler ce que cela change pour la sortie."
+      }
+    ]
+  },
+  {
+    "id": "14",
+    "question": "Que raconte la laisse de mer ?",
+    "objectif": "Utiliser la laisse de mer comme indice du passage de l'eau, sans la confondre avec une prévision suffisante de la prochaine pleine mer.",
+    "tip": "La laisse de mer est un indice à lire avec le calendrier de marée et les conditions du jour ; elle ne remplace jamais une prévision.",
+    "explication": "La laisse de mer est formée d'algues, coquilles, bois et autres éléments déposés par l'eau. Elle garde la trace d'un passage de la mer, mais sa position dépend aussi du vent, des vagues et des marées précédentes. Elle aide à lire la plage ; elle ne permet pas, seule, de prévoir exactement la prochaine limite de l'eau.",
+    "accroche": "Cette ligne d'algues raconte un passage de la mer. Mais suffit-elle à savoir où l'eau ira tout à l'heure ?",
+    "accroches_variantes": [
+      "Cette ligne d'algues raconte un passage de la mer. Mais suffit-elle à savoir où l'eau ira tout à l'heure ?"
+    ],
+    "accroches_formes": null,
+    "erreur_frequente": "La laisse de mer est un indice précieux, pas une limite garantie pour la marée suivante.",
+    "a_observer": "Les différentes lignes de dépôts, leur composition et leur hauteur sur la plage.",
+    "a_retenir": "La laisse de mer raconte ce que l'eau a déposé ; pour anticiper, on la croise avec la prévision du jour.",
+    "actions": [
+      {
+        "id": "f14_lire_laisse",
+        "label": "Indice ou prévision ?",
+        "consigne": "Repérez une ligne de laisse, puis consultez la prochaine marée et les conditions de vent. Faites distinguer ce que la ligne indique de ce qu'il reste à vérifier."
+      }
+    ]
+  },
+  {
+    "id": "15",
+    "question": "Comment savoir où poser mon matériel quand j'arrive sur l'estran ?",
+    "objectif": "Choisir un emplacement de matériel qui reste sûr pendant la séance en croisant la marée prévue, les conditions du jour et la configuration de la plage.",
+    "tip": "Avant d'installer le matériel : prochaine pleine mer, hauteur prévue, vent/houle, accès de repli et marge réelle au-dessus de la zone atteignable.",
+    "explication": "La laisse de mer donne un repère utile, mais elle correspond à des conditions passées. Pour poser le matériel, on regarde surtout la prochaine marée prévue et sa hauteur, puis on garde une marge adaptée au vent, à la houle et à la forme de la plage. En cas de doute, on choisit plus haut et on conserve un accès de sortie.",
+    "accroche": "Je pose les affaires ici. Dans deux heures, elles sont où ?",
+    "accroches_variantes": [
+      "Je pose les affaires ici. Dans deux heures, elles sont où ?"
+    ],
+    "accroches_formes": null,
+    "erreur_frequente": "Le coefficient seul ne dit pas jusqu'où l'eau ira sur cette plage. Il faut lire la prévision complète et les conditions réelles.",
+    "a_observer": "La laisse de mer, la prochaine pleine mer prévue, la houle et un itinéraire de repli.",
+    "a_retenir": "Pour poser le matériel, on croise prévision, conditions locales et marge de sécurité.",
+    "actions": [
+      {
+        "id": "f15_choisir_emplacement",
+        "label": "Choisir avec une marge",
+        "consigne": "Faites choisir un emplacement et demandez quelles informations le justifient : prochaine marée, hauteur, vent/houle, accès de repli. Le groupe doit pouvoir expliquer sa marge."
+      }
+    ]
+  },
+  {
+    "id": "24",
+    "question": "Qu'est-ce qui peut faire bouger l'eau de mer ici ?",
+    "objectif": "Distinguer les effets locaux de la marée, du vent, des vagues et des courants plus larges.",
+    "tip": "Ne pas chercher une cause unique : comparer le niveau, les vagues, le sens du vent et le sens du courant.",
+    "explication": "L'eau de mer peut bouger pour plusieurs raisons : la marée fait varier le niveau et crée des courants ; le vent pousse la surface ; les vagues transportent de l'énergie ; la température et la salinité alimentent aussi de grandes circulations océaniques. Près d'une côte, la cause dominante dépend du lieu et du moment.",
+    "accroche": "Ici, qu'est-ce qui bouge vraiment : le niveau, la surface, le courant — ou les trois à la fois ?",
+    "accroches_variantes": [
+      "Ici, qu'est-ce qui bouge vraiment : le niveau, la surface, le courant — ou les trois à la fois ?"
+    ],
+    "accroches_formes": null,
+    "erreur_frequente": "Voir de l'eau en mouvement ne suffit pas à en connaître la cause. On compare les indices avant de conclure.",
+    "a_observer": "Niveau contre un repère, direction du vent, direction du courant et forme des vagues.",
+    "a_retenir": "Marée, vent et vagues peuvent agir ensemble, mais pas de la même manière.",
+    "actions": [
+      {
+        "id": "f24_quatre_indices",
+        "label": "Quatre indices",
+        "consigne": "Répartissez les observations : un repère de niveau, le vent, le courant et les vagues. Mettez ensuite en commun ce que chaque indice raconte."
+      }
+    ]
+  },
+  {
+    "id": "25",
+    "question": "Pourquoi tous les courants ne se ressemblent-ils pas ?",
+    "objectif": "Identifier que les courants ont des causes et des rythmes différents, sans appliquer une règle unique à un site.",
+    "tip": "Sur une sortie, la question utile est : quel courant domine ici maintenant, et de quelles informations locales disposons-nous ?",
+    "explication": "Certains courants sont liés aux marées et changent de sens avec le cycle local ; d'autres sont entraînés par le vent ; d'autres encore appartiennent à de grandes circulations océaniques. Leur vitesse et leur direction dépendent aussi de la côte, des fonds et des passages resserrés.",
+    "accroche": "Deux courants peuvent-ils avoir la même direction aujourd'hui et une origine complètement différente ?",
+    "accroches_variantes": [
+      "Deux courants peuvent-ils avoir la même direction aujourd'hui et une origine complètement différente ?"
+    ],
+    "accroches_formes": null,
+    "erreur_frequente": "Un courant n'a pas un rythme universel. Pour naviguer, on cherche l'information du site plutôt qu'une règle apprise par cœur.",
+    "a_observer": "Le sens du courant près d'un repère et les informations de courant propres au site.",
+    "a_retenir": "Un courant peut être lié à la marée, au vent ou à la géographie locale : on identifie sa cause avant de prévoir son évolution.",
+    "actions": [
+      {
+        "id": "f25_identifier_courant",
+        "label": "Quel courant observons-nous ?",
+        "consigne": "Faites relever le sens du vent, celui du courant et l'heure de marée. Demandez quelles causes sont plausibles ici et quelle source locale permettrait de vérifier."
+      }
+    ]
+  },
+  {
+    "id": "68",
+    "question": "Pourquoi l'horaire de la séance change-t-il d'un jour à l'autre ?",
+    "objectif": "Faire constater le décalage quotidien des marées et relier l'organisation d'une activité aux contraintes du site.",
+    "tip": "Comparer deux jours du calendrier plutôt que faire réciter « 50 minutes » : le décalage est voisin de cette valeur, mais pas exactement identique chaque jour.",
+    "explication": "La Lune avance sur son orbite pendant que la Terre tourne : il faut donc un peu plus de temps pour la retrouver dans la même position apparente. Les horaires de marée se décalent ainsi d'un jour à l'autre, d'environ cinquante minutes en moyenne. Le moniteur adapte alors l'horaire au site, à l'activité et au groupe.",
+    "accroche": "Hier nous étions prêts à 14 h ; demain, si la marée nous intéresse, partirons-nous forcément à la même heure ?",
+    "accroches_variantes": [
+      "Hier nous étions prêts à 14 h ; demain, si la marée nous intéresse, partirons-nous forcément à la même heure ?"
+    ],
+    "accroches_formes": null,
+    "erreur_frequente": "Le programme du club n'est pas le seul à fixer l'horaire : sur certains sites, la marée impose une fenêtre utile ou une contrainte à intégrer.",
+    "a_observer": "Les horaires de marée de deux jours successifs et la fenêtre réellement utile pour l'activité.",
+    "a_retenir": "Les marées se décalent chaque jour ; l'organisation s'adapte aux fenêtres du site.",
+    "actions": [
+      {
+        "id": "f68_comparer_deux_jours",
+        "label": "Deux jours, deux fenêtres",
+        "consigne": "Comparez les horaires de deux jours et faites choisir le créneau le plus adapté à l'activité prévue. Demandez ce qui a changé et pourquoi."
+      }
+    ]
+  },
+  {
+    "id": "75",
+    "question": "Quels usages partageons-nous sur ce littoral ?",
+    "objectif": "Faire repérer les usages réellement présents et comprendre les besoins de cohabitation.",
+    "tip": "Regardez autour de vous : pêcheurs, plaisanciers, promeneurs... nous partageons tous cet espace.",
+    "explication": "Un même littoral peut être un lieu de travail, de déplacement, de loisir et de vie sauvage. Pêcheurs, conchyliculteurs, plaisanciers, promeneurs et pratiquants n'utilisent pas toujours le même espace ni le même moment : les règles locales servent à rendre cette cohabitation possible.",
+    "accroche": "Regardez le site : qui l'utilise aujourd'hui, et de quoi chacun a-t-il besoin pour y avoir sa place ?",
+    "accroches_variantes": [
+      "Regardez le site : qui l'utilise aujourd'hui, et de quoi chacun a-t-il besoin pour y avoir sa place ?"
+    ],
+    "accroches_formes": null,
+    "erreur_frequente": "Voir une plage comme un décor de loisirs fait oublier qu'elle est aussi un espace de travail, de déplacement et d'habitat.",
+    "a_observer": "Les traces d'usages présents : bateaux, casiers, bouées, parcs, chemins, zones balisées.",
+    "a_retenir": "Le littoral est partagé : comprendre les autres usages aide à y trouver sa place sans les gêner.",
+    "actions": [
+      {
+        "id": "f75_carte_usages",
+        "label": "Cartographier les usages",
+        "consigne": "Depuis un point haut ou une carte, faites repérer trois usages visibles, leur zone et leur moment. Cherchez ensuite une règle ou un comportement qui évite un conflit."
+      }
+    ]
+  },
+  {
+    "id": "76",
+    "question": "Quelle trace notre groupe laisse-t-il sur ce site ?",
+    "objectif": "Distinguer les impacts immédiatement évitables du groupe des enjeux plus larges, sans culpabiliser.",
+    "tip": "Même un petit déchet peut avoir un impact énorme sur un animal.",
+    "explication": "Toute présence laisse une trace : bruit, passage, déchets, dérangement ou simple occupation d'un espace. L'enjeu n'est pas de prétendre ne rien modifier, mais d'observer les effets possibles de notre activité et de choisir les adaptations qui évitent les impacts inutiles.",
+    "accroche": "Avant de repartir, qu'est-ce que notre groupe aura changé ici — même pour peu de temps ?",
+    "accroches_variantes": [
+      "Avant de repartir, qu'est-ce que notre groupe aura changé ici — même pour peu de temps ?"
+    ],
+    "accroches_formes": null,
+    "erreur_frequente": "Un impact n'est pas seulement un déchet. Il peut aussi venir du bruit, d'un passage répété ou d'une distance trop courte avec la faune.",
+    "a_observer": "Les sentiers, zones piétinées, déchets, traces de passage et réactions de la faune.",
+    "a_retenir": "On ne maîtrise pas tout, mais on peut adapter notre présence aux impacts que l'on voit.",
+    "actions": [
+      {
+        "id": "f76_adapter_sortie",
+        "label": "Une adaptation concrète",
+        "consigne": "Choisissez une trace potentielle du groupe et décidez d'une adaptation immédiate : trajet, distance, volume sonore, regroupement ou gestion des déchets."
+      }
+    ]
+  },
+  {
+    "id": "77",
+    "question": "Comment une activité maritime peut-elle durer sans épuiser le lieu où elle se pratique ?",
+    "objectif": "Comprendre, à partir d'un usage local, que l'activité économique dépend aussi du bon état du milieu.",
+    "tip": "C'est l'idée de développer des activités économiques qui respectent la santé de l'océan.",
+    "explication": "Pêche, tourisme, navigation ou production d'énergie dépendent tous d'une mer praticable et vivante. Parler d'économie bleue revient à chercher comment une activité peut rester utile dans le temps sans détruire les ressources, les habitats ou les paysages dont elle dépend.",
+    "accroche": "Choisissons une activité visible ici : de quoi a-t-elle besoin pour pouvoir encore exister dans vingt ans ?",
+    "accroches_variantes": [
+      "Choisissons une activité visible ici : de quoi a-t-elle besoin pour pouvoir encore exister dans vingt ans ?"
+    ],
+    "accroches_formes": null,
+    "erreur_frequente": "Économie et environnement ne sont pas deux camps séparés : une activité durable a besoin d'un milieu qui continue de fonctionner.",
+    "a_observer": "Une activité locale, ce qu'elle utilise et ce qu'elle doit préserver pour durer.",
+    "a_retenir": "Vivre de la mer suppose de préserver ce qui permet d'en vivre.",
+    "actions": [
+      {
+        "id": "f77_activite_durable",
+        "label": "Une activité, deux besoins",
+        "consigne": "Choisissez une activité locale et faites lister ce qu'elle prélève ou utilise, puis ce qu'elle doit laisser en bon état pour durer."
+      }
+    ]
+  },
+  {
+    "id": "79",
+    "question": "Quel choix concret pouvons-nous faire avant une sortie pour limiter nos déchets ?",
+    "objectif": "Passer d'une injonction générale à un choix de matériel ou d'organisation réellement faisable au club.",
+    "tip": "Choisir des produits de la mer issus de la pêche durable, réduire sa consommation de plastique.",
+    "explication": "Les déchets les plus simples à éviter sont ceux que l'on n'a pas apportés : gourdes, goûters sans suremballage, matériel entretenu et réparable, rangement prévu au retour. Le bon choix dépend de ce que le groupe utilise réellement, pas d'une liste idéale impossible à appliquer.",
+    "accroche": "Regardons ce que nous avons apporté : quel objet pourrait ne pas devenir un déchet aujourd'hui ?",
+    "accroches_variantes": [
+      "Regardons ce que nous avons apporté : quel objet pourrait ne pas devenir un déchet aujourd'hui ?"
+    ],
+    "accroches_formes": null,
+    "erreur_frequente": "Le tri est utile, mais éviter l'objet jetable ou prolonger la vie d'un matériel a souvent plus d'effet.",
+    "a_observer": "Le contenu du sac collectif et les objets qui seront jetés, réutilisés ou réparés.",
+    "a_retenir": "Le geste le plus simple est souvent de ne pas produire le déchet.",
+    "actions": [
+      {
+        "id": "f79_choix_sortie",
+        "label": "Un choix pour aujourd'hui",
+        "consigne": "Faites repérer un objet jetable ou fragile de la sortie et choisissez ensemble une alternative réaliste pour la prochaine séance."
+      }
+    ]
+  },
+  {
+    "id": "80",
+    "question": "Comment transmettre une observation utile à un programme de sciences participatives ?",
+    "objectif": "Comprendre qu'une donnée utile associe observation, contexte et respect du vivant ; elle est ensuite vérifiée.",
+    "tip": "Des applications comme iNaturalist ou OBSenMER permettent de signaler vos observations.",
+    "explication": "Les programmes de sciences participatives permettent de partager des observations avec des naturalistes et des chercheurs. Une donnée utile ne se résume pas à une photo : on note au minimum le lieu, la date et le comportement observé ; l'identification peut être proposée puis validée. On ne s'approche jamais d'une espèce pour obtenir une image.",
+    "accroche": "Notre observation du jour mérite-t-elle d'être signalée ? Qu'aurions-nous besoin de noter pour qu'elle soit utile ?",
+    "accroches_variantes": [
+      "Notre observation du jour mérite-t-elle d'être signalée ? Qu'aurions-nous besoin de noter pour qu'elle soit utile ?"
+    ],
+    "accroches_formes": null,
+    "erreur_frequente": "Une photo géolocalisée n'est pas automatiquement une donnée fiable. Le contexte, la qualité de l'observation et la validation comptent aussi.",
+    "a_observer": "Une espèce ou un phénomène observé sans dérangement : lieu, date, comportement et, si adapté, photo lointaine.",
+    "a_retenir": "Une observation partagée est utile si elle est située, décrite et réalisée sans déranger.",
+    "actions": [
+      {
+        "id": "f80_fiche_observation",
+        "label": "Préparer une observation",
+        "consigne": "Sans approcher l'animal, notez ensemble lieu, date, comportement et conditions. Décidez ensuite si une plateforme adaptée peut recevoir cette observation."
+      }
+    ]
+  },
+  {
+    "id": "81",
+    "question": "Qu'est-ce qui rend une observation utile à partager ?",
+    "objectif": "Compléter la carte de sciences participatives par un discernement : tout n'a pas besoin d'être publié, mais certaines observations méritent d'être documentées.",
+    "tip": "Des milliers d'yeux valent mieux qu'un seul. Vos données sont précieuses pour les scientifiques.",
+    "explication": "Les observateurs de terrain peuvent compléter les suivis scientifiques, surtout lorsqu'ils décrivent des changements, des comportements inhabituels ou la présence d'une espèce. La valeur vient de l'ensemble : observation précise, contexte, répétition et validation. Signaler n'est pas seulement « envoyer une photo ».",
+    "accroche": "Parmi ce que nous avons vu aujourd'hui, qu'est-ce qui mérite d'être noté — et qu'est-ce qui reste une simple impression ?",
+    "accroches_variantes": [
+      "Parmi ce que nous avons vu aujourd'hui, qu'est-ce qui mérite d'être noté — et qu'est-ce qui reste une simple impression ?"
+    ],
+    "accroches_formes": null,
+    "erreur_frequente": "Toutes les observations n'ont pas la même valeur, mais aucune ne devient inutile parce que l'observateur n'est pas expert.",
+    "a_observer": "Ce qui est réellement décrit, comparé ou inhabituel, plutôt que ce qui est seulement aperçu.",
+    "a_retenir": "Une observation utile est précise, située et honnête sur ce que l'on a — ou n'a pas — vu.",
+    "actions": [
+      {
+        "id": "f81_trier_observations",
+        "label": "Décrire avant partager",
+        "consigne": "Choisissez une observation du jour. Séparez les faits vus, les hypothèses et les informations manquantes avant de décider si elle peut être signalée."
+      }
+    ]
+  },
+  {
+    "id": "88",
+    "question": "Comment observer un mammifère marin sans le déranger ?",
+    "objectif": "Apprendre un protocole de guet et de signalement prudent plutôt qu'une mémorisation de chiffres ou d'espèces.",
+    "tip": "Phoques, marsouins et dauphins sont discrets. Une observation lointaine, brève et documentée vaut mieux qu'une tentative d'approche.",
+    "explication": "Les côtes normandes accueillent régulièrement des mammifères marins, notamment des phoques et des marsouins. Les reconnaître avec certitude demande parfois de l'expérience : sur le terrain, l'essentiel est de garder ses distances et de décrire ce qui est vu — silhouette, souffle, direction, comportement — sans chercher à s'approcher.",
+    "accroche": "Au large, quelque chose apparaît puis disparaît. Que peut-on noter sans aller voir de plus près ?",
+    "accroches_variantes": [
+      "Au large, quelque chose apparaît puis disparaît. Que peut-on noter sans aller voir de plus près ?"
+    ],
+    "accroches_formes": null,
+    "erreur_frequente": "Voir une forme à la surface ne suffit pas toujours à nommer l'espèce ; on décrit d'abord ce que l'on observe.",
+    "a_observer": "Depuis le bord : silhouettes, souffles, direction de déplacement, temps d'apparition et comportement.",
+    "a_retenir": "Pour bien observer un mammifère marin, on garde sa distance et on décrit avant d'identifier.",
+    "actions": [
+      {
+        "id": "f88_guet_respectueux",
+        "label": "Dix minutes de guet",
+        "consigne": "Délimitez un secteur depuis le bord et observez sans vous déplacer vers l'animal. Notez les faits vus, même si l'espèce reste inconnue."
+      }
+    ]
+  },
+  {
+    "id": "91",
+    "question": "Pourquoi les horaires de marée se décalent-ils d'un jour à l'autre ?",
+    "objectif": "Expliquer simplement l'origine astronomique du décalage quotidien, sans transformer la carte en exercice de mémorisation.",
+    "tip": "Cette carte complète la préparation pratique : partir du calendrier déjà consulté, puis seulement expliquer le mouvement de la Lune.",
+    "explication": "Pendant une journée, la Terre tourne sur elle-même, mais la Lune avance aussi sur son orbite. Pour retrouver la Lune dans la même direction, la Terre doit tourner un peu plus longtemps qu'un jour solaire : les marées arrivent donc plus tard d'un jour au suivant, avec un décalage voisin de cinquante minutes.",
+    "accroche": "Le tableau montre que la pleine mer glisse chaque jour. Qu'est-ce qui, là-haut, fait bouger notre horaire ?",
+    "accroches_variantes": [
+      "Le tableau montre que la pleine mer glisse chaque jour. Qu'est-ce qui, là-haut, fait bouger notre horaire ?"
+    ],
+    "accroches_formes": null,
+    "erreur_frequente": "Le décalage est régulier dans son principe, mais on lit toujours le calendrier réel plutôt que d'ajouter mécaniquement un nombre de minutes.",
+    "a_observer": "Le décalage des heures de pleine ou basse mer sur plusieurs jours.",
+    "a_retenir": "La Lune avance pendant que la Terre tourne : les marées arrivent progressivement plus tard.",
+    "actions": [
+      {
+        "id": "f91_lire_decalage",
+        "label": "Lire le décalage",
+        "consigne": "Faites relever les horaires sur trois jours. Décrivez d'abord le glissement observé, puis utilisez un globe ou deux personnes pour expliquer le mouvement Terre-Lune."
+      }
+    ]
+  },
+  {
+    "id": "92",
+    "question": "Comment passer de « je vois » à « je comprends mieux » ?",
+    "objectif": "Installer une démarche d'observation simple, réutilisable sur toutes les cartes.",
+    "tip": "Un bon observateur est animé par la curiosité : il se questionne, il se demande « quoi ? », « pourquoi ? », « comment ? ».",
+    "explication": "Une observation commence par des faits : ce que l'on voit, entend ou mesure. Ensuite viennent les questions et les hypothèses ; enfin, on cherche ce qui permet de vérifier. Cette méthode évite de confondre une impression avec une explication.",
+    "accroche": "Choisissons une chose devant nous : qu'est-ce que nous savons vraiment, et qu'est-ce que nous supposons ?",
+    "accroches_variantes": [
+      "Choisissons une chose devant nous : qu'est-ce que nous savons vraiment, et qu'est-ce que nous supposons ?"
+    ],
+    "accroches_formes": null,
+    "erreur_frequente": "Observer ne demande pas d'avoir la réponse tout de suite. Une bonne question vaut mieux qu'une explication inventée.",
+    "a_observer": "Un détail précis du paysage, du vivant ou de l'état de mer.",
+    "a_retenir": "Je vois ; je me demande ; je peux vérifier.",
+    "actions": [
+      {
+        "id": "f92_faits_hypotheses",
+        "label": "Faits, questions, hypothèses",
+        "consigne": "Sur un élément visible, faites trois colonnes à l'oral : ce que nous voyons, ce que nous nous demandons, ce que nous pourrions vérifier."
+      }
+    ]
+  },
+  {
+    "id": "94",
+    "question": "Que décrire avant de chercher le nom d'une espèce ?",
+    "objectif": "Développer une observation descriptive accessible aux débutants avant l'identification.",
+    "tip": "Connaître (ou chercher à connaître) les plantes, animaux, habitats de sa région permet de reconnaître ce qui est «normal», ce qui est «nouveau» ou «significatif». Cela enrichit l’observation",
+    "explication": "Identifier une espèce peut être utile, mais le premier geste consiste à la décrire : forme, taille, couleur, déplacement, lieu et comportement. Cette description aide ensuite à comparer, chercher ou demander un avis ; elle permet aussi d'observer sans être déjà expert.",
+    "accroche": "Avant de chercher son nom, comment décririons-nous cet animal à quelqu'un qui ne le voit pas ?",
+    "accroches_variantes": [
+      "Avant de chercher son nom, comment décririons-nous cet animal à quelqu'un qui ne le voit pas ?"
+    ],
+    "accroches_formes": null,
+    "erreur_frequente": "Ne pas connaître le nom d'une espèce n'empêche pas de faire une observation de qualité.",
+    "a_observer": "Forme, taille, couleur, comportement, habitat et traces.",
+    "a_retenir": "Décrire avant de nommer : c'est ainsi qu'on observe vraiment.",
+    "actions": [
+      {
+        "id": "f94_decrire_avant_nommer",
+        "label": "Portrait sans nom",
+        "consigne": "Choisissez un organisme ou une trace et faites-en le portrait sans prononcer de nom. Cherchez l'identification seulement après."
+      }
+    ]
+  },
+  {
+    "id": "95",
+    "question": "Comment savoir que notre présence dérange un animal ?",
+    "objectif": "Repérer les signaux de dérangement sans provoquer une réaction et adapter immédiatement la distance.",
+    "tip": "On n'approche pas pour trouver la limite : on observe à distance et on recule dès qu'un comportement change.",
+    "explication": "Un animal peut cesser de se nourrir, relever la tête, se figer ou s'éloigner avant de fuir. Ces signaux indiquent que notre présence a déjà un coût pour lui. L'observation respectueuse commence donc loin, dans le calme, et s'interrompt ou recule au moindre signe de gêne.",
+    "accroche": "Sans nous rapprocher, quels signes nous diraient que cet animal a déjà remarqué notre présence ?",
+    "accroches_variantes": [
+      "Sans nous rapprocher, quels signes nous diraient que cet animal a déjà remarqué notre présence ?"
+    ],
+    "accroches_formes": null,
+    "erreur_frequente": "La distance correcte n'est pas celle où l'animal fuit : c'est celle où son comportement ne change pas à cause de nous.",
+    "a_observer": "L'activité normale de l'animal et les changements éventuels de posture, d'alimentation ou de déplacement.",
+    "a_retenir": "Si l'animal change son comportement à cause de nous, nous sommes déjà trop près.",
+    "actions": [
+      {
+        "id": "f95_distance_respect",
+        "label": "Observer puis reculer",
+        "consigne": "Depuis une distance déjà large, repérez l'activité normale de l'animal. Si un signe de vigilance apparaît, reculez ou changez d'itinéraire : ne cherchez jamais à provoquer ce signal."
+      }
+    ]
+  },
+  {
+    "id": "98",
+    "question": "Pourquoi vérifie-t-on la qualité de l'eau avant de se baigner ou de pêcher à pied ?",
+    "objectif": "Relier la santé humaine et l'état du milieu à une décision concrète de pratique.",
+    "tip": "Parce que la pollution de l’air, de l’eau ou des sols peut entraîner des maladies respiratoires, des cancers, des infections hydriques, etc. On peut voir l’environnement comme notre « maison commune » : si elle est en mauvais état, notre santé en pâtit.",
+    "explication": "La qualité de l'eau peut varier après de fortes pluies, des pollutions ou selon le site. Les informations locales sur la baignade et la pêche à pied protègent les personnes comme le milieu : elles aident à savoir quand une activité est adaptée, plutôt que de supposer que l'eau est toujours sans risque.",
+    "accroche": "Avant une baignade ou une pêche à pied, où chercherions-nous une information fiable sur l'eau d'aujourd'hui ?",
+    "accroches_variantes": [
+      "Avant une baignade ou une pêche à pied, où chercherions-nous une information fiable sur l'eau d'aujourd'hui ?"
+    ],
+    "accroches_formes": null,
+    "erreur_frequente": "Une eau claire n'est pas forcément une eau dont la qualité est connue. On consulte les informations locales.",
+    "a_observer": "Panneaux, informations officielles de baignade ou de pêche à pied, et conditions récentes du site.",
+    "a_retenir": "La qualité de l'eau se vérifie : c'est une information de pratique, pas seulement un sujet de santé publique.",
+    "actions": [
+      {
+        "id": "f98_verifier_eau",
+        "label": "Trouver l'information fiable",
+        "consigne": "Identifiez la source locale qui informe sur la baignade ou la pêche à pied. Faites distinguer un panneau officiel d'une simple impression visuelle."
+      }
+    ]
+  },
+  {
+    "id": "103",
+    "question": "Pourquoi certains oiseaux ont-ils besoin de cette vasière ou de ce banc de sable ?",
+    "objectif": "Relier le comportement visible des oiseaux migrateurs au besoin de repos et d'alimentation, puis à la distance du groupe.",
+    "tip": "Parce que les zones d’escale ou d’hivernage doivent être protégées (zones humides, littoraux), car la perturbation ou destruction de ces milieux peut compromettre le succès migratoire des espèces",
+    "explication": "Pendant une migration ou un hivernage, les oiseaux utilisent certains sites pour se nourrir et reconstituer leurs réserves. Une vasière, un pré salé ou un banc de sable ne sont pas interchangeables : la nourriture, la tranquillité et la marée y comptent. Les déranger les oblige à interrompre ces activités essentielles.",
+    "accroche": "Cet oiseau choisit de rester ici alors qu'il pourrait voler plus loin : qu'est-ce que ce lieu lui apporte ?",
+    "accroches_variantes": [
+      "Cet oiseau choisit de rester ici alors qu'il pourrait voler plus loin : qu'est-ce que ce lieu lui apporte ?"
+    ],
+    "accroches_formes": null,
+    "erreur_frequente": "Un oiseau peut parfois changer de site, mais on ne suppose pas qu'il trouvera aussitôt la même nourriture et la même tranquillité ailleurs.",
+    "a_observer": "Oiseaux qui se nourrissent, se reposent ou se regroupent, et la distance à laquelle ils restent calmes.",
+    "a_retenir": "Pour un oiseau migrateur, une halte n'est pas un décor : c'est une étape pour refaire ses réserves.",
+    "actions": [
+      {
+        "id": "f103_choisir_distance",
+        "label": "Choisir notre trajectoire",
+        "consigne": "Observez un groupe d'oiseaux depuis loin et choisissez un trajet qui ne coupe ni sa zone de repos ni sa zone d'alimentation. Justifiez la distance retenue."
+      }
+    ]
+  },
+  {
+    "id": "106",
+    "question": "Que vérifier sur la marée et le courant avant une activité nautique ?",
+    "objectif": "Construire une décision de départ à partir d'informations croisées, du site et du niveau réel du groupe.",
+    "tip": "Une check-list de départ ne remplace pas le jugement du moniteur : elle rend visibles les informations à croiser.",
+    "explication": "Avant de partir, on repère la prochaine marée et les hauteurs prévues, les informations locales de courant, le vent et l'état de mer, puis les zones de repli du site. Le coefficient complète cette lecture, mais ne suffit pas à dire si les conditions conviennent à un groupe donné.",
+    "accroche": "Avant de mettre à l'eau, quelle information nous ferait renoncer — et laquelle nous donnerait seulement un indice ?",
+    "accroches_variantes": [
+      "Avant de mettre à l'eau, quelle information nous ferait renoncer — et laquelle nous donnerait seulement un indice ?"
+    ],
+    "accroches_formes": null,
+    "erreur_frequente": "Connaître l'heure ou le coefficient ne suffit pas. Une décision se prend avec les conditions du site et les capacités du groupe.",
+    "a_observer": "Prévision de marée, informations locales de courant, vent, état de mer et solutions de repli.",
+    "a_retenir": "Avant de partir, on croise marée, courant, météo, site et groupe.",
+    "actions": [
+      {
+        "id": "f106_decision_depart",
+        "label": "La décision de départ",
+        "consigne": "Répartissez les informations entre les stagiaires : marée, courant local, météo/mer, site. Chacun dit ce que son information change dans la décision."
+      }
+    ]
+  },
+  {
+    "id": "109",
+    "question": "Pourquoi ne prélève-t-on pas une ressource plus vite qu'elle ne se renouvelle ?",
+    "objectif": "Aborder le renouvellement à partir d'une ressource locale réellement observable.",
+    "tip": "La protection de l’environnement implique de gérer durablement les ressources naturelles (eau, forêts, sols, biodiversité) afin qu’elles puissent satisfaire les besoins actuels **et futurs** sans s’épuiser",
+    "explication": "Certaines ressources se renouvellent — poissons, coquillages, végétation — mais pas au même rythme et pas dans toutes les conditions. Prélever durablement consiste à respecter les tailles, saisons, quantités et zones prévues pour laisser aux populations le temps de se reproduire et au milieu le temps de se réparer.",
+    "accroche": "Si chacun prend « juste un peu », comment savoir si le site a le temps de se refaire ?",
+    "accroches_variantes": [
+      "Si chacun prend « juste un peu », comment savoir si le site a le temps de se refaire ?"
+    ],
+    "accroches_formes": null,
+    "erreur_frequente": "Renouvelable ne veut pas dire inépuisable : tout dépend du rythme de prélèvement et de la capacité du milieu à se reconstituer.",
+    "a_observer": "Une ressource locale et les règles qui encadrent sa collecte : taille, saison, quantité, zone.",
+    "a_retenir": "Une ressource peut se renouveler seulement si on lui laisse le temps et les conditions de le faire.",
+    "actions": [
+      {
+        "id": "f109_regle_prelevement",
+        "label": "Lire une règle de prélèvement",
+        "consigne": "Choisissez une ressource du site et recherchez la règle qui protège son renouvellement. Faites expliquer ce que cette règle laisse au vivant."
+      }
+    ]
+  },
+  {
+    "id": "112",
+    "question": "Que signifie qu'un espace naturel est protégé ?",
+    "objectif": "Comprendre une protection à partir d'une règle locale, d'un habitat ou d'une espèce, sans cours institutionnel ni chiffres instables.",
+    "tip": "Partir d'un panneau, d'un balisage ou d'une carte du site. Le nom Natura 2000 vient ensuite si cela éclaire réellement la situation.",
+    "explication": "Protéger un espace ne signifie pas toujours l'interdire au public. Cela peut organiser les usages pour préserver un habitat, une espèce ou une période sensible : rester sur un chemin, contourner une zone de repos, limiter une pratique à certaines dates. Natura 2000 est l'un des cadres qui peuvent aider à cette cohabitation.",
+    "accroche": "Cette règle sur le site protège quoi, et qu'est-ce qu'elle nous demande de changer aujourd'hui ?",
+    "accroches_variantes": [
+      "Cette règle sur le site protège quoi, et qu'est-ce qu'elle nous demande de changer aujourd'hui ?"
+    ],
+    "accroches_formes": null,
+    "erreur_frequente": "« Protégé » ne veut pas forcément dire « fermé » ; cela veut dire que les usages doivent tenir compte de ce qui vit là.",
+    "a_observer": "Panneaux, balisages, sentiers et zones à contourner, puis l'habitat ou l'espèce concernés.",
+    "a_retenir": "Une protection devient concrète quand on comprend ce qu'elle préserve et comment on adapte sa pratique.",
+    "actions": [
+      {
+        "id": "f112_lire_regle_locale",
+        "label": "Lire une règle du site",
+        "consigne": "Choisissez un panneau ou un balisage. Identifiez ce qu'il demande, ce qu'il protège et l'adaptation précise que le groupe doit faire."
+      }
+    ]
+  },
+  {
+    "id": "116",
+    "question": "Les oiseaux arrivent-ils toujours à la même période ?",
+    "objectif": "Comprendre que les dates de présence des oiseaux sont suivies dans le temps et peuvent varier selon les espèces.",
+    "tip": "Éviter les chiffres généraux non sourcés : comparer une observation locale à un calendrier ou à une source ornithologique identifiée.",
+    "explication": "Les dates d'arrivée, de départ, de floraison ou de reproduction forment un calendrier du vivant, appelé phénologie. Les suivis montrent que ce calendrier évolue selon les espèces et les années : le climat, la nourriture et les conditions de migration ne changent pas tous au même rythme.",
+    "accroche": "Si nous voyons cet oiseau aujourd'hui, est-ce « tôt », « tard » ou simplement normal pour cette espèce et ce lieu ?",
+    "accroches_variantes": [
+      "Si nous voyons cet oiseau aujourd'hui, est-ce « tôt », « tard » ou simplement normal pour cette espèce et ce lieu ?"
+    ],
+    "accroches_formes": null,
+    "erreur_frequente": "Une observation isolée ne prouve pas un changement climatique : elle devient parlante quand on la compare à des suivis répétés.",
+    "a_observer": "Espèce observée, date, lieu et comportement, puis calendrier local disponible.",
+    "a_retenir": "Le calendrier du vivant varie ; ce sont les suivis répétés qui permettent de comprendre comment il évolue.",
+    "actions": [
+      {
+        "id": "f116_comparer_calendrier",
+        "label": "Comparer à un calendrier",
+        "consigne": "Notez l'espèce, la date et le lieu. Comparez ensuite cette observation à une source locale et dites clairement ce que l'on peut — ou non — en conclure."
+      }
+    ]
+  },
+  {
+    "id": "125",
+    "question": "Qu'est-ce qui nous aide vraiment à changer une habitude ?",
+    "objectif": "Faire réfléchir à un changement précis et possible plutôt qu'à une injonction générale à la consommation responsable.",
+    "tip": "Une personne sensibilisée fait des choix plus responsables (produits durables, moins de déchets, consommation raisonnée) ce qui réduit l’impact environnemental",
+    "explication": "Comprendre un problème peut donner envie d'agir, mais une habitude change surtout lorsqu'on sait quoi faire, avec qui et dans quelles conditions. Une décision concrète — par exemple organiser les gourdes du groupe ou réparer un équipement — peut ensuite devenir une règle collective.",
+    "accroche": "Nous savons déjà beaucoup de choses sur les déchets : quelle condition nous manque pour faire autrement dès la prochaine sortie ?",
+    "accroches_variantes": [
+      "Nous savons déjà beaucoup de choses sur les déchets : quelle condition nous manque pour faire autrement dès la prochaine sortie ?"
+    ],
+    "accroches_formes": null,
+    "erreur_frequente": "Informer ne suffit pas toujours ; il faut aussi rendre le changement simple, visible et possible.",
+    "a_observer": "Une habitude réelle du groupe et ce qui la rend facile ou difficile à modifier.",
+    "a_retenir": "Une intention devient une habitude quand elle se transforme en choix concret et partagé.",
+    "actions": [
+      {
+        "id": "f125_changer_habitude",
+        "label": "Rendre le changement possible",
+        "consigne": "Choisissez une habitude de sortie et identifiez l'obstacle concret. Décidez d'une règle simple qui permet de la changer dès la prochaine séance."
+      }
+    ]
+  },
+  {
+    "id": "126",
+    "question": "Quel geste pouvons-nous réellement changer pendant cette sortie ?",
+    "objectif": "Transformer une prise de conscience en adaptation immédiate et vérifiable de la séance.",
+    "tip": "La sensibilisation concerne la prise de conscience et l’information ; l’action est l’application concrète (changer des habitudes, participer à des initiatives).",
+    "explication": "Comprendre un enjeu aide à décider ; agir consiste ensuite à modifier quelque chose de concret. Sur le terrain, cela peut être changer de trajet, garder une distance, réduire le jetable, choisir une zone d'attente ou signaler une observation. Le geste doit être adapté au lieu et vérifiable par le groupe.",
+    "accroche": "Parmi tout ce que nous venons de comprendre, qu'est-ce que nous pouvons modifier avant de repartir ?",
+    "accroches_variantes": [
+      "Parmi tout ce que nous venons de comprendre, qu'est-ce que nous pouvons modifier avant de repartir ?"
+    ],
+    "accroches_formes": null,
+    "erreur_frequente": "Une promesse vague ne devient pas une action. Il faut un geste précis, un moment et une manière de vérifier qu'il a été fait.",
+    "a_observer": "Le moment de la sortie où le groupe peut concrètement modifier sa pratique.",
+    "a_retenir": "Agir, c'est choisir une adaptation précise et la faire maintenant.",
+    "actions": [
+      {
+        "id": "f126_agir_maintenant",
+        "label": "Une adaptation maintenant",
+        "consigne": "Le groupe choisit une adaptation visible pour la fin de séance. Avant de repartir, vérifiez ensemble qu'elle a bien été appliquée."
+      }
+    ]
+  },
+  {
+    "id": "127",
+    "question": "Qu'est-ce qui peut encore améliorer ce site ?",
+    "objectif": "Aborder l'action environnementale par des changements locaux observables, sans promesse simpliste ni discours de découragement.",
+    "tip": "Parce que même si certains effets du changement sont déjà irréversibles, la réduction des émissions, l’adaptation et les transitions vers des modes de vie plus durables peuvent limiter les risques futurs et améliorer la résilience des sociétés",
+    "explication": "Les problèmes environnementaux ont des causes et des échelles différentes. Une sortie ne résout pas tout, mais elle peut rendre visibles des améliorations possibles : une zone de repos respectée, un déchet évité, une pratique adaptée, une information transmise ou une règle collective mieux appliquée. Les gestes individuels comptent lorsqu'ils s'inscrivent aussi dans des choix collectifs.",
+    "accroche": "Regardons ce lieu tel qu'il est : quelle amélioration précise dépend de nous, et laquelle dépend d'une décision collective ?",
+    "accroches_variantes": [
+      "Regardons ce lieu tel qu'il est : quelle amélioration précise dépend de nous, et laquelle dépend d'une décision collective ?"
+    ],
+    "accroches_formes": null,
+    "erreur_frequente": "Ni « tout est perdu », ni « un petit geste suffit à tout régler » : les actions n'ont pas la même échelle, mais elles peuvent se compléter.",
+    "a_observer": "Un problème ou une amélioration visible du site, et les personnes capables d'agir à différentes échelles.",
+    "a_retenir": "Agir consiste à relier un geste local à des règles et décisions collectives plus larges.",
+    "actions": [
+      {
+        "id": "f127_echelles_action",
+        "label": "Ce qui dépend de qui",
+        "consigne": "Choisissez un enjeu visible et classez les réponses : ce que le groupe peut faire maintenant, ce que le club peut organiser, ce qui relève d'une décision publique."
+      }
+    ]
+  },
+  {
+    "id": "128",
+    "question": "Quelles informations noter lorsqu'on observe un mammifère marin ?",
+    "objectif": "Comprendre la valeur d'un suivi prudent et apprendre à documenter une observation sans surinterpréter l'état de l'écosystème.",
+    "tip": "Parce que ces espèces sont souvent situées au sommet de la chaîne trophique, sont sensibles aux modifications de leur milieu (pollution, bruit sous-marin, changement climatique) et leur état permet d’évaluer l’état global de l’écosystème marin. Leur suivi est donc une forme de “sentinelle” pour la biodiversité marine.",
+    "explication": "Le suivi des mammifères marins aide à connaître leur présence, leur répartition, leurs comportements et certains problèmes rencontrés. Ces animaux peuvent signaler des changements dans le milieu, mais ils ne résument pas à eux seuls « la santé de toute la mer ». Une observation utile est d'abord précise, distante et transmise au bon interlocuteur.",
+    "accroche": "Si nous voyons un phoque ou un marsouin, quelles informations seraient utiles à noter sans le déranger ?",
+    "accroches_variantes": [
+      "Si nous voyons un phoque ou un marsouin, quelles informations seraient utiles à noter sans le déranger ?"
+    ],
+    "accroches_formes": null,
+    "erreur_frequente": "Un mammifère marin est un indicateur parmi d'autres ; une seule observation ne permet pas de conclure sur l'état global de la mer.",
+    "a_observer": "Heure, lieu, direction, comportement, conditions et photo lointaine seulement si elle est possible sans approche.",
+    "a_retenir": "Observer un mammifère marin, c'est d'abord garder ses distances et décrire des faits précis.",
+    "actions": [
+      {
+        "id": "f128_noter_sans_deranger",
+        "label": "La fiche de guet",
+        "consigne": "Préparez une courte fiche : heure, lieu, direction, comportement, conditions. Si un animal est vu, notez les faits sans chercher à le suivre ou l'approcher."
+      }
+    ]
+  }
+]

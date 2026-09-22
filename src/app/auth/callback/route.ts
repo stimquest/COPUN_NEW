@@ -1,17 +1,19 @@
+import type { Database } from '@/types/database';
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import { safeRedirectPath } from '@/lib/safe-redirect';
 
 export async function GET(request: Request) {
     const { searchParams, origin } = new URL(request.url);
     const code = searchParams.get('code');
     const tokenHash = searchParams.get('token_hash');
     const type = searchParams.get('type');
-    const next = searchParams.get('next') ?? '/stages';
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? origin;
+    const next = safeRedirectPath(searchParams.get('next'));
+    const siteUrl = new URL(process.env.NEXT_PUBLIC_SITE_URL ?? origin).origin;
 
     const cookieStore = await cookies();
-    const supabase = createServerClient(
+    const supabase = createServerClient<Database>(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
         {

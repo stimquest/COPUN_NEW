@@ -35,7 +35,7 @@ export function PointsGainedBadge({ points }: Props) {
         <AnimatePresence>
             {points !== null && points > 0 && (
                 <motion.span
-                    key={points + Math.random()}
+                    key={points}
                     initial={{ opacity: 0, y: 6, scale: 0.3, rotate: -8 }}
                     animate={{ opacity: 1, y: -6, scale: 1, rotate: 0 }}
                     exit={{ opacity: 0, y: -22, scale: 0.85 }}

@@ -4,8 +4,6 @@ import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import clsx from 'clsx';
 import { saveStageGameResult, saveQuizAttempt } from '@/actions/game-actions';
-import { awardStageQuizPoints } from '@/actions/quiz-actions';
-import { computeQuizPoints } from '@/lib/quiz-points';
 
 type GameItemData = Record<string, unknown>;
 
@@ -94,11 +92,10 @@ export default function PlayClient({ game }: { game: Game }) {
             const finalScore = score;
             setIsFinished(true);
             if (game.stage_id) {
+                // Le score reste enregistré (bilan, carnet, stats club) mais ne donne plus
+                // de points : le quiz est un outil d'animation, pas une épreuve notée.
+                // Seules les actions menées avec le groupe mesurent la progression.
                 await saveStageGameResult(game.stage_id, game.id, finalScore, totalCards, answers);
-                // Si c'est un quiz de bilan, on attribue les points moniteur
-                if (game.game_data.leGrandQuizz) {
-                    await awardStageQuizPoints(game.stage_id, game.id, finalScore, totalCards);
-                }
             }
             await saveQuizAttempt(game.theme || 'Mixte', finalScore, totalCards);
         }
@@ -107,7 +104,6 @@ export default function PlayClient({ game }: { game: Game }) {
     if (isFinished) {
         const finalScore = score;
         const percentage = Math.round((finalScore / totalCards) * 100);
-        const pointsAwarded = computeQuizPoints(finalScore, totalCards);
         const isStageQuiz = !!game.game_data.leGrandQuizz && !!game.stage_id;
         const isExcellent = percentage >= 85;
         const isGood = percentage >= 70;
@@ -153,13 +149,6 @@ export default function PlayClient({ game }: { game: Game }) {
                                 ? 'Tes stagiaires ont bien assimilé les notions essentielles. Continuez ainsi, vous êtes sur la bonne vague !'
                                 : 'Certaines notions méritent d\'être revues ensemble. Chaque semaine est un pas de plus vers la conscience du littoral.'}
                     </p>
-
-                    {/* Points de la semaine */}
-                    <div className="bg-indigo-600/20 border border-indigo-500/30 rounded-2xl px-8 py-5 flex flex-col items-center gap-1 mb-8 w-full max-w-xs">
-                        <p className="text-[10px] font-black text-indigo-300 uppercase tracking-widest">Points gagnés pour cette semaine</p>
-                        <span className="text-5xl font-black text-white">+{pointsAwarded}</span>
-                        <p className="text-xs text-indigo-400 font-medium">ajoutés à votre banque de points moniteur</p>
-                    </div>
 
                     <button
                         onClick={() => router.push(`/stages/${game.stage_id}/bilan`)}
@@ -362,25 +351,27 @@ function QuizzCard({ data, onAnswer, showFeedback }: {
     // certaines données historiques plaçaient systématiquement la bonne réponse en 2e
     // position. Mélange stable pour la durée de vie de la question (recalculé seulement
     // si la question elle-même change), pour ne pas rebattre les cartes à chaque re-render.
-    const { answerOptions, correctIndex } = useMemo(() => {
+    const { answerOptions, correctIndex, order } = useMemo(() => {
         const rawAnswers = data.answers || data.options || [];
         const rawCorrectIndex = data.correctAnswerIndex ?? data.correctAnswer ?? 0;
         const order = rawAnswers.map((_, i) => i);
+        let seed = Array.from(data.question).reduce((n, c) => Math.imul(n, 31) + c.charCodeAt(0) | 0, 7) >>> 0;
         for (let i = order.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
+            seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+            const j = seed % (i + 1);
             [order[i], order[j]] = [order[j], order[i]];
         }
         return {
+            order,
             answerOptions: order.map(i => rawAnswers[i]),
             correctIndex: order.indexOf(rawCorrectIndex),
         };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [data.question]);
+    }, [data]);
 
     const handleSelect = (index: number) => {
         if (showFeedback) return;
         setSelectedAnswer(index);
-        onAnswer(index, index === correctIndex);
+        onAnswer(order[index], index === correctIndex);
     };
 
     return (

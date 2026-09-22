@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from '@/lib/supabase/server';
+import { contentModel } from '@/lib/data-models';
 import { revalidatePath } from 'next/cache';
 import { ContentTodo, PedagogicalContent } from '@/types';
 import { requireAuth } from '@/lib/auth';
@@ -134,10 +134,9 @@ export async function getMyCustomContent(): Promise<(PedagogicalContent & { todo
     if (!data) return [];
 
     return data.map(row => ({
-        ...row,
+        ...contentModel(row),
         todos: (row.content_todos ?? []).sort(
             (a: ContentTodo, b: ContentTodo) => a.todo_order - b.todo_order
         ),
     }));
 }
-

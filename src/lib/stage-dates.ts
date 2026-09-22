@@ -71,12 +71,12 @@ export function parseStageDateRange(dates: string, referenceDate = new Date()): 
     if (parts.length !== 2) return null;
 
     const parseOne = (part: string, year: number, hours: number, minutes: number, seconds: number): Date | null => {
-        const match = part.match(/^(\d{1,2})\s+([a-zûé.]+)$/i);
+        const match = part.match(/^(\d{1,2})\s+([a-zûé.]+)(?:\s+(\d{4}))?$/i);
         if (!match) return null;
         const day = Number(match[1]);
         const month = MONTH_ABBR[match[2].toLowerCase()];
         if (month === undefined) return null;
-        return instantAParis(year, month, day, hours, minutes, seconds);
+        return instantAParis(match[3] ? Number(match[3]) : year, month, day, hours, minutes, seconds);
     };
 
     const refYear = ymdAParis(referenceDate).year;
@@ -90,7 +90,10 @@ export function parseStageDateRange(dates: string, referenceDate = new Date()): 
     // Semaine à cheval sur le nouvel an (ex: 29 déc. - 2 janv.)
     if (end < start) end = parseOne(parts[1], refYear + 1, 23, 59, 59);
     if (!end) return null;
-
+    if (!/\d{4}/.test(dates) && end.getFullYear() > start.getFullYear() && start.getTime() - referenceDate.getTime() > 183 * 86400000) {
+        start = parseOne(parts[0], refYear - 1, 0, 0, 0)!;
+        end = parseOne(parts[1], refYear, 23, 59, 59)!;
+    }
     return { start, end };
 }
 
@@ -110,4 +113,14 @@ export function pickCurrentStage<T extends { dates: string }>(stages: T[], refer
     }
 
     return null;
+}
+
+export function dateISOAParis(date: Date): string {
+    const { year, month, day } = ymdAParis(date);
+    return [year, String(month + 1).padStart(2, '0'), String(day).padStart(2, '0')].join('-');
+}
+
+export function civilDay(date: Date): number {
+    const { year, month, day } = ymdAParis(date);
+    return Date.UTC(year, month, day) / 86400000;
 }

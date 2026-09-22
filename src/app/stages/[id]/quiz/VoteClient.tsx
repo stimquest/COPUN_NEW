@@ -1,0 +1,174 @@
+'use client';
+
+import { useState, useTransition } from 'react';
+import Link from 'next/link';
+import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
+import type { AffirmationVote } from '@/data/vote-fin-de-stage';
+import { enregistrerVote, type ResultatAffirmation } from '@/actions/vote-actions';
+
+/**
+ * Le vote de fin de stage, côté moniteur.
+ *
+ * L'écran ne sert qu'à LUI : il lit l'affirmation à voix haute, le groupe lève ses panneaux,
+ * il compte et saisit. Les enfants ne regardent jamais ce téléphone — c'est toute la raison
+ * du format vrai/faux, qui ne demande rien à lire.
+ *
+ * D'où la typographie : l'affirmation est énorme parce qu'elle se lit d'un coup d'œil en
+ * parlant à un groupe, pas parce qu'elle doit impressionner.
+ *
+ * Trois réponses et non deux : sans « partagé », un groupe hésitant serait rangé dans
+ * « oui » et une action jamais menée ressortirait validée — l'erreur la plus gênante pour
+ * un chiffre censé servir de justificatif.
+ *
+ * Un seul tap par affirmation, et aucun nombre à saisir : le moniteur regarde les panneaux,
+ * juge ce que le groupe a répondu, et touche. Compter les mains une par une lui coûterait
+ * quarante clics sur un moment censé durer trente secondes — il ne le ferait pas deux fois.
+ * La caméra, plus tard, produira le détail chiffré ; ce que le moniteur donne ici, c'est le
+ * verdict du groupe.
+ */
+/** Ce que le groupe a répondu, tel que le moniteur l'a jugé en regardant les panneaux. */
+type Reponse = 'oui' | 'non' | 'partage';
+
+export default function VoteClient({ stageId, affirmations, dejaFait }: {
+    stageId: string;
+    affirmations: AffirmationVote[];
+    dejaFait: boolean;
+}) {
+    const [index, setIndex] = useState(0);
+    const [reponses, setReponses] = useState<Record<string, Reponse>>({});
+    const [termine, setTermine] = useState(false);
+    const [error, setError] = useState('');
+    const [isPending, startTransition] = useTransition();
+
+    const courante = affirmations[index];
+    const reponse = reponses[courante?.id];
+    const dernier = index === affirmations.length - 1;
+    const repondues = affirmations.filter(a => reponses[a.id]).length;
+
+    /** Répondre fait avancer : sur cinq affirmations, un bouton « suivant » à chaque fois
+     *  doublerait les gestes sans rien apporter. La dernière reste affichée pour laisser
+     *  conclure, et on peut toujours revenir corriger. */
+    const repondre = (valeur: Reponse) => {
+        setReponses(prev => ({ ...prev, [courante.id]: valeur }));
+        if (!dernier) window.setTimeout(() => setIndex(i => i + 1), 180);
+    };
+
+    const enregistrer = () => {
+        setError('');
+        startTransition(async () => {
+            // Le moniteur donne un verdict, pas un comptage : on l'écrit dans les colonnes
+            // de dépouillement sous la forme 1/0/0. Le jour où la caméra comptera vraiment,
+            // elle écrira des nombres réels dans ces mêmes colonnes, et la règle de majorité
+            // qui les lit n'aura pas à changer.
+            const resultats: ResultatAffirmation[] = affirmations
+                .filter(a => reponses[a.id])
+                .map(a => {
+                    const r = reponses[a.id];
+                    return {
+                        affirmationId: a.id,
+                        contentId: a.contentId,
+                        actionId: a.type === 'action' ? a.actionId : null,
+                        attendu: a.type === 'savoir' ? a.reponse : null,
+                        votesVrai: r === 'oui' ? 1 : 0,
+                        votesFaux: r === 'non' ? 1 : 0,
+                        votesIncertain: r === 'partage' ? 1 : 0,
+                        participants: null,
+                    };
+                });
+            if (!resultats.length) { setError('Répondez à au moins une affirmation.'); return; }
+            const res = await enregistrerVote(stageId, resultats);
+            if (!res.success) { setError(res.error ?? 'Enregistrement impossible.'); return; }
+            setTermine(true);
+        });
+    };
+
+    if (!affirmations.length) {
+        return <main className="co-vote">
+            <p className="co-vote-kicker">Vote de fin de stage</p>
+            <h1>Pas encore disponible</h1>
+            <p className="co-vote-lead">Les cartes de cette semaine n’ont pas encore d’affirmations à faire voter. Elles arrivent au fil des mises à jour du catalogue.</p>
+            <Link href="/stages/semaines" className="co-vote-secondary">Retour à ma semaine</Link>
+        </main>;
+    }
+
+    if (termine) {
+        // Le vote rend deux résultats distincts, et l'écran les sépare : ce que le groupe a
+        // retenu regarde le moniteur, ce qu'il a confirmé alimente sa démarche et le club.
+        // Les fondre en un seul chiffre reviendrait à noter le moniteur sur le travail de
+        // ses stagiaires, ou à valider des actions avec un score de connaissances.
+        const savoirs = affirmations.filter(a => a.type === 'savoir');
+        const justes = savoirs.filter(a => a.type === 'savoir' && reponses[a.id] === (a.reponse ? 'oui' : 'non')).length;
+        const actions = affirmations.filter(a => a.type === 'action');
+        const confirmees = actions.filter(a => reponses[a.id] === 'oui').length;
+        return <main className="co-vote">
+            <p className="co-vote-kicker">Vote terminé</p>
+            <h1>Ce que votre groupe a répondu</h1>
+
+            {!!savoirs.length && <section className="co-vote-result">
+                <p className="co-vote-result-label">Ce qu’ils ont retenu</p>
+                <strong>{justes} / {savoirs.length}</strong>
+                <p>{justes === savoirs.length
+                    ? 'Toutes les réponses étaient justes.'
+                    : justes === 0
+                        ? 'Ces notions méritent d’être reprises avec eux.'
+                        : 'Le reste mérite d’être repris avec eux.'}</p>
+            </section>}
+
+            {!!actions.length && <section className="co-vote-result">
+                <p className="co-vote-result-label">Ce qu’ils ont confirmé avoir fait</p>
+                <strong>{confirmees} / {actions.length}</strong>
+                <p>{confirmees > 0
+                    ? `${confirmees === 1 ? 'Cette action compte' : 'Ces actions comptent'} pour votre démarche et pour celle du club.`
+                    : 'Aucune action n’a été confirmée par le groupe cette fois.'}</p>
+            </section>}
+
+            <Link href="/stages/semaines" className="co-vote-primary">Retour à ma semaine <ArrowRight size={18}/></Link>
+        </main>;
+    }
+
+    return <main className="co-vote">
+        <header className="co-vote-head">
+            <Link href="/stages/semaines" aria-label="Quitter le vote" className="co-vote-back"><ArrowLeft size={19}/></Link>
+            <span className="co-vote-count">{index + 1} / {affirmations.length}</span>
+        </header>
+        <div className="co-vote-progress" aria-hidden="true"><span style={{ width: `${((index + 1) / affirmations.length) * 100}%` }}/></div>
+
+        {dejaFait && index === 0 && <p className="co-vote-note">Un vote a déjà été enregistré pour cette semaine. Le refaire remplacera les réponses précédentes.</p>}
+
+        {/* L'affirmation est lue à voix haute : rien d'autre ne doit occuper l'écran. */}
+        <p className="co-vote-instruction">Lisez à voix haute</p>
+        <blockquote className="co-vote-affirmation">{courante.texte}</blockquote>
+
+        {/* VRAI / FAUX quelle que soit la nature de l'affirmation — jamais « oui, on l'a fait ».
+            Tout le dispositif tient à ce que rien ne distingue une confirmation d'action d'une
+            question de savoir : un libellé différent les désignerait, et le moniteur saurait
+            lesquelles comptent pour ses chiffres.
+
+            « Partagé » existe pour que l'hésitation d'un groupe ne se déverse pas dans VRAI :
+            c'est elle qui empêche de valider une action qui n'a pas eu lieu. */}
+        <div className="co-vote-tally">
+            <button type="button" className="co-vote-choice co-vote-true" aria-pressed={reponse === 'oui'} onClick={() => repondre('oui')}>
+                <span className="co-vote-label">Vrai</span>
+                {reponse === 'oui' && <Check size={19} strokeWidth={3} aria-hidden/>}
+            </button>
+            <button type="button" className="co-vote-choice co-vote-false" aria-pressed={reponse === 'non'} onClick={() => repondre('non')}>
+                <span className="co-vote-label">Faux</span>
+                {reponse === 'non' && <Check size={19} strokeWidth={3} aria-hidden/>}
+            </button>
+            <button type="button" className="co-vote-choice co-vote-unsure" aria-pressed={reponse === 'partage'} onClick={() => repondre('partage')}>
+                <span className="co-vote-label">Le groupe était partagé</span>
+                {reponse === 'partage' && <Check size={19} strokeWidth={3} aria-hidden/>}
+            </button>
+        </div>
+
+        {error && <p role="alert" className="co-vote-error">{error}</p>}
+
+        <div className="co-vote-actions">
+            {index > 0 && <button type="button" className="co-vote-secondary" onClick={() => setIndex(i => i - 1)}>Revenir</button>}
+            {dernier && <button type="button" className="co-vote-primary" disabled={isPending || !repondues} onClick={enregistrer}>{isPending ? 'Enregistrement…' : 'Terminer le vote'} <ArrowRight size={18}/></button>}
+            {!dernier && reponse && <button type="button" className="co-vote-secondary" onClick={() => setIndex(i => i + 1)}>Passer à la suivante</button>}
+        </div>
+
+        {repondues > 0 && <p className="co-vote-hint"><Check size={14} aria-hidden/> {repondues} réponse{repondues > 1 ? 's' : ''} sur {affirmations.length}</p>}
+    </main>;
+}

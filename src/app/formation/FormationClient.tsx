@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useMemo, useState } from 'react';
 import { AnimatePresence, motion, useMotionValue, useTransform, type PanInfo } from 'framer-motion';
 import clsx from 'clsx';
@@ -14,6 +15,7 @@ import {
 import { marquerLeconTerminee } from '@/actions/formation-actions';
 import { Motif, type NomMotif } from './Motifs';
 import { TEINTE_THEME } from '@/data/formation-teintes';
+import { CoastalMark, PageHeading } from '@/components/design/Coastal';
 
 /**
  * Parcours « Savoir en parler » — liste des modules, puis lecteur en cartes.
@@ -103,8 +105,8 @@ function Bandeau({ illustration, motif }: {
         // `mb` aligné sur celui de `Nature`, pour que le titre tombe toujours pareil.
         <div className="-mx-6 -mt-7 mb-3.5 h-[22vh] max-h-40 min-h-24 shrink-0 overflow-hidden">
             {photo ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
+                <Image
+                    width={1328} height={800} sizes="(max-width: 640px) 100vw, 600px"
                     src={`/formation/${illustration.fichier}`}
                     alt={illustration.alt}
                     onError={() => setPhotoAbsente(true)}
@@ -731,68 +733,21 @@ function CarteTheme({ section, nbFaits, onOuvrir }: {
     nbFaits: number;
     onOuvrir: () => void;
 }) {
-    const teinte = TEINTE_THEME[section.id];
-    const Icone = teinte.icone;
     const nbRediges = section.modules.filter(m => m.leconId).length;
-    const nbTotal = section.modules.length;
-    const nbAVenir = nbTotal - nbRediges;
-    const nbRestant = nbRediges - nbFaits;
-    const pct = nbTotal > 0 ? Math.round((nbFaits / nbTotal) * 100) : 0;
-    const complet = nbRediges > 0 && nbFaits === nbRediges && nbAVenir === 0;
-
-    return (
-        <motion.button
-            onClick={onOuvrir}
-            whileTap={{ scale: 0.98 }}
-            className="relative w-full rounded-2xl overflow-hidden text-left shadow-md px-4 py-3.5"
-            style={{ background: `linear-gradient(150deg, ${teinte.vif}, ${teinte.sombre})` }}
-        >
-            <div className="flex items-center gap-3">
-                <span className="size-10 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
-                    <Icone size={18} strokeWidth={2} className="text-white" />
-                </span>
-
-                <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-2">
-                        <h2 className="text-[15px] font-black text-white leading-tight truncate">
-                            {section.titre}
-                        </h2>
-                        <span className="text-[13px] font-black text-white shrink-0">
-                            {nbFaits}<span className="text-white/50">/{nbTotal}</span>
-                        </span>
-                    </div>
-                    <p className="text-[11.5px] text-white/70 leading-tight truncate mt-0.5">
-                        {section.description}
-                    </p>
-                </div>
-            </div>
-
-            <div className="h-1 rounded-full bg-white/15 overflow-hidden mt-2.5">
-                <div className="h-full rounded-full bg-white transition-all" style={{ width: `${pct}%` }} />
-            </div>
-
-            {/* Ce qu'il reste, en toutes lettres — distinguer « à faire » de « à venir »
-                plutôt qu'un seul total qui les confondrait. */}
-            <div className="flex items-center gap-3 mt-1.5 text-[10.5px] font-bold text-white/60">
-                {complet ? (
-                    <span className="flex items-center gap-1 text-white">
-                        <Check size={11} strokeWidth={3} />
-                        Thème terminé
-                    </span>
-                ) : (
-                    <>
-                        {nbRestant > 0 && <span>{nbRestant} à faire</span>}
-                        {nbAVenir > 0 && (
-                            <span className="flex items-center gap-1">
-                                <Clock size={11} strokeWidth={2.5} />
-                                {nbAVenir} à venir
-                            </span>
-                        )}
-                    </>
-                )}
-            </div>
-        </motion.button>
-    );
+    const pct = nbRediges ? Math.min(100, nbFaits / nbRediges * 100) : 0;
+    const visuals = {
+        pourquoi: { tone: 'var(--co-sand)', kind: 'compass' },
+        'quoi-dire': { tone: 'var(--co-coral)', kind: 'talk' },
+        'faire-vivre': { tone: 'var(--co-sea)', kind: 'waves' },
+        methode: { tone: 'var(--co-leaf)', kind: 'leaf' },
+    } as const;
+    const visual = visuals[section.id];
+    return <motion.button onClick={onOuvrir} whileTap={{ scale: 0.98 }} className="co-course" style={{ background: visual.tone }}>
+        <CoastalMark kind={visual.kind}/>
+        <h2>{section.titre}</h2>
+        <div className="co-course-meta"><span>{nbRediges} modules</span><span>{nbFaits} parcourus</span></div>
+        <div className="co-progress" aria-label={`${nbFaits} modules parcourus sur ${nbRediges}`}><span style={{ width: `${pct}%` }}/></div>
+    </motion.button>;
 }
 
 /**
@@ -888,7 +843,7 @@ function EcranTheme({ section, leconParId, termine, onRetour, onOuvrirModule }: 
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 24 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-50 bg-slate-50 overflow-y-auto"
+            className="co-formation-overlay fixed inset-0 z-50 bg-[var(--co-paper)] overflow-y-auto"
         >
             <div
                 className="relative px-6 pt-[calc(env(safe-area-inset-top)+1rem)] pb-8"
@@ -910,7 +865,7 @@ function EcranTheme({ section, leconParId, termine, onRetour, onOuvrirModule }: 
                 <p className="relative text-[11px] font-black uppercase tracking-[0.14em] text-white/70 mb-1.5">
                     {section.modules.length} module{section.modules.length > 1 ? 's' : ''}
                 </p>
-                <h1 className="relative text-[26px] font-black text-white leading-tight text-balance">
+                <h1 className="relative text-[32px] font-semibold tracking-[-.045em] text-white leading-tight text-balance">
                     {section.titre}
                 </h1>
                 <p className="relative text-[14px] text-white/80 mt-1.5 max-w-sm">{section.description}</p>
@@ -952,30 +907,12 @@ export function FormationClient({ plan, lecons, termine: termineInitial }: {
 
     const nbTermine = lecons.filter(l => termine.has(l.id)).length;
     const nbRediges = lecons.length;
-    const nbTotal = plan.reduce((n, s) => n + s.modules.length, 0);
 
     return (
-        <div className="flex flex-col min-h-screen bg-slate-50 pb-28">
-            {/* Même gabarit de titre que les autres pages principales de l'app
-                (Ressources, Stats) : pré-titre en petites capitales espacées, puis un
-                grand titre en majuscules. « Savoir en parler » a été abandonné partout
-                ailleurs (l'accueil dit « Apprends à parler d'environnement ») — le garder
-                ici aurait laissé deux noms différents pour la même formation. */}
-            <header className="px-6 pt-8 pb-4">
-                <p className="text-[10px] font-black tracking-[0.2em] text-indigo-400 uppercase mb-2">Formation</p>
-                <h1 className="text-4xl font-black uppercase tracking-tighter italic leading-none text-slate-900">
-                    Parler d&apos;environnement
-                </h1>
-                <p className="text-[13.5px] text-slate-500 mt-3 leading-snug max-w-sm">
-                    Les clés pour l&apos;intégrer à ton encadrement, sujet par sujet, à ton rythme.
-                </p>
-                <p className="text-[12px] font-bold text-slate-400 mt-3.5">
-                    {nbTermine} sur {nbRediges} module{nbRediges > 1 ? 's' : ''} terminé{nbTermine > 1 ? 's' : ''}
-                    {nbRediges < nbTotal && ` · ${nbTotal} au total`}
-                </p>
-            </header>
-
-            <main className="flex-1 px-4 py-4 grid grid-cols-1 gap-3.5 max-w-lg mx-auto w-full">
+        <div className="co-page">
+            <PageHeading eyebrow="La formation générale" title="Parler d’environnement" description="Trouver une accroche, faire observer, donner envie de participer."/>
+            <div className="co-formation-progress"><div><strong>{nbTermine}</strong><small>/ {nbRediges} modules parcourus</small></div><div className="co-progress"><span style={{ width: `${nbRediges ? nbTermine / nbRediges * 100 : 0}%` }}/></div></div>
+            <main className="co-course-grid">
                 {plan.map(section => (
                     <CarteTheme
                         key={section.id}

@@ -24,59 +24,53 @@ import AccrochesCarousel from './AccrochesCarousel';
  */
 export default function LectureCarte({ fiche }: { fiche: PedagogicalContent }) {
     const [actionIndex, setActionIndex] = useState(0);
-    const labelClass = 'text-xs font-semibold tracking-wide text-slate-500';
-    const bodyClass = 'whitespace-pre-line text-base leading-[1.65] text-slate-700';
+    const labelClass = 'text-[10px] font-extrabold uppercase tracking-[0.12em] text-[#56706a]';
+    const bodyClass = 'whitespace-pre-line text-[15px] leading-[1.65] text-[#405653]';
     const actions = fiche.actions ?? [];
     const action = actions[actionIndex];
     const aDesReperes = !!(fiche.tip || fiche.objectif || fiche.erreur_frequente);
 
     return (
-        <div className="mt-5 space-y-5 text-[15px] leading-relaxed text-slate-700" onPointerDown={event => {
+        <div className="mt-5 space-y-7 text-[15px] leading-relaxed text-[#405653]" onPointerDown={event => {
             if ((event.target as HTMLElement).closest('button, a, summary')) event.stopPropagation();
         }}>
             <AccrochesCarousel fiche={fiche} />
 
-            {fiche.explication && <p className={bodyClass}>{fiche.explication}</p>}
+            {fiche.explication && <section className="border-t border-[#193d3b1a] pt-6"><p className={labelClass}>Pour l’expliquer simplement</p><p className={`mt-2 ${bodyClass}`}>{fiche.explication}</p></section>}
 
-            {fiche.a_observer && <div className="rounded-2xl bg-sky-50 px-5 py-4">
+            {fiche.a_observer && <section className="border-l-[3px] border-[#87b7b0] pl-4">
                 <p className={labelClass}>À faire observer</p>
-                <p className={`mt-1 ${bodyClass}`}>{fiche.a_observer}</p>
-            </div>}
+                <p className={`mt-2 ${bodyClass}`}>{fiche.a_observer}</p>
+            </section>}
 
-            {action && <section className="border-t border-slate-100 pt-5">
-                <p className={labelClass}>À faire vivre</p>
-                <h4 className="mt-2 text-base font-semibold text-slate-900">{action.label}</h4>
-                <p className={`mt-1 ${bodyClass}`}>{action.consigne}</p>
-                {actions.length > 1 && <button type="button" className="mt-1 min-h-11 text-sm font-bold text-indigo-600"
+            {action && <section className="rounded-[1.35rem] bg-[#e8eee8] px-5 py-5 ring-1 ring-[#193d3b14]">
+                <div className="flex items-baseline justify-between gap-3"><p className={labelClass}>À faire vivre avec le groupe</p>{actions.length > 1 && <span className="text-[11px] font-semibold tabular-nums text-[#6f817d]">{actionIndex + 1} / {actions.length}</span>}</div>
+                <h4 className="mt-3 text-[17px] font-bold leading-snug text-[#173d3a]">{action.label}</h4>
+                <p className={`mt-2 ${bodyClass}`}>{action.consigne}</p>
+                {actions.length > 1 && <button type="button" className="mt-5 flex min-h-12 w-full items-center justify-between rounded-xl border border-[#193d3b38] bg-[#fffdf8] px-4 text-left text-[13px] font-bold text-[#173d3a] transition active:scale-[.98]"
                     onClick={() => setActionIndex(index => (index + 1) % actions.length)}>
-                    Autre proposition → <span className="font-normal text-slate-500">({actionIndex + 1}/{actions.length})</span>
+                    Voir l’action suivante <span aria-hidden>→</span>
                 </button>}
             </section>}
 
-            {fiche.a_retenir && <section className="border-l-2 border-emerald-400 pl-4">
+            {fiche.a_retenir && <section className="border-t border-[#193d3b1a] pt-6">
                 <h4 className={labelClass}>L’idée à faire passer</h4>
-                <p className={`mt-1 ${bodyClass}`}>{fiche.a_retenir}</p>
+                <p className="mt-2 text-[17px] font-semibold leading-[1.55] text-[#173d3a]">{fiche.a_retenir}</p>
             </section>}
 
             {/* Repères de fond : même contenu qu'avant, en retrait typographique pour ne pas
                 peser autant que le déroulé de la séquence. */}
-            {aDesReperes && <section className="space-y-3 border-t border-slate-100 pt-5 text-sm leading-relaxed text-slate-500">
-                {fiche.erreur_frequente && <p>
-                    <span className="font-semibold text-slate-600">Ils croient souvent que </span>
-                    <span className="whitespace-pre-line">{fiche.erreur_frequente}</span>
-                </p>}
-                {fiche.tip && <p className="whitespace-pre-line">{fiche.tip}</p>}
-                {fiche.objectif && <p>
-                    <span className="font-semibold text-slate-600">Intention pédagogique — </span>
-                    <span className="whitespace-pre-line">{fiche.objectif}</span>
-                </p>}
+            {aDesReperes && <section className="space-y-5 border-t border-[#193d3b1a] pt-6 text-[13px] leading-[1.6] text-[#647773]">
+                {fiche.erreur_frequente && <div><p className={labelClass}>Idée reçue fréquente</p><p className="mt-1.5 whitespace-pre-line">{fiche.erreur_frequente}</p></div>}
+                {fiche.tip && <div><p className={labelClass}>Repère d’animation</p><p className="mt-1.5 whitespace-pre-line">{fiche.tip}</p></div>}
+                {fiche.objectif && <div><p className={labelClass}>Intention pédagogique</p><p className="mt-1.5 whitespace-pre-line">{fiche.objectif}</p></div>}
             </section>}
 
-            {!!fiche.ressources?.length && <section className="space-y-2 border-t border-slate-100 pt-5">
+            {!!fiche.ressources?.length && <section className="space-y-2 border-t border-[#193d3b1a] pt-6">
                 <h4 className={labelClass}>Pour approfondir</h4>
                 {fiche.ressources.map((resource, index) => resource.type === 'fiche_memo'
-                    ? <Link key={index} href={`/ressources/${encodeURIComponent(resource.fiche_memo_id)}`} className="block py-2 font-semibold text-indigo-600 underline underline-offset-4">{resource.label} →</Link>
-                    : /^https?:\/\//i.test(resource.url) && <a key={index} href={resource.url} target="_blank" rel="noopener noreferrer" className="block py-2 font-semibold text-indigo-600 underline underline-offset-4">{resource.label} ↗</a>)}
+                    ? <Link key={index} href={`/ressources/${encodeURIComponent(resource.fiche_memo_id)}`} className="flex min-h-11 items-center justify-between rounded-xl border border-[#193d3b24] px-4 font-semibold text-[#173d3a]">{resource.label} <span>→</span></Link>
+                    : /^https?:\/\//i.test(resource.url) && <a key={index} href={resource.url} target="_blank" rel="noopener noreferrer" className="flex min-h-11 items-center justify-between rounded-xl border border-[#193d3b24] px-4 font-semibold text-[#173d3a]">{resource.label} <span>↗</span></a>)}
             </section>}
         </div>
     );

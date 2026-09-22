@@ -36,6 +36,15 @@ export type FicheTrajectory = {
     attempts: FicheAttempt[];
 };
 
+/** Retour libre après un essai de terrain dans un parcours de formation. */
+export type FormationPracticeNote = {
+    id: string;
+    sequenceId: string;
+    prompt: string;
+    note: string;
+    createdAt: string;
+};
+
 export type PracticeJournal = {
     weeksCount: number;
     insights: string[];
@@ -44,6 +53,7 @@ export type PracticeJournal = {
     progressing: FicheTrajectory[];
     resisting: FicheTrajectory[];
     weeks: JournalWeek[];
+    formationNotes: FormationPracticeNote[];
 };
 
 /** Rang de réussite d'une tentative, pour comparer deux passages sur une même fiche. */
@@ -61,21 +71,34 @@ function attemptRank(status: StageObjectiveExecutionStatus, impact: StageObjecti
  * et trajectoires des fiches tentées plusieurs fois.
  */
 export async function getPracticeJournal(): Promise<PracticeJournal> {
-    const empty: PracticeJournal = { weeksCount: 0, insights: [], reminder: null, evolution: [], progressing: [], resisting: [], weeks: [] };
+    const empty: PracticeJournal = { weeksCount: 0, insights: [], reminder: null, evolution: [], progressing: [], resisting: [], weeks: [], formationNotes: [] };
     const supabase = await createClient();
     const user = await getCachedUser();
     if (!user) return empty;
 
-    const { data: allStages } = await supabase
-        .from('stages')
-        .select('id, title, dates, closed_at, closing_notes, selected_content, created_at')
-        .eq('owner_id', user.id)
-        .order('created_at', { ascending: true });
+    const [{ data: allStages }, { data: formationNotesRows }] = await Promise.all([
+        supabase.from('stages')
+            .select('id, title, dates, closed_at, closing_notes, selected_content, created_at')
+            .eq('owner_id', user.id)
+            .order('created_at', { ascending: true }),
+        supabase.from('formation_practice_notes')
+            .select('id, sequence_id, prompt, note, created_at')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false })
+            .limit(20),
+    ]);
+    const formationNotes: FormationPracticeNote[] = (formationNotesRows ?? []).map(note => ({
+        id: note.id,
+        sequenceId: note.sequence_id,
+        prompt: note.prompt,
+        note: note.note,
+        createdAt: note.created_at,
+    }));
 
     const closedStages = (allStages ?? [])
         .filter(s => s.closed_at)
         .sort((a, b) => new Date(a.closed_at!).getTime() - new Date(b.closed_at!).getTime());
-    if (closedStages.length === 0) return empty;
+    if (closedStages.length === 0) return { ...empty, formationNotes };
 
     const closedIds = closedStages.map(s => s.id);
     const allContentIds = Array.from(new Set(
@@ -226,7 +249,7 @@ export async function getPracticeJournal(): Promise<PracticeJournal> {
     });
     const everWorkedTags = new Set(workedTagCounts.keys());
     const allCatalogTags = new Set<string>();
-    (catalogRows ?? []).forEach((c: { tags_filtre?: string[]; source?: string }) => {
+    (catalogRows ?? []).forEach((c) => {
         if (c.source === 'custom') return;
         (c.tags_filtre ?? []).forEach(t => allCatalogTags.add(t));
     });
@@ -268,5 +291,6 @@ export async function getPracticeJournal(): Promise<PracticeJournal> {
         progressing: progressing.slice(0, 5),
         resisting: resisting.slice(0, 5),
         weeks: [...weeks].reverse(), // fil du plus récent au plus ancien
+        formationNotes,
     };
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import DOMPurify from 'dompurify';
+import DOMPurify from 'isomorphic-dompurify';
 
 /**
  * Affiche le contenu HTML d'une fiche mémo de façon sécurisée (anti-XSS).

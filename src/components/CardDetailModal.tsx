@@ -41,10 +41,10 @@ export default function CardDetailModal({ isOpen, onClose, content, onGarder, re
     // faire perdre le fil de l'accueil.
     const [viewingFicheId, setViewingFicheId] = useState<string | null>(null);
     const [viewingFiche, setViewingFiche] = useState<FicheMemo | null>(null);
-    const [loadingFiche, setLoadingFiche] = useState(false);
+    const loadingFiche = !!viewingFicheId && viewingFiche?.id !== viewingFicheId;
 
     useEffect(() => {
-        if (!isOpen || !content) { setRelatedFiches([]); return; }
+        if (!isOpen || !content) return;
         let cancelled = false;
         getFichesMemoForCard(content.tags_theme ?? [], content.tags_filtre ?? []).then(fiches => {
             if (!cancelled) setRelatedFiches(fiches);
@@ -53,19 +53,19 @@ export default function CardDetailModal({ isOpen, onClose, content, onGarder, re
     }, [isOpen, content]);
 
     useEffect(() => {
-        if (!viewingFicheId) { setViewingFiche(null); return; }
+        if (!viewingFicheId) return;
         let cancelled = false;
-        setLoadingFiche(true);
         getFicheMemoById(viewingFicheId).then(fiche => {
-            if (!cancelled) { setViewingFiche(fiche); setLoadingFiche(false); }
+            if (!cancelled) setViewingFiche(fiche);
         });
         return () => { cancelled = true; };
     }, [viewingFicheId]);
 
-    // Réinitialise la vue fiche quand le modal se ferme ou change de carte
-    useEffect(() => {
-        if (!isOpen) setViewingFicheId(null);
-    }, [isOpen, content]);
+    const close = () => {
+        setViewingFicheId(null);
+        setViewingFiche(null);
+        onClose();
+    };
 
     if (!isClient) return null;
 
@@ -78,7 +78,7 @@ export default function CardDetailModal({ isOpen, onClose, content, onGarder, re
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        onClick={onClose}
+                        onClick={close}
                         className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm"
                     />
 
@@ -107,7 +107,7 @@ export default function CardDetailModal({ isOpen, onClose, content, onGarder, re
                                         Retour à la fiche
                                     </button>
                                     <button
-                                        onClick={onClose}
+                                        onClick={close}
                                         className="size-9 rounded-full bg-white/60 hover:bg-white flex items-center justify-center text-indigo-400 hover:text-indigo-900 transition-colors shrink-0"
                                     >
                                         <span className="material-symbols-outlined text-[20px]">close</span>
@@ -143,7 +143,7 @@ export default function CardDetailModal({ isOpen, onClose, content, onGarder, re
                                         </h2>
                                     </div>
                                     <button
-                                        onClick={onClose}
+                                        onClick={close}
                                         className="size-9 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 transition-colors shrink-0"
                                     >
                                         <span className="material-symbols-outlined text-[20px]">close</span>
@@ -313,7 +313,7 @@ export default function CardDetailModal({ isOpen, onClose, content, onGarder, re
                             obligerait à un second geste pour rien. */}
                         <div className="px-5 sm:px-7 py-4 bg-slate-50 border-t border-slate-100 flex items-center gap-3">
                             <button
-                                onClick={onClose}
+                                onClick={close}
                                 className={clsx(
                                     'py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl font-bold text-sm hover:bg-slate-100 transition-colors',
                                     onGarder ? 'px-5 shrink-0' : 'px-6 ml-auto',

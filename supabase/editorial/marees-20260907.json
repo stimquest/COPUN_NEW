@@ -1,0 +1,521 @@
+[
+  {
+    "id": "1",
+    "question": "Pourquoi y a-t-il plusieurs marées par jour ?",
+    "objectif": "Comprendre le mécanisme astronomique des marées (Lune/Soleil).",
+    "tip": "Préparez un schéma Terre-Lune. La seconde marée mérite une explication : ne vous arrêtez pas à « la Lune attire l’eau ».",
+    "explication": "La Lune et le Soleil exercent une attraction qui varie d’un point à l’autre de la Terre et déforme les masses d’eau. Dans un modèle simplifié, l’effet de la Lune produit deux renflements opposés ; la rotation terrestre explique ainsi le rythme de deux pleines mers et deux basses mers par jour lunaire, soit environ 24 h 50. Ce rythme domine sur les côtes normandes, mais la forme des bassins océaniques et des fonds le transforme : il n’est pas identique partout.",
+    "accroche": "La Lune attire l’eau. Alors pourquoi avons-nous deux marées hautes, et pas une seule ?",
+    "accroches_variantes": [
+      "La Lune attire l’eau. Alors pourquoi avons-nous deux marées hautes, et pas une seule ?"
+    ],
+    "accroches_formes": null,
+    "erreur_frequente": null,
+    "a_observer": "Sur l’annuaire du port, les pleines mers et basses mers d’une journée ; sur un schéma, les deux renflements du modèle simplifié.",
+    "a_retenir": "En Normandie, le niveau monte et descend généralement deux fois en un peu plus de vingt-quatre heures.",
+    "actions": [
+      {
+        "id": "f1_deux_mouvements",
+        "label": "Pourquoi deux ?",
+        "consigne": "Faites compter les pleines mers dans l’annuaire, puis recueillez les explications. Dessinez le modèle des deux renflements autour de la Terre et montrez comment un point côtier les traverse pendant la rotation. Précisez que ce dessin explique le principe, pas la forme réelle de l’océan."
+      }
+    ]
+  },
+  {
+    "id": "3",
+    "question": "Pourquoi l'heure de la marée n'est pas la même partout ?",
+    "objectif": "Comprendre que la forme des côtes influence la propagation de l'onde de marée.",
+    "tip": "Choisissez deux ports dont les prévisions montrent réellement un décalage à la date étudiée.",
+    "explication": "La marée se propage sous forme d’ondes dans les bassins océaniques. Leur progression dépend de la profondeur et de la forme des côtes : dans une baie ou un estuaire, le niveau ne suit donc pas exactement le même rythme qu’au large. C’est pourquoi deux ports peuvent avoir des horaires de pleine mer différents, même pour la même marée.",
+    "accroche": "Ces deux ports sont proches, pourtant leurs pleines mers ne sont pas à la même heure. Qu’est-ce qui peut expliquer ce décalage ?",
+    "accroches_variantes": [
+      "Ces deux ports sont proches, pourtant leurs pleines mers ne sont pas à la même heure. Qu’est-ce qui peut expliquer ce décalage ?"
+    ],
+    "accroches_formes": null,
+    "erreur_frequente": null,
+    "a_observer": "Les horaires de deux ports à la même date, leur position sur la carte et la forme du littoral.",
+    "a_retenir": "La marée ne se produit pas partout à la même heure : sa propagation dépend des bassins, des fonds et des côtes.",
+    "actions": [
+      {
+        "id": "f3_deux_ports",
+        "label": "Deux ports, deux heures",
+        "consigne": "Comparez les prévisions de deux ports à la même date. Repérez leur situation sur la carte et expliquez le rôle des fonds et des côtes, sans prétendre déduire le trajet exact de l’onde de leur seule forme."
+      },
+      {
+        "id": "f3_onde_carte",
+        "label": "Du large à la baie",
+        "consigne": "Montrez sur une carte un port ouvert sur le large et un port situé dans une baie ou un estuaire. Faites décrire ces configurations, puis expliquez qu’elles modifient la réponse locale à la marée."
+      }
+    ]
+  },
+  {
+    "id": "4",
+    "question": "Comment s'appelle la zone qui se couvre et se découvre avec la marée ?",
+    "objectif": "Connaître le mot 'estran' et sa signification.",
+    "tip": "Montrez aussi la partie de l’estran encore sous l’eau : il ne se limite pas au sable visible au moment de la visite.",
+    "explication": "L’estran est la partie du rivage située entre les niveaux des plus hautes et des plus basses mers. Toute cette zone n’est pas découverte puis recouverte à chaque marée : les secteurs les plus hauts et les plus bas ne connaissent cette alternance que lors de marées suffisamment grandes. Les organismes y vivent donc des durées d’immersion et d’exposition à l’air différentes selon leur position.",
+    "accroche": "À marée basse, la mer laisse apparaître une partie du rivage. Comment s’appelle cette zone qu’elle peut recouvrir ?",
+    "accroches_variantes": [
+      "À marée basse, la mer laisse apparaître une partie du rivage. Comment s’appelle cette zone qu’elle peut recouvrir ?"
+    ],
+    "accroches_formes": null,
+    "erreur_frequente": null,
+    "a_observer": "La partie découverte et, avec des photos de grandes marées, l’étendue du rivage entre les niveaux extrêmes.",
+    "a_retenir": "L’estran est la zone que les marées peuvent couvrir et découvrir ; toute sa surface ne change pas d’état à chaque marée.",
+    "actions": [
+      {
+        "id": "f4_montrez_estran",
+        "label": "Montrer l’estran",
+        "consigne": "Depuis un point sûr, repérez la zone découverte. À l’aide de photos du même lieu à d’autres niveaux de marée, faites retrouver les parties encore immergées ou rarement recouvertes."
+      },
+      {
+        "id": "f4_six_heures_sec",
+        "label": "Plus haut, plus bas",
+        "consigne": "Comparez deux zones de l’estran sur une photo : laquelle reste sous l’eau le plus longtemps ? Reliez cette différence aux conditions de vie des organismes fixés."
+      }
+    ]
+  },
+  {
+    "id": "5",
+    "question": "Qu’est-ce que l’étale de marée ?",
+    "objectif": "Distinguer l’étale du niveau de la mer et l’étale de courant, qui ne coïncident pas nécessairement.",
+    "tip": "Comparez deux observations distinctes : la hauteur sur un poteau et le mouvement de l’eau autour de lui. Un niveau stable ne suffit pas à conclure sur le courant.",
+    "explication": "Autour de la pleine mer ou de la basse mer, le niveau varie peu pendant un certain temps : on parle d’étale de marée. L’étale de courant désigne, elle, un moment où le courant devient très faible. Les deux ne coïncident pas nécessairement : un niveau presque stable ne signifie donc pas que toute l’eau est immobile.",
+    "accroche": "L’eau reste presque à la même hauteur sur ce poteau. Est-ce que le courant s’est arrêté aussi ?",
+    "accroches_variantes": [
+      "L’eau reste presque à la même hauteur sur ce poteau. Est-ce que le courant s’est arrêté aussi ?"
+    ],
+    "accroches_formes": null,
+    "erreur_frequente": null,
+    "a_observer": "Séparément, le niveau sur un support fixe et le mouvement de l’eau autour de ce support.",
+    "a_retenir": "L’étale du niveau et l’étale du courant ne sont pas forcément simultanées.",
+    "actions": [
+      {
+        "id": "f5_sens_courant",
+        "label": "Deux choses à regarder",
+        "consigne": "Près d’une pleine ou basse mer, observez depuis le bord la hauteur d’eau et les mouvements autour d’un obstacle. Demandez au groupe de décrire chacun des deux, sans déduire l’un de l’autre."
+      }
+    ]
+  },
+  {
+    "id": "7",
+    "question": "Pourquoi est-il important de connaître l’amplitude de la marée ?",
+    "objectif": "Distinguer le coefficient, le marnage et les hauteurs d’eau, et comprendre l’augmentation puis la diminution de l’importance des marées.",
+    "tip": "Faites lire les coefficients avant et après celui du jour : 85 peut être atteint en augmentant ou en diminuant. L’augmentation s’appelle le revif, la diminution le déchet ; aucun écart de coefficient ne se convertit directement en centimètres.",
+    "explication": "Le marnage est l’écart de hauteur entre une basse mer et une pleine mer successives ; le coefficient indique l’importance de la marée, sans donner une hauteur en mètres. De 85 à 90, on va vers une marée plus ample ; de 90 à 85, vers une marée moins ample : au même endroit, les pleines mers tendent alors à être moins hautes et les basses mers moins basses. Cette tendance aide à comprendre ce qui se couvre ou se découvre, mais ce sont les hauteurs prévues au port qui précisent les niveaux attendus.",
+    "accroche": "Le coefficient passe de 90 à 85. À la prochaine basse mer, ce rocher sera-t-il davantage découvert, ou moins ?",
+    "accroches_variantes": [
+      "Le coefficient passe de 90 à 85. À la prochaine basse mer, ce rocher sera-t-il davantage découvert, ou moins ?"
+    ],
+    "accroches_formes": null,
+    "erreur_frequente": null,
+    "a_observer": "Une suite de coefficients croissants puis décroissants, et les hauteurs de pleine et de basse mer correspondantes au même port.",
+    "a_retenir": "Les marées gagnent puis perdent de l’ampleur : un coefficient encore élevé peut déjà être en baisse.",
+    "actions": [
+      {
+        "id": "f7_croiser_infos",
+        "label": "Dans les deux sens",
+        "consigne": "Dans un annuaire local, choisissez une période de coefficients croissants puis une période décroissante. Faites comparer les hautes mers et les basses mers séparément, puis reliez ces différences à un rocher ou à un accès du site."
+      }
+    ]
+  },
+  {
+    "id": "8",
+    "question": "Pourquoi la marée remonte plus vite à certains moments ?",
+    "objectif": "Comprendre la variation de la vitesse de montée du niveau au cours d’une même marée et les limites de la règle des douzièmes.",
+    "tip": "Présentez les douzièmes comme une approximation pour une marée régulière. Une courbe locale permet de voir si ce modèle convient au lieu.",
+    "explication": "Pendant une même marée montante de forme régulière, le niveau s’élève lentement près de la basse mer, plus vite vers le milieu, puis ralentit près de la pleine mer. La règle des douzièmes représente approximativement cette variation : elle concerne la hauteur d’eau, pas la vitesse du courant. Sur une plage plate, une petite hausse de niveau peut aussi recouvrir une grande distance de sable.",
+    "accroche": "Pendant une heure, l’eau semble avancer à peine ; ensuite elle gagne vite du terrain. Comment l’expliquer ?",
+    "accroches_variantes": [
+      "Pendant une heure, l’eau semble avancer à peine ; ensuite elle gagne vite du terrain. Comment l’expliquer ?"
+    ],
+    "accroches_formes": null,
+    "erreur_frequente": null,
+    "a_observer": "La courbe de hauteur d’eau au cours de la marée et la pente de la plage.",
+    "a_retenir": "Pendant une même montée, le niveau ne gagne pas la même hauteur chaque heure ; ce n’est pas une mesure du courant.",
+    "actions": [
+      {
+        "id": "f8_reperes_reguliers",
+        "label": "Lire la pente de la courbe",
+        "consigne": "Sur une courbe locale de marée, repérez deux intervalles d’une heure et comparez les gains de hauteur. Reliez ensuite cette montée à une partie plate puis pentue de la plage, sans faire de la distance sur le sable une mesure directe du marnage."
+      }
+    ]
+  },
+  {
+    "id": "9",
+    "question": "Pourquoi la mi-marée est-elle un moment particulier ?",
+    "objectif": "Comprendre la variation du niveau vers la mi-marée et rechercher localement le moment des courants les plus forts.",
+    "tip": "La comparaison peut se faire à terre : ne placez pas le groupe dans le courant pour en démontrer la force.",
+    "explication": "Dans une marée de forme régulière, le niveau varie le plus rapidement vers le milieu de la montée ou de la descente. Le courant, lui, dépend aussi des différences de niveau entre les zones reliées et de la forme des passages : son maximum peut coïncider avec la mi-marée ou être décalé. La courbe de hauteur et l’atlas de courants décrivent donc deux choses à comparer, pas à confondre.",
+    "accroche": "Le niveau monte vite en ce moment. Est-ce aussi le moment où le courant est le plus fort dans ce passage ?",
+    "accroches_variantes": [
+      "Le niveau monte vite en ce moment. Est-ce aussi le moment où le courant est le plus fort dans ce passage ?"
+    ],
+    "accroches_formes": null,
+    "erreur_frequente": null,
+    "a_observer": "La courbe de hauteur et les prévisions de courant du même secteur, avec leurs heures de référence.",
+    "a_retenir": "Le moment où le niveau varie le plus vite n’est pas partout celui où le courant est le plus fort.",
+    "actions": [
+      {
+        "id": "f9_courant_local",
+        "label": "Suivre un cycle de courant",
+        "consigne": "Sur un atlas ou un document du club, comparez le même passage à plusieurs heures de marée. Faites repérer le courant le plus fort puis sa position par rapport à la pleine mer de référence."
+      }
+    ]
+  },
+  {
+    "id": "11",
+    "question": "Pourquoi le rythme des marées a des incidences sur le « vivant » et les activités humaines ?",
+    "objectif": "Comprendre l'interaction marées-biodiversité-activités.",
+    "tip": "Partez d’une espèce et d’un usage identifiés sur le site, plutôt que d’attribuer le même rythme à tout le vivant.",
+    "explication": "Quand la mer se retire, elle rend accessibles des zones où des oiseaux de rivage cherchent leur nourriture ; quand elle revient, les moules immergées peuvent filtrer l’eau pour se nourrir. L’alternance entre immersion et exposition à l’air change donc les possibilités de chaque espèce. Elle organise aussi certains usages humains : pêche à pied à basse mer, accès à une cale ou passage d’un bateau quand la hauteur d’eau le permet.",
+    "accroche": "Au même endroit, la marée basse permet à l’oiseau de manger ; l’eau qui revient permet à la moule de filtrer. Pourquoi n’ont-ils pas le même horaire ?",
+    "accroches_variantes": [
+      "Au même endroit, la marée basse permet à l’oiseau de manger ; l’eau qui revient permet à la moule de filtrer. Pourquoi n’ont-ils pas le même horaire ?"
+    ],
+    "accroches_formes": null,
+    "erreur_frequente": null,
+    "a_observer": "Un secteur d’estran utilisé par des oiseaux à basse mer et des organismes fixés qui seront recouverts.",
+    "a_retenir": "La marée change l’accès à l’eau et à la nourriture : chaque espèce et chaque activité en dépendent à leur façon.",
+    "actions": [
+      {
+        "id": "f11_qui_travaille_maintenant",
+        "label": "Qui peut se nourrir maintenant ?",
+        "consigne": "Faites décrire ce que permet le niveau actuel à un oiseau de rivage, à une moule et à un pêcheur à pied. Expliquez les différences sans chercher une réponse identique pour les trois."
+      },
+      {
+        "id": "f11_meme_endroit_six_heures",
+        "label": "Quand l’eau aura changé de niveau",
+        "consigne": "À partir des prévisions, choisissez un moment où le niveau sera différent. Demandez quels accès et quelles possibilités de nourrissage auront changé à cet endroit."
+      }
+    ]
+  },
+  {
+    "id": "12",
+    "question": "Comment les vives-eaux et les mortes-eaux influencent-elles le vivant et les activités humaines ?",
+    "objectif": "Comprendre l'impact des différents cycles de marée.",
+    "tip": "Ne confondez pas « coefficient élevé » et « coefficient qui augmente ». On peut encore être en vives-eaux alors que les marées perdent déjà de l’ampleur.",
+    "explication": "Les vives-eaux correspondent à un grand marnage, les mortes-eaux à un petit : au même endroit, les basses mers de vives-eaux découvrent généralement davantage d’estran. Lorsque les marées perdent de l’ampleur, certaines zones basses restent à nouveau immergées, tandis que des zones hautes ne sont plus atteintes par les pleines mers. Cela change le temps passé dans l’eau pour les organismes fixés, les secteurs où les oiseaux peuvent se nourrir et les accès possibles pour la pêche à pied ou les bateaux.",
+    "accroche": "Ce banc était découvert à basse mer lors des grandes marées. Quelques jours plus tard, il reste sous l’eau : qu’est-ce que cela change pour ceux qui y vivent ou y viennent ?",
+    "accroches_variantes": [
+      "Ce banc était découvert à basse mer lors des grandes marées. Quelques jours plus tard, il reste sous l’eau : qu’est-ce que cela change pour ceux qui y vivent ou y viennent ?"
+    ],
+    "accroches_formes": null,
+    "erreur_frequente": null,
+    "a_observer": "Deux photos ou observations du même banc à basse mer, l’une en vives-eaux et l’autre avec des marées moins amples.",
+    "a_retenir": "Quand les marées perdent de l’ampleur, elles découvrent généralement moins loin à basse mer et recouvrent moins haut à pleine mer.",
+    "actions": [
+      {
+        "id": "f12_comparer_marees",
+        "label": "Un banc accessible, puis immergé",
+        "consigne": "Comparez le même banc à basse mer pendant puis après les grandes marées. Faites expliquer ce que son immersion change pour les organismes fixés, pour un oiseau qui y cherche sa nourriture et pour un pêcheur à pied."
+      }
+    ]
+  },
+  {
+    "id": "13",
+    "question": "Comment sait-on que l'eau monte et descend ?",
+    "objectif": "Identifier des repères visuels simples (rochers, poteaux) pour voir la marée.",
+    "tip": "Adaptez l’intervalle d’observation à la variation réelle. Cinq minutes ne donnent pas forcément un résultat visible près de l’étale.",
+    "explication": "Pour savoir si le niveau monte ou descend, on le compare à un support fixe à plusieurs moments. Le va-et-vient des vagues peut masquer cette évolution : il faut regarder la tendance au-delà d’une seule vague. Près de l’étale, la différence peut rester faible, alors qu’ailleurs la progression ou le retrait de l’eau est bien visible.",
+    "accroche": "La mer monte ou elle descend, là, maintenant ? Quel repère nous permettrait de le vérifier ?",
+    "accroches_variantes": [
+      "La mer monte ou elle descend, là, maintenant ? Quel repère nous permettrait de le vérifier ?"
+    ],
+    "accroches_formes": null,
+    "erreur_frequente": null,
+    "a_observer": "Le niveau moyen de l’eau contre un rocher ou un poteau fixe, observé à plusieurs moments depuis le même endroit.",
+    "a_retenir": "Un repère fixe permet de distinguer la montée ou la baisse du niveau du simple passage des vagues.",
+    "actions": [
+      {
+        "id": "f13_repere_cinq_minutes",
+        "label": "Le même repère, deux observations",
+        "consigne": "Choisissez un support fixe visible depuis un endroit sûr. Comparez le niveau à quelques minutes d’intervalle : a-t-il monté, baissé ou trop peu changé pour conclure ?"
+      },
+      {
+        "id": "f13_regarde_la_monter",
+        "label": "Vagues et tendance",
+        "consigne": "Observez plusieurs vagues contre le repère. Faites distinguer leur va-et-vient de l’évolution du niveau sur une durée plus longue, en vous aidant si besoin de deux photos datées."
+      }
+    ]
+  },
+  {
+    "id": "14",
+    "question": "Comment sait-on jusqu'où la mer va monter ?",
+    "objectif": "Utiliser les traces de marée comme indices, en les confrontant aux prévisions et aux conditions du site.",
+    "tip": "Appuyez-vous sur des prévisions et, si possible, une laisse dont le dépôt a été observé. Une ligne ancienne ne se date pas à sa seule position.",
+    "explication": "Une laisse de mer témoigne d’un dépôt passé ; elle ne donne à elle seule ni sa date ni la limite de la prochaine pleine mer. Celle-ci peut rester en dessous ou atteindre plus haut : on compare les hauteurs prévues au même port, sans supposer que chaque marée dépasse la précédente. La pente de plage, les vagues et les surcotes ou décotes météorologiques modifient aussi la limite réellement atteinte.",
+    "accroche": "Cette ligne d’algues est restée au sec aujourd’hui. Pourquoi la mer n’est-elle pas revenue jusque-là ?",
+    "accroches_variantes": [
+      "Cette ligne d’algues est restée au sec aujourd’hui. Pourquoi la mer n’est-elle pas revenue jusque-là ?"
+    ],
+    "accroches_formes": null,
+    "erreur_frequente": null,
+    "a_observer": "Une laisse restée au sec, les hauteurs prévues des pleines mers successives et les conditions du jour.",
+    "a_retenir": "La prochaine pleine mer peut être moins haute ou plus haute que la précédente ; une ancienne laisse n’est pas sa limite annoncée.",
+    "actions": [
+      {
+        "id": "f14_lire_laisse",
+        "label": "Reviendra-t-elle jusque-là ?",
+        "consigne": "Comparez dans l’annuaire des pleines mers successives de hauteurs différentes. Reliez-les à une laisse observée ou à une photo datée : dans quel cas attend-on une limite plus basse, dans quel cas plus haute ? Distinguez cette tendance de l’effet des vagues et de la météo."
+      }
+    ]
+  },
+  {
+    "id": "15",
+    "question": "Comment savoir où poser mon matériel quand j'arrive sur l'estran ?",
+    "objectif": "Adapter sa pratique en observant la marée pour des raisons de sécurité.",
+    "tip": "Utilisez aussi un exemple où la pleine mer a lieu avant le retour : l’eau peut avoir atteint le matériel puis être redescendue.",
+    "explication": "Le matériel doit rester hors d’atteinte de l’eau pendant toute la séance, pas seulement au départ et au retour. Même si les coefficients diminuent, une marée montante peut encore recouvrir l’emplacement ; inversement, la prochaine pleine mer ne dépassera pas forcément la précédente. On choisit donc l’emplacement à partir du niveau maximal attendu pendant l’absence, avec une marge pour les vagues et les conditions du site.",
+    "accroche": "Le coefficient baisse, mais la mer monte pendant notre séance. Où poser le matériel pour qu’il reste au sec ?",
+    "accroches_variantes": [
+      "Le coefficient baisse, mais la mer monte pendant notre séance. Où poser le matériel pour qu’il reste au sec ?"
+    ],
+    "accroches_formes": null,
+    "erreur_frequente": null,
+    "a_observer": "La courbe de hauteur entre le départ et le retour, le point le plus haut de cet intervalle et l’emplacement proposé.",
+    "a_retenir": "Pour le matériel, on regarde le plus haut niveau attendu pendant toute l’absence, pas seulement le coefficient ou l’heure du retour.",
+    "actions": [
+      {
+        "id": "f15_choisir_emplacement",
+        "label": "Toute la séance, pas seulement le retour",
+        "consigne": "Sur la courbe du jour, encadrez le départ et le retour puis repérez le niveau maximal entre les deux. Faites proposer un emplacement ; le moniteur le valide avec les marges nécessaires et en gardant les accès dégagés."
+      }
+    ]
+  },
+  {
+    "id": "16",
+    "question": "Pourquoi respecter les zones de reproduction selon les cycles de marée ?",
+    "objectif": "Comprendre pourquoi un secteur découvert par la marée peut rester sensible en période de reproduction.",
+    "tip": "Choisissez une espèce réellement présente et une période documentée. N’annoncez pas des œufs sous les pieds sans les avoir identifiés.",
+    "explication": "La baisse du niveau rend accessibles aux visiteurs des zones qui peuvent abriter des pontes ou de jeunes animaux, selon les espèces et la saison. Les plus grandes marées découvrent parfois des secteurs rarement accessibles : cette occasion d’observer n’autorise pas à fouiller, déplacer les rochers ou piétiner une zone sensible. Les protections suivent les besoins des espèces présentes, et ne disparaissent pas lorsque l’eau se retire.",
+    "accroche": "La mer s’est retirée, mais cette zone reste protégée. Qu’est-ce que l’eau pouvait cacher ?",
+    "accroches_variantes": [
+      "La mer s’est retirée, mais cette zone reste protégée. Qu’est-ce que l’eau pouvait cacher ?"
+    ],
+    "accroches_formes": null,
+    "erreur_frequente": null,
+    "a_observer": "Le balisage et l’information sur les espèces protégées du site, ou une photo identifiée de ponte ou de jeunes animaux.",
+    "a_retenir": "Une zone découverte devient accessible, pas forcément sans risque pour le vivant.",
+    "actions": [
+      {
+        "id": "f16_ca_a_l_air_vide",
+        "label": "Ce que protège la zone",
+        "consigne": "Depuis l’extérieur du secteur sensible, montrez l’information disponible sur l’espèce et sa reproduction. Expliquez pourquoi le retrait de l’eau ne supprime pas sa vulnérabilité."
+      },
+      {
+        "id": "f16_ou_on_marche",
+        "label": "Choisir le passage",
+        "consigne": "Faites repérer les cheminements autorisés et les secteurs à éviter. Le moniteur valide un trajet qui respecte le balisage, sans fouiller le sable ni retourner les rochers."
+      }
+    ]
+  },
+  {
+    "id": "27",
+    "question": "Comment repère-t-on le sens du courant ?",
+    "objectif": "Identifier des indices visuels pour déterminer le sens du courant.",
+    "tip": "Privilégiez un poteau ou un rocher fixe. Comparez plusieurs indices et les informations locales plutôt que de vous fier à une « moustache » isolée.",
+    "explication": "Autour d’un poteau fixe, le courant peut produire des remous et entraîner l’écume déjà présente. Suivre le déplacement de plusieurs traces d’écume par rapport au poteau aide à repérer le sens de l’écoulement local. Une zone d’écume immobile ou un tourbillon ne suffit pas : le vent, les vagues et les contre-courants peuvent compliquer la lecture.",
+    "accroche": "Cette écume passe le long du poteau. Dans quel sens l’eau se déplace-t-elle ici ?",
+    "accroches_variantes": [
+      "Cette écume passe le long du poteau. Dans quel sens l’eau se déplace-t-elle ici ?"
+    ],
+    "accroches_formes": null,
+    "erreur_frequente": null,
+    "a_observer": "Le déplacement de l’écume déjà présente autour d’un support fixe, puis un second indice à proximité.",
+    "a_retenir": "On suit le déplacement de l’eau par rapport à un repère fixe ; un remous isolé ne donne pas forcément le sens du courant général.",
+    "actions": [
+      {
+        "id": "f27_moustache_bouee",
+        "label": "Suivre l’écume",
+        "consigne": "Depuis le bord, faites suivre plusieurs traces d’écume déjà présentes par rapport à un poteau. Demandez dans quel sens elles se déplacent et si toutes suivent le même chemin."
+      },
+      {
+        "id": "f27_sans_rien_jeter",
+        "label": "Comparer deux indices",
+        "consigne": "Observez un second point à proximité. Si les directions diffèrent, cherchez la présence d’un obstacle ou d’un contre-courant et confrontez l’observation aux informations du site."
+      }
+    ]
+  },
+  {
+    "id": "30",
+    "question": "Comment se forment les vagues ?",
+    "objectif": "Comprendre que les vagues sont principalement créées par le vent.",
+    "tip": "Plus le vent souffle fort, longtemps et sur une grande distance, plus les vagues sont grosses.",
+    "explication": "Le vent frotte sur la surface de l'eau et lui transmet de l'énergie : plus il souffle fort, longtemps, et sur une grande étendue d'eau libre (le fetch), plus les vagues qu'il crée sont hautes et puissantes.",
+    "accroche": "Qu'est-ce qui fabrique les vagues ?",
+    "accroches_variantes": [
+      "Qu'est-ce qui fabrique les vagues ?",
+      "Soufflez sur votre gobelet d'eau. Vous venez de faire des vagues — comment ?",
+      "Soufflez sur l'eau dans le creux de vos mains. Vous venez de fabriquer une vague."
+    ],
+    "accroches_formes": null,
+    "erreur_frequente": null,
+    "a_observer": "Les vagues observées, le vent local et les informations sur la houle susceptible de venir du large.",
+    "a_retenir": "C'est le vent qui fait les vagues, en frottant sur l'eau. Plus il souffle fort et longtemps, plus elles grossissent.",
+    "actions": [
+      {
+        "id": "f30_vent_fort_vagues",
+        "label": "D’où viennent ces vagues ?",
+        "consigne": "Faites proposer l’origine des vagues observées. Comparez le vent local et la prévision de houle : le vent qui les a formées peut souffler ici ou avoir soufflé au loin."
+      },
+      {
+        "id": "f30_vague_ou_maree",
+        "label": "Vagues et niveau de marée",
+        "consigne": "Contre un repère fixe, distinguez le va-et-vient des vagues et la variation du niveau sur une durée plus longue. Expliquez que le vent forme la plupart des vagues observées, tandis que la marée dépend de l’action de la Lune et du Soleil."
+      }
+    ]
+  },
+  {
+    "id": "47",
+    "question": "Pourquoi le bord de la dune change-t-il au fil du temps ?",
+    "objectif": "Observer les signes d'érosion et d'accumulation de sable.",
+    "tip": "Observez depuis le chemin, à distance du pied et du bord d’une falaise sableuse qui peut s’effondrer.",
+    "explication": "La dune ne se déplace pas automatiquement à chaque marée. Lorsque le niveau d’eau et les vagues permettent à la mer d’atteindre son pied, celle-ci peut emporter du sable et tailler une falaise d’érosion. À d’autres moments, le vent apporte ou redistribue du sable : une reconstitution est possible si le sable est disponible, mais elle n’est ni immédiate ni garantie.",
+    "accroche": "Cette dune porte une coupure verticale. Comment la mer a-t-elle pu atteindre cet endroit ?",
+    "accroches_variantes": [
+      "Cette dune porte une coupure verticale. Comment la mer a-t-elle pu atteindre cet endroit ?"
+    ],
+    "accroches_formes": null,
+    "erreur_frequente": null,
+    "a_observer": "Des photos datées du front de dune, les traces d’érosion et les dépôts de sable, depuis les accès autorisés.",
+    "a_retenir": "Les vagues peuvent éroder le pied de dune lorsqu’elles l’atteignent ; le vent redistribue le sable disponible.",
+    "actions": [
+      {
+        "id": "f47_falaise_de_sable",
+        "label": "Lire une trace d’érosion",
+        "consigne": "Depuis un endroit sûr, montrez une coupure du front de dune. Expliquez que les vagues ont pu atteindre son pied, sans attribuer sa date à la dernière tempête sans observation."
+      },
+      {
+        "id": "f47_meme_endroit_vendredi",
+        "label": "Comparer dans le temps",
+        "consigne": "Comparez deux photos prises du même point autorisé. Faites décrire ce qui a changé ou est resté stable, puis distinguez les indices observés des causes à documenter."
+      }
+    ]
+  },
+  {
+    "id": "50",
+    "question": "Comment s'appelle la bande colorée sur le sable, quand la mer se retire ?",
+    "objectif": "Connaître le terme 'laisse de mer'.",
+    "tip": "Introduisez le mot en montrant le dépôt, sans le présenter comme une poubelle ni comme une mesure exacte du niveau.",
+    "explication": "La laisse de mer est un dépôt laissé sur le rivage par l’eau : algues, fragments de coquilles ou bois, parfois mêlés à des déchets humains. Les vagues peuvent déposer, reprendre ou déplacer ces éléments ; plusieurs laisses d’âges différents peuvent donc rester visibles. La ligne la plus haute n’est pas nécessairement celle de la dernière pleine mer.",
+    "accroche": "La mer est loin et cette ligne d’algues reste sur le sable. Comment est-elle arrivée là ?",
+    "accroches_variantes": [
+      "La mer est loin et cette ligne d’algues reste sur le sable. Comment est-elle arrivée là ?"
+    ],
+    "accroches_formes": null,
+    "erreur_frequente": null,
+    "a_observer": "Une ou plusieurs lignes de dépôts, leur contenu et leur position par rapport à l’eau.",
+    "a_retenir": "La laisse de mer rassemble ce que l’eau a déposé ; elle peut rester en place pendant plusieurs marées.",
+    "actions": [
+      {
+        "id": "f50_poubelle_ou_garde_manger",
+        "label": "Nommer ce dépôt",
+        "consigne": "Faites décrire les éléments visibles sans les déplacer. Introduisez le terme laisse de mer, puis expliquez comment l’eau les a apportés."
+      },
+      {
+        "id": "f50_jusqu_ou_montee",
+        "label": "Laquelle est récente ?",
+        "consigne": "S’il y a plusieurs lignes, demandez comment connaître leur date. Distinguez une supposition d’un dépôt réellement observé ou photographié : leur hauteur seule ne suffit pas."
+      }
+    ]
+  },
+  {
+    "id": "52",
+    "question": "Comment les courants et marées transportent-ils les débris ?",
+    "objectif": "Comprendre que la laisse de mer est un indicateur des mouvements de l'eau.",
+    "tip": "Appuyez la comparaison sur deux observations datées du même endroit. Fraîcheur apparente et hauteur ne permettent pas de dater précisément un dépôt.",
+    "explication": "Les courants transportent des éléments flottants, et les vagues peuvent les déposer sur le rivage ou les reprendre. Si les pleines mers suivantes atteignent moins haut, une ancienne laisse peut rester au sec tandis que de nouveaux dépôts se forment plus bas ; si l’eau l’atteint à nouveau, elle peut la remanier. La position des dépôts dépend aussi du vent, des vagues et de la plage : elle ne permet pas à elle seule de retrouver le trajet des débris.",
+    "accroche": "Il y a une vieille ligne d’algues en haut et des débris plus frais en bas. Pourquoi la mer a-t-elle laissé les deux ?",
+    "accroches_variantes": [
+      "Il y a une vieille ligne d’algues en haut et des débris plus frais en bas. Pourquoi la mer a-t-elle laissé les deux ?"
+    ],
+    "accroches_formes": null,
+    "erreur_frequente": null,
+    "a_observer": "Les dépôts du même secteur à deux dates, les hauteurs des pleines mers entre les deux et les conditions de vagues.",
+    "a_retenir": "Une laisse peut rester au sec, être reprise ou recevoir de nouveaux dépôts : elle ne se déplace pas forcément à chaque marée.",
+    "actions": [
+      {
+        "id": "f52_deux_lignes",
+        "label": "Ce qui reste, ce qui change",
+        "consigne": "Comparez deux photos datées du même secteur. Repérez les dépôts encore présents et les nouveaux, puis cherchez quelles hauteurs d’eau et quelles vagues ont pu atteindre chaque zone."
+      },
+      {
+        "id": "f52_pourquoi_la",
+        "label": "Plus bas ou plus haut",
+        "consigne": "Comparez une période de pleines mers moins hautes à une période de pleines mers plus hautes dans les prévisions locales. Faites expliquer ce que cela peut changer pour une ligne de débris déjà présente."
+      }
+    ]
+  },
+  {
+    "id": "68",
+    "question": "Pourquoi on ne part pas à la même heure chaque jour ?",
+    "objectif": "Comprendre que les activités nautiques suivent les rythmes de la nature : la marée chaque jour, les coefficients sur deux semaines, les saisons sur l’année.",
+    "tip": "Choisissez un exemple réel du club ; tous les horaires de séance ne sont pas imposés par la marée.",
+    "explication": "Sur un site soumis aux marées, un accès peut demander une certaine hauteur d’eau ou un courant adapté. D’un jour à l’autre, les horaires de pleine et de basse mer se décalent, mais les hauteurs changent aussi avec des marées qui gagnent ou perdent de l’ampleur. On ne peut donc pas toujours reprendre le créneau de la veille en le décalant simplement : la plage horaire utilisable peut s’allonger, se raccourcir ou disparaître.",
+    "accroche": "Pourquoi ce passage est-il utilisable à une heure un jour, et à une autre heure le lendemain ?",
+    "accroches_variantes": [
+      "Pourquoi ce passage est-il utilisable à une heure un jour, et à une autre heure le lendemain ?"
+    ],
+    "accroches_formes": null,
+    "erreur_frequente": null,
+    "a_observer": "Un accès réellement dépendant de l’eau et les prévisions de deux journées.",
+    "a_retenir": "Pour retrouver un créneau adapté, on compare les horaires et les hauteurs d’eau de chaque journée.",
+    "actions": [
+      {
+        "id": "f68_comparer_deux_jours",
+        "label": "Comparer deux journées",
+        "consigne": "Prenez un accès réellement utilisé par le club et deux journées de prévisions. Faites retrouver quand la hauteur nécessaire est disponible ; le moniteur explique ensuite comment le courant et la météo interviennent dans son choix."
+      }
+    ]
+  },
+  {
+    "id": "89",
+    "question": "Qu’est-ce qu’un courant marin ?",
+    "objectif": "Définir ce qu'est un courant marin.",
+    "tip": "Commencez par nommer le déplacement observé. Son origine pourra ensuite être expliquée avec les informations du site.",
+    "explication": "Un courant marin est un déplacement de masses d’eau, souvent décrit par sa direction et sa vitesse. Il peut être entraîné par les marées, le vent ou des différences de densité liées à la température et à la salinité. Certains courants circulent au large, d’autres sont guidés par un chenal ou un détroit : l’image d’une rivière dans la mer est utile, mais ne décrit pas toutes les situations.",
+    "accroche": "Le niveau de l’eau change peu, mais cette écume se déplace. Quel mouvement voyons-nous ?",
+    "accroches_variantes": [
+      "Le niveau de l’eau change peu, mais cette écume se déplace. Quel mouvement voyons-nous ?"
+    ],
+    "accroches_formes": null,
+    "erreur_frequente": null,
+    "a_observer": "Le mouvement de l’eau par rapport au rivage, autour d’un support fixe ou dans un passage.",
+    "a_retenir": "Le courant décrit le déplacement de l’eau ; la hauteur de marée décrit son niveau.",
+    "actions": [
+      {
+        "id": "f89_ou_sont_les_berges",
+        "label": "Décrire le déplacement",
+        "consigne": "Depuis le bord, faites décrire dans quel sens l’eau se déplace par rapport à un repère fixe. Introduisez le mot courant sans en déduire immédiatement sa cause."
+      },
+      {
+        "id": "f89_montre_le",
+        "label": "Deux mouvements différents",
+        "consigne": "Comparez le niveau sur un poteau et le déplacement de l’écume à proximité. Faites expliquer pourquoi l’un renseigne sur la hauteur et l’autre sur le courant."
+      }
+    ]
+  },
+  {
+    "id": "106",
+    "question": "Que faut-il observer concernant la marée ou le courant avant une activité nautique ?",
+    "objectif": "Identifier les points d'observation essentiels pour la marée et les courants.",
+    "tip": "Le groupe apprend à lire les contraintes ; il ne remplace pas l’évaluation professionnelle du départ.",
+    "explication": "Pour préparer le parcours, on regarde si la mer monte ou descend, les hauteurs disponibles pendant toute la sortie et l’évolution du courant dans les passages. Un coefficient en baisse ne signifie pas que le niveau baisse à cet instant ; il n’indique pas non plus, à lui seul, le courant rencontré. Les prévisions locales permettent de suivre ces évolutions, et l’observation aide à les confronter aux conditions présentes.",
+    "accroche": "Le coefficient diminue aujourd’hui. Est-ce suffisant pour savoir si nous aurons de l’eau dans ce passage au retour ?",
+    "accroches_variantes": [
+      "Le coefficient diminue aujourd’hui. Est-ce suffisant pour savoir si nous aurons de l’eau dans ce passage au retour ?"
+    ],
+    "accroches_formes": null,
+    "erreur_frequente": null,
+    "a_observer": "Le passage prévu, ses accès, les mouvements d’eau et les prévisions couvrant l’aller et le retour.",
+    "a_retenir": "Coefficient, hauteur d’eau et courant répondent à trois questions différentes : importance de la marée, accès et déplacement de l’eau.",
+    "actions": [
+      {
+        "id": "f106_decision_depart",
+        "label": "Trois informations à retrouver",
+        "consigne": "Sur les documents du site, faites retrouver le coefficient, les hauteurs couvrant toute la sortie et les prévisions de courant du passage. Demandez à quoi sert chacune de ces informations, puis expliquez le parcours retenu."
+      }
+    ]
+  }
+]

@@ -4,11 +4,11 @@ import Link from 'next/link';
 import { useTransition } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { deleteFicheMemo, publierFicheMemo, depublierFicheMemo } from '@/actions/fiche-memo-actions';
-import type { FicheMemo } from '@/actions/fiche-memo-actions';
+import type { FichePreview } from '@/actions/fiche-memo-actions';
 import { THEMATIC_TAG_LABELS, SAISON_LABELS } from './fiche-constants';
 
 interface FicheCardProps {
-    fiche: FicheMemo;
+    fiche: FichePreview;
     currentUserId?: string | null;
     isAdmin?: boolean;
     isModerator?: boolean; // référent : admin OU instructor
@@ -39,18 +39,16 @@ export default function FicheCard({ fiche, currentUserId, isAdmin, isModerator }
     const handleDelete = () => {
         if (!confirm(`Supprimer la fiche "${fiche.titre}" ?`)) return;
         startTransition(async () => {
-            await deleteFicheMemo(fiche.id);
+            const result = await deleteFicheMemo(fiche.id);
+            if (!result.success) { alert(result.error); return; }
             router.refresh();
         });
     };
 
     const handleToggleStatut = () => {
         startTransition(async () => {
-            if (fiche.statut === 'publie') {
-                await depublierFicheMemo(fiche.id);
-            } else {
-                await publierFicheMemo(fiche.id);
-            }
+            const result = fiche.statut === 'publie' ? await depublierFicheMemo(fiche.id) : await publierFicheMemo(fiche.id);
+            if (!result.success) { alert(result.error); return; }
             router.refresh();
         });
     };

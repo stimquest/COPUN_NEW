@@ -155,7 +155,7 @@ export function FichesClient({ initialFiches }: { initialFiches: FicheWithTodos[
                 {fiches.length === 0 ? (
                     <div className="rounded-[2rem] border border-dashed border-slate-300 bg-white p-10 text-center">
                         <span className="material-symbols-outlined text-5xl text-slate-200 block mb-3">menu_book</span>
-                        <p className="text-sm font-bold text-slate-400">Aucune fiche sportive pour l'instant.</p>
+                        <p className="text-sm font-bold text-slate-400">Aucune fiche sportive pour l&apos;instant.</p>
                         <p className="mt-1 text-xs text-slate-400">Créez vos fiches réutilisables avec leurs points de cours.</p>
                         <button
                             onClick={() => setDrawerOpen(true)}
@@ -180,6 +180,7 @@ export function FichesClient({ initialFiches }: { initialFiches: FicheWithTodos[
             </main>
 
             <CustomContentDrawer
+                key={editing?.id ?? (drawerOpen ? 'new' : 'closed')}
                 open={drawerOpen || editing !== null}
                 initialData={editing}
                 onClose={() => { setDrawerOpen(false); setEditing(null); }}

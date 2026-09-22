@@ -1,5 +1,6 @@
 'use server';
 
+import { contentModel } from '@/lib/data-models';
 import { revalidatePath } from 'next/cache';
 import { requireAuth } from '@/lib/auth';
 import { PedagogicalContent } from '@/types';
@@ -18,7 +19,7 @@ export async function getAllPedagogicalContent(): Promise<PedagogicalContent[]> 
         console.error('[getAllPedagogicalContent]', error.message);
         return [];
     }
-    return data as PedagogicalContent[];
+    return (data ?? []).map(contentModel);
 }
 
 async function requireAdmin() {
@@ -75,7 +76,9 @@ export async function createPedagogicalContent(data: Partial<PedagogicalContent>
     const ctx = await requireAuth();
     if (!ctx) return { success: false, error: 'Vous devez être connecté pour créer une fiche.' };
 
+    if (!data.question?.trim() || !data.objectif?.trim()) return { success: false, error: 'Question et objectif requis.' };
     const newContent = {
+        id: crypto.randomUUID(),
         question: data.question,
         objectif: data.objectif,
         explication: data.explication,
@@ -86,6 +89,8 @@ export async function createPedagogicalContent(data: Partial<PedagogicalContent>
         tags_filtre: [...(data.tags_filtre || []).filter(t => t !== 'Personnel'), 'Personnel'],
         owner_id: ctx.user.id,
         is_public: false,
+        source: 'custom' as const,
+        ressources: data.ressources ?? [],
     };
 
     const { data: inserted, error } = await ctx.supabase
@@ -100,7 +105,7 @@ export async function createPedagogicalContent(data: Partial<PedagogicalContent>
     }
 
     revalidatePath('/stages');
-    return { success: true, data: inserted };
+    return { success: true, data: contentModel(inserted) };
 }
 
 export async function getUserContent() {
@@ -116,5 +121,20 @@ export async function getUserContent() {
         console.error('[getUserContent]', error.message);
         return [];
     }
-    return data as PedagogicalContent[];
+    return (data ?? []).map(contentModel);
+}
+
+export async function createAdminPedagogicalContent(data: Partial<PedagogicalContent>) {
+    const ctx = await requireAdmin();
+    if (!ctx) return { success: false, error: 'Accès refusé.' };
+    if (!data.question?.trim() || !data.objectif?.trim()) return { success: false, error: 'Question et objectif requis.' };
+    const { data: inserted, error } = await ctx.supabase.from('pedagogical_content').insert({
+        id: crypto.randomUUID(), question: data.question.trim(), objectif: data.objectif.trim(), explication: data.explication,
+        tip: data.tip ?? '', niveau: data.niveau ?? 1, dimension: data.dimension ?? 'COMPRENDRE',
+        tags_theme: data.tags_theme ?? [], tags_filtre: data.tags_filtre ?? [], ressources: data.ressources ?? [],
+        source: 'copun', is_public: true, owner_id: ctx.user.id,
+    }).select().single();
+    if (error) return { success: false, error: error.message };
+    revalidatePath('/admin'); revalidatePath('/stages');
+    return { success: true, data: inserted };
 }

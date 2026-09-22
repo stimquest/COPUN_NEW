@@ -5,14 +5,6 @@ import { requireAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import type { ThematicTag } from '@/data/seasonal-context';
 
-async function requireAdminOrModerator() {
-    const ctx = await requireAuth();
-    if (!ctx) return null;
-    const { data: profile } = await ctx.supabase
-        .from('profiles').select('role').eq('id', ctx.user.id).single();
-    if (!profile || !['admin', 'moderator'].includes(profile.role)) return null;
-    return ctx;
-}
 
 export type FicheStatut = 'brouillon' | 'publie';
 
@@ -28,7 +20,7 @@ export interface FicheMemo {
     auteur_id: string | null;
     created_at: string;
     updated_at: string;
-    auteur?: { full_name: string | null; email: string | null } | null;
+    auteur?: { full_name: string | null; email?: string | null } | null;
 }
 
 export interface CreateFicheData {
@@ -40,22 +32,24 @@ export interface CreateFicheData {
     tags: string[];
 }
 
-export async function getAllFichesMemo(filtreStatut?: FicheStatut): Promise<FicheMemo[]> {
+export type FichePreview = Omit<FicheMemo, 'contenu'>;
+
+export async function getAllFichesMemo(filtreStatut?: FicheStatut): Promise<FichePreview[]> {
     const supabase = await createClient();
     let query = supabase
         .from('fiches_memo')
-        .select('*, auteur:profiles(full_name, email)')
+        .select('id,titre,resume,tags_thematiques,tags_saisons,tags,statut,auteur_id,created_at,updated_at,auteur:profile_directory(full_name)')
         .order('updated_at', { ascending: false });
     if (filtreStatut) query = query.eq('statut', filtreStatut);
     const { data, error } = await query;
     if (error) { console.error('[getAllFichesMemo]', error.message); return []; }
-    return data as FicheMemo[];
+    return data as FichePreview[];
 }
 
 export async function getFicheMemoById(id: string): Promise<FicheMemo | null> {
     const supabase = await createClient();
     const { data, error } = await supabase
-        .from('fiches_memo').select('*, auteur:profiles(full_name, email)').eq('id', id).single();
+        .from('fiches_memo').select('*, auteur:profile_directory(full_name)').eq('id', id).single();
     if (error) return null;
     return data as FicheMemo;
 }
@@ -63,7 +57,7 @@ export async function getFicheMemoById(id: string): Promise<FicheMemo | null> {
 export async function getFichesMemoByTheme(tag: ThematicTag): Promise<FicheMemo[]> {
     const supabase = await createClient();
     const { data, error } = await supabase
-        .from('fiches_memo').select('*, auteur:profiles(full_name, email)')
+        .from('fiches_memo').select('*, auteur:profile_directory(full_name)')
         .eq('statut', 'publie').contains('tags_thematiques', [tag]).order('updated_at', { ascending: false });
     if (error) return [];
     return data as FicheMemo[];
@@ -72,7 +66,7 @@ export async function getFichesMemoByTheme(tag: ThematicTag): Promise<FicheMemo[
 export async function getFichesMemoByFilters(tags_thematiques: ThematicTag[], tags_saisons: string[]): Promise<FicheMemo[]> {
     const supabase = await createClient();
     let query = supabase
-        .from('fiches_memo').select('*, auteur:profiles(full_name, email)')
+        .from('fiches_memo').select('*, auteur:profile_directory(full_name)')
         .eq('statut', 'publie').order('updated_at', { ascending: false });
     if (tags_thematiques.length > 0) query = query.overlaps('tags_thematiques', tags_thematiques);
     if (tags_saisons.length > 0) query = query.overlaps('tags_saisons', tags_saisons);
@@ -96,7 +90,7 @@ export async function getFichesMemoForCard(
     const supabase = await createClient();
     const { data, error } = await supabase
         .from('fiches_memo')
-        .select('*, auteur:profiles(full_name, email)')
+        .select('*, auteur:profile_directory(full_name)')
         .eq('statut', 'publie')
         .or([
             tags_theme.length > 0 ? `tags_thematiques.ov.{${tags_theme.join(',')}}` : null,
@@ -149,7 +143,7 @@ export async function updateFicheMemo(id: string, ficheData: Partial<CreateFiche
     if (!ctx) return { success: false, error: 'Non connecté' };
 
     const { data: profile } = await ctx.supabase.from('profiles').select('role').eq('id', ctx.user.id).single();
-    if (!['admin', 'moderator'].includes(profile?.role)) {
+    if (!['admin', 'instructor'].includes(profile?.role ?? '')) {
         const { data: fiche } = await ctx.supabase.from('fiches_memo').select('auteur_id').eq('id', id).single();
         if (fiche?.auteur_id !== ctx.user.id) return { success: false, error: 'Accès refusé.' };
     }
@@ -165,8 +159,13 @@ export async function publierFicheMemo(id: string) { return updateFicheMemo(id, 
 export async function depublierFicheMemo(id: string) { return updateFicheMemo(id, { statut: 'brouillon' }); }
 
 export async function deleteFicheMemo(id: string) {
-    const ctx = await requireAdminOrModerator();
+    const ctx = await requireAuth();
     if (!ctx) return { success: false, error: 'Accès refusé.' };
+    const [{ data: profile }, { data: fiche }] = await Promise.all([
+        ctx.supabase.from('profiles').select('role').eq('id', ctx.user.id).single(),
+        ctx.supabase.from('fiches_memo').select('auteur_id').eq('id', id).single(),
+    ]);
+    if (profile?.role !== 'admin' && fiche?.auteur_id !== ctx.user.id) return { success: false, error: 'Accès refusé.' };
     const { error } = await ctx.supabase.from('fiches_memo').delete().eq('id', id);
     if (error) { console.error('[deleteFicheMemo]', error.message); return { success: false, error: error.message }; }
     revalidatePath('/ressources');

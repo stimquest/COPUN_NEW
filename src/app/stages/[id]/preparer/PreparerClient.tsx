@@ -92,6 +92,7 @@ export default function PreparerClient({
      */
     const [echec, setEchec] = useState<string | null>(null);
 
+    const actionLocks = useRef(new Set<string>());
     const sections = useRef<(HTMLElement | null)[]>([]);
 
     /**
@@ -147,16 +148,20 @@ export default function PreparerClient({
     };
 
     const basculer = async (c: PedagogicalContent, id: string) => {
+        if (actionLocks.current.has(c.id)) return;
+        actionLocks.current.add(c.id);
         const avant = preps[c.id]?.actions ?? [];
         const suivant = avant.includes(id) ? avant.filter(a => a !== id) : [...avant, id];
         maj(c.id, { actions: suivant });
         setEchec(null);
 
-        const r = await saveActions(stageId, c.id, suivant);
-        if (!r.success) {
+        try {
+            const r = await saveActions(stageId, c.id, suivant);
+            if (!r.success) throw new Error(r.error);
+        } catch {
             maj(c.id, { actions: avant });
-            setEchec(r.error ?? 'Enregistrement impossible.');
-        }
+            setEchec('Enregistrement impossible.');
+        } finally { actionLocks.current.delete(c.id); }
     };
 
     const reordonner = async (ids: string[]) => {
@@ -341,7 +346,7 @@ export default function PreparerClient({
                         Mes sujets
                     </Link>
                     <Link
-                        href="/stages"
+                        href="/stages/semaines"
                         className="flex-1 h-[52px] rounded-2xl bg-slate-900 text-white text-[15px] font-black active:scale-[0.98] transition flex items-center justify-center gap-2"
                     >
                         {prets === ordre.length ? 'Terminé' : `${prets}/${ordre.length} préparés`}

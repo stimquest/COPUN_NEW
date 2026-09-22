@@ -13,12 +13,14 @@
     align-items: baseline;
     column-gap: 10px;
     row-gap: 2px;
-    color: #64748b;
-    font-size: 12px;
-    font-weight: 500;
+    color: #56706a;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .12em;
+    text-transform: uppercase;
     line-height: 1.4;
 }
-.forme { color: #334155; font-weight: 600; }
+.forme { color: #173d3a; font-weight: 700; }
 .controls { display: flex; flex-shrink: 0; gap: 4px; }
 .control {
     display: grid;
@@ -27,14 +29,15 @@
     height: 44px;
     padding: 0;
     border: 0;
-    border-radius: 10px;
-    background: #f1f5f9;
-    color: #475569;
+    border: 1px solid #193d3b26;
+    border-radius: 12px;
+    background: #fffdf8;
+    color: #36554f;
     cursor: pointer;
     transition: color 150ms ease, background-color 150ms ease, transform 150ms ease;
 }
-@media (hover: hover) { .control:not(:disabled):hover { color: #0f172a; background: #e2e8f0; } }
-.control:not(:disabled):active { transform: scale(.94); color: #0f172a; }
+@media (hover: hover) { .control:not(:disabled):hover { color: #173d3a; background: #edf1ea; } }
+.control:not(:disabled):active { transform: scale(.94); color: #173d3a; }
 .control:disabled { background: transparent; color: #cbd5e1; cursor: default; }
 .control:focus-visible { outline: 2px solid #6366f1; outline-offset: -5px; }
 .propositions { display: grid; grid-template-columns: minmax(0, 1fr); }
@@ -42,10 +45,10 @@
     grid-area: 1 / 1;
     min-width: 0;
     margin: 0;
-    color: #0f172a;
-    font-size: 18px;
-    font-weight: 600;
-    line-height: 1.5;
+    color: #173d3a;
+    font-size: 19px;
+    font-weight: 700;
+    line-height: 1.48;
     letter-spacing: -.015em;
 }
 .srOnly { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }

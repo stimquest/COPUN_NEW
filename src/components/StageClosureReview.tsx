@@ -50,7 +50,6 @@ export function StageClosureReview({
     const [error, setError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const defisDone = defisAssigned.filter(d => d.status === 'complete').length;
     const defisTotal = defisAssigned.length;
     const quizDone = quizData?.done ?? false;
 
@@ -77,6 +76,7 @@ export function StageClosureReview({
         setIsSubmitting(true);
         setError(null);
 
+        try {
         const result = await closeStage(stageId, {
             closingNotes: closingNote,
             ressenti: { niveau, raisons, note: '' },
@@ -90,6 +90,7 @@ export function StageClosureReview({
         }
         router.push(`/stages/${stageId}/bilan`);
         router.refresh();
+        } catch { setError("Clôture impossible. Veuillez réessayer."); } finally { setIsSubmitting(false); }
     };
 
     return (
@@ -304,7 +305,7 @@ export function StageClosureReview({
                         )}
                     </div>
                     <Link
-                        href="/stages"
+                        href="/stages/semaines"
                         className="h-11 px-4 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 flex items-center hover:bg-slate-50 transition"
                     >
                         Annuler

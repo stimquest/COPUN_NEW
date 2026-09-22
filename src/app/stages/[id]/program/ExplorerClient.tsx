@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useRef, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import clsx from 'clsx';
@@ -8,9 +8,7 @@ import { motion, AnimatePresence, Reorder, useDragControls } from 'framer-motion
 import { Stage, PedagogicalContent, Dimension } from '@/types';
 import { GROUPES, Groupe } from '@/data/groupes';
 import { PILLARS } from '@/data/etages';
-import { NIVEAUX } from '@/data/niveaux';
 import { updateStagePool } from '@/actions/stage-actions';
-import GroupeBloc from '@/components/explorer/GroupeBloc';
 import TagsPanel from '@/components/explorer/TagsPanel';
 import AideConditions from '@/components/explorer/AideConditions';
 import FluxDecouverte from '@/components/explorer/FluxDecouverte';
@@ -34,6 +32,7 @@ type Props = {
 // 2-3 notions par semaine = bon rythme de transmission ; 5 max pour les très motivés.
 // Au-delà, rien ne sera vraiment travaillé.
 const MAX_OBJECTIFS = 5;
+const EMPTY_DIMENSIONS: Dimension[] = [];
 
 /**
  * Écran de choix des contenus.
@@ -50,20 +49,15 @@ export default function ExplorerClient({ stage, copunPool, customPool, historiqu
     const router = useRouter();
     const [retenues, setRetenues] = useState<string[]>(() => Array.from(new Set([...(stage.selected_content ?? []), ...initialSelection])).slice(0, MAX_OBJECTIFS));
     const [savedOpen, setSavedOpen] = useState(false);
-    // Les groupes contenant déjà une sélection s'ouvrent d'emblée : en arrivant sur une
-    // semaine préparée, le moniteur doit voir ses choix, pas des accordéons fermés.
-    const [ouverts, setOuverts] = useState<string[]>(() => {
-        const dejaPris = new Set(stage.selected_content ?? []);
-        return GROUPES.filter(g => g.fiches.some(f => dejaPris.has(String(f)))).map(g => g.id);
-    });
-    const [recherche, setRecherche] = useState('');
-    const [niveau, setNiveau] = useState<1 | 2 | 3 | 4 | null>(null);
+    const recherche = '';
+    const niveau: 1 | 2 | 3 | 4 | null = null;
     // Multi-sélection : COP est un arc, pas une catégorie exclusive — on veut pouvoir
     // croiser deux « comprendre » et un « observer » sur un même sujet.
-    const [dimensions, setDimensions] = useState<Dimension[]>([]);
+    const dimensions = EMPTY_DIMENSIONS;
     const [ficheDetail, setFicheDetail] = useState<PedagogicalContent | null>(null);
     const [enregistre, setEnregistre] = useState(false);
     const [saving, setSaving] = useState(false);
+    const saveLock = useRef(false);
     const [plafond, setPlafond] = useState(false);
     const [voirSelection, setVoirSelection] = useState(false);
     const [tagsOuverts, setTagsOuverts] = useState(false);
@@ -73,7 +67,7 @@ export default function ExplorerClient({ stage, copunPool, customPool, historiqu
     // Parcours en deux temps : on choisit d'abord un sujet par couleur (ChoixThemes), puis
     // on ouvre les questions qui y mènent (QuestionsDuSujet). L'entrée « par sujet de terrain »
     // a été supprimée — elle éparpillait au lieu de tenir la semaine sur trois couleurs.
-    const [vueCopun, setVueCopun] = useState(false);
+    const vueCopun = false;
     // Deux chemins pour aborder la semaine, jamais confondus : une intention à accepter
     // (AideConditions) ou le catalogue à parcourir en flux (FluxDecouverte).
     const [aideConditionsOuverte, setAideConditionsOuverte] = useState(false);
@@ -93,7 +87,6 @@ export default function ExplorerClient({ stage, copunPool, customPool, historiqu
     // repartait vers l'éparpillement, alors que la semaine doit tenir sur trois sujets, un
     // par couleur. Son rendu reste en place plus bas mais n'est plus atteignable — laissé
     // le temps de confirmer que la nouvelle entrée par thèmes couvre bien tous les usages.
-    const catalogueSujetOuvert = false;
 
     const pool = useMemo(() => [...copunPool, ...customPool], [copunPool, customPool]);
     const savedCards = useMemo(() => savedIds.map(id => pool.find(card => card.id === id)).filter((card): card is PedagogicalContent => !!card), [savedIds, pool]);
@@ -178,9 +171,9 @@ export default function ExplorerClient({ stage, copunPool, customPool, historiqu
     }, [pool, niveau, dimensions, recherche, tags]);
 
     const total = useMemo(() => blocs.reduce((n, b) => n + b.fiches.length, 0), [blocs]);
-    const filtresActifs = (niveau ? 1 : 0) + dimensions.length + tags.length + (recherche.trim() ? 1 : 0);
 
     const toggleFiche = (id: string) => {
+        if (saveLock.current) return;
         setRetenues(p => {
             if (p.includes(id)) return p.filter(x => x !== id);
             if (p.length >= MAX_OBJECTIFS) {
@@ -195,11 +188,14 @@ export default function ExplorerClient({ stage, copunPool, customPool, historiqu
 
 
     const enregistrer = async () => {
-        setSaving(true);
-        const res = await updateStagePool(stage.id, retenues);
-        setSaving(false);
-        if (res.success) { setEnregistre(true); router.refresh(); }
-        else alert('Erreur : ' + res.error);
+        if (saveLock.current) return;
+        saveLock.current = true; setSaving(true);
+        try {
+            const res = await updateStagePool(stage.id, retenues);
+            if (res.success) { setEnregistre(true); router.refresh(); }
+            else alert(res.error);
+        } catch { alert('Enregistrement impossible.'); }
+        finally { saveLock.current = false; setSaving(false); }
     };
 
     // Résultat de l'entonnoir « par sujet » : préconfigure le catalogue phénomène
@@ -226,7 +222,7 @@ export default function ExplorerClient({ stage, copunPool, customPool, historiqu
                             </button>
                         ) : (
                             <Link
-                                href="/stages"
+                                href="/stages/semaines"
                                 className="size-10 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center text-white active:scale-90 transition shrink-0"
                             >
                                 <span className="material-symbols-outlined text-[20px]">arrow_back</span>
@@ -284,8 +280,8 @@ export default function ExplorerClient({ stage, copunPool, customPool, historiqu
                                     </div>
                                 </article>;
                             })}
-                        </> : <p className="text-sm text-slate-500">Dans Découvrir, mettez de côté les cartes qui vous intéressent. Vous les retrouverez ici quand vous préparerez une semaine.</p>}
-                        <Link href="/stages/decouvrir?saved=1" className="inline-block py-2 text-sm font-bold text-indigo-600">Relire mes cartes dans Découvrir →</Link>
+                        </> : <p className="text-sm text-slate-500">Dans Explorer, mettez de côté les cartes qui vous intéressent. Vous les retrouverez ici quand vous préparerez une semaine.</p>}
+                        <Link href="/stages/decouvrir?saved=1" className="inline-block py-2 text-sm font-bold text-indigo-600">Relire mes cartes dans Explorer →</Link>
                     </div>}
                 </section>}
 
@@ -295,7 +291,6 @@ export default function ExplorerClient({ stage, copunPool, customPool, historiqu
                 {aideConditionsOuverte && (
                     <AideConditions
                         open
-                        onClose={() => setAideConditionsOuverte(false)}
                         pool={pool}
                         retenues={retenues}
                         onToggleFiche={toggleFiche}
@@ -315,7 +310,7 @@ export default function ExplorerClient({ stage, copunPool, customPool, historiqu
                     — « Intention » : je choisis d'aborder un sujet précis, comme on accepte
                       un défi — le moteur existant (conditions, niveau) reste, seule sa
                       présentation change : un choix à faire, pas un formulaire à remplir.
-                    — « Découvrir » : le catalogue entier, en cartes qu'on swipe façon
+                    — « Choisir les sujets » : le catalogue entier, en cartes qu'on swipe façon
                       /formation — la matière (accroche, forme, idée reçue) directement
                       visible, « garder » comme seul geste, jamais de préparation forcée. */}
                 {/* Ce qui est déjà retenu passe en tête : arriver ici avec une sélection
@@ -372,7 +367,7 @@ export default function ExplorerClient({ stage, copunPool, customPool, historiqu
                                     modeDecouverte ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500',
                                 )}
                             >
-                                Explorer
+                                Choisir les sujets
                             </button>
                             <button
                                 onClick={() => setModeDecouverte(false)}
@@ -518,7 +513,7 @@ export default function ExplorerClient({ stage, copunPool, customPool, historiqu
                             <Reorder.Group
                                 axis="y"
                                 values={retenues}
-                                onReorder={ids => { setRetenues(ids); setEnregistre(false); }}
+                                onReorder={ids => { if (saveLock.current) return; setRetenues(ids); setEnregistre(false); }}
                                 className="flex-1 overflow-y-auto px-5 pb-8 space-y-2"
                             >
                                 {fichesRetenues.map((f, i) => (
@@ -559,24 +554,6 @@ export default function ExplorerClient({ stage, copunPool, customPool, historiqu
     );
 }
 
-
-function Puce({
-    actif, accent, onClick, children,
-}: { actif: boolean; accent?: string; onClick: () => void; children: React.ReactNode }) {
-    return (
-        <button
-            onClick={onClick}
-            className={clsx(
-                'shrink-0 h-8 px-3.5 rounded-full text-[11px] font-black uppercase tracking-wide transition-all active:scale-95',
-                actif
-                    ? clsx(accent ?? 'bg-slate-900', 'text-white shadow-sm')
-                    : 'bg-white text-slate-500 shadow-sm',
-            )}
-        >
-            {children}
-        </button>
-    );
-}
 
 /**
  * Une fiche retenue, déplaçable dans l'ordre de traitement.

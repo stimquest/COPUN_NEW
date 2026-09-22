@@ -35,6 +35,13 @@ export type ActionFiche = {
   label: string;
   /** La consigne, reprenable telle quelle devant le groupe. */
   consigne: string;
+  /**
+   * « on a comparé le vent et les vagues » — la phrase que le groupe confirme au vote de
+   * fin de stage, complétée par « Cette semaine, ». C'est la seule validation d'une action
+   * qui ne vienne pas du moniteur : il ne peut pas répondre à la place de ses stagiaires.
+   * Absente tant que la carte n'a pas été rédigée (niveaux 2 et 3 à ce jour).
+   */
+  confirmation?: string;
 };
 
 export type ObservationPillar = 'COMPRENDRE' | 'OBSERVER' | 'PROTÉGER';
@@ -74,6 +81,10 @@ export type PedagogicalContent = {
   a_observer?: string;
   a_retenir?: string;
   erreur_frequente?: string;
+  /** Affirmation exacte lue à voix haute au vote de fin de stage (réponse : VRAI). */
+  vote_vrai?: string | null;
+  /** Erreur plausible lue au vote de fin de stage (réponse : FAUX). */
+  vote_faux?: string | null;
   /** Actions de terrain propres à cette fiche. Repli sur le groupe si absent. */
   actions?: ActionFiche[] | null;
   /** Cible de public (voir src/data/niveaux.ts) : pas une échelle de difficulté du texte. */

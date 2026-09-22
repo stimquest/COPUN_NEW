@@ -47,7 +47,8 @@ export async function updatePassword(formData: FormData) {
     if (error) return { error: error.message };
 
     if (user) {
-        await supabase.from('profiles').update({ password_set: true }).eq('id', user.id);
+        const { error: profileError } = await supabase.from('profiles').update({ password_set: true }).eq('id', user.id);
+        if (profileError) return { error: 'Mot de passe modifié, mais confirmation impossible. Veuillez réessayer.' };
     }
 
     revalidatePath('/', 'layout');

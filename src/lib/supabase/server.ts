@@ -1,3 +1,4 @@
+import type { Database } from '@/types/database';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { cache } from 'react';
@@ -5,7 +6,7 @@ import { cache } from 'react';
 export async function createClient() {
     const cookieStore = await cookies();
 
-    return createServerClient(
+    return createServerClient<Database>(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
         {

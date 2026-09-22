@@ -1,3 +1,4 @@
+import { contentModel, stageModel } from '@/lib/data-models';
 import { createClient, getCachedUser } from '@/lib/supabase/server';
 import { summarizeObjectiveReviews, type ObjectiveAnalyticsInput, type StageObjectiveAnalyticsSummary } from '@/lib/stage-objective-analytics';
 import { isStageObjectiveExecutionStatus, isStageObjectiveImpactLevel } from '@/lib/stage-objective-review';
@@ -27,10 +28,9 @@ export async function getStageById(id: string) {
         .maybeSingle(); // null sans erreur si le stage n'existe pas / n'appartient pas au user
 
     if (error) {
-        console.error('Data Error (getStageById):', error.message);
-        return null;
+        throw new Error('Chargement du stage impossible', { cause: error });
     }
-    return data;
+    return data ? stageModel(data) : null;
 }
 
 export async function getStages() {
@@ -46,10 +46,9 @@ export async function getStages() {
         .order('created_at', { ascending: false });
 
     if (error) {
-        console.error('Data Error (getStages):', error.message);
-        return [];
+        throw new Error('Chargement des stages impossible', { cause: error });
     }
-    return data;
+    return data.map(stageModel);
 }
 
 export async function getDashboardStages() {
@@ -172,14 +171,14 @@ export async function getStageObjectiveReviewItems(stageId: string): Promise<Sta
             .eq('stage_id', stageId),
     ]);
 
-    const contentById = new Map((contentRows as PedagogicalContent[] ?? []).map(content => [content.id, content]));
+    const contentById = new Map((contentRows ?? []).map(contentModel).map(content => [content.id, content]));
 
-    const reviewByContentId = new Map(
+    const reviewByContentId = new Map<string, NonNullable<StageObjectiveReviewItem['review']>>(
         (reviewRows ?? []).map(review => [
             review.pedagogical_content_id,
             {
-                executionStatus: review.execution_status,
-                impactLevel: review.impact_level,
+                executionStatus: isStageObjectiveExecutionStatus(review.execution_status) ? review.execution_status : 'not_done',
+                impactLevel: review.impact_level !== null && isStageObjectiveImpactLevel(review.impact_level) ? review.impact_level : null,
                 reasons: review.reasons ?? [],
                 note: review.note,
             },
@@ -187,7 +186,7 @@ export async function getStageObjectiveReviewItems(stageId: string): Promise<Sta
     );
 
     return selectedContent
-        .map(contentId => {
+        .map((contentId): StageObjectiveReviewItem | null => {
             const pedagogicalContent = contentById.get(contentId);
             if (!pedagogicalContent) return null;
 
@@ -511,17 +510,16 @@ export async function getObservationsDashboardStats(): Promise<ObservationsDashb
     return { totalObservations: observations.length, byType, topSpecies };
 }
 
-export async function getPedagogicalPool() {
+export async function getPedagogicalPool(): Promise<PedagogicalContent[]> {
     const supabase = await createClient();
     const { data, error } = await supabase
         .from('pedagogical_content')
         .select('*');
 
     if (error) {
-        console.error('Error fetching pool:', error);
-        return [];
+        throw new Error('Chargement du catalogue impossible', { cause: error });
     }
-    return data;
+    return data.map(contentModel);
 }
 
 /**
@@ -546,7 +544,7 @@ export async function getPedagogicalContentByIds(ids: string[]) {
     }
 
     const rang = new Map(ids.map((id, i) => [id, i]));
-    return (data ?? []).sort(
+    return (data ?? []).map(contentModel).sort(
         (a, b) => (rang.get(a.id) ?? Infinity) - (rang.get(b.id) ?? Infinity),
     );
 }

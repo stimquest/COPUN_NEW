@@ -3,12 +3,11 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { createUserAccount, inviteUser } from '@/actions/admin-actions';
-import { FichesAdminTab } from './FichesAdminTab';
-import { ReportingTab } from './ReportingTab';
-import { ActiviteTab } from './ActiviteTab';
+import dynamic from 'next/dynamic';
+const FichesAdminLoader = dynamic(() => import('./FichesAdminLoader'));
+const ReportingTab = dynamic(() => import('./ReportingTab').then(m => m.ReportingTab));
+const ActiviteTab = dynamic(() => import('./ActiviteTab').then(m => m.ActiviteTab));
 import { UserEditModal } from './UserEditModal';
-import type { PedagogicalContent } from '@/types';
-import type { FicheMemo } from '@/actions/fiche-memo-actions';
 
 type User = {
     id: string;
@@ -36,11 +35,9 @@ type Club = { id: string; name: string };
 
 type Tab = 'users' | 'create' | 'invite' | 'fiches' | 'reporting' | 'activite';
 
-export function AdminClient({ users: initialUsers, clubs, fiches, fichesMemo, error, userRole }: {
+export function AdminClient({ users: initialUsers, clubs, error, userRole }: {
     users: User[];
     clubs: Club[];
-    fiches: PedagogicalContent[];
-    fichesMemo: FicheMemo[];
     error?: string;
     userRole?: string | null;
 }) {
@@ -110,7 +107,7 @@ export function AdminClient({ users: initialUsers, clubs, fiches, fichesMemo, er
                 <div className="flex gap-1 max-w-6xl mx-auto">
                     {([
                         { key: 'users', label: 'Utilisateurs', icon: 'group', count: users.length },
-                        { key: 'fiches', label: 'Fiches péda.', icon: 'auto_stories', count: fiches.length },
+                        { key: 'fiches', label: 'Fiches péda.', icon: 'auto_stories', count: null },
                         { key: 'reporting', label: 'Reporting', icon: 'analytics', count: null },
                         { key: 'activite', label: 'Activité', icon: 'timeline', count: null },
                         { key: 'create', label: 'Créer un compte', icon: 'person_add', count: null },
@@ -140,7 +137,7 @@ export function AdminClient({ users: initialUsers, clubs, fiches, fichesMemo, er
             {/* Onglet Fiches — pleine largeur, layout split-panel */}
             {tab === 'fiches' && (
                 <div className="flex-1 overflow-hidden">
-                    <FichesAdminTab initialFiches={fiches} fichesMemo={fichesMemo} />
+                    <FichesAdminLoader />
                 </div>
             )}
 
@@ -230,7 +227,7 @@ export function AdminClient({ users: initialUsers, clubs, fiches, fichesMemo, er
                         <div>
                             <h3 className="font-black text-slate-900">Créer un compte</h3>
                             <p className="text-xs text-slate-500 mt-1">
-                                Le compte est créé immédiatement. L'utilisateur reçoit un email pour choisir son mot de passe.
+                                Le compte est créé immédiatement. L&apos;utilisateur reçoit un email pour choisir son mot de passe.
                             </p>
                         </div>
 
@@ -301,7 +298,7 @@ export function AdminClient({ users: initialUsers, clubs, fiches, fichesMemo, er
                         <div>
                             <h3 className="font-black text-slate-900">Envoyer une invitation</h3>
                             <p className="text-xs text-slate-500 mt-1">
-                                L'utilisateur reçoit un lien magique par email. En cliquant, il est connecté directement et peut choisir son mot de passe.
+                                L&apos;utilisateur reçoit un lien magique par email. En cliquant, il est connecté directement et peut choisir son mot de passe.
                             </p>
                         </div>
 
@@ -319,7 +316,7 @@ export function AdminClient({ users: initialUsers, clubs, fiches, fichesMemo, er
                             <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 flex gap-3">
                                 <span className="material-symbols-outlined text-amber-500 text-lg shrink-0 mt-0.5">info</span>
                                 <p className="text-xs text-amber-700 leading-relaxed">
-                                    Le rôle et le club ne sont pas définis à l'invitation. Pensez à les configurer dans la liste des utilisateurs après la première connexion.
+                                    Le rôle et le club ne sont pas définis à l&apos;invitation. Pensez à les configurer dans la liste des utilisateurs après la première connexion.
                                 </p>
                             </div>
                             <button

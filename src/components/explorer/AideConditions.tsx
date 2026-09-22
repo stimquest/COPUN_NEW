@@ -27,7 +27,6 @@ import { HistoriqueMoniteur } from '@/lib/historique-moniteur';
 
 type Props = {
     open: boolean;
-    onClose: () => void;
     pool: PedagogicalContent[];
     retenues: string[];
     onToggleFiche: (id: string) => void;
@@ -49,7 +48,7 @@ const METEO_OPTIONS: { value: MeteoType; label: string; icon: string }[] = [
 ];
 
 export default function AideConditions({
-    open, onClose, pool, retenues, onToggleFiche, onFicheInfo, historique,
+    open, pool, retenues, onToggleFiche, onFicheInfo, historique,
 }: Props) {
     const [coeff, setCoeff] = useState<CoeffType | null>(null);
     const [meteo, setMeteo] = useState<MeteoType | null>(null);

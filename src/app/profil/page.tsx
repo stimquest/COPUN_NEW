@@ -8,6 +8,7 @@ import Link from 'next/link';
 import SignOutButton from '@/components/SignOutButton';
 import { FilRougePicker } from '@/components/FilRougePicker';
 import { SPORT_FEATURES_ENABLED } from '@/lib/feature-flags';
+import { SECONDARY_NAV, ADMIN_NAV } from '@/data/navigation';
 
 export default async function ProfilPage() {
     let profile: Profile | null = null;
@@ -53,9 +54,9 @@ export default async function ProfilPage() {
     }
 
     return (
-        <div className="flex flex-col min-h-screen bg-slate-50 pb-24">
+        <div className="co-page co-profile">
             {/* Header */}
-            <div className="bg-white p-8 pb-12 rounded-b-[40px] shadow-sm border-b border-slate-200">
+            <div className="bg-[var(--co-sea)] p-8 pb-12 rounded-[32px]">
                 <div className="flex flex-col items-center">
                     <div className="size-24 rounded-full bg-slate-100 border-4 border-white shadow-xl mb-4 overflow-hidden flex items-center justify-center">
                         {profile.avatar_url ? (
@@ -76,6 +77,9 @@ export default async function ProfilPage() {
                 </div>
             </div>
 
+            <nav className="co-profile-links" aria-label="Outils et compte">
+                {[...SECONDARY_NAV.filter(item => item.href !== '/profil'), ...(['admin', 'club_admin'].includes(profile.role) ? [ADMIN_NAV] : [])].map(item => <Link key={item.href} href={item.href}><item.icon size={19}/><span>{item.name}</span></Link>)}
+            </nav>
             {/* Stats Grid */}
             <div className="px-5 -mt-8">
                 <div className={SPORT_FEATURES_ENABLED ? 'grid grid-cols-3 gap-3' : 'grid grid-cols-2 gap-3'}>

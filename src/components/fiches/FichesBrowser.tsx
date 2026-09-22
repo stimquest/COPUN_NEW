@@ -2,12 +2,12 @@
 
 import { useState, useMemo } from 'react';
 import FicheCard from './FicheCard';
-import type { FicheMemo } from '@/actions/fiche-memo-actions';
+import type { FichePreview } from '@/actions/fiche-memo-actions';
 import type { ThematicTag } from '@/data/seasonal-context';
 import { THEMATIC_TAG_LABELS, SAISON_LABELS, ALL_THEMATIC_TAGS, ALL_SAISON_IDS } from './fiche-constants';
 
 interface Props {
-    fiches: FicheMemo[];
+    fiches: FichePreview[];
     currentUserId?: string | null;
     isAdmin?: boolean;
     isModerator?: boolean;

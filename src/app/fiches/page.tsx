@@ -1,3 +1,4 @@
+import { contentModel } from '@/lib/data-models';
 import { createClient, getCachedUser } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { FichesClient } from './FichesClient';
@@ -16,7 +17,7 @@ export default async function FichesPage() {
         .order('created_at', { ascending: false });
 
     const fiches: (PedagogicalContent & { todos: ContentTodo[] })[] = (data ?? []).map(row => ({
-        ...row,
+        ...contentModel(row),
         todos: (row.content_todos ?? []).sort(
             (a: ContentTodo, b: ContentTodo) => a.todo_order - b.todo_order
         ),

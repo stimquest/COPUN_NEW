@@ -3,62 +3,21 @@
 import { useRef, useState } from 'react';
 import Link from 'next/link';
 import { PedagogicalContent } from '@/types';
-import { THEMATIC_LABELS, ThematicTag } from '@/data/seasonal-context';
-import { GROUPES } from '@/data/groupes';
+import { ENTREES_DECOUVERTE, cartesDuTheme } from '@/data/decouverte-accueil';
 
-type Rail = {
-    title: string;
-    subtitle: string;
-    theme: ThematicTag;
-    icon: string;
-    tone: string;
-    cardTone: string;
-    /**
-     * L'angle de lecture qui titre les cartes de ce rail. Déclaré explicitement : il était
-     * déduit de l'icône (`icon === 'eco' ? 'proteger' : …`), or aucun rail n'utilisait les
-     * icônes attendues — deux des trois colonnes de `ANGLES` n'étaient jamais lues et le
-     * premier rail retombait silencieusement sur l'accroche du groupe.
-     * `null` = on affiche la première question du groupe telle quelle.
-     */
-    angle: 'comprendre' | 'observer' | 'proteger' | null;
-    select: (card: PedagogicalContent) => boolean;
+type Rail = typeof ENTREES_DECOUVERTE[number];
+
+const TONES = {
+    comprendre: 'bg-[var(--co-sand)]',
+    observer: 'bg-[var(--co-sea)]',
+    proteger: 'bg-[var(--co-leaf)]',
 };
 
-const hasTheme = (card: PedagogicalContent, theme: string) => card.tags_theme?.includes(theme);
-
-// Titres propres à l'angle de lecture, les noms des groupes restent les repères secondaires.
-const ANGLES: Record<string, { comprendre: string; proteger: string; observer: string }> = {
-    marees: { comprendre: 'Comprendre les marées', proteger: 'Préserver la vie de l’estran', observer: 'Repérer la mer qui monte' },
-    courants: { comprendre: 'Pourquoi l’eau circule', proteger: 'Composer avec les courants', observer: 'Lire le sens du courant' },
-    vagues: { comprendre: 'De la houle à la vague', proteger: 'Épargner les habitats du bord', observer: 'Regarder où les vagues cassent' },
-    etat_mer: { comprendre: 'Pourquoi la mer change', proteger: 'Adapter sa sortie au milieu', observer: 'Lire la mer avant de partir' },
-    vent: { comprendre: 'D’où vient le vent ?', proteger: 'Adapter sa pratique au vent', observer: 'Trouver les indices du vent' },
-    meteo: { comprendre: 'Comment naissent les nuages', proteger: 'Tenir compte du temps', observer: 'Décrypter le ciel' },
-    plage_dunes: { comprendre: 'Comment se construit une dune', proteger: 'Laisser les dunes respirer', observer: 'Lire les traces de l’érosion' },
-    laisse_mer: { comprendre: 'Ce que la mer dépose', proteger: 'Nettoyer sans tout enlever', observer: 'Enquêter dans la laisse de mer' },
-    vie_marine: { comprendre: 'Les liens de la vie marine', proteger: 'Prendre soin de la vie marine', observer: 'Rencontrer la vie dans l’eau' },
-    oiseaux: { comprendre: 'Le voyage des oiseaux', proteger: 'Respecter les haltes des oiseaux', observer: 'Observer les oiseaux de passage' },
-    cohabiter: { comprendre: 'Un littoral plein de vie', proteger: 'Approcher sans déranger', observer: 'Reconnaître le dérangement' },
-    observer: { comprendre: 'Relier les indices du terrain', proteger: 'Observer avec respect', observer: 'Mobiliser ses sens' },
-    activites: { comprendre: 'Un littoral partagé', proteger: 'Faire évoluer nos habitudes', observer: 'Repérer les usages du littoral' },
-    protection: { comprendre: 'Pourquoi protéger un site', proteger: 'Agir pour le territoire', observer: 'Reconnaître les zones sensibles' },
-};
-
-/** Le titre d'une carte : l'angle du rail s'il en a un, sinon la première question. */
-function titreDe(
-    slide: { id: string; accroche: string; questions: PedagogicalContent[] },
-    angle: Rail['angle'],
-): string {
-    if (angle) return ANGLES[slide.id]?.[angle] ?? slide.accroche;
-    return slide.questions[0]?.question ?? slide.accroche;
-}
-
-function RailRow({ rail, cards, destination }: { rail: Rail; cards: PedagogicalContent[]; destination: string }) {
-    const slides = GROUPES.map(group => ({
-        ...group,
-        questions: cards.filter(card => group.fiches.includes(Number(card.id))),
-    })).filter(group => group.questions.length > 0);
-    const angle = rail.angle;
+function RailRow({ rail, cards }: { rail: Rail; cards: PedagogicalContent[] }) {
+    const slides = rail.themes.map(theme => ({
+        ...theme, questions: cartesDuTheme(cards, rail.dimension, theme),
+    })).filter(theme => theme.questions.length > 0);
+    const destination = '/stages/decouvrir';
     const [index, setIndex] = useState(0);
     const trackRef = useRef<HTMLDivElement>(null);
     if (!slides.length) return null;
@@ -81,41 +40,20 @@ function RailRow({ rail, cards, destination }: { rail: Rail; cards: PedagogicalC
         <section className="space-y-3" aria-label={rail.title}>
             <div className="flex items-end justify-between gap-3 px-0.5">
                 <div>
-                    <h2 className="text-[17px] font-black tracking-tight text-slate-950 leading-tight">{rail.title}</h2>
-                    <p className="text-xs text-slate-500 mt-1 leading-relaxed">{rail.subtitle}</p>
+                    <h3 className="text-[17px] font-semibold tracking-[-.025em] text-[var(--co-ink)] leading-tight">{rail.title}</h3>
                 </div>
-                <Link href={`${destination}?theme=${rail.theme}`} className={`text-[11px] font-black shrink-0 ${rail.tone}`}>Voir tout</Link>
+                <Link href={`${destination}?pillar=${rail.id}`} className={`text-[11px] font-black shrink-0 text-slate-600`}>Voir tout</Link>
             </div>
             <div className="relative -mr-4">
                 <div ref={trackRef} onScroll={updatePosition} className="relative flex gap-3 overflow-x-auto scroll-smooth snap-x snap-mandatory scroll-pl-1 pl-1 pr-4 pt-2 pb-7 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                     {slides.map(card => (
                         <Link
                             key={card.id}
-                            href={`${destination}?group=${card.id}`}
-                            className={`group relative isolate flex flex-col overflow-hidden snap-start shrink-0 w-[calc((100%_-_12px)_/_1.5)] rounded-[22px] text-white shadow-[0_6px_16px_-8px_rgba(15,23,42,.18)] active:scale-[.985] transition-transform focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 ${rail.cardTone}`}
+                            href={`${destination}?pillar=${rail.id}&entry=${card.id}`}
+                            className={`co-discovery-tile group relative isolate flex flex-col overflow-hidden snap-start shrink-0 w-[72%] sm:w-[42%] rounded-[26px] text-[var(--co-ink)] active:scale-[.985] transition-transform ${TONES[rail.id as keyof typeof TONES]}`}
                         >
-                            <div className="relative overflow-hidden px-4 pt-4 pb-3">
-                                <span aria-hidden="true" className="absolute -right-4 -top-5 size-28 rounded-full border border-white/15" />
-                                <span aria-hidden="true" className="absolute right-5 top-7 size-20 rounded-full border border-white/10" />
-                                <div className="relative flex items-center gap-2 text-white/80">
-                                    <span aria-hidden="true" className="material-symbols-outlined text-[18px]">{card.icon}</span>
-                                    <span className="text-[10px] font-semibold">{card.label}</span>
-                                </div>
-                                <h3 className="relative mt-2 text-[17px] font-extrabold leading-tight tracking-tight">{titreDe(card, angle)}</h3>
-                            </div>
-                            <div className="flex flex-1 flex-col px-4 pb-4">
-                                <div className="space-y-2 border-t border-white/20 pt-3">
-                                    {card.questions.filter(question => question.question !== titreDe(card, angle)).slice(0, 2).map(question => (
-                                        <p key={question.id} className="text-xs leading-snug text-white/90">
-                                            {question.question}
-                                        </p>
-                                    ))}
-                                </div>
-                                <span className="mt-auto pt-3 flex items-center justify-between gap-2 text-[10px] font-bold text-white/85">
-                                    Explorer le sujet
-                                    <span aria-hidden="true" className="material-symbols-outlined text-[17px] transition-transform group-hover:translate-x-1">arrow_forward</span>
-                                </span>
-                            </div>
+                            <div className="co-discovery-art" aria-hidden="true"><span className="material-symbols-outlined">{card.icon}</span><span className="co-discovery-orbit"/></div>
+                            <div className="px-5 pb-5"><h4 className="text-[21px] font-semibold tracking-[-.04em] leading-tight">{card.title}</h4><span className="mt-4 flex items-center justify-between text-xs">Explorer <span aria-hidden className="material-symbols-outlined text-lg">arrow_forward</span></span></div>
                         </Link>
                     ))}
                 </div>
@@ -139,43 +77,14 @@ function RailRow({ rail, cards, destination }: { rail: Rail; cards: PedagogicalC
     );
 }
 
-/** Accueil éditorial : cinq portes d'entrée, pas un catalogue de thèmes. */
-export function RailSuggestions({ pool, suggested }: { pool: PedagogicalContent[]; suggested: string[] }) {
-    // Une suggestion reste toujours une porte vers le feuilletage libre. La selection
-    // d'une semaine a son propre ecran : elle ne doit jamais se substituer a cette entree.
-    const destination = '/stages/decouvrir';
-    const currentTheme = suggested.find(tag => THEMATIC_LABELS[tag as ThematicTag]) as ThematicTag | undefined
-        ?? 'biodiversite_saisonnalite';
-    const cleanPool = pool.filter(card => card.source !== 'custom');
-    const rails: Rail[] = [
-        {
-            title: 'Ce que le terrain montre en ce moment', subtitle: 'Des sujets qui font écho à la saison', theme: currentTheme,
-            icon: 'wb_sunny', tone: 'text-orange-600', cardTone: 'bg-gradient-to-br from-orange-400 to-amber-600',
-            angle: 'comprendre',
-            select: card => hasTheme(card, currentTheme),
-        },
-        {
-            title: 'Pour lancer une discussion', subtitle: 'Des questions qui donnent envie de réagir', theme: 'biodiversite_saisonnalite',
-            icon: 'forum', tone: 'text-violet-600', cardTone: 'bg-gradient-to-br from-violet-500 to-indigo-700',
-            // Pas d'angle : ce rail montre la question elle-même, c'est son propos.
-            angle: null,
-            select: card => hasTheme(card, 'biodiversite_saisonnalite'),
-        },
-        {
-            title: 'À observer ou protéger cette semaine', subtitle: 'Partir de ce qui est visible et agir sur le terrain', theme: 'cohabitation_vivant',
-            icon: 'visibility', tone: 'text-emerald-600', cardTone: 'bg-gradient-to-br from-sky-500 to-emerald-600',
-            angle: 'proteger',
-            select: card => hasTheme(card, 'lecture_paysage') || hasTheme(card, 'cohabitation_vivant') || hasTheme(card, 'impact_presence_humaine'),
-        },
-    ];
-
+/** Trois intentions de terrain, chacune ouvre une découverte libre ciblée. */
+export function RailSuggestions({ pool }: { pool: PedagogicalContent[]; suggested: string[] }) {
     return (
-        <div className="space-y-7">
+        <div className="space-y-8">
             <div className="px-0.5">
-                <p className="text-[10px] font-black uppercase tracking-[.2em] text-indigo-500">Explorer avant de préparer</p>
-                <h1 className="text-[23px] font-black tracking-tight text-slate-950 mt-1">Qu&apos;as-tu envie de faire vivre au groupe&nbsp;?</h1>
+                <h2 className="co-section-title">Au gré des découvertes</h2>
             </div>
-            {rails.map(rail => <RailRow key={rail.title} rail={rail} destination={destination} cards={cleanPool.filter(rail.select)} />)}
+            {ENTREES_DECOUVERTE.map(rail => <RailRow key={rail.id} rail={rail} cards={pool} />)}
         </div>
     );
 }

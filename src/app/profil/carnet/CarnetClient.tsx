@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import clsx from 'clsx';
-import type { PracticeJournal, FicheTrajectory, JournalWeek } from '@/services/practice-journal';
+import type { PracticeJournal, FicheTrajectory, JournalWeek, FormationPracticeNote } from '@/services/practice-journal';
 import { StageObjectiveExecutionStatus, StageObjectiveImpactLevel } from '@/types';
 
 const STATUS_LABELS: Record<StageObjectiveExecutionStatus, string> = {
@@ -21,6 +21,15 @@ function attemptDotClass(status: StageObjectiveExecutionStatus, impact: StageObj
 
 function formatClosedAt(dateStr: string) {
     return new Date(dateStr).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+}
+
+function FormationNoteEntry({ entry }: { entry: FormationPracticeNote }) {
+    const sequenceTitle = entry.sequenceId === 'laisse-de-mer' ? 'La laisse de mer' : entry.sequenceId;
+    return <article className="rounded-2xl border border-indigo-100 bg-white p-4">
+        <div className="flex items-baseline justify-between gap-3"><p className="text-sm font-black text-slate-900">{sequenceTitle}</p><p className="shrink-0 text-[10px] font-bold text-slate-400">{formatClosedAt(entry.createdAt)}</p></div>
+        <p className="mt-2 text-[11px] font-bold uppercase tracking-wide text-indigo-500">Essai sur le terrain</p>
+        <p className="mt-2 text-sm italic leading-relaxed text-slate-600">« {entry.note} »</p>
+    </article>;
 }
 
 // ── Trajectoire d'une fiche : une ligne dépliable ────────────────────────────
@@ -120,6 +129,13 @@ export function CarnetClient({ journal }: { journal: PracticeJournal }) {
 
     return (
         <div className="space-y-6">
+
+            {journal.formationNotes.length > 0 && (
+                <section>
+                    <p className="mb-3 text-[10px] font-black uppercase tracking-[0.18em] text-indigo-500">Mes essais sur le terrain</p>
+                    <div className="space-y-2.5">{journal.formationNotes.map(entry => <FormationNoteEntry key={entry.id} entry={entry} />)}</div>
+                </section>
+            )}
 
             {/* Observations */}
             {journal.insights.length > 0 && (

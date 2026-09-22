@@ -1,7 +1,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
-import { requireAuth } from '@/lib/auth';
+import { requireStageOwner, requireAuth } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 import { encodeIntention, ObjectifId } from '@/data/objectifs';
 import { StageRessenti, isRessentiNiveau } from '@/lib/stage-ressenti';
@@ -16,7 +16,10 @@ import { StageRessenti, isRessentiNiveau } from '@/lib/stage-ressenti';
  * réordonnancement.
  */
 export async function updateStagePool(stageId: string, contentIds: string[]) {
-    const supabase = await createClient();
+    const ctx = await requireStageOwner(stageId);
+    if (!ctx) return { success: false, error: 'Stage inaccessible.' };
+    if (!Array.isArray(contentIds) || contentIds.length > 200 || !contentIds.every(id => typeof id === 'string')) return { success: false, error: 'Selection invalide.' };
+    const supabase = ctx.supabase;
     const { error } = await supabase
         .from('stages')
         .update({ selected_content: contentIds })
@@ -60,12 +63,14 @@ export async function updateStageConditions(stageId: string, suggestedThematics:
     return { success: true };
 }
 
-export async function createStage(data: { title: string, activity: string, level: string, dates: string, nb_stagiaires?: number, suggested_thematics?: string[], intention?: ObjectifId | null }) {
+export async function createStage(data: { title: string, activity: string, level: string, dates: string, nb_stagiaires?: number, suggested_thematics?: string[], intention?: ObjectifId | null, selectedContentIds?: string[] }) {
     const ctx = await requireAuth();
     if (!ctx) return { success: false, error: 'Vous devez être connecté pour créer une semaine.' };
 
     const suggestedThematics = [...(data.suggested_thematics ?? [])];
     if (data.intention) suggestedThematics.push(encodeIntention(data.intention));
+
+    const selectedContentIds = Array.from(new Set(data.selectedContentIds ?? [])).filter(id => typeof id === 'string').slice(0, 5);
 
     const { data: created, error } = await ctx.supabase
         .from('stages')
@@ -76,7 +81,7 @@ export async function createStage(data: { title: string, activity: string, level
                 level: data.level,
                 dates: data.dates,
                 nb_stagiaires: data.nb_stagiaires ?? null,
-                selected_content: [],
+                selected_content: selectedContentIds,
                 suggested_thematics: suggestedThematics,
                 owner_id: ctx.user.id
             }
@@ -105,6 +110,7 @@ export async function createStage(data: { title: string, activity: string, level
     }
 
     revalidatePath('/stages');
+    revalidatePath('/stages/semaines');
     return { success: true, stageId: created.id };
 }
 
@@ -282,8 +288,8 @@ export async function saveObjectiveStatus(
   contentId: string,
   executionStatus: import('@/types').StageObjectiveExecutionStatus,
 ) {
-  const ctx = await requireAuth();
-  if (!ctx) return { success: false, error: 'Non autorisé' };
+  const ctx = await requireStageOwner(stageId);
+  if (!ctx) return { success: false, error: 'Semaine inaccessible.' };
 
   const { error } = await ctx.supabase
     .from('stage_objective_reviews')

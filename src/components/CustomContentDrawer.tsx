@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
 import { ContentTodo, PedagogicalContent } from '@/types';
 import { createCustomContent, updateCustomContent } from '@/actions/custom-content-actions';
@@ -30,41 +30,17 @@ type Props = {
 };
 
 export function CustomContentDrawer({ open, initialData, onClose, onSaved }: Props) {
-    const [mounted, setMounted] = useState(false);
-    const [question, setQuestion] = useState('');
-    const [objectif, setObjectif] = useState('');
-    const [tip, setTip] = useState('');
-    const [ffvLevel, setFfvLevel] = useState<number | null>(null);
-    const [supports, setSupports] = useState<string[]>([]);
-    const [todos, setTodos] = useState<TodoDraft[]>([]);
+    const mounted = useSyncExternalStore(() => () => {}, () => true, () => false);
+    const [question, setQuestion] = useState(() => initialData?.question ?? '');
+    const [objectif, setObjectif] = useState(() => initialData?.objectif ?? '');
+    const [tip, setTip] = useState(() => initialData?.tip ?? '');
+    const [ffvLevel, setFfvLevel] = useState<number | null>(() => initialData?.ffv_level ?? null);
+    const [supports, setSupports] = useState<string[]>(() => initialData?.supports ?? []);
+    const [todos, setTodos] = useState<TodoDraft[]>(() => initialData?.todos.map(t => ({ text: t.text, todo_order: t.todo_order })) ?? []);
     const [newTodo, setNewTodo] = useState('');
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const newTodoRef = useRef<HTMLInputElement>(null);
-
-    useEffect(() => { setMounted(true); }, []);
-
-    useEffect(() => {
-        if (open) {
-            if (initialData) {
-                setQuestion(initialData.question);
-                setObjectif(initialData.objectif);
-                setTip(initialData.tip ?? '');
-                setFfvLevel(initialData.ffv_level ?? null);
-                setSupports(initialData.supports ?? []);
-                setTodos(initialData.todos.map(t => ({ text: t.text, todo_order: t.todo_order })));
-            } else {
-                setQuestion('');
-                setObjectif('');
-                setTip('');
-                setFfvLevel(null);
-                setSupports([]);
-                setTodos([]);
-            }
-            setNewTodo('');
-            setError(null);
-        }
-    }, [open, initialData]);
 
     const toggleSupport = (s: string) => {
         setSupports(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]);

@@ -5,15 +5,16 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import FluxDecouverte from '@/components/explorer/FluxDecouverte';
 import { setCardSaved } from '@/actions/saved-card-actions';
-import { PedagogicalContent } from '@/types';
+import { Dimension, PedagogicalContent } from '@/types';
 import { ThematicTag } from '@/data/seasonal-context';
 
 /**
  * L'espace Decouvrir n'est pas une semaine en attente de creation : il sert a
  * feuilleter librement la methode et les situations de transmission.
  */
-export default function DecouvrirClient({ pool, theme, group, initialSavedIds = [], savedError, initialSavedView = false }: {
+export default function DecouvrirClient({ pool, theme, group, pillar, entry, initialSavedIds = [], savedError, initialSavedView = false }: {
     pool: PedagogicalContent[]; theme?: ThematicTag; group?: string;
+    pillar?: Dimension; entry?: string;
     initialSavedIds?: string[]; savedError?: string; initialSavedView?: boolean;
 }) {
     const router = useRouter();
@@ -50,11 +51,11 @@ export default function DecouvrirClient({ pool, theme, group, initialSavedIds = 
                     <Link href="/stages" aria-label="Retour à l’accueil" className="-ml-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-slate-600 hover:bg-white/60">
                         <span className="material-symbols-outlined" aria-hidden>arrow_back</span>
                     </Link>
-                    <h1 className="min-w-0 flex-1 text-xl font-bold tracking-tight text-slate-900">{savedView ? 'Mises de côté' : 'Découvrir'}</h1>
+                    <h1 className="min-w-0 flex-1 text-[28px] font-semibold tracking-[-.045em] text-[var(--co-ink)]">{savedView ? 'Mises de côté' : 'Explorer'}</h1>
                     <button onClick={() => { if (!savedView) setSavedSnapshot(savedIds); setSavedView(value => !value); }}
                         className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full px-2 text-sm font-medium text-slate-600 hover:bg-white/60">
                         <span className="material-symbols-outlined text-[20px]" aria-hidden>{savedView ? 'explore' : 'bookmarks'}</span>
-                        {savedView ? 'Découvrir' : 'Mises de côté'}{!savedView && savedIds.length ? ` · ${savedIds.length}` : ''}
+                        {savedView ? 'Explorer' : 'Mises de côté'}{!savedView && savedIds.length ? ` · ${savedIds.length}` : ''}
                     </button>
                 </div>
                 {savedError && <div role="alert" className="mt-3 text-sm text-amber-800">{savedError} <button className="underline font-bold" onClick={() => router.refresh()}>Réessayer</button></div>}
@@ -64,6 +65,8 @@ export default function DecouvrirClient({ pool, theme, group, initialSavedIds = 
                     pool={pool}
                     initialTheme={theme}
                     initialGroup={group}
+                    initialPillar={pillar}
+                    initialEntry={entry}
                     mode="lecture"
                     savedIds={savedIds} onToggleSaved={toggleSaved} savingId={savingId} savedUnavailable={!!savedError}
                 /></div>
@@ -75,7 +78,7 @@ export default function DecouvrirClient({ pool, theme, group, initialSavedIds = 
                         <span className="material-symbols-outlined text-3xl text-indigo-400" aria-hidden>bookmark_add</span>
                         <h2 className="mt-3 font-bold text-slate-900">Vos prochaines idées à transmettre</h2>
                         <p className="mt-2 text-sm text-slate-600">Pendant votre lecture, utilisez « Mettre de côté » pour retrouver ici une carte qui vous intéresse.</p>
-                        <button onClick={() => setSavedView(false)} className="mt-5 rounded-full bg-indigo-600 px-5 py-3 text-sm font-bold text-white">Découvrir les cartes</button>
+                        <button onClick={() => setSavedView(false)} className="mt-5 rounded-full bg-indigo-600 px-5 py-3 text-sm font-bold text-white">Explorer les cartes</button>
                     </div>}
                 </div>}
             </main>

@@ -1,97 +1,25 @@
 'use client';
-
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import clsx from 'clsx';
+import { PRIMARY_NAV, SECONDARY_NAV, SPORT_NAV, ADMIN_NAV, activeNavigation } from '@/data/navigation';
 import { SPORT_FEATURES_ENABLED } from '@/lib/feature-flags';
 
-const baseNavItems = [
-    { name: 'Accueil', href: '/stages', icon: 'dashboard', fill: true },
-    { name: 'Formation', href: '/formation', icon: 'school', fill: false },
-    { name: 'Ressources', href: '/ressources', icon: 'menu_book', fill: false },
-    { name: 'Mes fiches', href: '/fiches', icon: 'sports', fill: false },
-    { name: 'Stats', href: '/stats', icon: 'leaderboard', fill: false },
-    { name: 'Profil', href: '/profil', icon: 'person', fill: false },
-];
-
-const adminNavItem = { name: 'Admin', href: '/admin', icon: 'admin_panel_settings', fill: false };
-
-type SidebarProps = {
-    role?: string | null;
-    fullName?: string | null;
-    email?: string | null;
-    clubName?: string | null;
-    formationEnCours?: boolean;
-};
-
+type SidebarProps = { role?: string | null; fullName?: string | null; email?: string | null; clubName?: string | null; formationEnCours?: boolean };
 export function Sidebar({ role, fullName, email, clubName, formationEnCours }: SidebarProps) {
-    const pathname = usePathname();
-    const navItems = ((role === 'admin' || role === 'club_admin')
-        ? [...baseNavItems, adminNavItem]
-        : baseNavItems)
-        .filter(i => SPORT_FEATURES_ENABLED || i.href !== '/fiches');
-
-    const initials = fullName
-        ? fullName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
-        : (email?.[0] ?? '?').toUpperCase();
-
-    const roleLabel = ({
-        admin: 'Admin général',
-        club_admin: 'Admin club',
-        moderator: 'Référent mémo',
-        instructor: 'Moniteur',
-    } as Record<string, string>)[role ?? ''] ?? 'Moniteur';
-
-    return (
-        <aside className="hidden md:flex flex-col w-64 h-screen sticky top-0 bg-white border-r border-slate-200 shadow-sm p-6 z-50 shrink-0">
-            <div className="mb-10 px-4">
-                <span className="text-2xl font-black text-indigo-600 tracking-tight">COPUN.</span>
-            </div>
-
-            <nav className="flex-1 space-y-1">
-                {navItems.map((item) => {
-                    const isActive = pathname.startsWith(item.href);
-                    const isAdmin = item.href === '/admin';
-                    return (
-                        <Link
-                            key={item.name}
-                            href={item.href}
-                            className={clsx(
-                                "relative flex items-center gap-4 px-4 py-3 rounded-xl transition-all font-semibold",
-                                isActive
-                                    ? isAdmin
-                                        ? "text-violet-700 bg-violet-50 shadow-sm"
-                                        : "text-indigo-700 bg-indigo-50 shadow-sm"
-                                    : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"
-                            )}
-                        >
-                            <span className={clsx("material-symbols-outlined text-xl", isActive && item.fill && "font-variation-fill-1")}>
-                                {item.icon}
-                            </span>
-                            <span className="uppercase tracking-wider text-sm">{item.name}</span>
-                            {/* Même principe que sur la nav mobile : un point tant que la
-                                formation n'est pas terminée, visible depuis tout écran. */}
-                            {item.href === '/formation' && formationEnCours && !isActive && (
-                                <span className="absolute top-2.5 left-8 size-2 rounded-full bg-indigo-500 border-2 border-white" />
-                            )}
-                        </Link>
-                    );
-                })}
-            </nav>
-
-            <div className="mt-auto pt-6 border-t border-slate-100">
-                <div className="flex items-center gap-3 px-2">
-                    <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold shrink-0 text-sm">
-                        {initials}
-                    </div>
-                    <div className="overflow-hidden">
-                        <p className="text-sm font-bold text-slate-800 truncate">{fullName || email || '—'}</p>
-                        <p className="text-xs text-slate-500 truncate">
-                            {clubName ? `${clubName} · ` : ''}{roleLabel}
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </aside>
-    );
+    const path = usePathname();
+    if (path === '/' || path.startsWith('/login') || path.startsWith('/auth')) return null;
+    const secondary = [...SECONDARY_NAV, ...(SPORT_FEATURES_ENABLED ? [SPORT_NAV] : []), ...(['admin', 'club_admin'].includes(role ?? '') ? [ADMIN_NAV] : [])];
+    return <aside className="co-sidebar">
+        <Link href="/stages" className="co-wordmark">cop<span>’</span>un<span className="co-wordmark-dot">.</span></Link>
+        <p className="co-sidebar-tagline">Le terrain a tant à raconter.</p>
+        <nav aria-label="Navigation principale">{PRIMARY_NAV.map(item => {
+            const Icon = item.icon;
+            return <Link key={item.href} href={item.href} aria-current={activeNavigation(path, item.href) ? 'page' : undefined}><Icon size={20}/>{item.name}{item.href === '/formation' && formationEnCours && <i className="co-nav-dot"/>}</Link>;
+        })}</nav>
+        <nav className="co-sidebar-secondary" aria-label="Outils et compte">{secondary.map(item => {
+            const Icon = item.icon;
+            return <Link key={item.href} href={item.href} aria-current={activeNavigation(path, item.href) ? 'page' : undefined}><Icon size={18}/>{item.name}</Link>;
+        })}</nav>
+        <Link href="/profil" className="co-sidebar-profile"><span className="co-avatar">{(fullName || email || 'M').slice(0, 1).toUpperCase()}</span><span>{fullName || 'Mon profil'}<small>{clubName || 'Mon espace personnel'}</small></span></Link>
+    </aside>;
 }

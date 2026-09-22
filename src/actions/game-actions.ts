@@ -1,5 +1,6 @@
 'use server';
 
+import { gameModel, objectValue, jsonValue } from '@/lib/data-models';
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { requireAuth } from '@/lib/auth';
@@ -33,13 +34,13 @@ export async function getAllGameCards() {
         .order('theme', { ascending: true })
         .order('type', { ascending: true });
     if (error) { console.error('[getAllGameCards]', error.message); return []; }
-    return data;
+    return data.map(row => ({ ...row, theme: row.theme ?? '', data: objectValue(row.data) }));
 }
 
 export async function getFilteredGameCards(types: string[], themes: string[]) {
     const supabase = await createClient();
     let query = supabase.from('game_cards').select('*');
-    if (types.length > 0) query = query.in('type', types);
+    if (types.length > 0) query = query.in('type', types.filter((t): t is 'quizz' | 'triage' | 'mots' | 'dilemme' => ['quizz', 'triage', 'mots', 'dilemme'].includes(t)));
     if (themes.length > 0) query = query.in('theme', themes);
     const { data, error } = await query;
     if (error) { console.error('[getFilteredGameCards]', error.message); return []; }
@@ -64,7 +65,7 @@ export async function createGame(title: string, theme: string, stageId: string |
     const supabase = await createClient();
     const { data, error } = await supabase
         .from('games')
-        .insert({ title, theme, stage_id: stageId, game_data: gameData })
+        .insert({ title, theme, stage_id: stageId, game_data: jsonValue(gameData) })
         .select()
         .single();
 
@@ -80,7 +81,7 @@ export async function getGameById(gameId: string) {
     const supabase = await createClient();
     const { data, error } = await supabase.from('games').select('*').eq('id', gameId).single();
     if (error) { console.error('[getGameById]', error.message); return null; }
-    return data;
+    return gameModel(data);
 }
 
 export async function getGamesForStage(stageId: string) {
@@ -88,7 +89,7 @@ export async function getGamesForStage(stageId: string) {
     const { data, error } = await supabase
         .from('games').select('*').eq('stage_id', stageId).order('created_at', { ascending: false });
     if (error) { console.error('[getGamesForStage]', error.message); return []; }
-    return data;
+    return data.map(gameModel);
 }
 
 /**
@@ -102,7 +103,7 @@ export async function getAllGames() {
     const { data, error } = await supabase
         .from('games').select('*').is('stage_id', null).order('created_at', { ascending: false });
     if (error) { console.error('[getAllGames]', error.message); return []; }
-    return data;
+    return data.map(gameModel);
 }
 
 export async function deleteGame(gameId: string) {
@@ -138,7 +139,7 @@ export async function saveStageGameResult(stageId: string, gameId: string, score
     const supabase = await createClient();
     const { error } = await supabase.from('stage_game_history').insert({
         stage_id: stageId, game_id: gameId, score, total,
-        percentage: Math.round((score / total) * 100), results,
+        percentage: Math.round((score / total) * 100), results: jsonValue(results),
     });
     if (error) { console.error('[saveStageGameResult]', error.message); return { success: false, error: error.message }; }
     revalidatePath('/stages');
@@ -157,7 +158,7 @@ export async function submitGameResult(gameCardId: string, result: unknown) {
     const ctx = await requireAuth();
     if (!ctx) return { success: false, error: 'Non authentifié' };
     const { error } = await ctx.supabase
-        .from('user_game_progress').insert({ user_id: ctx.user.id, game_card_id: gameCardId, result });
+        .from('user_game_progress').insert({ user_id: ctx.user.id, game_card_id: gameCardId, result: jsonValue(result) });
     if (error) { console.error('[submitGameResult]', error.message); return { success: false, error: error.message }; }
     return { success: true };
 }

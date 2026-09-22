@@ -23,7 +23,7 @@ export default async function PreparerPage({ params }: { params: Promise<{ id: s
         <div className="flex flex-col min-h-screen bg-background">
             <header className="flex items-center gap-3 px-4 py-4 sticky top-0 bg-background/90 backdrop-blur-sm z-40">
                 <Link
-                    href="/stages"
+                    href="/stages/semaines"
                     className="size-9 rounded-full bg-white flex items-center justify-center text-slate-600 active:scale-90 transition shrink-0"
                 >
                     <span className="material-symbols-outlined text-[20px]">arrow_back</span>

@@ -10,11 +10,10 @@ import ProgrammeCondense from '@/components/ProgrammeCondense';
 import { THEMATIC_LABELS, ThematicTag } from '@/data/seasonal-context';
 import { DEFAULT_WASTE_TYPES } from '@/data/littoral-species';
 import { OBSERVATION_TYPES, SPECIES_CATEGORY_LABELS, SPECIES_CATEGORY_ORDER } from '@/data/observations';
-import { PILLARS } from '@/data/etages';
-import { parseStageDateRange } from '@/lib/stage-dates';
+import { civilDay, parseStageDateRange } from '@/lib/stage-dates';
 import { SPORT_FEATURES_ENABLED } from '@/lib/feature-flags';
 import { addObservation, deleteObservation } from '@/actions/observation-actions';
-import { saveObjectiveStatus, saveObjectiveImpact, clearObjectiveStatus, updateStagePool } from '@/actions/stage-actions';
+import { updateStagePool } from '@/actions/stage-actions';
 import { updateStageExploitStatus, uploadDefiPhoto } from '@/actions/defi-actions';
 import FilRougeForm from '@/components/defis/FilRougeForm';
 import { DeleteStageButton } from '@/components/DeleteStageButton';
@@ -22,7 +21,6 @@ import CardDetailModal from '@/components/CardDetailModal';
 import { HelpGuideModal } from '@/components/HelpGuideModal';
 import { PointsGainedBadge, usePointsGainedBadge } from '@/components/PointsGainedBadge';
 import { compressImage } from '@/lib/image-compression';
-import { getStageObjectiveImpactOptions, getStageObjectiveReasonOptions } from '@/lib/stage-objective-review';
 import type { ResumeFormation } from '@/actions/formation-actions';
 import { DashboardFormation } from '@/components/DashboardFormation';
 import { RailSuggestions } from '@/components/RailSuggestions';
@@ -76,20 +74,18 @@ function ExploitCard({ exploit, stageId, clubObservationTargets }: { exploit: St
         }
     };
 
-    const validate = () => {
-        setLocalStatus('complete');
+    const changeStatus = (status: 'complete' | 'en_cours') => {
         startTransition(async () => {
-            const res = await updateStageExploitStatus(stageId, exploit.exploit_id, 'complete');
-            if (res.success) celebrate(res.pointsAwarded ?? 0);
+            try {
+                const res = await updateStageExploitStatus(stageId, exploit.exploit_id, status);
+                if (!res.success) { alert(res.error); return; }
+                setLocalStatus(status);
+                if (status === 'complete') celebrate(res.pointsAwarded ?? 0);
+            } catch { alert('Enregistrement impossible.'); }
         });
     };
-
-    const unvalidate = () => {
-        setLocalStatus('en_cours');
-        startTransition(async () => {
-            await updateStageExploitStatus(stageId, exploit.exploit_id, 'en_cours');
-        });
-    };
+    const validate = () => changeStatus('complete');
+    const unvalidate = () => changeStatus('en_cours');
 
     const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -443,10 +439,12 @@ export function WeekDashboardClient({
 
     useEffect(() => {
         if (showAddObs && textRef.current) textRef.current.focus();
-        // Un retour terrain se note presque toujours juste après l'avoir vécu : la date
-        // est pré-remplie à maintenant (modifiable), pas un champ vide obligatoire.
-        if (showAddObs) setObsDate(prev => prev || toDatetimeLocal(new Date()));
     }, [showAddObs]);
+
+    const openObservationForm = () => {
+        setObsDate(current => current || toDatetimeLocal(new Date()));
+        setShowAddObs(true);
+    };
 
     // Sujets dont l'accroche est choisie : c'est le signal "prêt à raconter", au même
     // sens que sur l'écran de préparation — pas un statut d'exécution après coup.
@@ -455,21 +453,13 @@ export function WeekDashboardClient({
     const defisDone = initialExploits.filter(e => e.status === 'complete').length;
     // Position dans la semaine : "Jour 2/5" si aujourd'hui est dans l'intervalle du stage.
     const now = new Date();
-    const DAY_MS = 86_400_000;
     const weekRange = parseStageDateRange(stageDates, now);
     let dayIndex: number | null = null;
     let dayTotal: number | null = null;
     let weekOver = false;
     if (weekRange) {
-        const startDay = new Date(weekRange.start);
-        startDay.setHours(0, 0, 0, 0);
-        // `end` est à 23:59:59 du dernier jour : l'écart brut fait 6,99 jours pour une
-        // semaine de 7. Sans `floor` sur des jours entiers, `Math.round(...) + 1` donnait
-        // un jour fantôme — « Jour 7/8 » le dimanche d'une semaine lundi-dimanche.
-        const endDay = new Date(weekRange.end);
-        endDay.setHours(0, 0, 0, 0);
-        dayTotal = Math.floor((endDay.getTime() - startDay.getTime()) / DAY_MS) + 1;
-        const diff = Math.floor((now.getTime() - startDay.getTime()) / DAY_MS);
+        dayTotal = civilDay(weekRange.end) - civilDay(weekRange.start) + 1;
+        const diff = civilDay(now) - civilDay(weekRange.start);
         if (diff >= 0 && diff < dayTotal) dayIndex = diff + 1;
         weekOver = diff >= dayTotal;
     }
@@ -541,8 +531,11 @@ export function WeekDashboardClient({
     };
 
     const handleDeleteObs = async (id: string) => {
-        setObservations(prev => prev.filter(o => o.id !== id));
-        await deleteObservation(id);
+        try {
+            const result = await deleteObservation(id);
+            if (!result.success) { alert(result.error); return; }
+            setObservations(prev => prev.filter(o => o.id !== id));
+        } catch { alert('Suppression impossible.'); }
     };
 
     const handleSaveSportSelection = async (selected: PedagogicalContent[]) => {
@@ -640,7 +633,7 @@ export function WeekDashboardClient({
                         >
                             <div className="flex-1 min-w-0">
                                 <p className="text-[10px] font-black uppercase tracking-widest text-white/50">Fin de semaine</p>
-                                <p className="text-sm font-black text-white leading-snug mt-0.5">Qu&apos;est-ce que ton groupe a perçu, vu et entendu grâce à toi&nbsp;?</p>
+                                <p className="text-sm font-black text-white leading-snug mt-0.5">Faites voter le groupe sur ce que vous avez fait ensemble</p>
                             </div>
                             <span className="size-9 rounded-full bg-white/20 border border-white/30 flex items-center justify-center text-white shrink-0">
                                 <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
@@ -761,7 +754,7 @@ export function WeekDashboardClient({
                         </span>
                         <span className="flex-1 min-w-0">
                             <span className="block text-[13.5px] font-black text-slate-900 leading-snug">
-                                Découvrir d&apos;autres sujets
+                                Explorer d&apos;autres sujets
                             </span>
                             <span className="block text-[11.5px] text-slate-400 mt-0.5">
                                 Sans rien changer à ta semaine
@@ -1143,7 +1136,7 @@ export function WeekDashboardClient({
 
                     {!showAddObs && (
                         <button
-                            onClick={() => setShowAddObs(true)}
+                            onClick={openObservationForm}
                             className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl border-2 border-dashed border-slate-200 bg-white text-slate-400 hover:border-slate-300 hover:text-slate-600 transition-all mb-3"
                         >
                             <span className="material-symbols-outlined text-lg">add</span>
@@ -1245,8 +1238,8 @@ export function WeekDashboardClient({
                             <span className="material-symbols-outlined text-[20px]">quiz</span>
                         </span>
                         <span className="flex-1 min-w-0">
-                            <span className="block text-sm font-black text-slate-900 leading-snug">Quiz de la semaine</span>
-                            <span className="block text-[11px] text-slate-400 mt-0.5">{quizDone ? 'Déjà fait — revoir ou refaire' : 'Qu’est-ce que ton groupe a perçu, vu et entendu grâce à toi ?'}</span>
+                            <span className="block text-sm font-black text-slate-900 leading-snug">Vote de fin de stage</span>
+                            <span className="block text-[11px] text-slate-400 mt-0.5">{quizDone ? 'Déjà fait — revoir ou refaire' : 'Le groupe confirme ce qu’il a fait avec toi'}</span>
                         </span>
                         <span className="material-symbols-outlined text-slate-300 shrink-0">arrow_forward</span>
                     </Link>

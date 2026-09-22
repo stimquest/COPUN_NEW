@@ -13,7 +13,7 @@ import { getStageQuiz } from '@/actions/quiz-actions';
 import { getStagePreparations } from '@/actions/preparation-actions';
 import { getObservationsForStage } from '@/actions/observation-actions';
 import { RESSENTI_OPTIONS, isRessentiNiveau } from '@/lib/stage-ressenti';
-import { parseStageDateRange } from '@/lib/stage-dates';
+import { civilDay, parseStageDateRange } from '@/lib/stage-dates';
 import { PedagogicalContent } from '@/types';
 
 export default async function StageBilanPage({ params }: { params: Promise<{ id: string }> }) {
@@ -35,7 +35,7 @@ export default async function StageBilanPage({ params }: { params: Promise<{ id:
     const selectedIds: string[] = stage.selected_content ?? [];
     const objectives = selectedIds
         .map(cid => copunPool.find((c: PedagogicalContent) => c.id === cid))
-        .filter((c): c is PedagogicalContent => Boolean(c) && c.source !== 'custom');
+        .filter((c): c is PedagogicalContent => c !== undefined && c.source !== 'custom');
 
     const isClosed = !!stage.closed_at;
 
@@ -62,11 +62,8 @@ export default async function StageBilanPage({ params }: { params: Promise<{ id:
     if (!isClosed) {
         const range = parseStageDateRange(stage.dates, new Date());
         if (range) {
-            const DAY_MS = 86_400_000;
-            const startDay = new Date(range.start);
-            startDay.setHours(0, 0, 0, 0);
-            const dayTotal = Math.round((range.end.getTime() - range.start.getTime()) / DAY_MS) + 1;
-            const diff = Math.floor((Date.now() - startDay.getTime()) / DAY_MS);
+            const dayTotal = civilDay(range.end) - civilDay(range.start) + 1;
+            const diff = civilDay(new Date()) - civilDay(range.start);
             if (diff < 0) {
                 earlyWarning = "Cette semaine n'a pas encore commencé.";
             } else if (diff < dayTotal - 1) {
@@ -98,7 +95,7 @@ export default async function StageBilanPage({ params }: { params: Promise<{ id:
             <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm border-b border-slate-100">
                 <div className="flex items-center gap-3 px-4 py-3 max-w-2xl mx-auto">
                     <Link
-                        href="/stages"
+                        href="/stages/semaines"
                         className="size-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-slate-200 transition active:scale-95 shrink-0"
                     >
                         <span className="material-symbols-outlined text-[20px]">arrow_back</span>
@@ -113,7 +110,7 @@ export default async function StageBilanPage({ params }: { params: Promise<{ id:
                             Clôturé
                         </span>
                     ) : (
-                        <DeleteStageButton stageId={stage.id} redirectTo="/stages" />
+                        <DeleteStageButton stageId={stage.id} redirectTo="/stages/semaines" />
                     )}
                 </div>
             </header>
@@ -241,7 +238,7 @@ export default async function StageBilanPage({ params }: { params: Promise<{ id:
                         {/* Actions */}
                         <div className="flex gap-3 pt-2">
                             <Link
-                                href="/stages"
+                                href="/stages/semaines"
                                 className="flex-1 h-11 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 flex items-center justify-center hover:bg-slate-50 transition"
                             >
                                 Retour

@@ -233,7 +233,7 @@ export function ReportingTab({ userRole }: { userRole?: string | null }) {
                             <div className="text-sm text-indigo-800 space-y-1">
                                 <p className="font-bold">Pour le rapport Ministère</p>
                                 <p className="text-indigo-600 text-xs leading-relaxed">
-                                    Ce tableau de bord agrège automatiquement les données de tous les clubs. Exportez en CSV pour l'intégrer à votre rapport annuel de conformité environnementale.
+                                    Ce tableau de bord agrège automatiquement les données de tous les clubs. Exportez en CSV pour l&apos;intégrer à votre rapport annuel de conformité environnementale.
                                     Le score quiz représente le taux de transmission des connaissances environnementales aux stagiaires.
                                 </p>
                             </div>

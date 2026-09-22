@@ -1,6 +1,4 @@
 import { listUsers, getClubs } from '@/actions/admin-actions';
-import { getAllPedagogicalContent } from '@/actions/content-actions';
-import { getAllFichesMemo } from '@/actions/fiche-memo-actions';
 import { AdminClient } from './AdminClient';
 import { createClient, getCachedUser } from '@/lib/supabase/server';
 
@@ -17,17 +15,15 @@ export default async function AdminPage() {
         userRole = profile?.role ?? null;
     }
 
-    const [{ users, error }, clubs, fiches, fichesMemo] = await Promise.all([
+    const [{ users, error }, clubs] = await Promise.all([
         listUsers(),
         getClubs(),
-        getAllPedagogicalContent(),
-        getAllFichesMemo('publie'),
     ]);
 
     const normalized = (users ?? []).map(u => ({
-        ...u,
+        ...u, full_name: u.full_name ?? undefined, email: u.email ?? '', role: u.role ?? 'instructor', created_at: u.created_at ?? '',
         clubs: Array.isArray(u.clubs) ? (u.clubs[0] ?? null) : u.clubs,
     }));
 
-    return <AdminClient users={normalized} clubs={clubs} fiches={fiches} fichesMemo={fichesMemo} error={error} userRole={userRole} />;
+    return <AdminClient users={normalized} clubs={clubs} error={error} userRole={userRole} />;
 }

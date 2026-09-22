@@ -10,8 +10,8 @@ import { getResumeFormation } from '@/actions/formation-actions';
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
 export const metadata: Metadata = {
-  title: "COP'UN Dashboard",
-  description: 'Instructor Hub',
+  title: "COP’UN — Apprendre à parler d’environnement",
+  description: 'Se former, découvrir le littoral et transmettre sur le terrain.',
   manifest: '/manifest.webmanifest',
   appleWebApp: {
     capable: true,
@@ -48,17 +48,16 @@ export default async function RootLayout({
     const user = await getCachedUser();
     if (user) {
       email = user.email ?? null;
-      const { data: profile } = await supabase
+      const [{ data: profile }, resumeFormation] = await Promise.all([supabase
         .from('profiles')
         .select('role, full_name, club_id, clubs(name)')
         .eq('id', user.id)
-        .single();
+        .single(), getResumeFormation()]);
       role = profile?.role ?? null;
       fullName = profile?.full_name ?? null;
       const clubs = profile?.clubs as { name: string } | { name: string }[] | null;
       clubName = clubs ? (Array.isArray(clubs) ? clubs[0]?.name : clubs.name) ?? null : null;
 
-      const resumeFormation = await getResumeFormation();
       formationEnCours = resumeFormation.nbRediges > 0 && resumeFormation.nbFaits < resumeFormation.nbTotal;
     }
   } catch { /* non connecté ou page publique */ }
@@ -69,7 +68,7 @@ export default async function RootLayout({
         {/* eslint-disable-next-line @next/next/no-page-custom-font */}
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
       </head>
-      <body className={`${inter.variable} font-sans antialiased min-h-screen bg-[#EBF0F7] text-slate-900 md:flex overflow-x-hidden`}>
+      <body className={`${inter.variable} co-app font-sans antialiased min-h-screen md:flex`}>
         <Sidebar role={role} fullName={fullName} email={email} clubName={clubName} formationEnCours={formationEnCours} />
         {/*
           Zone de sécurité globale pour la nav flottante mobile :
@@ -77,9 +76,9 @@ export default async function RootLayout({
           - inclut le safe-area iOS
           - annulé en desktop (md:pb-8) où il n'y a pas de bottom nav
         */}
-        <main className="flex-1 mx-auto w-full md:max-w-7xl min-h-screen relative md:px-8 md:py-8 pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-8">
+        <div className="co-workspace">
           {children}
-        </main>
+        </div>
         <BottomNav role={role} formationEnCours={formationEnCours} />
       </body>
     </html>

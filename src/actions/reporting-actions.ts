@@ -11,7 +11,7 @@ async function requireAdminOrClubAdmin() {
         .select('role, club_id')
         .eq('id', user.id)
         .single();
-    if (!profile || !['admin', 'club_admin'].includes(profile.role)) return null;
+    if (!profile || !['admin', 'club_admin'].includes(profile.role ?? '')) return null;
     return { user, supabase, role: profile.role, club_id: profile.club_id as string | null };
 }
 
@@ -61,6 +61,7 @@ export async function getReportingData(annee?: number): Promise<{ data?: Reporti
     const dateEnd = `${year}-12-31`;
 
     // Pour un club_admin : on récupère d'abord les moniteurs de son club
+    if (role === 'club_admin' && !myClubId) return { error: 'Aucun club associé.' };
     let ownerFilter: string[] | null = null;
     if (role === 'club_admin' && myClubId) {
         const { data: clubMembers } = await supabase
@@ -90,41 +91,31 @@ export async function getReportingData(annee?: number): Promise<{ data?: Reporti
     const stageIds = (stages ?? []).map(s => s.id);
 
     // club_id vient du profil du moniteur, pas du stage
-    const ownerIds = [...new Set((stages ?? []).map(s => s.owner_id).filter(Boolean))];
-    const { data: ownerProfiles } = await supabase
-        .from('profiles')
-        .select('id, club_id')
-        .in('id', ownerIds.length > 0 ? ownerIds : ['__none__']);
+    const ownerIds = [...new Set((stages ?? []).map(s => s.owner_id).filter((id): id is string => Boolean(id)))];
+    const [ownersResult, pointsResult, quizzesResult, clubsResult] = await Promise.all([
+        supabase.from('profiles').select('id, club_id').in('id', ownerIds),
+        supabase.from('leaderboard_points').select('club_id, defi_id, monitor_id, stage_id, created_at').in('stage_id', stageIds),
+        supabase.from('stage_quizzes').select('stage_id, score_correct, score_total, completed_at').in('stage_id', stageIds).not('completed_at', 'is', null),
+        supabase.from('clubs').select('id, name'),
+    ]);
+    const queryError = [ownersResult, pointsResult, quizzesResult, clubsResult].find(r => r.error)?.error;
+    if (queryError) return { error: queryError.message };
+    const ownerProfiles = ownersResult.data;
+    const points = pointsResult.data;
+    const quizzes = quizzesResult.data;
+    const clubs = clubsResult.data;
     const ownerClubMap = Object.fromEntries((ownerProfiles ?? []).map(p => [p.id, p.club_id]));
-
-    // Points / défis validés sur ces stages
-    const { data: points } = await supabase
-        .from('leaderboard_points')
-        .select('club_id, defi_id, monitor_id, stage_id, created_at')
-        .in('stage_id', stageIds.length > 0 ? stageIds : ['__none__']);
-
-    // Quiz complétés sur ces stages
-    const { data: quizzes } = await supabase
-        .from('stage_quizzes')
-        .select('stage_id, score_correct, score_total, completed_at')
-        .in('stage_id', stageIds.length > 0 ? stageIds : ['__none__'])
-        .not('completed_at', 'is', null);
-
-    // Clubs
-    const { data: clubs } = await supabase
-        .from('clubs')
-        .select('id, name');
 
     const clubMap = Object.fromEntries((clubs ?? []).map(c => [c.id, c.name]));
 
     // ── Calculs globaux ──────────────────────────────────────────────────────
     const stagesArr = stages ?? [];
     const pointsArr = points ?? [];
-    const quizzesArr = quizzes ?? [];
+    const quizzesArr = (quizzes ?? []).map(q => ({ ...q, score_total: q.score_total ?? 0, score_correct: q.score_correct ?? 0 }));
 
     const nb_stagiaires_total = stagesArr.reduce((sum, s) => sum + (s.nb_stagiaires ?? 0), 0);
     const moniteurs_actifs = new Set(stagesArr.map(s => s.owner_id));
-    const clubs_actifs = new Set(stagesArr.map(s => ownerClubMap[s.owner_id]).filter(Boolean));
+    const clubs_actifs = new Set(stagesArr.map(s => ownerClubMap[s.owner_id ?? '']).filter(Boolean));
 
     const scores_valides = quizzesArr.filter(q => q.score_total > 0);
     const score_quiz_moyen = scores_valides.length > 0
@@ -140,7 +131,7 @@ export async function getReportingData(annee?: number): Promise<{ data?: Reporti
     }> = {};
 
     for (const s of stagesArr) {
-        const cid = ownerClubMap[s.owner_id] ?? 'sans_club';
+        const cid = ownerClubMap[s.owner_id ?? ''] ?? 'sans_club';
         if (!clubStats[cid]) clubStats[cid] = {
             club_id: cid,
             club_name: clubMap[cid] ?? 'Sans club',
@@ -149,7 +140,7 @@ export async function getReportingData(annee?: number): Promise<{ data?: Reporti
         };
         clubStats[cid].stages.add(s.id);
         clubStats[cid].stagiaires += s.nb_stagiaires ?? 0;
-        clubStats[cid].moniteurs.add(s.owner_id);
+        if (s.owner_id) clubStats[cid].moniteurs.add(s.owner_id);
     }
 
     for (const p of pointsArr) {
@@ -160,7 +151,7 @@ export async function getReportingData(annee?: number): Promise<{ data?: Reporti
     for (const q of quizzesArr) {
         const stage = stagesArr.find(s => s.id === q.stage_id);
         if (!stage) continue;
-        const cid = ownerClubMap[stage.owner_id] ?? 'sans_club';
+        const cid = ownerClubMap[stage.owner_id ?? ''] ?? 'sans_club';
         if (clubStats[cid] && q.score_total > 0) {
             clubStats[cid].quiz_scores.push(Math.round((q.score_correct / q.score_total) * 100));
         }

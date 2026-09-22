@@ -11,7 +11,7 @@ export default async function StagesHistoriquePage() {
         <div className="min-h-screen bg-slate-50 pb-32">
             <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm border-b border-slate-100">
                 <div className="flex items-center gap-3 px-4 py-3 max-w-2xl mx-auto">
-                    <Link href="/stages" className="size-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-slate-200 transition active:scale-95 shrink-0">
+                    <Link href="/stages/semaines" className="size-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-slate-200 transition active:scale-95 shrink-0">
                         <span className="material-symbols-outlined text-[20px]">arrow_back</span>
                     </Link>
                     <div className="flex-1 min-w-0">

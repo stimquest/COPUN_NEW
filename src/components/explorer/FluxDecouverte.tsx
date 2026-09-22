@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useMemo, useRef } from 'react';
-import { motion, AnimatePresence, useMotionValue, useTransform, type PanInfo } from 'framer-motion';
+import { useState, useMemo, useRef, useEffect } from 'react';
+import { animate, motion, useMotionValue, useTransform, type PanInfo } from 'framer-motion';
 import clsx from 'clsx';
 import { PedagogicalContent, Dimension } from '@/types';
 import { PILLARS, THEMES_BY_PILLAR } from '@/data/etages';
@@ -9,6 +9,7 @@ import { groupeDe, GROUPES } from '@/data/groupes';
 import { NIVEAUX } from '@/data/niveaux';
 import { HistoriqueMoniteur } from '@/lib/historique-moniteur';
 import LectureCarte from './LectureCarte';
+import { ENTREES_DECOUVERTE, cartesDuTheme } from '@/data/decouverte-accueil';
 
 /**
  * Le second chemin de l'écran : consommer le catalogue comme un flux, pas comme une
@@ -18,7 +19,7 @@ import LectureCarte from './LectureCarte';
  *
  * Le drag utilise les primitives standard de framer-motion (`useMotionValue` +
  * `useTransform` pour suivre le doigt sans re-render, `dragConstraints`/`dragElastic` pour
- * la résistance, `dragSnapToOrigin` pour le retour natif sous le seuil) — jamais
+ * la résistance, puis une animation de retour sous le seuil) — jamais
  * `controls.start()` appelé en boucle dans `onDrag`, qui empile des animations à chaque
  * frame et produit un geste erratique. Le swipe n'avance que dans un seul sens ; revenir
  * en arrière et garder ne passent que par leurs boutons dédiés, jamais par un geste,
@@ -42,6 +43,8 @@ type Props = {
     historique?: HistoriqueMoniteur;
     initialTheme?: string;
     initialGroup?: string;
+    initialPillar?: Dimension;
+    initialEntry?: string;
     savedIds?: string[];
     onToggleSaved?: (id: string) => void;
     savingId?: string | null;
@@ -121,7 +124,8 @@ const THEME_TONES: Record<Dimension, { active: string }> = {
     },
 };
 
-export default function FluxDecouverte({ pool, mode = 'selection', retenues = [], onToggleFiche, onFicheInfo, historique, initialTheme, initialGroup, savedIds = [], onToggleSaved, savingId, savedUnavailable }: Props) {
+export default function FluxDecouverte({ pool, mode = 'selection', retenues = [], onToggleFiche, onFicheInfo, historique, initialTheme, initialGroup, initialPillar, initialEntry, savedIds = [], onToggleSaved, savingId, savedUnavailable }: Props) {
+    const [entry, setEntry] = useState(() => ENTREES_DECOUVERTE.find(rail => rail.dimension === initialPillar)?.themes.find(theme => theme.id === initialEntry));
     const [group, setGroup] = useState(() => GROUPES.find(item => item.id === initialGroup));
     const [filtresOuverts, setFiltresOuverts] = useState(false);
     const dejaVues = useMemo(() => historique?.dejaVues ?? {}, [historique]);
@@ -130,19 +134,20 @@ export default function FluxDecouverte({ pool, mode = 'selection', retenues = []
     // l'inverse — un thème n'a de sens qu'à l'intérieur d'un pilier. Le niveau reste
     // visible avant cette orientation : c'est le repère de public de la méthode, pas un
     // filtre technique noyé parmi les autres.
-    const [pilier, setPilier] = useState<Dimension | null>(null);
+    const [pilier, setPilier] = useState<Dimension | null>(initialPillar ?? null);
     const [theme, setTheme] = useState<string | null>(initialTheme ?? null);
     const [niveau, setNiveau] = useState<1 | 2 | 3 | null>(null);
 
     const poolFiltre = useMemo(() => {
-        return pool.filter(f => {
+        const candidates = entry && pilier ? cartesDuTheme(pool, pilier, entry) : pool;
+        return candidates.filter(f => {
             if (group && !group.fiches.includes(Number(f.id))) return false;
             if (pilier && f.dimension !== pilier) return false;
             if (theme && !f.tags_theme?.includes(theme)) return false;
             if (niveau && f.niveau !== niveau) return false;
             return true;
         });
-    }, [pool, pilier, theme, niveau, group]);
+    }, [pool, pilier, theme, niveau, group, entry]);
 
     // Jamais vues d'abord, puis le reste — mélangé une seule fois par changement de
     // filtre, pas à chaque rendu (sinon la pile change sous les doigts pendant le swipe).
@@ -160,6 +165,7 @@ export default function FluxDecouverte({ pool, mode = 'selection', retenues = []
     }, [poolFiltre, dejaVues]);
 
     const choisirPilier = (p: Dimension) => {
+        setEntry(undefined);
         setPilier(prev => (prev === p ? null : p));
         setTheme(null);
     };
@@ -169,6 +175,10 @@ export default function FluxDecouverte({ pool, mode = 'selection', retenues = []
 
     return (
         <div className="space-y-3">
+            {entry && <div className="flex items-center justify-between gap-3 rounded-xl bg-white/70 px-4 py-3">
+                <p className="text-sm font-semibold text-slate-700">{entry.title}</p>
+                <button onClick={() => setEntry(undefined)} aria-label="Retirer le thème de découverte" className="size-11 shrink-0 rounded-full text-slate-500">✕</button>
+            </div>}
             <div className="flex items-center justify-between gap-2 px-1">
                 {group ? (
                     <button onClick={() => setGroup(undefined)} aria-label={`Retirer le filtre ${group.label}`} className="min-h-11 min-w-0 truncate px-2 text-sm font-medium text-slate-600">{group.label} <span className="ml-1 text-slate-400" aria-hidden>×</span></button>
@@ -396,7 +406,6 @@ function DeckDecouverte({
             </p>
             <div ref={pileRef} className="relative scroll-mt-4" style={{ paddingTop: (Math.min(3, pile.length) - 1) * HAUTEUR_TITRE_PILE }}>
                 <div className="relative" style={mode === 'lecture' ? undefined : { height: HAUTEUR_CARTE_DECOUVERTE }}>
-                <AnimatePresence mode="popLayout">
                     {pile.slice(-3).map((f, i, arr) => (
                         <CarteFlux
                             key={f.id} fiche={f} estTop={i === arr.length - 1} rang={arr.length - 1 - i}
@@ -406,7 +415,6 @@ function DeckDecouverte({
                             saving={savingId === f.id} savedUnavailable={savedUnavailable || (!!savingId && savingId !== f.id)} canGoBack={historiquePile.length > 0}
                         />
                     ))}
-                </AnimatePresence>
                 </div>
             </div>
         </>
@@ -445,6 +453,23 @@ function CarteFlux({
     // et fait s'entrechoquer les transitions.
     const x = useMotionValue(0);
     const rotate = useTransform(x, [-200, 200], [-12, 12]);
+    const animation = useRef<ReturnType<typeof animate> | null>(null);
+    const sortieEnCours = useRef(false);
+    const [sortie, setSortie] = useState(false);
+    const element = useRef<HTMLDivElement>(null);
+    useEffect(() => () => { animation.current?.stop(); }, []);
+
+    const passer = async () => {
+        if (!estTop || sortieEnCours.current) return;
+        sortieEnCours.current = true;
+        setSortie(true);
+        // La pile reste immobile jusqu'à la sortie complète de la carte opaque.
+        const distance = window.innerWidth + (element.current?.offsetHeight ?? 680);
+        const mouvement = animate(x, -distance, { duration: 0.3, ease: [0.32, 0, 0.67, 0] });
+        animation.current = mouvement;
+        await mouvement;
+        if (element.current) onSwipe();
+    };
 
     /**
      * Le tap n'ouvre la fiche que si la carte n'est pas en train d'être swipée. Une ref,
@@ -455,30 +480,33 @@ function CarteFlux({
 
     /**
      * Le swipe n'avance que dans un seul sens (vers la gauche, comme « passer la carte »).
-     * En dessous du seuil, `dragSnapToOrigin` ramène nativement la carte au centre — pas
-     * besoin de le déclencher à la main.
+     * Sous le seuil, la carte revient au centre. Au-delà, sa sortie se termine avant
+     * de promouvoir la suivante, sans retour automatique concurrent.
      */
     const gerer = (_: unknown, info: PanInfo) => {
         enSwipe.current = false;
-        if (info.offset.x < -SWIPE_THRESHOLD) onSwipe();
+        if (info.offset.x < -SWIPE_THRESHOLD) void passer();
+        else animation.current = animate(x, 0, { type: 'spring', damping: 30, stiffness: 320 });
     };
 
     return (
         <motion.div
+            ref={element}
             // Seule la carte du dessus porte une ombre : appliquée aux trois, les ombres
             // bleutées et larges se cumulaient en un halo coloré autour de la pile.
             // Les cartes de derrière se distinguent par leur `scale`/`y`, pas par une ombre.
             className={clsx(
-                'rounded-[1.75rem] bg-white overflow-hidden',
+                'rounded-[1.75rem] overflow-hidden',
                 mode === 'lecture' && estTop ? 'relative min-h-[680px]' : 'absolute inset-0',
-                estTop ? 'shadow-[var(--shadow-lift)]' : 'ring-1 ring-slate-900/5',
+                mode === 'lecture' ? 'bg-[#fffdf8] ring-1 ring-[#193d3b14]' : 'bg-white',
+                estTop ? 'shadow-[0_18px_44px_rgba(25,61,59,.10)]' : 'ring-1 ring-slate-900/5',
             )}
             style={{ zIndex: 10 - rang, x: estTop ? x : 0, rotate: estTop ? rotate : 0, transformOrigin: 'center top' }}
-            inert={!estTop}
-            drag={estTop ? 'x' : false}
+            inert={!estTop || sortie}
+            drag={estTop && !sortie ? 'x' : false}
             dragConstraints={{ left: 0, right: 0 }}
             dragElastic={{ left: 0.6, right: 0.15 }}
-            dragSnapToOrigin
+            dragMomentum={false}
             onDragStart={estTop ? () => { enSwipe.current = true; } : undefined}
             onDragEnd={estTop ? gerer : undefined}
             // Pleine opacité à tous les rangs : une carte de fond semi-transparente reste
@@ -486,17 +514,16 @@ function CarteFlux({
             // l'impression d'un flou sale plutôt que d'une vraie pile nette.
             initial={{ scale: 1 - rang * 0.05, y: -rang * HAUTEUR_TITRE_PILE }}
             animate={{ scale: 1 - rang * 0.05, y: -rang * HAUTEUR_TITRE_PILE }}
-            exit={{ x: -400, opacity: 0, transition: { duration: 0.2 } }}
             transition={{ type: 'spring', damping: 30, stiffness: 320 }}
         >
             <motion.div
-                className={clsx('flex shrink-0 items-center gap-2.5 overflow-hidden px-5', estTop ? pilier?.bg : 'bg-white', mode === 'lecture' && estTop && 'min-h-[60px] py-4')}
+                className={clsx('flex shrink-0 items-center gap-2.5 overflow-hidden px-5', mode === 'lecture' && estTop ? 'min-h-[76px] border-b border-[#193d3b14] bg-[#f1eee4] py-5' : estTop ? pilier?.bg : 'bg-white')}
                 initial={false}
                 animate={{ height: mode === 'lecture' && estTop ? 'auto' : HAUTEUR_TITRE_PILE, opacity: 1 }}
                 transition={{ duration: 0.2 }}
             >
                 {!estTop && <span aria-hidden className={clsx('h-5 w-0.5 shrink-0 rounded-full', pilier?.bg)} />}
-                <h3 className={clsx(mode === 'lecture' && estTop ? 'text-[17px] leading-snug font-bold text-white' : ['leading-[16px] line-clamp-3', estTop ? 'text-[13px] font-bold text-white' : 'text-[12px] font-semibold text-slate-500'])}>{fiche.question}</h3>
+                <h3 className={clsx(mode === 'lecture' && estTop ? 'text-[21px] leading-[1.25] font-bold tracking-[-.02em] text-[#173d3a]' : ['leading-[16px] line-clamp-3', estTop ? 'text-[13px] font-bold text-white' : 'text-[12px] font-semibold text-slate-500'])}>{fiche.question}</h3>
             </motion.div>
             {/* Le tap n'ouvre la fiche que si la carte n'est pas en swipe (`enSwipe`) :
                 `onDragStart` de framer-motion ne se déclenche qu'au-delà de son propre
@@ -522,7 +549,7 @@ function CarteFlux({
                         onPointerDown={event => event.stopPropagation()}
                         onClick={onGarder} disabled={saving || savedUnavailable} aria-pressed={retenue}
                         aria-label={retenue ? 'Retirer cette carte des cartes mises de côté' : 'Mettre cette carte de côté'}
-                        className="ml-auto flex size-11 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-indigo-600 disabled:opacity-50"
+                        className="ml-auto flex size-11 shrink-0 items-center justify-center rounded-full border border-[#193d3b24] bg-[#edf1ea] text-[#173d3a] disabled:opacity-50"
                     ><span className="material-symbols-outlined" aria-hidden>{saving ? 'hourglass_top' : retenue ? 'bookmark_added' : 'bookmark_add'}</span></button>}
                 </div>
 
@@ -579,7 +606,7 @@ function CarteFlux({
             {/* Le swipe (vers la gauche uniquement) fait avancer. Revenir en arrière et
                 garder ne sont accessibles QUE par ces boutons — jamais par un geste,
                 pour qu'aucun des deux ne se déclenche par accident pendant un swipe. */}
-            <div onPointerDown={event => event.stopPropagation()} className={clsx('flex items-center gap-3 px-5 sm:px-6 py-4 bg-white border-t border-slate-100', mode !== 'lecture' && 'absolute bottom-0 inset-x-0')}>
+            <div onPointerDown={event => event.stopPropagation()} className={clsx('flex items-center gap-3 px-5 sm:px-6 py-4 bg-[#fffdf8] border-t border-[#193d3b14]', mode !== 'lecture' && 'absolute bottom-0 inset-x-0')}>
                 <button
                     onClick={onPrecedente}
                     disabled={!canGoBack}
@@ -614,7 +641,7 @@ function CarteFlux({
                 )}
 
                 <button
-                    onClick={onSwipe}
+                    onClick={() => { void passer(); }}
                     className="size-11 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 active:scale-90 transition shrink-0"
                     aria-label="Suivante"
                 >

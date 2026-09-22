@@ -5,15 +5,12 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import clsx from 'clsx';
 import { createStage, updateStage } from '@/actions/stage-actions';
+import { ajouterMissionPratique } from '@/actions/parcours-formation-actions';
+import { dateISOAParis } from '@/lib/stage-dates';
 import { Stage } from '@/types';
 
-const SUPPORTS = [
-    'Catamaran', 'Optimist', 'Planche à voile', 'Wing Foil',
-    'Kayak mer', 'SUP / Paddle', 'Dériveur', 'Kite Surf',
-];
-
 function formatDateRange(start: string, end: string) {
-    const opts: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short' };
+    const opts: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short', year: 'numeric' };
     return `${new Date(start + 'T12:00:00').toLocaleDateString('fr-FR', opts)} - ${new Date(end + 'T12:00:00').toLocaleDateString('fr-FR', opts)}`;
 }
 
@@ -36,7 +33,7 @@ function computeAutoTitle(startDate: string): string {
 }
 
 function todayISO() {
-    return new Date().toISOString().slice(0, 10);
+    return dateISOAParis(new Date());
 }
 
 function addDays(dateISO: string, n: number): string {
@@ -69,6 +66,7 @@ type Props = {
     initialSelection?: string[];
     initialTheme?: string;
     initialGroup?: string;
+    initialParcours?: string;
 };
 
 /**
@@ -107,20 +105,12 @@ type Props = {
  * connaît vraiment plutôt qu'estimé avant même que le groupe soit constitué — utile plus
  * tard pour mesurer combien de personnes ont été sensibilisées.
  */
-export function NewStageClient({ existingStage, initialSelection = [], initialTheme, initialGroup }: Props) {
+export function NewStageClient({ existingStage, initialSelection = [], initialTheme, initialGroup, initialParcours }: Props) {
     const router = useRouter();
     const isEditing = !!existingStage;
     const [isSaving, setIsSaving] = useState(false);
 
     const [title, setTitle] = useState(existingStage?.title ?? '');
-    const [activities, setActivities] = useState<string[]>(
-        existingStage?.activity ? existingStage.activity.split(', ').filter(Boolean) : []
-    );
-
-    const toggleActivity = (s: string) =>
-        setActivities(prev =>
-            prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]
-        );
     // Au fil de l'eau : les moniteurs ne préparent pratiquement jamais à plus de quelques
     // jours d'avance. Un choix entre deux semaines suffit — pas de calendrier à parcourir
     // pour une date lointaine qui ne sera de toute façon pas utilisée.
@@ -149,7 +139,7 @@ export function NewStageClient({ existingStage, initialSelection = [], initialTh
         ? boundsOfCalendarWeek(startDate)
         : { start: '', end: '' };
 
-    const canSubmit = !!startDate;
+    const canSubmit = !!startDate || (isEditing && !dateEditedManually);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -162,7 +152,7 @@ export function NewStageClient({ existingStage, initialSelection = [], initialTh
 
         const payload = {
             title: (title.trim() || computeAutoTitle(startDate)).trim(),
-            activity: activities.join(', '),
+            activity: existingStage?.activity ?? '',
             // Le niveau n'est plus renseigné à la création (voir le repère par fiche dans
             // Explorer) ; en édition, on préserve celui déjà enregistré.
             level: existingStage?.level ?? '',
@@ -171,22 +161,34 @@ export function NewStageClient({ existingStage, initialSelection = [], initialTh
             // le groupe réellement constitué — voir StageClosureReview.
             nb_stagiaires: existingStage?.nb_stagiaires ?? undefined,
             suggested_thematics: isEditing ? existingStage!.suggested_thematics : [],
+            selectedContentIds: isEditing ? existingStage!.selected_content : initialSelection,
         };
 
+        try {
         const res = isEditing
             ? await updateStage(existingStage!.id, payload)
             : await createStage(payload);
 
         if (res.success && res.stageId) {
-            const query = new URLSearchParams();
-            if (!isEditing && initialSelection.length) query.set('selection', initialSelection.join(','));
-            if (!isEditing && initialTheme) query.set('theme', initialTheme);
-            if (!isEditing && initialGroup) query.set('group', initialGroup);
-            const suffix = query.size ? `?${query.toString()}` : '';
-            router.push(`/stages/${res.stageId}/program${suffix}`);
+            if (!isEditing && initialSelection.length) {
+                if (initialParcours) {
+                    const mission = await ajouterMissionPratique({ sequenceId: initialParcours, stageId: res.stageId, actionId: 'carte-question', cardIds: initialSelection.slice(0, 3) });
+                    if ('error' in mission) alert(mission.error);
+                }
+                router.push('/stages/semaines');
+            }
+            else {
+                const query = new URLSearchParams();
+                if (!isEditing && initialTheme) query.set('theme', initialTheme);
+                if (!isEditing && initialGroup) query.set('group', initialGroup);
+                const suffix = query.size ? `?${query.toString()}` : '';
+                router.push(`/stages/${res.stageId}/program${suffix}`);
+            }
         } else {
             alert('Erreur : ' + res.error);
-            setIsSaving(false);
+        }
+        } catch { alert("Enregistrement impossible. Veuillez réessayer."); } finally {
+        setIsSaving(false);
         }
     };
 
@@ -204,7 +206,7 @@ export function NewStageClient({ existingStage, initialSelection = [], initialTh
             {/* Header */}
             <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm border-b border-slate-100">
                 <div className="flex items-center gap-3 px-4 py-3 max-w-lg mx-auto">
-                    <Link href={isEditing ? `/stages/${existingStage!.id}/program` : '/stages'} className="size-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-slate-200 transition active:scale-95 shrink-0">
+                    <Link href={isEditing ? `/stages/${existingStage!.id}/program` : '/stages/semaines'} className="size-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-slate-200 transition active:scale-95 shrink-0">
                         <span className="material-symbols-outlined text-[20px]">arrow_back</span>
                     </Link>
                     <p className="text-sm font-bold text-slate-900">
@@ -272,36 +274,10 @@ export function NewStageClient({ existingStage, initialSelection = [], initialTh
                         </div>
                     )}
 
-                    {/* Support — seul champ secondaire qui reste ici : titre auto-généré,
-                        niveau déplacé en repère sur chaque fiche (Explorer), effectif
-                        déplacé au bilan de fin de semaine (voir StageClosureReview). */}
-                    <div>
-                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1 block">
-                            Support{activities.length > 1 ? 's' : ''}
-                            <span className="font-semibold normal-case tracking-normal text-slate-300 ml-1">— plusieurs possibles, optionnel</span>
-                        </label>
-                        <div className="flex flex-wrap gap-2">
-                            {SUPPORTS.map(s => {
-                                const selected = activities.includes(s);
-                                return (
-                                    <button
-                                        key={s}
-                                        type="button"
-                                        onClick={() => toggleActivity(s)}
-                                        className={clsx(
-                                            'px-3 py-2 rounded-xl border text-xs font-bold transition active:scale-95 flex items-center gap-1.5',
-                                            selected
-                                                ? 'bg-slate-900 border-slate-900 text-white'
-                                                : 'bg-white border-slate-200 text-slate-600 hover:border-slate-400'
-                                        )}
-                                    >
-                                        {selected && <span className="material-symbols-outlined text-[13px]">check</span>}
-                                        {s}
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    </div>
+                    {initialSelection.length > 0 && !isEditing && <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-4">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-emerald-700">Cartes déjà choisies</p>
+                        <p className="mt-1 text-sm font-bold text-emerald-950">{initialSelection.length} carte{initialSelection.length > 1 ? 's' : ''} du parcours seront ajoutées automatiquement.</p>
+                    </div>}
 
                     {/* Submit — envoie directement sur Explorer, pas d'étape intermédiaire
                         à deviner (météo, coefficient) avant d'avoir vu le vrai contenu. */}
@@ -322,7 +298,7 @@ export function NewStageClient({ existingStage, initialSelection = [], initialTh
                             </>
                         ) : (
                             <>
-                                {isEditing ? 'Enregistrer' : 'Cette semaine, on parle de quoi ?'}
+                                {isEditing ? 'Enregistrer' : initialSelection.length ? 'Créer cette semaine' : 'Choisir mes cartes'}
                                 <span className="material-symbols-outlined text-lg">arrow_forward</span>
                             </>
                         )}

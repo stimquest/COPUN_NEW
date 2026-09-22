@@ -5,6 +5,7 @@ import type { ThematicTag } from '@/data/seasonal-context';
 import FicheCard from '@/components/fiches/FicheCard';
 import FichesBrowser from '@/components/fiches/FichesBrowser';
 import { ALL_THEMATIC_TAGS } from '@/components/fiches/fiche-constants';
+import { PageHeading } from '@/components/design/Coastal';
 
 export default async function RessourcesPage({
     searchParams,
@@ -39,9 +40,9 @@ export default async function RessourcesPage({
     const fichesPubliees = fiches.filter(f => f.statut === 'publie');
 
     return (
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 pb-32">
+        <div className="co-page">
             {/* Header */}
-            <header className="mb-10">
+            <div className="co-library-header">
                 {retour && (
                     <Link
                         href={retour}
@@ -52,37 +53,20 @@ export default async function RessourcesPage({
                     </Link>
                 )}
 
-                <div className="flex items-start justify-between gap-4 mb-6">
-                    <div>
-                        <h1 className="text-4xl font-black text-slate-900 uppercase tracking-tighter italic mb-2">
-                            Ressources
-                        </h1>
-                        <p className="text-slate-500 font-medium">
-                            Fiches mémo collaboratives et jeux pédagogiques
-                        </p>
-                    </div>
-                    <Link
-                        href="/ressources/nouvelle"
-                        className="flex items-center gap-2 px-5 py-3 bg-teal-600 text-white rounded-xl font-bold hover:bg-teal-700 transition shadow-lg shadow-teal-200 shrink-0"
-                    >
-                        <span className="material-symbols-outlined">add</span>
-                        <span className="hidden sm:inline">Nouvelle fiche</span>
-                    </Link>
-                </div>
+                <PageHeading eyebrow="Pour approfondir" title="Ressources" description="Des repères à garder sous la main." action={<Link href="/ressources/nouvelle" className="co-icon-button" aria-label="Créer une fiche"><span className="material-symbols-outlined" aria-hidden>add</span></Link>}/>
 
                 {/* Onglets */}
-                <div className="flex gap-2">
-                    <span className="px-4 py-2 bg-teal-600 text-white rounded-xl font-bold text-sm">
+                <div className="co-tabs">
+                    <span aria-current="page">
                         Fiches mémo
                     </span>
                     <Link
                         href="/ressources/jeux"
-                        className="px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-xl font-semibold text-sm hover:border-indigo-300 hover:text-indigo-600 transition"
                     >
                         Jeux
                     </Link>
                 </div>
-            </header>
+            </div>
 
             {/* Brouillons (référents seulement) */}
             {canModerate && fichesBrouillon.length > 0 && (

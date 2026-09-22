@@ -25,7 +25,7 @@ async function requireAdminOrClubAdmin() {
         .select('role, club_id')
         .eq('id', user.id)
         .single();
-    if (!profile || !['admin', 'club_admin'].includes(profile.role)) return null;
+    if (!profile || !['admin', 'club_admin'].includes(profile.role ?? '')) return null;
     return { user, supabase, role: profile.role as string, club_id: profile.club_id as string | null };
 }
 
@@ -86,7 +86,7 @@ export async function getActiviteData(depuis?: string): Promise<{ data?: Activit
     if (!ctx) return { error: 'Accès refusé.' };
 
     const { supabase, role, club_id: myClubId } = ctx;
-    const p = depuis ?? null;
+    const p = depuis ?? undefined;
 
     const [activite, sessions, parJour, parGenre, pages] = await Promise.all([
         supabase.rpc('admin_activite_moniteurs'),

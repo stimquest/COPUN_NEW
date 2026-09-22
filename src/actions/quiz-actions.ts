@@ -1,8 +1,9 @@
 'use server';
 
+import { jsonValue } from '@/lib/data-models';
 import { createClient } from '@/lib/supabase/server';
-import { requireAuth } from '@/lib/auth';
-import { computeQuizPoints } from '@/lib/quiz-points';
+import { createPrivilegedClient } from '@/lib/supabase/privileged';
+import { requireStageOwner, requireAuth } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 
 const DIMENSION_TO_THEMES: Record<string, string[]> = {
@@ -27,7 +28,11 @@ export async function generateStageQuiz(
     forceTheme: string | null = null,
     audience: 'enfant' | 'adulte' = 'enfant',
 ): Promise<{ success: boolean; gameId?: string; error?: string }> {
-    const supabase = await createClient();
+    const ctx = await requireStageOwner(stageId);
+    if (!ctx) return { success: false, error: 'Stage inaccessible.' };
+    if (!Number.isInteger(questionCount) || questionCount < 1 || questionCount > 50) return { success: false, error: 'Nombre de questions invalide.' };
+    const supabase = ctx.supabase;
+    const writer = createPrivilegedClient();
 
     const { data: stage } = await supabase
         .from('stages').select('selected_content, title').eq('id', stageId).single();
@@ -50,7 +55,7 @@ export async function generateStageQuiz(
             const { data: selectedCards } = await supabase
                 .from('pedagogical_content').select('dimension').in('id', selectedContent);
 
-            const dimensions = [...new Set((selectedCards ?? []).map(c => c.dimension).filter(Boolean))];
+            const dimensions = [...new Set((selectedCards ?? []).map(c => c.dimension).filter((d): d is string => Boolean(d)))];
             const themeSet = new Set<string>();
             dimensions.forEach(dim => (DIMENSION_TO_THEMES[dim] ?? ['Général']).forEach(t => themeSet.add(t)));
             targetThemes = Array.from(themeSet);
@@ -87,7 +92,8 @@ export async function generateStageQuiz(
             const { version_enfant, ...adulte } = data;
             return { ...adulte, ...(version_enfant as object) };
         }
-        const { version_enfant: _omit, ...adulte } = data;
+        const adulte = { ...data };
+        delete adulte.version_enfant;
         return adulte;
     });
 
@@ -97,76 +103,47 @@ export async function generateStageQuiz(
         await supabase.from('games').delete().eq('id', existingQuiz.game_id);
     }
 
-    const { data: game, error: gameError } = await supabase
+    const { data: game, error: gameError } = await writer
         .from('games')
         .insert({
             title: `Quiz — ${stage?.title ?? 'Semaine'}`,
             theme: forceTheme ?? targetThemes[0] ?? 'Général',
             stage_id: stageId,
-            game_data: { leGrandQuizz: { title: 'Quiz de fin de semaine', instruction: 'Pose ces questions à tes stagiaires pour valider la transmission.', items: quizzItems } },
+            game_data: { leGrandQuizz: { title: 'Quiz de fin de semaine', instruction: 'Pose ces questions à tes stagiaires pour valider la transmission.', items: jsonValue(quizzItems) } },
         })
         .select()
         .single();
 
     if (gameError || !game) return { success: false, error: gameError?.message ?? 'Erreur création du jeu' };
 
-    await supabase.from('stage_quizzes').upsert(
+    const { error: quizError } = await writer.from('stage_quizzes').upsert(
         { stage_id: stageId, game_id: game.id, score_correct: null, score_total: null, points_awarded: null, completed_at: null },
         { onConflict: 'stage_id' },
     );
 
+    if (quizError) return { success: false, error: quizError.message };
     return { success: true, gameId: game.id };
 }
 
-export async function awardStageQuizPoints(
-    stageId: string,
-    gameId: string,
-    scoreCorrect: number,
-    scoreTotal: number,
-): Promise<{ success: boolean; points_awarded?: number; error?: string }> {
-    const ctx = await requireAuth();
-    if (!ctx) return { success: false, error: 'Non authentifié' };
-
-    // Un seul gain de quiz par semaine — on cible précisément les lignes "Quiz…" :
-    // un filtre trop large (ex: "tout sauf Défi") matcherait aussi les points retours terrain.
-    const { data: existingPoints } = await ctx.supabase
-        .from('leaderboard_points')
-        .select('points')
-        .eq('monitor_id', ctx.user.id)
-        .eq('stage_id', stageId)
-        .like('reason', 'Quiz%')
-        .limit(1)
-        .maybeSingle();
-
-    if (existingPoints) return { success: true, points_awarded: existingPoints.points };
-
-    const score_pct = scoreTotal > 0 ? Math.round((scoreCorrect / scoreTotal) * 100) : 0;
-    const points_awarded = computeQuizPoints(scoreCorrect, scoreTotal);
-
-    // Le club vient du profil du moniteur (les stages n'ont pas de club_id renseigné).
-    const { data: profile } = await ctx.supabase
-        .from('profiles').select('club_id').eq('id', ctx.user.id).maybeSingle();
-
-    await Promise.all([
-        ctx.supabase.from('stage_quizzes').upsert(
-            { stage_id: stageId, game_id: gameId, score_correct: scoreCorrect, score_total: scoreTotal, points_awarded, completed_at: new Date().toISOString() },
-            { onConflict: 'stage_id' },
-        ),
-        ctx.supabase.from('leaderboard_points').insert({
-            monitor_id: ctx.user.id,
-            club_id: profile?.club_id ?? null,
-            stage_id: stageId,
-            defi_id: null,
-            points: points_awarded,
-            reason: `Quiz de fin de semaine — ${scoreCorrect}/${scoreTotal} (${score_pct}%)`,
-        }),
-    ]);
-
-    revalidatePath(`/stages/${stageId}/bilan`);
+/**
+ * @deprecated Le quiz ne donne plus de points : c'est un outil d'animation que le moniteur
+ * sort quand l'occasion se présente (attente avant d'embarquer, averse, retour en minibus),
+ * pas une épreuve notée en fin de semaine. Seules les actions menées avec le groupe
+ * mesurent la progression — elles se constatent sans que le moniteur ait à se juger.
+ *
+ * Conservée parce que la RPC `complete_stage_quiz` reste la voie d'écriture de
+ * `stage_quizzes` ; plus aucun appelant côté application.
+ */
+export async function awardStageQuizPoints(stageId: string, gameId: string, answers: unknown[]) {
+    const ctx = await requireStageOwner(stageId);
+    if (!ctx) return { success: false, error: 'Stage inaccessible.' };
+    if (!Array.isArray(answers) || answers.length > 50 || !answers.every(a => Number.isInteger(a) && Number(a) >= 0)) return { success: false, error: 'Réponses invalides.' };
+    const { data, error } = await ctx.supabase.rpc('complete_stage_quiz', { p_stage_id: stageId, p_game_id: gameId, p_answers: answers.map(Number) });
+    if (error) return { success: false, error: error.message };
+    revalidatePath('/stages');
     revalidatePath('/classement');
     revalidatePath('/profil');
-
-    return { success: true, points_awarded };
+    return { success: true, points_awarded: data as number };
 }
 
 export async function getStageQuiz(stageId: string): Promise<StageQuiz | null> {
