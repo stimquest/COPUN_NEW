@@ -18,6 +18,8 @@ export type CartonLu = {
     centre: { x: number; y: number };
     /** Côté approximatif du marqueur, même repère que `centre`. */
     taille: number;
+    /** Coins exacts du marqueur, utilisés pour caler le retour visuel sur la vidéo. */
+    coins: { x: number; y: number }[];
 };
 
 export type LectureCartons = {
@@ -102,7 +104,14 @@ export async function lireCartons(image: ImageData): Promise<LectureCartons> {
         if (vus.has(marqueur.id)) continue;
         const angle = angleDuMarqueur(marqueur.corners);
         const { centre, taille } = geometrie(marqueur.corners);
-        vus.set(marqueur.id, { id: marqueur.id, angle, reponse: reponsePourAngle(angle), centre, taille });
+        vus.set(marqueur.id, {
+            id: marqueur.id,
+            angle,
+            reponse: reponsePourAngle(angle),
+            centre,
+            taille,
+            coins: marqueur.corners.map(({ x, y }) => ({ x, y })),
+        });
     }
 
     const cartons = [...vus.values()].sort((a, b) => a.id - b.id);

@@ -10,10 +10,9 @@ import { lireCartons, type LectureCartons } from '@/lib/detection-cartons';
  *
  * Deux régimes distincts, et c'est ce qui rend l'écran utilisable :
  *
- *   - un aperçu continu, qui entoure chaque marqueur reconnu et annonce sa réponse. Le
- *     moniteur voit AVANT de déclencher que les douze cartons sont vus, et qui est mal
- *     orienté. Sans ce retour, il photographierait à l'aveugle et ne découvrirait qu'après
- *     coup qu'un enfant était caché ou de travers.
+ *   - un aperçu continu, qui entoure chaque marqueur reconnu sans annoncer sa réponse. Le
+ *     moniteur voit AVANT de déclencher combien de cartons sont détectés, sans influencer
+ *     le vote en découvrant son résultat pendant que les enfants répondent.
  *   - une photo sur déclenchement, seule retenue. C'est elle qui fige le décompte proposé.
  *
  * L'aperçu tourne volontairement sur une image réduite et à cadence limitée : il sert à
@@ -28,7 +27,7 @@ const HAUTEUR_APERCU = 480;
 /** Intervalle entre deux analyses d'aperçu : au-dessous, le téléphone chauffe pour rien. */
 const PERIODE_MS = 350;
 
-type Boite = { x: number; y: number; taille: number; angle: number; reponse: ReponseCarton | null };
+type MarqueurApercu = { id: number; points: string };
 
 export default function CaptureCartons({ onLu, onFermer }: {
     onLu: (lecture: LectureCartons) => void;
@@ -41,7 +40,8 @@ export default function CaptureCartons({ onLu, onFermer }: {
     const [pret, setPret] = useState(false);
     const [analyse, setAnalyse] = useState(false);
     const [lecture, setLecture] = useState<LectureCartons | null>(null);
-    const [boites, setBoites] = useState<Boite[]>([]);
+    const [marqueurs, setMarqueurs] = useState<MarqueurApercu[]>([]);
+    const [dimensionsApercu, setDimensionsApercu] = useState({ largeur: 1, hauteur: 1 });
     const [erreur, setErreur] = useState('');
 
     useEffect(() => {
@@ -70,14 +70,10 @@ export default function CaptureCartons({ onLu, onFermer }: {
         if (!ctx) return;
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         const vue = await lireCartons(ctx.getImageData(0, 0, canvas.width, canvas.height));
-        // Les positions sont exprimées en pourcentage : l'aperçu est affiché en `cover`,
-        // donc ses dimensions à l'écran ne correspondent pas à celles de l'analyse.
-        setBoites(vue.cartons.map(carton => ({
-            x: (carton.centre.x / canvas.width) * 100,
-            y: (carton.centre.y / canvas.height) * 100,
-            taille: (carton.taille / canvas.width) * 100,
-            angle: carton.angle,
-            reponse: carton.reponse,
+        setDimensionsApercu({ largeur: canvas.width, hauteur: canvas.height });
+        setMarqueurs(vue.cartons.map(carton => ({
+            id: carton.id,
+            points: carton.coins.map(coin => `${coin.x},${coin.y}`).join(' '),
         })));
     }, []);
 
@@ -116,8 +112,7 @@ export default function CaptureCartons({ onLu, onFermer }: {
     };
 
     const total = lecture ? Object.values(lecture.decompte).reduce((s, n) => s + n, 0) : 0;
-    const vus = boites.length;
-    const malOrientes = boites.filter(b => !b.reponse).length;
+    const vus = marqueurs.length;
 
     return <div className="co-capture">
         <header className="co-capture-head">
@@ -127,21 +122,21 @@ export default function CaptureCartons({ onLu, onFermer }: {
 
         <div className="co-capture-vue">
             <video ref={videoRef} autoPlay playsInline muted className={lecture ? 'co-capture-fige' : undefined}/>
-            {/* Un cadre par marqueur reconnu, coloré par la réponse lue. C'est le seul moyen
-                pour le moniteur de savoir qu'un carton n'est pas vu avant de déclencher. */}
-            {!lecture && boites.map((boite, i) => (
-                <span key={i} className={`co-cadre ${boite.reponse ? 'co-cadre-' + boite.reponse : 'co-cadre-perdu'}`}
-                    style={{ left: `${boite.x}%`, top: `${boite.y}%`, width: `${boite.taille}%`, aspectRatio: '1' }}>
-                    <b>{boite.reponse ? LIBELLES_REPONSE[boite.reponse].split(' ')[0] : '?'}</b>
-                </span>
-            ))}
+            {/* Le SVG partage le cadrage `cover` de la vidéo. Les quatre coins réels
+                restent superposés au code même lorsque le mobile rogne l'image. */}
+            {!lecture && <svg className="co-detection-layer"
+                viewBox={`0 0 ${dimensionsApercu.largeur} ${dimensionsApercu.hauteur}`}
+                preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+                {marqueurs.map(marqueur => <polygon key={marqueur.id} points={marqueur.points}/>) }
+            </svg>}
             <canvas ref={canvasRef} hidden/>
             <canvas ref={apercuRef} hidden/>
         </div>
 
         {!lecture && <p className="co-capture-note">
-            {vus === 0 ? 'Aucun carton vu pour l’instant.' : `${vus} carton${vus > 1 ? 's' : ''} vu${vus > 1 ? 's' : ''}`}
-            {malOrientes > 0 && ` · ${malOrientes} à faire redresser`}
+            {vus === 0
+                ? 'Aucun code détecté pour l’instant.'
+                : `${vus} code${vus > 1 ? 's' : ''} détecté${vus > 1 ? 's' : ''}`}
         </p>}
 
         {erreur && <p role="alert" className="co-capture-erreur">{erreur}</p>}
