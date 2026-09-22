@@ -1059,6 +1059,7 @@ export type Database = {
           participants: number | null
           stage_id: string
           updated_at: string
+          origine: string
           votes_faux: number
           votes_incertain: number
           votes_vrai: number
@@ -1073,6 +1074,7 @@ export type Database = {
           participants?: number | null
           stage_id: string
           updated_at?: string
+          origine?: string
           votes_faux?: number
           votes_incertain?: number
           votes_vrai?: number
@@ -1087,6 +1089,7 @@ export type Database = {
           participants?: number | null
           stage_id?: string
           updated_at?: string
+          origine?: string
           votes_faux?: number
           votes_incertain?: number
           votes_vrai?: number

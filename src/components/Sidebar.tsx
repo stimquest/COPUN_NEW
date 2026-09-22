@@ -14,11 +14,11 @@ export function Sidebar({ role, fullName, email, clubName, formationEnCours }: S
         <p className="co-sidebar-tagline">Le terrain a tant à raconter.</p>
         <nav aria-label="Navigation principale">{PRIMARY_NAV.map(item => {
             const Icon = item.icon;
-            return <Link key={item.href} href={item.href} aria-current={activeNavigation(path, item.href) ? 'page' : undefined}><Icon size={20}/>{item.name}{item.href === '/formation' && formationEnCours && <i className="co-nav-dot"/>}</Link>;
+            return <Link key={item.href} href={item.href} aria-current={activeNavigation(path, item.href) ? 'page' : undefined}><Icon size={20}/>{item.name}</Link>;
         })}</nav>
         <nav className="co-sidebar-secondary" aria-label="Outils et compte">{secondary.map(item => {
             const Icon = item.icon;
-            return <Link key={item.href} href={item.href} aria-current={activeNavigation(path, item.href) ? 'page' : undefined}><Icon size={18}/>{item.name}</Link>;
+            return <Link key={item.href} href={item.href} aria-current={activeNavigation(path, item.href) ? 'page' : undefined}><Icon size={18}/>{item.name}{item.href === '/formation' && formationEnCours && <i className="co-nav-dot"/>}</Link>;
         })}</nav>
         <Link href="/profil" className="co-sidebar-profile"><span className="co-avatar">{(fullName || email || 'M').slice(0, 1).toUpperCase()}</span><span>{fullName || 'Mon profil'}<small>{clubName || 'Mon espace personnel'}</small></span></Link>
     </aside>;

@@ -1238,7 +1238,7 @@ export function WeekDashboardClient({
                             <span className="material-symbols-outlined text-[20px]">quiz</span>
                         </span>
                         <span className="flex-1 min-w-0">
-                            <span className="block text-sm font-black text-slate-900 leading-snug">Vote de fin de stage</span>
+                            <span className="block text-sm font-black text-slate-900 leading-snug">Le quiz de fin</span>
                             <span className="block text-[11px] text-slate-400 mt-0.5">{quizDone ? 'Déjà fait — revoir ou refaire' : 'Le groupe confirme ce qu’il a fait avec toi'}</span>
                         </span>
                         <span className="material-symbols-outlined text-slate-300 shrink-0">arrow_forward</span>

@@ -14,6 +14,10 @@ export type CartonLu = {
     angle: number;
     /** `null` quand le carton est trop de travers pour être rattaché à une réponse. */
     reponse: ReponseCarton | null;
+    /** Centre du marqueur dans l'image analysée, pour poser un cadre dessus à l'écran. */
+    centre: { x: number; y: number };
+    /** Côté approximatif du marqueur, même repère que `centre`. */
+    taille: number;
 };
 
 export type LectureCartons = {
@@ -62,6 +66,16 @@ function angleDuMarqueur(corners: Coin[]): number {
     return (Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI + 360) % 360;
 }
 
+/** Centre et côté du marqueur, d'après ses quatre coins. */
+function geometrie(corners: Coin[]) {
+    const x = corners.reduce((s, c) => s + c.x, 0) / corners.length;
+    const y = corners.reduce((s, c) => s + c.y, 0) / corners.length;
+    // Le côté est pris sur le bord supérieur : un marqueur vu de biais est plus étroit que
+    // haut, et surdimensionner le cadre le ferait déborder sur les cartons voisins.
+    const [a, b] = corners;
+    return { centre: { x, y }, taille: Math.hypot(b.x - a.x, b.y - a.y) };
+}
+
 /** La réponse dont l'angle est le plus proche, ou `null` si aucune n'est assez proche. */
 function reponsePourAngle(angle: number): ReponseCarton | null {
     let meilleure: ReponseCarton | null = null;
@@ -87,7 +101,8 @@ export async function lireCartons(image: ImageData): Promise<LectureCartons> {
     for (const marqueur of detect.detect(image)) {
         if (vus.has(marqueur.id)) continue;
         const angle = angleDuMarqueur(marqueur.corners);
-        vus.set(marqueur.id, { id: marqueur.id, angle, reponse: reponsePourAngle(angle) });
+        const { centre, taille } = geometrie(marqueur.corners);
+        vus.set(marqueur.id, { id: marqueur.id, angle, reponse: reponsePourAngle(angle), centre, taille });
     }
 
     const cartons = [...vus.values()].sort((a, b) => a.id - b.id);

@@ -14,6 +14,11 @@ export type ResultatAffirmation = {
     votesFaux: number;
     /** « je ne sais plus » : ni pour, ni contre — mais visible. */
     votesIncertain: number;
+    /**
+     * D'où vient ce décompte. Seule la caméra fait foi : le moniteur ne peut pas fabriquer
+     * ce que les enfants ont levé, alors qu'une saisie manuelle n'est qu'une déclaration.
+     */
+    origine: 'camera' | 'manuel';
     participants?: number | null;
 };
 
@@ -42,6 +47,7 @@ export async function enregistrerVote(stageId: string, resultats: ResultatAffirm
         if (typeof r.contentId !== 'string' || !r.contentId) return { success: false, error: 'Résultats invalides.' };
         if (!entier(r.votesVrai, MAX_PARTICIPANTS) || !entier(r.votesFaux, MAX_PARTICIPANTS) || !entier(r.votesIncertain, MAX_PARTICIPANTS)) return { success: false, error: 'Résultats invalides.' };
         if (r.participants != null && !entier(r.participants, MAX_PARTICIPANTS)) return { success: false, error: 'Résultats invalides.' };
+        if (r.origine !== 'camera' && r.origine !== 'manuel') return { success: false, error: 'Résultats invalides.' };
     }
 
     const { error } = await ctx.supabase
@@ -57,6 +63,7 @@ export async function enregistrerVote(stageId: string, resultats: ResultatAffirm
                 votes_faux: r.votesFaux,
                 votes_incertain: r.votesIncertain,
                 participants: r.participants ?? null,
+                origine: r.origine,
                 updated_at: new Date().toISOString(),
             })),
             { onConflict: 'stage_id,affirmation_id', ignoreDuplicates: false },
@@ -77,9 +84,14 @@ export type ActionConfirmee = { contentId: string; actionId: string; votesVrai: 
 /**
  * Les actions que le groupe a confirmées pour cette semaine.
  *
- * Une action est retenue quand la majorité stricte du groupe l'a confirmée. Le seuil vit ici,
- * côté application, et non dans le schéma : il relève d'un arbitrage produit susceptible
- * d'évoluer, alors que les lignes de dépouillement, elles, sont un fait à conserver tel quel.
+ * Une action est retenue quand la majorité stricte du groupe l'a confirmée — et seulement
+ * si la caméra a lu les cartons. Un décompte saisi à la main reste visible au moniteur dans
+ * son suivi, mais ne vaut rien pour le club : c'est lui qui l'a écrit, il ne peut pas se
+ * valider lui-même. C'est toute la raison d'être du dispositif de cartons.
+ *
+ * Le seuil vit ici, côté application, et non dans le schéma : il relève d'un arbitrage
+ * produit susceptible d'évoluer, alors que les lignes de dépouillement sont un fait à
+ * conserver tel quel.
  */
 export async function getActionsConfirmees(stageId: string): Promise<ActionConfirmee[]> {
     const ctx = await requireStageOwner(stageId);
@@ -89,6 +101,7 @@ export async function getActionsConfirmees(stageId: string): Promise<ActionConfi
         .from('stage_vote_results')
         .select('content_id, action_id, votes_vrai, votes_faux, votes_incertain')
         .eq('stage_id', stageId)
+        .eq('origine', 'camera')
         .not('action_id', 'is', null);
 
     if (error) {

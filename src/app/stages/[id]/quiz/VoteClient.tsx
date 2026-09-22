@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, ArrowRight, Camera, Check } from 'lucide-react';
+import { ArrowRight, Camera, Check } from 'lucide-react';
 import type { AffirmationVote } from '@/data/vote-fin-de-stage';
 import { enregistrerVote, type ResultatAffirmation } from '@/actions/vote-actions';
 import CaptureCartons from './CaptureCartons';
@@ -92,6 +92,7 @@ export default function VoteClient({ stageId, affirmations, dejaFait }: {
                         votesVrai: decomptes[a.id]?.vrai ?? (r === 'oui' ? 1 : 0),
                         votesFaux: decomptes[a.id]?.faux ?? (r === 'non' ? 1 : 0),
                         votesIncertain: decomptes[a.id]?.incertain ?? (r === 'partage' ? 1 : 0),
+                        origine: decomptes[a.id] ? 'camera' : 'manuel',
                         participants: null,
                     };
                 });
@@ -104,7 +105,7 @@ export default function VoteClient({ stageId, affirmations, dejaFait }: {
 
     if (!affirmations.length) {
         return <main className="co-vote">
-            <p className="co-vote-kicker">Vote de fin de stage</p>
+            <p className="co-vote-kicker">Le quiz de fin</p>
             <h1>Pas encore disponible</h1>
             <p className="co-vote-lead">Les cartes de cette semaine n’ont pas encore d’affirmations à faire voter. Elles arrivent au fil des mises à jour du catalogue.</p>
             <Link href="/stages/semaines" className="co-vote-secondary">Retour à ma semaine</Link>
@@ -119,7 +120,10 @@ export default function VoteClient({ stageId, affirmations, dejaFait }: {
         const savoirs = affirmations.filter(a => a.type === 'savoir');
         const justes = savoirs.filter(a => a.type === 'savoir' && reponses[a.id] === (a.reponse ? 'oui' : 'non')).length;
         const actions = affirmations.filter(a => a.type === 'action');
-        const confirmees = actions.filter(a => reponses[a.id] === 'oui').length;
+        // Seules les actions lues par la caméra valent validation : une réponse saisie par
+        // le moniteur ne peut pas le valider auprès de son propre club.
+        const confirmees = actions.filter(a => reponses[a.id] === 'oui' && decomptes[a.id]).length;
+        const saisiesMain = affirmations.filter(a => reponses[a.id] && !decomptes[a.id]).length;
         return <main className="co-vote">
             <p className="co-vote-kicker">Vote terminé</p>
             <h1>Ce que votre groupe a répondu</h1>
@@ -140,6 +144,12 @@ export default function VoteClient({ stageId, affirmations, dejaFait }: {
                 <p>{confirmees > 0
                     ? `${confirmees === 1 ? 'Cette action compte' : 'Ces actions comptent'} pour votre démarche et pour celle du club.`
                     : 'Aucune action n’a été confirmée par le groupe cette fois.'}</p>
+                {/* Dit franchement ce qui ne comptera pas, et pourquoi : découvrir après coup
+                    qu'une semaine entière n'a rien validé serait bien plus décourageant. */}
+                {saisiesMain > 0 && <p className="co-vote-result-note">
+                    {saisiesMain === 1 ? 'Une réponse a été saisie à la main' : `${saisiesMain} réponses ont été saisies à la main`} :
+                    elles restent dans votre suivi, mais ne sont pas validées par le groupe.
+                </p>}
             </section>}
 
             <Link href="/stages/semaines" className="co-vote-primary">Retour à ma semaine <ArrowRight size={18}/></Link>
@@ -147,17 +157,22 @@ export default function VoteClient({ stageId, affirmations, dejaFait }: {
     }
 
     return <main className="co-vote">
-        <header className="co-vote-head">
-            <Link href="/stages/semaines" aria-label="Quitter le vote" className="co-vote-back"><ArrowLeft size={19}/></Link>
-            <span className="co-vote-count">{index + 1} / {affirmations.length}</span>
-        </header>
         <div className="co-vote-progress" aria-hidden="true"><span style={{ width: `${((index + 1) / affirmations.length) * 100}%` }}/></div>
 
         {dejaFait && index === 0 && <p className="co-vote-note">Un vote a déjà été enregistré pour cette semaine. Le refaire remplacera les réponses précédentes.</p>}
 
-        {/* L'affirmation est lue à voix haute : rien d'autre ne doit occuper l'écran. */}
-        <p className="co-vote-instruction">Lisez à voix haute</p>
-        <blockquote className="co-vote-affirmation">{courante.texte}</blockquote>
+        {/* L'affirmation dans une carte qui occupe la hauteur disponible : c'est la seule
+            chose que le moniteur doit trouver du regard en parlant à un groupe. Posée à plat
+            entre un bandeau et un bouton, elle se lisait comme un paragraphe parmi d'autres,
+            et le bas de l'écran restait vide alors qu'elle en est le sujet. */}
+        <section className="co-vote-carte">
+            {/* Le même libellé quelle que soit la nature de l'affirmation : « Question 1 sur 4 »
+                ne dit rien de plus qu'un numéro, et c'est voulu. Annoncer « confirmation » ou
+                « connaissances » désignerait les questions qui comptent pour les chiffres du
+                club, et le moniteur comme le groupe sauraient lesquelles soigner. */}
+            <p className="co-vote-etiquette">Affirmation {index + 1} sur {affirmations.length}</p>
+            <blockquote className="co-vote-affirmation">{courante.texte}</blockquote>
+        </section>
 
         {/* VRAI / FAUX quelle que soit la nature de l'affirmation — jamais « oui, on l'a fait ».
             Tout le dispositif tient à ce que rien ne distingue une confirmation d'action d'une
@@ -170,25 +185,35 @@ export default function VoteClient({ stageId, affirmations, dejaFait }: {
 
         {/* La caméra compte, la saisie manuelle reste disponible : réseau, lumière, cartons
             oubliés — le moniteur doit toujours pouvoir trancher d'un tap. */}
-        {!camera && <button type="button" className="co-vote-camera" onClick={() => setCamera(true)}>
-            <Camera size={18}/> Lire les cartons avec la caméra
+        {!camera && <button type="button" className="co-vote-primary co-vote-lancer" onClick={() => setCamera(true)}>
+            <Camera size={19}/> Lire les cartons
         </button>}
 
-        <div className="co-vote-tally">
-            <button type="button" className="co-vote-choice co-vote-true" aria-pressed={reponse === 'oui'} onClick={() => repondre('oui')}>
-                <span className="co-vote-label">Vrai</span>
-                {reponse === 'oui' && <Check size={19} strokeWidth={3} aria-hidden/>}
-            </button>
-            <button type="button" className="co-vote-choice co-vote-false" aria-pressed={reponse === 'non'} onClick={() => repondre('non')}>
-                <span className="co-vote-label">Faux</span>
-                {reponse === 'non' && <Check size={19} strokeWidth={3} aria-hidden/>}
-            </button>
-            <button type="button" className="co-vote-choice co-vote-unsure" aria-pressed={reponse === 'partage'} onClick={() => repondre('partage')}>
-                <span className="co-vote-label">Le groupe était partagé</span>
-                {reponse === 'partage' && <Check size={19} strokeWidth={3} aria-hidden/>}
-            </button>
-        </div>
+        {/* La saisie manuelle vit entièrement dans ce dépliant, fermé par défaut.
 
+            Elle doit rester atteignable — caméra en panne, contre-jour, cartons oubliés : un
+            moniteur bloqué abandonnerait le quiz, et on récolterait zéro donnée plutôt que des
+            données non validantes. Mais elle ne peut pas s'afficher comme une voie
+            équivalente : ce que le moniteur saisit lui-même ne le valide pas auprès de son
+            club, et des boutons pleine largeur à côté de la caméra suggéreraient le contraire. */}
+        {!camera && <details className="co-vote-repli">
+            <summary>La caméra ne marche pas ?</summary>
+            <p>Ces réponses resteront dans votre suivi, mais ne compteront pas comme validées par le groupe.</p>
+            <div className="co-vote-repli-choix">
+                <button type="button" className="co-repli-vrai" aria-pressed={reponse === 'oui'} onClick={() => repondre('oui')}>Vrai</button>
+                <button type="button" className="co-repli-faux" aria-pressed={reponse === 'non'} onClick={() => repondre('non')}>Faux</button>
+                <button type="button" className="co-repli-partage" aria-pressed={reponse === 'partage'} onClick={() => repondre('partage')}>Partagé</button>
+            </div>
+        </details>}
+
+        {/* Ce que la caméra a lu, une fois répondu : le moniteur doit voir sur quoi il avance. */}
+        {decomptes[courante.id] && <div className="co-vote-lu">
+            <Check size={17} strokeWidth={3} aria-hidden/>
+            <span>
+                <strong>{decomptes[courante.id].vrai} vrai · {decomptes[courante.id].faux} faux · {decomptes[courante.id].incertain} sans avis</strong>
+                <small>Lu par la caméra</small>
+            </span>
+        </div>}
         {error && <p role="alert" className="co-vote-error">{error}</p>}
 
         <div className="co-vote-actions">

@@ -46,8 +46,10 @@ export default async function SemainesPage() {
     const future = remaining.filter(week => !late.some(item => item.id === week.id));
     const archived = weeks.filter(week => Boolean(week.closed_at));
     const activeObjectives = active ? await getStageObjectiveReviewItems(active.id) : [];
-    // 'partial' vient de l'ancien suivi à trois états : il compte comme mené.
-    const menees = activeObjectives.filter(item => item.review?.executionStatus === 'done' || item.review?.executionStatus === 'partial').length;
+    // Ce que le moniteur déclare avoir abordé — pas ce que le groupe a confirmé, qui ne se
+    // mesure qu'au quiz de fin et par la caméra. 'partial' vient de l'ancien suivi à trois
+    // états : il compte comme abordé.
+    const abordes = activeObjectives.filter(item => item.review?.executionStatus === 'done' || item.review?.executionStatus === 'partial').length;
 
     return <main className="co-page co-weeks-page">
         <header className="co-weeks-heading">
@@ -62,9 +64,9 @@ export default async function SemainesPage() {
         {active ? <section className="co-current-week">
             <header>
                 <div><p className="co-eyebrow">Cette semaine</p><h2>{active.title}</h2><span>{active.dates}</span></div>
-                {/* Ce que les groupes ont mené, pas le nombre de cartes retenues : la semaine
-                    mesure les apprenants, la formation mesure le moniteur. */}
-                <strong>{menees}<small>menée{menees > 1 ? 's' : ''} sur {activeObjectives.length}</small></strong>
+                {/* Les sujets abordés, tels que le moniteur les note. Les actions validées
+                    par le groupe sont un autre compte, qui ne se fait qu'au quiz de fin. */}
+                <strong>{abordes}<small>abordé{abordes > 1 ? 's' : ''} sur {activeObjectives.length}</small></strong>
             </header>
 
             {activeObjectives.length ? <WeekObjectiveTracker stageId={active.id} objectives={activeObjectives.map(item => ({
@@ -73,11 +75,18 @@ export default async function SemainesPage() {
                 objectif: item.pedagogicalContent.objectif,
                 action: item.pedagogicalContent.actions?.[0]?.consigne ?? item.pedagogicalContent.a_observer ?? null,
                 initialStatus: item.review?.executionStatus ?? 'not_done',
-            }))}/> : <div className="co-current-week-empty"><p>Cette semaine ne contient pas encore de carte-question.</p><Link href={`/stages/${active.id}/program`}>Choisir des cartes <ArrowRight size={16}/></Link></div>}
+            }))} extra={active.cards.length > 0 ? {
+                href: `/stages/${active.id}/quiz/animation`,
+                titre: 'Un quiz pour occuper un temps mort',
+                detail: 'Des questions prêtes à poser : attente avant d’embarquer, averse, retour en minibus.',
+            } : undefined}/> : <div className="co-current-week-empty"><p>Cette semaine ne contient pas encore de carte-question.</p><Link href={`/stages/${active.id}/program`}>Choisir des cartes <ArrowRight size={16}/></Link></div>}
 
+            {/* Le quiz de fin passe en premier : c'est l'aboutissement de la semaine, et la
+                seule action qui fasse valider quelque chose par le groupe. Revoir les objectifs
+                est un ajustement de préparation, qui a sa place après. */}
             <footer>
-                <Link href={`/stages/${active.id}/program`} className="co-week-primary">Voir et modifier les objectifs <ArrowRight size={17}/></Link>
-                {active.cards.length > 0 && <Link href={`/stages/${active.id}/quiz`} className="co-week-secondary">Faire voter le groupe</Link>}
+                {active.cards.length > 0 && <Link href={`/stages/${active.id}/quiz`} className="co-week-primary">Le quiz de fin <ArrowRight size={17}/></Link>}
+                <Link href={`/stages/${active.id}/program`} className="co-week-secondary">Voir et modifier les objectifs</Link>
             </footer>
         </section> : <section className="co-no-current-week">
             <p className="co-eyebrow">Aucune semaine en cours</p>

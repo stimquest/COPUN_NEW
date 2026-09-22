@@ -10,12 +10,14 @@ import { PRIMARY_NAV } from '@/data/navigation';
 import pool from '@/data/pedagogical_content.json';
 import type { PedagogicalContent } from '@/types';
 
-export default async function PreviewUI({ searchParams }: { searchParams: Promise<{ screen?: string }> }) {
+export default async function PreviewUI({ searchParams }: { searchParams: Promise<{ screen?: string; semaine?: string }> }) {
     if (process.env.NODE_ENV !== 'development') notFound();
-    const { screen = 'home' } = await searchParams;
+    // `?semaine=1` montre la tuile terrain telle qu'elle apparaît pendant une semaine :
+    // le libellé change, et c'est justement ce qu'on vient regarder ici.
+    const { screen = 'home', semaine } = await searchParams;
     const resume = { nbFaits: 3, nbRediges: LECONS_FORMATION.length, nbTotal: LECONS_FORMATION.length, prochain: null, themes: [] };
     return <>
-        {screen === 'home' && <HomeLearning firstName="Camille" resume={resume} progressions={{ 'laisse-de-mer': { parcouru: true, acquisVerifie: true, mission: null }, 'littoral-eau': { parcouru: false, acquisVerifie: false, mission: null } }}/>}
+        {screen === 'home' && <HomeLearning firstName="Camille" resume={resume} progressions={{ 'laisse-de-mer': { parcouru: true, acquisVerifie: true, mission: null }, 'littoral-eau': { parcouru: false, acquisVerifie: false, mission: null } }} semaineEnCours={semaine === '1'}/>}
         {screen === 'formation' && <FormationClient plan={PLAN_FORMATION} lecons={LECONS_FORMATION} termine={LECONS_FORMATION.slice(0,3).map(l => l.id)}/>}
         {screen === 'journey' && <LearningJourney progressions={{ 'laisse-de-mer': { parcouru: false, acquisVerifie: false, mission: null }, 'littoral-eau': { parcouru: false, acquisVerifie: false, mission: null } }}/>}
         {screen === 'lesson' && <main className="co-lesson-page pt-6"><ParcoursLaisseDeMerClient sequence={PARCOURS_LAISSE_DE_MER} progression={{ parcouru: false, acquisVerifie: false, mission: null }} cards={pool as PedagogicalContent[]} stages={[]} savedIds={[]}/></main>}

@@ -15,9 +15,9 @@ import VoteClient from './VoteClient';
  * lui-même les réponses, donc il ne pouvait pas servir de preuve. Le vote, lui, fait
  * répondre le groupe.
  *
- * Le quiz est donc déplacé sur `/stages/[id]/quiz/animation`, atteignable d'ici en un
- * lien : toutes les entrées existantes de l'application pointent sur ce chemin-ci, et
- * c'est le vote qui doit désormais s'y trouver.
+ * Le quiz d'animation est déplacé sur `/stages/[id]/quiz/animation`, proposé depuis la page
+ * de la semaine. Il n'a volontairement aucune sortie depuis cet écran-ci : une fois le
+ * groupe réuni et le quiz de fin commencé, rien ne doit inviter à en lancer un autre.
  */
 export default async function StageQuizPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
@@ -69,16 +69,12 @@ export default async function StageQuizPage({ params }: { params: Promise<{ id: 
             <header className="co-vote-topbar">
                 <Link href="/stages/semaines" aria-label="Retour à ma semaine" className="co-vote-back"><ArrowLeft size={19}/></Link>
                 <div>
-                    <p className="co-eyebrow">Vote de fin de stage</p>
+                    <p className="co-eyebrow">Le quiz de fin</p>
                     <strong>{stage.title}</strong>
                 </div>
             </header>
 
             <VoteClient stageId={id} affirmations={affirmations} dejaFait={(count ?? 0) > 0}/>
-
-            <Link href={`/stages/${id}/quiz/animation`} className="co-vote-quiet">
-                Lancer plutôt le quiz d’animation
-            </Link>
         </div>
     );
 }
