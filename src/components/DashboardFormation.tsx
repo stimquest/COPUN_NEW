@@ -10,7 +10,7 @@ const MOT_CLE: Record<string, string> = {
     pourquoi: 'Pourquoi',
     'quoi-dire': 'Quoi dire',
     'faire-vivre': 'Faire vivre',
-    methode: 'Méthode',
+    methode: 'Démarche',
 };
 
 /**

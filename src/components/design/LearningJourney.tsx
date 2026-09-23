@@ -20,6 +20,8 @@ export function LearningJourney({ progressions }: { progressions: Record<string,
         domain.parcours.filter(path => progressions[path.id]?.mission?.completed).length;
     return <main className="co-page co-journey">
         <header className="co-journey-intro">
+            {/* Les parcours appartiennent au pôle formation : le retour y mène directement. */}
+            <Link href="/formation" className="co-field-back">← Formation</Link>
             <p className="co-eyebrow">Parcours environnement</p>
             <p>Choisissez librement les sujets que vous souhaitez approfondir.</p>
         </header>

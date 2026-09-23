@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { AnimatePresence, motion, useMotionValue, useTransform, type PanInfo } from 'framer-motion';
 import clsx from 'clsx';
@@ -15,7 +16,7 @@ import {
 import { marquerLeconTerminee } from '@/actions/formation-actions';
 import { Motif, type NomMotif } from './Motifs';
 import { TEINTE_THEME } from '@/data/formation-teintes';
-import { CoastalMark, PageHeading } from '@/components/design/Coastal';
+import { CoastalMark } from '@/components/design/Coastal';
 
 /**
  * Parcours « Savoir en parler » — liste des modules, puis lecteur en cartes.
@@ -887,10 +888,12 @@ function EcranTheme({ section, leconParId, termine, onRetour, onOuvrirModule }: 
     );
 }
 
-export function FormationClient({ plan, lecons, termine: termineInitial }: {
+export function FormationClient({ plan, lecons, termine: termineInitial, parcours }: {
     plan: SectionFormation[];
     lecons: LeconFormation[];
     termine: string[];
+    /** Avancement des parcours environnement, second volet du pôle formation. */
+    parcours: { disponibles: number; enCours: number; termines: number };
 }) {
     const [termine, setTermine] = useState(new Set(termineInitial));
     const [themeOuvert, setThemeOuvert] = useState<SectionFormation | null>(null);
@@ -910,8 +913,22 @@ export function FormationClient({ plan, lecons, termine: termineInitial }: {
 
     return (
         <div className="co-page">
-            <PageHeading eyebrow="La formation générale" title="Parler d’environnement" description="Trouver une accroche, faire observer, donner envie de participer."/>
-            <div className="co-formation-progress"><div><strong>{nbTermine}</strong><small>/ {nbRediges} modules parcourus</small></div><div className="co-progress"><span style={{ width: `${nbRediges ? nbTermine / nbRediges * 100 : 0}%` }}/></div></div>
+            {/* Une seule intro : le titre, puis le cadre de la formation (on ne forme pas
+                des guides nature — voir AGENTS.md), puis l'avancement. L'ancien sous-titre
+                et le second surtitre empilaient cinq niveaux de texte avant les thèmes. */}
+            <header className="co-formation-intro">
+                <p className="co-eyebrow">Formation</p>
+                <h1>Comment parler d’environnement</h1>
+                {/* Le message fondateur mis en exergue, comme une citation : c'est la promesse
+                    de la formation, pas un paragraphe d'introduction parmi d'autres. */}
+                <blockquote className="co-formation-quote">
+                    <p>Moniteur avant tout, curieux de son milieu. Sans faire de vous un naturaliste, cette formation vous aide à comprendre l’essentiel de votre milieu de pratique et en parler simplement, en quelques minutes, pendant vos séances.</p>
+                </blockquote>
+                <div className="co-formation-avancement">
+                    <span><strong>{nbTermine}</strong> / {nbRediges} modules parcourus</span>
+                    <span className="co-progress"><span style={{ width: `${nbRediges ? nbTermine / nbRediges * 100 : 0}%` }}/></span>
+                </div>
+            </header>
             <main className="co-course-grid">
                 {plan.map(section => (
                     <CarteTheme
@@ -921,6 +938,16 @@ export function FormationClient({ plan, lecons, termine: termineInitial }: {
                         onOuvrir={() => setThemeOuvert(section)}
                     />
                 ))}
+                {/* Les parcours, 5e entrée de la formation. Ils se distinguent des quatre
+                    thèmes : ce ne sont pas des modules à lire mais des sujets à approfondir
+                    jusqu'à l'essai avec son groupe — d'où le fond encre et la mention « Parcours ». */}
+                <Link href="/specialisation" className="co-course co-course-parcours">
+                    <span className="co-course-tag">Parcours</span>
+                    <CoastalMark kind="waves"/>
+                    <h2>Approfondir un sujet du littoral</h2>
+                    <div className="co-course-meta"><span>{parcours.disponibles} parcours</span><span>{parcours.termines} terminé{parcours.termines > 1 ? 's' : ''}</span></div>
+                    <div className="co-progress" aria-label={`${parcours.termines} parcours terminés sur ${parcours.disponibles}`}><span style={{ width: `${parcours.disponibles ? parcours.termines / parcours.disponibles * 100 : 0}%` }}/></div>
+                </Link>
             </main>
 
             <AnimatePresence>

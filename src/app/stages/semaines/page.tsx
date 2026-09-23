@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ArrowRight, Plus } from 'lucide-react';
+import { ArrowRight, Compass, NotebookPen, Plus } from 'lucide-react';
 import { unstable_noStore as noStore } from 'next/cache';
 import { getPedagogicalPool, getStageObjectiveReviewItems, getStages } from '@/services/data-service';
 import { DeleteStageButton } from '@/components/DeleteStageButton';
@@ -9,6 +9,7 @@ import { WeekObjectiveTracker } from './WeekObjectiveTracker';
 import { getResumeVote } from '@/actions/vote-actions';
 import { getStagePreparations, type StagePreparation } from '@/actions/preparation-actions';
 import { formulationsFiche } from '@/data/formulations-fiche';
+import { FORMES_ACCROCHE } from '@/data/formes-accroche';
 
 type WeekWithCards = Stage & { cards: PedagogicalContent[] };
 
@@ -57,11 +58,14 @@ export default async function SemainesPage() {
     const abordes = activeObjectives.filter(item => item.review?.executionStatus === 'done' || item.review?.executionStatus === 'partial').length;
 
     return <main className="co-page co-weeks-page">
+        {/* Page d'entrée du second pôle : intégrer l'environnement dans ses séances. La
+            semaine en cours d'abord, puis les outils du pôle — explorer, le carnet — puis
+            les semaines à venir et passées. */}
         <header className="co-weeks-heading">
             <div>
-                <p className="co-eyebrow">Mises en pratique</p>
-                <h1>Mes semaines</h1>
-                <p>Les cartes choisies pendant vos parcours deviennent ici des actions à faire vivre avec votre groupe.</p>
+                <p className="co-eyebrow">Intégrer l’environnement dans mes séances</p>
+                <h1>Mes séances</h1>
+                <p>Préparer sa semaine, faire vivre les sujets avec son groupe, garder la trace de ce qui a été fait.</p>
             </div>
         </header>
 
@@ -73,15 +77,21 @@ export default async function SemainesPage() {
                 <strong>{abordes}<small>abordé{abordes > 1 ? 's' : ''} sur {activeObjectives.length}</small></strong>
             </header>
 
-            {activeObjectives.length ? <WeekObjectiveTracker stageId={active.id} objectives={activeObjectives.map(item => ({
+            {activeObjectives.length ? <WeekObjectiveTracker stageId={active.id} objectives={activeObjectives.map(item => {
+                const formulations = formulationsFiche(item.pedagogicalContent);
+                const accroche = preparations[item.pedagogicalContent.id]?.accroche_choisie || formulations[0].texte;
+                const formulation = formulations.find(f => f.texte === accroche);
+                const forme = formulation && 'forme' in formulation ? FORMES_ACCROCHE.find(f => f.id === formulation.forme)?.nom : undefined;
+                return {
                 id: item.pedagogicalContent.id,
                 question: item.pedagogicalContent.question,
                 objectif: item.pedagogicalContent.objectif,
-                accroche: preparations[item.pedagogicalContent.id]?.accroche_choisie || formulationsFiche(item.pedagogicalContent)[0].texte,
+                accroche,
+                forme,
                 action: item.pedagogicalContent.actions?.filter(action => preparations[item.pedagogicalContent.id]?.actions?.includes(action.id)).map(action => action.consigne).join('\n\n') || item.pedagogicalContent.a_observer || null,
                 retenir: preparations[item.pedagogicalContent.id]?.chute || item.pedagogicalContent.a_retenir,
                 initialStatus: item.review?.executionStatus ?? 'not_done',
-            }))} extra={active.cards.length > 0 ? {
+            }; })} extra={active.cards.length > 0 ? {
                 href: `/stages/${active.id}/quiz/animation`,
                 titre: 'Un quiz pour occuper un temps mort',
                 detail: 'Des questions prêtes à poser : attente avant d’embarquer, averse, retour en minibus.',
@@ -103,6 +113,12 @@ export default async function SemainesPage() {
             <p>Vous pouvez partir des cartes mises de côté ou de celles choisies à la fin d’un parcours.</p>
             <Link href="/stages/new" className="co-week-primary">Créer une semaine <ArrowRight size={17}/></Link>
         </section>}
+
+        {/* Les outils du pôle, juste après la semaine en cours. */}
+        <nav className="co-seances-outils" aria-label="Outils de mes séances">
+            <Link href="/stages/decouvrir"><Compass size={19}/><span><strong>Explorer les cartes</strong><small>Trouver un sujet, une accroche, une action</small></span></Link>
+            <Link href="/profil/carnet"><NotebookPen size={19}/><span><strong>Mon carnet</strong><small>Ce que j’ai essayé et ce que j’en retiens</small></span></Link>
+        </nav>
 
         {late.length > 0 && <section className="co-weeks-section">
             <div className="co-weeks-section-title"><div><p className="co-eyebrow">À terminer</p><h2>Valider ce qui a été fait</h2></div><span>{late.length}</span></div>

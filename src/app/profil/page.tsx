@@ -170,7 +170,7 @@ export default async function ProfilPage() {
                         <span className="material-symbols-outlined">auto_stories</span>
                     </div>
                     <div className="flex-1 min-w-0">
-                        <p className="font-bold text-slate-900 text-sm">Guide de la méthode</p>
+                        <p className="font-bold text-slate-900 text-sm">Guide de la démarche</p>
                         <p className="text-xs text-slate-400 mt-0.5">Comprendre, Observer, Protéger — la démarche COPUN</p>
                     </div>
                     <span className="material-symbols-outlined text-slate-300 group-hover:translate-x-1 transition-transform">arrow_forward_ios</span>

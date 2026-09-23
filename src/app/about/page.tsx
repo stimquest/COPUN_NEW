@@ -58,7 +58,7 @@ export default function AboutPage() {
                     <span className="material-symbols-outlined">arrow_back</span>
                 </Link>
                 <div>
-                    <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">La méthode</p>
+                    <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">La démarche</p>
                     <p className="text-lg font-bold leading-none text-slate-900">Guide COPUN</p>
                 </div>
             </header>
@@ -89,7 +89,7 @@ export default function AboutPage() {
                 {/* Les 3 dimensions */}
                 <section className="space-y-6">
                     <div>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">La méthode</p>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">La démarche</p>
                         <h2 className="text-2xl font-black text-slate-900">Le cercle vertueux des apprentissages sens marin – environnement</h2>
                         <p className="text-sm text-slate-500 mt-1">On ne protège que ce qu&apos;on comprend. On n&apos;observe bien que ce qu&apos;on connaît.</p>
                         <p className="text-sm text-slate-500 mt-2 leading-relaxed">

@@ -724,7 +724,7 @@ export const LECONS_FORMATION: LeconFormation[] = [
                     'Le bénéfice est autant pour toi que pour le groupe',
                     'Deux minutes suffisent, avec une seule idée claire',
                 ],
-                note: "Prochaine étape naturelle : « Repérer le bon moment pour en parler », dans le thème La méthode COPUN.",
+                note: "Prochaine étape naturelle : « Repérer le bon moment pour en parler », dans le thème La démarche COP’UN.",
             },
             ],
         },
@@ -1068,7 +1068,7 @@ export const LECONS_FORMATION: LeconFormation[] = [
                     'Faire reformuler avec ses mots révèle ce qui a vraiment pris',
                     'Le vrai signal : l\'idée qui ressort d\'elle-même, plus tard',
                 ],
-                note: "Ce module boucle le parcours de La méthode COPUN — tu as de quoi choisir le moment, tenir la méthode, gérer l'imprévu, et savoir si ça a marché.",
+                note: "Ce module boucle le parcours de La démarche COP’UN — tu as de quoi choisir le moment, tenir la démarche, gérer l'imprévu, et savoir si ça a marché.",
             },
             ],
         },
@@ -1555,7 +1555,7 @@ export const PLAN_FORMATION: SectionFormation[] = [
     },
     {
         id: 'methode',
-        titre: 'La méthode COPUN',
+        titre: 'La démarche COP’UN',
         description: 'La grille de lecture, et ce qu\'elle ne dit pas toujours.',
         modules: [
             {

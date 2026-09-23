@@ -1,5 +1,7 @@
 import { getFormationProgression } from '@/actions/formation-actions';
+import { getSequencesProgress } from '@/actions/parcours-formation-actions';
 import { LECONS_FORMATION, PLAN_FORMATION } from '@/data/formation-methode';
+import { PARCOURS_FORMATION } from '@/data/parcours-formation';
 import { FormationClient } from './FormationClient';
 
 /**
@@ -16,7 +18,19 @@ import { FormationClient } from './FormationClient';
  * la formation, plutôt qu'un module isolé qui donnerait l'impression d'un module esseulé.
  */
 export default async function FormationPage() {
-    const termine = await getFormationProgression();
+    const [termine, progressions] = await Promise.all([
+        getFormationProgression(),
+        getSequencesProgress(PARCOURS_FORMATION.map(parcours => parcours.id)),
+    ]);
 
-    return <FormationClient plan={PLAN_FORMATION} lecons={LECONS_FORMATION} termine={termine} />;
+    // Les parcours font partie du pôle formation : la page les présente sous la formation
+    // générale, avec leur avancement, plutôt que de les laisser dans un écran à part.
+    const suivis = Object.values(progressions);
+    const parcours = {
+        disponibles: PARCOURS_FORMATION.length,
+        enCours: suivis.filter(p => !p.mission?.completed && (p.parcouru || p.acquisVerifie || p.mission)).length,
+        termines: suivis.filter(p => p.mission?.completed).length,
+    };
+
+    return <FormationClient plan={PLAN_FORMATION} lecons={LECONS_FORMATION} termine={termine} parcours={parcours} />;
 }
