@@ -10,6 +10,8 @@ type Objective = {
     id: string;
     question: string;
     objectif: string;
+    accroche?: string;
+    retenir?: string;
     action?: string | null;
     initialStatus: StageObjectiveExecutionStatus;
 };
@@ -58,8 +60,9 @@ function ObjectiveRow({ stageId, objective, index }: { stageId: string; objectiv
         <span className="co-week-objective-number">{String(index + 1).padStart(2, '0')}</span>
         <div className="co-week-objective-body">
             <h3>{objective.question}</h3>
-            <p>{objective.objectif}</p>
+            {objective.accroche && <p className="co-week-objective-action"><strong>Je lance le sujet</strong>« {objective.accroche} »</p>}
             {objective.action && <p className="co-week-objective-action"><strong>Avec le groupe</strong>{objective.action}</p>}
+            {objective.retenir && <p className="co-week-objective-action"><strong>L’idée à retenir</strong>{objective.retenir}</p>}
             <div className="co-week-objective-status" aria-label="Où j’en suis sur ce sujet">
                 {ETATS.map(etat => (
                     <button key={etat.valeur} type="button" aria-pressed={status === etat.valeur} disabled={pending}

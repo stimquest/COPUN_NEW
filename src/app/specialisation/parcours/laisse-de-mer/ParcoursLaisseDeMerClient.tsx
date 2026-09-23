@@ -4,13 +4,17 @@ import { useEffect, useMemo, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import type { SequenceProgress } from '@/actions/parcours-formation-actions';
-import { ajouterMissionPratique, marquerSequenceParcourue, validerMissionPratique, verifierAcquisSequence } from '@/actions/parcours-formation-actions';
+import { ajouterMissionPratique, marquerSequenceParcourue, verifierAcquisSequence } from '@/actions/parcours-formation-actions';
 import type { ParcoursFormation } from '@/data/parcours-formation';
 import type { PedagogicalContent, Stage } from '@/types';
 import FluxDecouverte from '@/components/explorer/FluxDecouverte';
 import { setCardSaved } from '@/actions/saved-card-actions';
+import { useRouter } from 'next/navigation';
+import { resolveCardChoice, type CardChoice, type CardChoices } from '@/lib/card-choice';
 
-export function ParcoursLaisseDeMerClient({ sequence, progression, cards, stages, savedIds }: { sequence: ParcoursFormation; progression: SequenceProgress; cards: PedagogicalContent[]; stages: Stage[]; savedIds: string[] }) {
+export function ParcoursLaisseDeMerClient({ sequence, progression, cards, stages, savedIds, initialChoices = {} }: { sequence: ParcoursFormation; progression: SequenceProgress; cards: PedagogicalContent[]; stages: Stage[]; savedIds: string[]; initialChoices?: CardChoices }) {
+    const router = useRouter();
+    const [choices, setChoices] = useState<CardChoices>(initialChoices);
     // Une validation théorique est conservée en base : en revenant sur le parcours,
     // le moniteur reprend sa mise en pratique au lieu de repasser le quiz.
     const [etape, setEtape] = useState(() => progression.acquisVerifie ? 4 : 0);
@@ -24,7 +28,6 @@ export function ParcoursLaisseDeMerClient({ sequence, progression, cards, stages
     const [stageId, setStageId] = useState(() => progression.mission?.stageId ?? '');
     const [practiceView, setPracticeView] = useState<'cards' | 'recap'>('cards');
     const [missionEnregistree, setMissionEnregistree] = useState(false);
-    const [missionValidee, setMissionValidee] = useState(false);
     const [error, setError] = useState('');
     const [isPending, startTransition] = useTransition();
     const repere = sequence.reperes[repereIndex];
@@ -75,10 +78,10 @@ export function ParcoursLaisseDeMerClient({ sequence, progression, cards, stages
     });
     const ajouterMission = () => startTransition(async () => {
         setError('');
-        try { const response = await ajouterMissionPratique({ sequenceId: sequence.id, stageId, actionId: 'carte-question', cardIds }); if (response.error) { setError(response.error); return; } setMissionEnregistree(true); }
+        try { const response = await ajouterMissionPratique({ sequenceId: sequence.id, stageId, actionId: 'carte-question', cardIds, choices }); if (response.error) { setError(response.error); return; } setMissionEnregistree(true); }
         catch { setError('La connexion a été interrompue. Réessaie.'); }
     });
-    const choisirCarte = (id: string) => {
+    const choisirCarte = (id: string, choice?: CardChoice) => {
         if (cardIds.includes(id)) {
             setCardIds(ids => ids.filter(cardId => cardId !== id));
             return;
@@ -86,18 +89,21 @@ export function ParcoursLaisseDeMerClient({ sequence, progression, cards, stages
         if (cardIds.length >= 3) return;
 
         setCardIds(ids => [...ids, id]);
-        if (!savedIds.includes(id)) {
-            void setCardSaved(id, true).then(response => {
+        if (choice) setChoices(current => ({ ...current, [id]: choice }));
+        {
+            void setCardSaved(id, true, choice).then(response => {
                 if (!response.success) setError(response.error ?? 'La carte n’a pas pu être mise de côté.');
-            });
+            }).catch(() => setError('Connexion interrompue. La carte n’a pas été mise de côté.'));
         }
     };
-    const validerMission = () => startTransition(async () => {
+    const creerSemaine = () => startTransition(async () => {
         setError('');
-        try { const response = await validerMissionPratique(sequence.id); if (response.error) { setError(response.error); return; } setMissionValidee(true); }
-        catch { setError('La connexion a été interrompue. Réessaie.'); }
+        try {
+            const results = await Promise.all(cartesChoisies.map(card => setCardSaved(card.id, true, resolveCardChoice(card, choices[card.id]))));
+            if (results.some(result => !result.success)) { setError('Les choix n’ont pas tous été conservés. Réessayez.'); return; }
+            router.push(`/stages/new?selection=${encodeURIComponent(cardIds.join(','))}&parcours=${encodeURIComponent(sequence.id)}`);
+        } catch { setError('Connexion interrompue. Réessayez.'); }
     });
-
     return <div className="co-pro-lesson">
         <header className="co-pro-lesson-head">
             {etape === 0 || etape === 4 ? <Link href="/specialisation" aria-label="Fermer le parcours" className="co-pro-back"><ArrowLeft size={19}/></Link> : <button type="button" onClick={precedent} aria-label="Étape précédente" className="co-pro-back"><ArrowLeft size={19}/></button>}
@@ -143,24 +149,37 @@ export function ParcoursLaisseDeMerClient({ sequence, progression, cards, stages
         </section>}
 
         {etape === 4 && <section className="co-pro-study">
-            {progression.mission?.completed || missionValidee ? <>
+            {progression.mission?.completed ? <>
                 <p className="co-pro-kicker">Parcours terminé</p><h1>Vous l’avez fait vivre</h1><p className="co-pro-lead">Vous avez mené cette situation avec un groupe. Ce sujet fait maintenant partie de ce que vous savez transmettre.</p>
                 <div className="co-practice-end-actions"><Link href="/specialisation" className="co-pro-action">Choisir un autre parcours <ArrowRight size={18}/></Link><Link href="/stages/decouvrir" className="co-pro-secondary">Revoir les cartes de ce sujet</Link></div>
             </> : progression.mission || missionEnregistree ? <>
-                <p className="co-pro-kicker">Votre essai</p><h1>C’est noté, à vous de jouer</h1><p className="co-pro-lead">Tentez-le lors d’une prochaine sortie. Revenez ensuite nous dire que vous l’avez fait : c’est ce qui termine le parcours.</p>
-                <div className="co-practice-end-actions"><Link href={`/stages/${progression.mission?.stageId ?? stageId}/program`} className="co-pro-action">Revoir mon essai <ArrowRight size={18}/></Link><Link href="/specialisation" className="co-pro-secondary">Fermer le parcours</Link><button className="co-pro-secondary" disabled={isPending} onClick={validerMission}>Je l’ai fait avec mon groupe</button></div>
+                {/* Plus de bouton « Je l'ai fait avec mon groupe » : personne ne revenait le
+                    cliquer, et le parcours restait ouvert indéfiniment même après la sortie.
+                    Le geste qui compte se fait sur la carte elle-même, dans la semaine — au
+                    même endroit que le suivi de tous les autres sujets. */}
+                <p className="co-pro-kicker">Votre essai</p><h1>C’est noté, à vous de jouer</h1><p className="co-pro-lead">Tentez-le lors d’une prochaine sortie. Une fois fait, marquez le sujet « Abordé » dans votre semaine : c’est ce qui termine le parcours.</p>
+                <div className="co-practice-end-actions"><Link href={`/stages/${progression.mission?.stageId ?? stageId}/program`} className="co-pro-action">Marquer le sujet abordé <ArrowRight size={18}/></Link><Link href="/specialisation" className="co-pro-secondary">Fermer le parcours</Link></div>
             </> : practiceView === 'cards' ? <>
                 <p className="co-pro-kicker">Votre essai</p><h1>Quel angle allez-vous prendre ?</h1><p className="co-pro-lead">Ces cartes-questions sont autant de manières d’entrer dans le sujet. Retenez-en une à trois à tenter lors d’une prochaine sortie.</p>
                 <div className="co-practice-toolbar"><div><strong>{cardIds.length} / 3</strong><span>à essayer</span></div><button type="button" disabled={!cardIds.length} onClick={() => { setPracticeView('recap'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>Voir ce que je vais essayer <ArrowRight size={16}/></button></div>
-                {cartesProposees.length ? <FluxDecouverte pool={cartesProposees} mode="lecture" savedIds={cardIds} onToggleSaved={choisirCarte} /> : <p className="co-pro-feedback">Aucune carte n’est disponible pour le moment.</p>}
+                {cartesProposees.length ? <FluxDecouverte pool={cartesProposees} mode="lecture" savedIds={cardIds} onToggleSaved={choisirCarte} initialChoices={choices} onChoiceChange={(id, choice) => setChoices(current => ({ ...current, [id]: choice }))} allowUse={false} /> : <p className="co-pro-feedback">Aucune carte n’est disponible pour le moment.</p>}
                 <div className="co-practice-footer"><button type="button" className="co-pro-secondary" disabled={!cardIds.length} onClick={() => { setPracticeView('recap'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>Continuer avec {cardIds.length || 0} carte{cardIds.length > 1 ? 's' : ''}</button><Link href="/specialisation" className="co-pro-quiet">Fermer le parcours</Link></div>
             </> : <>
                 <p className="co-pro-kicker">Votre essai</p><h1>Ce que vous allez tenter</h1><p className="co-pro-lead">Voici, pour chaque carte, ce que vous cherchez à faire passer et comment le lancer sur le terrain.</p>
-                <div className="co-practice-objectives">{cartesChoisies.map(card => <article key={card.id}><span>{card.dimension}</span><h2>{card.question}</h2><p><strong>Objectif</strong>{card.objectif}</p>{card.actions?.[0] && <p><strong>Action avec le groupe</strong>{card.actions[0].label} — {card.actions[0].consigne}</p>}{!card.actions?.[0] && card.a_observer && <p><strong>À faire observer</strong>{card.a_observer}</p>}</article>)}</div>
+                <div className="co-practice-objectives">{cartesChoisies.map(card => {
+                    const choice = resolveCardChoice(card, choices[card.id]);
+                    const action = card.actions?.find(item => item.id === choice.actionId);
+                    return <article key={card.id}>
+                        <span>{card.dimension}</span><h2>{card.question}</h2>
+                        <p><strong>Je lance le sujet</strong>« {choice.accroche} »</p>
+                        {action && <p><strong>{action.label}</strong>{action.consigne}</p>}
+                        {card.a_retenir && <p><strong>L’idée à retenir</strong>{card.a_retenir}</p>}
+                    </article>;
+                })}</div>
                 <button type="button" className="co-pro-secondary" onClick={() => { setPracticeView('cards'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>Changer de carte</button>
                 <label className="co-pro-note-label" htmlFor="practice-stage">Avec quel groupe ?</label><select id="practice-stage" className="co-pro-stage-select" value={stageId} onChange={event => setStageId(event.target.value)}><option value="">Choisir une semaine</option>{stages.filter(stage => !stage.closed_at).map(stage => <option key={stage.id} value={stage.id}>{stage.title}</option>)}</select>
                 <button className="co-pro-action" disabled={!stageId || !cardIds.length || isPending} onClick={ajouterMission}>{isPending ? 'Enregistrement…' : 'Noter cet essai'} <ArrowRight size={18}/></button><Link href="/specialisation" className="co-pro-quiet">Fermer le parcours</Link>
-                {cardIds.length > 0 && <Link href={`/stages/new?selection=${encodeURIComponent(cardIds.join(','))}&parcours=${encodeURIComponent(sequence.id)}`} className="co-pro-secondary">Créer une semaine pour cet essai</Link>}
+                {cardIds.length > 0 && <button type="button" disabled={isPending} onClick={creerSemaine} className="co-pro-secondary">Créer une semaine pour cet essai</button>}
             </>}
         </section>}
     </div>;

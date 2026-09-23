@@ -614,12 +614,12 @@ export function WeekDashboardClient({
                         plutôt que de la remplacer : il reste des séances à encadrer. */}
                     {contentCount > 0 && !weekOver && (
                         <Link
-                            href={`/stages/${stageId}/preparer`}
+                            href={`/stages/${stageId}/program`}
                             className="flex items-center gap-3 bg-white/15 backdrop-blur-sm rounded-2xl p-4 border border-white/20 active:scale-[0.99] transition-transform"
                         >
                             <div className="flex-1 min-w-0">
-                                <p className="text-[10px] font-black uppercase tracking-widest text-white/50">Avant d&apos;aller sur l&apos;eau</p>
-                                <p className="text-sm font-black text-white leading-snug mt-0.5">Préparer le fil de ma semaine</p>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-white/50">Mes objectifs</p>
+                                <p className="text-sm font-black text-white leading-snug mt-0.5">Voir et modifier mes cartes</p>
                             </div>
                             <span className="size-9 rounded-full bg-white/20 border border-white/30 flex items-center justify-center text-white shrink-0">
                                 <span className="material-symbols-outlined text-[18px]">arrow_forward</span>

@@ -1,627 +1,175 @@
 'use client';
 
-import { useRef, useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRef, useState } from 'react';
 import Link from 'next/link';
-import clsx from 'clsx';
-import { motion, AnimatePresence, Reorder, useDragControls } from 'framer-motion';
-import { Stage, PedagogicalContent, Dimension } from '@/types';
-import { GROUPES, Groupe } from '@/data/groupes';
-import { PILLARS } from '@/data/etages';
+import { useRouter } from 'next/navigation';
+import type { Stage, PedagogicalContent } from '@/types';
+import type { HistoriqueMoniteur } from '@/lib/historique-moniteur';
+import { resolveCardChoice, type CardChoice, type CardChoices } from '@/lib/card-choice';
 import { updateStagePool } from '@/actions/stage-actions';
-import TagsPanel from '@/components/explorer/TagsPanel';
-import AideConditions from '@/components/explorer/AideConditions';
+import { addCardToWeek } from '@/actions/card-week-actions';
 import FluxDecouverte from '@/components/explorer/FluxDecouverte';
-import SelectionRecapCopun from '@/components/explorer/SelectionRecapCopun';
-import CardDetailModal from '@/components/CardDetailModal';
-import { HistoriqueMoniteur } from '@/lib/historique-moniteur';
+import AideConditions from '@/components/explorer/AideConditions';
+import WeekCardEditor from '@/components/explorer/WeekCardEditor';
+import { cartesConnexes, type CarteConnexe } from '@/data/cartes-connexes';
 
 type Props = {
-    stage: Stage;
-    copunPool: PedagogicalContent[];
-    customPool: PedagogicalContent[];
-    /** Ce que ce moniteur a déjà traité les semaines passées. */
-    historique?: HistoriqueMoniteur;
-    initialTheme?: string;
-    initialGroup?: string;
-    initialSelection?: string[];
-    savedIds?: string[];
-    savedError?: string;
+    stage: Stage; copunPool: PedagogicalContent[]; customPool: PedagogicalContent[];
+    historique?: HistoriqueMoniteur; initialTheme?: string; initialGroup?: string;
+    initialSelection?: string[]; savedIds?: string[]; savedError?: string;
+    initialChoices?: CardChoices; initialActionChoices?: Record<string, string>;
+    locked?: boolean; initiallyDiscussed?: boolean;
 };
 
-// 2-3 notions par semaine = bon rythme de transmission ; 5 max pour les très motivés.
-// Au-delà, rien ne sera vraiment travaillé.
-const MAX_OBJECTIFS = 5;
-const EMPTY_DIMENSIONS: Dimension[] = [];
-
-/**
- * Écran de choix des contenus.
- *
- * Remplace les trois onglets (Guidé / Explorer / Sélection) par un seul écran. Le
- * catalogue complet est l'arrivée par défaut — celui qui sait ce qu'il cherche n'a rien
- * à traverser — mais il est désormais structuré par phénomène au lieu d'être à plat,
- * avec l'arc Comprendre → Observer → Protéger visible dans chaque groupe.
- *
- * Le mode guidé devient une aide au choix appelable (« Par où commencer ? ») qui
- * pré-règle les filtres au lieu d'imposer un parcours parallèle.
- */
-export default function ExplorerClient({ stage, copunPool, customPool, historique, initialTheme, initialGroup, initialSelection = [], savedIds = [], savedError }: Props) {
+export default function ExplorerClient({ stage, copunPool, customPool, historique, initialTheme, initialGroup, initialSelection = [], savedIds = [], savedError, initialChoices = {}, initialActionChoices = {}, locked = false, initiallyDiscussed = false }: Props) {
     const router = useRouter();
-    const [retenues, setRetenues] = useState<string[]>(() => Array.from(new Set([...(stage.selected_content ?? []), ...initialSelection])).slice(0, MAX_OBJECTIFS));
-    const [savedOpen, setSavedOpen] = useState(false);
-    const recherche = '';
-    const niveau: 1 | 2 | 3 | 4 | null = null;
-    // Multi-sélection : COP est un arc, pas une catégorie exclusive — on veut pouvoir
-    // croiser deux « comprendre » et un « observer » sur un même sujet.
-    const dimensions = EMPTY_DIMENSIONS;
-    const [ficheDetail, setFicheDetail] = useState<PedagogicalContent | null>(null);
-    const [enregistre, setEnregistre] = useState(false);
-    const [saving, setSaving] = useState(false);
-    const saveLock = useRef(false);
-    const [plafond, setPlafond] = useState(false);
-    const [voirSelection, setVoirSelection] = useState(false);
-    const [tagsOuverts, setTagsOuverts] = useState(false);
-    // Stockés en minuscules : les tags existent en plusieurs casses en base.
-    const [tags, setTags] = useState<string[]>([]);
+    const pool = [...copunPool, ...customPool];
+    const [ids, setIds] = useState(stage.selected_content ?? []);
+    const [choices, setChoices] = useState<CardChoices>(initialChoices);
+    const [mode, setMode] = useState<'week' | 'planned' | 'discussed' | 'complete'>(initiallyDiscussed ? 'discussed' : 'week');
+    const [source, setSource] = useState<'all' | 'saved' | 'terrain'>('all');
+    const [search, setSearch] = useState('');
+    /** En mode « compléter », repasse du filtre suggestions au catalogue complet. */
+    const [elargi, setElargi] = useState(false);
+    const [editing, setEditing] = useState<PedagogicalContent | null>(null);
+    const [pending, setPending] = useState(false);
+    const [message, setMessage] = useState('');
+    const lock = useRef(false);
+    const readOnly = locked || !!stage.closed_at;
+    const selected = ids.map(id => pool.find(card => card.id === id)).filter((card): card is PedagogicalContent => !!card);
+    const getChoice = (card: PedagogicalContent) => resolveCardChoice(card, choices[card.id] ?? (initialActionChoices[card.id] ? { actionId: initialActionChoices[card.id] } : undefined));
+    const filtered = pool.filter(card => (source !== 'saved' || savedIds.includes(card.id)) && `${card.question} ${card.objectif} ${(card.tags_filtre ?? []).join(' ')}`.toLocaleLowerCase('fr').includes(search.toLocaleLowerCase('fr')));
 
-    // Parcours en deux temps : on choisit d'abord un sujet par couleur (ChoixThemes), puis
-    // on ouvre les questions qui y mènent (QuestionsDuSujet). L'entrée « par sujet de terrain »
-    // a été supprimée — elle éparpillait au lieu de tenir la semaine sur trois couleurs.
-    const vueCopun = false;
-    // Deux chemins pour aborder la semaine, jamais confondus : une intention à accepter
-    // (AideConditions) ou le catalogue à parcourir en flux (FluxDecouverte).
-    const [aideConditionsOuverte, setAideConditionsOuverte] = useState(false);
-    // Le flux est l'arrivée naturelle : on rencontre d'abord la matière, l'intention
-    // reste un autre chemin possible quand le moniteur sait déjà ce qu'il cherche.
-    const [modeDecouverte, setModeDecouverte] = useState(true);
     /**
-     * Arriver avec une sélection déjà faite (depuis /stages/decouvrir, via l'URL) ne doit
-     * pas rouvrir le catalogue : on vient justement de le parcourir. L'écran s'ouvre alors
-     * sur la semaine constituée, et chercher d'autres sujets redevient une action à
-     * demander — sinon on boucle sur l'outil de sélection sans jamais avancer.
+     * Les mots-clés qu'on peut effectivement chercher, plutôt qu'un champ texte à
+     * l'aveugle : taper un terme absent du catalogue (« méduse » écrit autrement que
+     * le tag qui l'indexe) renvoie zéro résultat sans jamais dire pourquoi. Triés par
+     * fréquence : les plus utiles — donc les plus susceptibles de correspondre à ce que
+     * cherche le moniteur — en premier.
+     *
+     * Sur `pool` entier, pas `filtered` : la liste doit aider à corriger une recherche
+     * qui échoue, pas rétrécir avec elle.
      */
-    const [chercherOuvert, setChercherOuvert] = useState(
-        () => (stage.selected_content ?? []).length === 0 && initialSelection.length === 0,
-    );
-    // Le catalogue par phénomène (marées, vent, oiseaux…) n'a plus de point d'entrée : il
-    // repartait vers l'éparpillement, alors que la semaine doit tenir sur trois sujets, un
-    // par couleur. Son rendu reste en place plus bas mais n'est plus atteignable — laissé
-    // le temps de confirmer que la nouvelle entrée par thèmes couvre bien tous les usages.
+    const motsCles = [...pool.reduce((compte, card) => {
+        for (const mot of card.tags_filtre ?? []) compte.set(mot, (compte.get(mot) ?? 0) + 1);
+        return compte;
+    }, new Map<string, number>()).entries()]
+        .sort((a, b) => b[1] - a[1])
+        .map(([mot]) => mot);
 
-    const pool = useMemo(() => [...copunPool, ...customPool], [copunPool, customPool]);
-    const savedCards = useMemo(() => savedIds.map(id => pool.find(card => card.id === id)).filter((card): card is PedagogicalContent => !!card), [savedIds, pool]);
+    /**
+     * Ce qui compléterait les sujets déjà retenus — visible en permanence, pas seulement
+     * dans la seconde qui suit un ajout : le moniteur revient sur cette page pour préparer,
+     * et c'est là qu'il décide d'étoffer.
+     *
+     * Les suggestions partent de la dernière carte retenue, en écartant les doublons : deux
+     * cartes du même groupe proposeraient sinon les mêmes compléments.
+     */
+    const suggestions: CarteConnexe[] = readOnly || ids.length >= 5 ? [] : (() => {
+        const vues = new Set<string>();
+        return [...selected].reverse()
+            .flatMap(card => cartesConnexes(card, pool, ids))
+            .filter(item => !vues.has(item.carte.id) && vues.add(item.carte.id))
+            .slice(0, 2);
+    })();
+    const suggestionIds = new Set(suggestions.map(item => item.carte.id));
+    // En mode « compléter », le catalogue s'ouvre déjà réduit aux suggestions : le
+    // moniteur y accède d'un tap, sans repasser par une recherche. « elargi » (ou changer
+    // de source, ou chercher) repasse au catalogue complet — il n'est jamais coincé
+    // devant deux cartes s'il veut finalement naviguer plus large.
+    const restreintAuxSuggestions = mode === 'complete' && source === 'all' && !search && !elargi;
+    const filteredComplete = restreintAuxSuggestions ? filtered.filter(card => suggestionIds.has(card.id)) : filtered;
 
-    /** Le groupe d'où vient le moniteur, quand il arrive depuis une suggestion d'accueil. */
-    const groupeOrigine = initialGroup ? GROUPES.find(g => g.id === initialGroup) : undefined;
-
-
-    // Rien à enregistrer si la sélection est identique à celle déjà en base : on propose
-    // alors directement l'étape suivante plutôt qu'un bouton qui ne ferait rien.
-    // Comparaison sans tri : l'ordre fait partie de la sélection, donc réorganiser sans
-    // rien ajouter ni retirer est bien une modification à enregistrer.
-    const dejaEnBase = useMemo(
-        () => (stage.selected_content ?? []).join('|') === retenues.join('|'),
-        [retenues, stage.selected_content],
-    );
-
-    // Les fiches déjà retenues, quel que soit le filtre courant : la sélection doit
-    // rester consultable même quand elle sort du tri affiché.
-    const fichesRetenues = useMemo(
-        () => retenues.map(id => pool.find(f => f.id === id)).filter((f): f is PedagogicalContent => !!f),
-        [retenues, pool],
-    );
-
-    const blocs = useMemo(() => {
-        const correspond = (f: PedagogicalContent) => {
-            if (niveau && Number(f.niveau) !== niveau) return false;
-            if (dimensions.length) {
-                const d = (f.dimension ?? '').toUpperCase();
-                const cle = d.startsWith('COMPR') ? 'COMPRENDRE' : d.startsWith('OBSERV') ? 'OBSERVER' : 'PROTÉGER';
-                if (!dimensions.includes(cle as Dimension)) return false;
-            }
-            if (tags.length) {
-                const siens = (f.tags_filtre ?? []).map(t => String(t).trim().toLocaleLowerCase('fr'));
-                // ET entre mots-clés : cumuler doit resserrer, pas élargir.
-                if (!tags.every(t => siens.includes(t))) return false;
-            }
-            if (recherche.trim()) {
-                const q = recherche.toLowerCase();
-                const cible = `${f.question} ${f.objectif ?? ''} ${(f.tags_filtre ?? []).join(' ')}`.toLowerCase();
-                if (!cible.includes(q)) return false;
-            }
-            return true;
-        };
-
-        const classees = new Set(GROUPES.flatMap(g => g.fiches.map(String)));
-
-        const blocsCatalogue = GROUPES.map(g => {
-            const ids = new Set(g.fiches.map(String));
-            return { groupe: g, fiches: pool.filter(f => ids.has(f.id) && correspond(f)) };
-        });
-
-        // Filet de sécurité, pas un rangement : toute fiche hors des 12 groupes doit
-        // rester visible plutôt que de disparaître sans erreur. Une fiche qui atterrit
-        // dans « À classer » signale un contenu à rattacher à son groupe dans
-        // `src/data/groupes.ts` — ce n'est pas sa place définitive.
-        const orphelines = pool.filter(f => !classees.has(f.id) && correspond(f));
-        const perso = orphelines.filter(f => f.source === 'custom');
-        const horsGroupe = orphelines.filter(f => f.source !== 'custom');
-
-        const blocsExtra: { groupe: Groupe; fiches: PedagogicalContent[] }[] = [];
-        if (horsGroupe.length) {
-            blocsExtra.push({
-                groupe: {
-                    id: '_autres', label: 'À classer', accroche: 'Pas encore rattaché à un thème',
-                    icon: 'more_horiz', milieu: 'posture', fiches: [],
-                },
-                fiches: horsGroupe,
-            });
-        }
-        if (perso.length) {
-            blocsExtra.push({
-                groupe: {
-                    id: '_perso', label: 'Mes fiches', accroche: 'Contenus que j’ai créés',
-                    icon: 'edit_note', milieu: 'posture', fiches: [],
-                },
-                fiches: perso,
-            });
-        }
-
-        return [...blocsCatalogue, ...blocsExtra].filter(b => b.fiches.length > 0);
-    }, [pool, niveau, dimensions, recherche, tags]);
-
-    const total = useMemo(() => blocs.reduce((n, b) => n + b.fiches.length, 0), [blocs]);
-
-    const toggleFiche = (id: string) => {
-        if (saveLock.current) return;
-        setRetenues(p => {
-            if (p.includes(id)) return p.filter(x => x !== id);
-            if (p.length >= MAX_OBJECTIFS) {
-                setPlafond(true);
-                setTimeout(() => setPlafond(false), 3000);
-                return p;
-            }
-            return [...p, id];
-        });
-        setEnregistre(false);
-    };
-
-
-    const enregistrer = async () => {
-        if (saveLock.current) return;
-        saveLock.current = true; setSaving(true);
+    async function changeSelection(next: string[]) {
+        if (lock.current || readOnly) return;
+        lock.current = true; setPending(true); setMessage('');
         try {
-            const res = await updateStagePool(stage.id, retenues);
-            if (res.success) { setEnregistre(true); router.refresh(); }
-            else alert(res.error);
-        } catch { alert('Enregistrement impossible.'); }
-        finally { saveLock.current = false; setSaving(false); }
-    };
+            const result = await updateStagePool(stage.id, next);
+            if (result.success) { setIds(next); router.refresh(); }
+            else setMessage(result.error ?? 'Enregistrement impossible.');
+        } catch { setMessage('Connexion interrompue. Réessayez.'); }
+        finally { lock.current = false; setPending(false); }
+    }
 
-    // Résultat de l'entonnoir « par sujet » : préconfigure le catalogue phénomène
-    // ci-dessous (dimensions COP + groupe ouvert), reprend le comportement d'origine.
-    return (
-        // Assez de marge pour que le bas de page passe SOUS la barre fixe (h-14 + dégradé)
-        // et la navigation : à pb-40, le récapitulatif de sélection était coupé en deux.
-        <div className="min-h-screen fond-ciel pb-52">
+    async function saveCard(card: PedagogicalContent, choice: CardChoice) {
+        if (readOnly || lock.current) return { success: false, error: 'Modification indisponible.' };
+        lock.current = true; setPending(true);
+        try {
+            const result = await addCardToWeek(stage.id, card.id, choice, mode === 'discussed');
+            if (result.success) {
+                setIds(current => current.includes(card.id) ? current : [...current, card.id]);
+                setChoices(current => ({ ...current, [card.id]: choice }));
+                setMessage(mode === 'discussed' ? 'Sujet ajouté et noté comme abordé. Le groupe pourra confirmer l’action au vote final.' : 'L’accroche et l’action sont enregistrées dans votre semaine.');
+                setMode('week'); router.refresh();
+            }
+            return result;
+        } finally { lock.current = false; setPending(false); }
+    }
 
-            {/* Bandeau d'identité : zone colorée franche dont les cartes se détachent, au
-                lieu d'un empilement de blancs sur gris uniforme. */}
-            <header className="bandeau-ciel px-4 pt-5 pb-6 rounded-b-[1.75rem]">
-                <div className="max-w-2xl mx-auto">
-                    <div className="flex items-center gap-3">
-                        {/* Une seule flèche pour tout l'écran : dans l'aide au choix elle
-                            recule d'une étape, ailleurs elle quitte la semaine. */}
-                        {aideConditionsOuverte ? (
-                            <button
-                                onClick={() => setAideConditionsOuverte(false)}
-                                className="size-10 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center text-white active:scale-90 transition shrink-0"
-                                aria-label="Retour"
-                            >
-                                <span className="material-symbols-outlined text-[20px]">arrow_back</span>
-                            </button>
-                        ) : (
-                            <Link
-                                href="/stages/semaines"
-                                className="size-10 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center text-white active:scale-90 transition shrink-0"
-                            >
-                                <span className="material-symbols-outlined text-[20px]">arrow_back</span>
-                            </Link>
-                        )}
-                        <div className="min-w-0 flex-1">
-                            {/* Le sujet d'où l'on vient (choisi sur l'accueil) reste affiché :
-                                il se perdait entre la découverte, la création de semaine et
-                                cet écran, et on ne savait plus pourquoi on était là. */}
-                            <p className="text-[11px] font-bold text-white/60 leading-tight truncate">
-                                {groupeOrigine?.label ?? stage.title}
-                            </p>
-                            <h1 className="text-[19px] font-black text-white leading-tight truncate mt-0.5">
-                                {aideConditionsOuverte
-                                    ? 'Ton intention'
-                                    : chercherOuvert ? 'Choisir les sujets' : 'Ta semaine'}
-                            </h1>
-                        </div>
-                    </div>
-                </div>
-            </header>
+    function move(index: number, offset: number) {
+        const next = [...ids];
+        [next[index], next[index + offset]] = [next[index + offset], next[index]];
+        void changeSelection(next);
+    }
 
-            {/* Pas de rangée de compteurs ici : reprise à mes références, elle affichait
-                « 0/3 sujets » au-dessus d'une grille qui montre déjà lesquels sont choisis,
-                le nombre de questions déjà présent dans la barre du bas, et un total de
-                fiches inexplorées sur lequel on ne peut rien faire depuis cet écran. De la
-                forme copiée sans usage. */}
-            {/* Échelle d'espacement : large entre les blocs (space-y-5), serré à l'intérieur
-                d'un bloc. Tout était à 2.5 — rien ne distinguait « deux sections » de « un
-                titre et sa grille », d'où un écran sans respiration ni groupement lisible. */}
-            <main className="max-w-2xl mx-auto px-4 pt-6 space-y-5">
-                {!aideConditionsOuverte && <section className="rounded-2xl border border-indigo-100 bg-white overflow-hidden">
-                    <button onClick={() => setSavedOpen(open => !open)} aria-expanded={savedOpen} aria-controls="saved-preparation-cards" className="w-full flex items-center gap-3 p-4 text-left">
-                        <span className="material-symbols-outlined text-indigo-500" aria-hidden>bookmarks</span>
-                        <span className="flex-1"><span className="block text-sm font-bold text-slate-900">Mes cartes mises de côté</span><span className="block mt-0.5 text-xs text-slate-500">Retrouver les idées qui vous ont intéressé</span></span>
-                        {!savedError && <span className="text-sm font-bold text-indigo-600">{savedCards.length}</span>}
-                        <span className="material-symbols-outlined text-slate-400" aria-hidden>{savedOpen ? 'expand_less' : 'expand_more'}</span>
-                    </button>
-                    {savedOpen && <div id="saved-preparation-cards" className="border-t border-indigo-50 p-4 space-y-3">
-                        {savedError ? <p role="alert" className="text-sm text-amber-800">{savedError} <button onClick={() => router.refresh()} className="font-bold underline">Réessayer</button></p>
-                        : savedCards.length ? <>
-                            <p className="text-sm text-slate-500">Choisissez celles que vous souhaitez utiliser cette semaine. Elles resteront dans vos cartes mises de côté.</p>
-                            {savedCards.map(card => {
-                                const chosen = retenues.includes(card.id);
-                                return <article key={card.id} className="rounded-xl border border-slate-100 p-3">
-                                    <button onClick={() => setFicheDetail(card)} className="w-full text-left">
-                                        <span className="text-[10px] uppercase tracking-wide font-bold text-indigo-500">{card.dimension}</span>
-                                        <h3 className="mt-1 text-sm font-bold text-slate-900">{card.question}</h3>
-                                    </button>
-                                    <div className="flex flex-wrap items-center justify-between gap-2 mt-3">
-                                        <button onClick={() => setFicheDetail(card)} className="text-xs font-bold text-slate-500 py-2">Relire</button>
-                                        <button onClick={() => toggleFiche(card.id)} aria-pressed={chosen} disabled={!chosen && retenues.length >= MAX_OBJECTIFS} className={clsx('rounded-full px-4 py-2.5 text-xs font-bold disabled:opacity-40', chosen ? 'bg-emerald-500 text-white' : 'bg-indigo-50 text-indigo-700')}>
-                                            {chosen ? 'Choisie pour cette semaine' : 'Choisir pour cette semaine'}
-                                        </button>
-                                    </div>
-                                </article>;
-                            })}
-                        </> : <p className="text-sm text-slate-500">Dans Explorer, mettez de côté les cartes qui vous intéressent. Vous les retrouverez ici quand vous préparerez une semaine.</p>}
-                        <Link href="/stages/decouvrir?saved=1" className="inline-block py-2 text-sm font-bold text-indigo-600">Relire mes cartes dans Explorer →</Link>
-                    </div>}
-                </section>}
+    return <main className="co-field-week">
+        {/* Masqué en mode catalogue : celui-ci porte déjà son propre retour et son propre
+            titre (ligne « ← Revenir à ma semaine » + h2 juste en dessous). Les deux
+            empilés répétaient la même navigation avant tout contenu utile. */}
+        {mode === 'week' && <header className="co-field-heading">
+            <Link href="/stages/semaines" className="co-field-back">← Mes semaines</Link>
+            <p className="co-eyebrow">{stage.dates}</p><h1>{stage.title}</h1>
+            <p>Vos idées à raconter, vos actions à faire vivre.</p>
+        </header>}
+        {message && <p className="co-field-feedback" role="status">{message}<button aria-label="Fermer le message" onClick={() => setMessage('')}>×</button></p>}
+        {mode === 'week' ? <>
+            {!readOnly && <div className="co-field-entrypoints">
+                <button onClick={() => setMode('planned')}>Prévoir un sujet <span aria-hidden>＋</span></button>
+                <button onClick={() => setMode('discussed')}>Ajouter un sujet abordé <span aria-hidden>＋</span></button>
+            </div>}
+            {initialSelection.some(id => !ids.includes(id)) && !readOnly && <button className="co-choice-secondary" disabled={pending} onClick={() => changeSelection(Array.from(new Set([...ids, ...initialSelection])).slice(0, 5))}>Ajouter les cartes apportées depuis mon parcours</button>}
+            {selected.length === 0 ? <section className="co-field-empty"><h2>Les occasions font aussi la semaine.</h2><p>Partez d’une carte mise de côté, prévoyez un sujet ou retrouvez celui que vous avez déjà abordé sur le terrain.</p><Link href="/specialisation">Me former avec un parcours →</Link></section> :
+                <div className="co-field-cards">{selected.map((card, index) => {
+                    const choice = getChoice(card);
+                    const action = card.actions?.find(item => item.id === choice.actionId);
+                    return <article className="co-field-card" key={card.id}>
+                        <header><p className="co-eyebrow">{card.dimension}</p><span>{String(index + 1).padStart(2, '0')}</span></header>
+                        <h2>{card.question}</h2>
+                        <div className="co-field-hook"><h3>Je lance le sujet</h3><blockquote>« {choice.accroche} »</blockquote></div>
+                        {action ? <div className="co-field-action"><h3>Avec le groupe</h3><strong>{action.label}</strong><p>{action.consigne}</p></div> : card.a_observer && <div className="co-field-action"><h3>À observer</h3><p>{card.a_observer}</p></div>}
+                        {card.a_retenir && <div className="co-field-takeaway"><h3>L’idée à retenir</h3><p>{card.a_retenir}</p></div>}
+                        {!readOnly && <footer><button disabled={pending} onClick={() => setEditing(card)}>Relire / modifier</button><details><summary>Gérer la carte</summary><div><button disabled={pending || index === 0} onClick={() => move(index, -1)}>Monter</button><button disabled={pending || index === ids.length - 1} onClick={() => move(index, 1)}>Descendre</button><button disabled={pending} onClick={() => changeSelection(ids.filter(id => id !== card.id))}>Retirer de la semaine</button></div></details></footer>}
+                    </article>;
+                })}</div>}
+            {/* Après les cartes, pas avant : on complète ce qu'on voit déjà retenu, pas ce
+                qu'on s'apprête à choisir. Ouvre le même écran catalogue que « Prévoir un
+                sujet », déjà réduit aux suggestions — accès direct, tout en restant dans le
+                catalogue complet où recherche et sources fonctionnent normalement.
 
-                {/* L'aide au choix remplace le contenu de l'écran — elle vivait dans un
-                    tiroir venu du bas, format qui convient à une action courte, pas à un
-                    parcours en trois étapes avec ses propres listes défilantes. */}
-                {aideConditionsOuverte && (
-                    <AideConditions
-                        open
-                        pool={pool}
-                        retenues={retenues}
-                        onToggleFiche={toggleFiche}
-                        onFicheInfo={setFicheDetail}
-                        historique={historique}
-                    />
-                )}
-
-                {/* ══ ÉTAPE 1 : LES SUJETS ══
-                    Les neuf thèmes, visibles d'emblée : c'est l'arrivée, pas une option
-                    derrière un menu. L'écran s'ouvrait avant sur « choisis un outil de
-                    filtre », qui demandait de comprendre l'outillage avant de voir le moindre
-                    contenu. */}
-                {/* ══ LES DEUX CHEMINS ══
-                    Ni filtre à remplir, ni case à cocher : deux façons distinctes d'aborder
-                    la semaine, jamais confondues dans un seul parcours.
-                    — « Intention » : je choisis d'aborder un sujet précis, comme on accepte
-                      un défi — le moteur existant (conditions, niveau) reste, seule sa
-                      présentation change : un choix à faire, pas un formulaire à remplir.
-                    — « Choisir les sujets » : le catalogue entier, en cartes qu'on swipe façon
-                      /formation — la matière (accroche, forme, idée reçue) directement
-                      visible, « garder » comme seul geste, jamais de préparation forcée. */}
-                {/* Ce qui est déjà retenu passe en tête : arriver ici avec une sélection
-                    veut dire qu'on a fini de chercher, pas qu'on recommence. */}
-                {!vueCopun && !aideConditionsOuverte && retenues.length > 0 && (
-                    <div className="space-y-3">
-                        <div className="flex items-baseline justify-between gap-2 px-1">
-                            <p className="text-[13px] font-black text-slate-900">
-                                Ta semaine
-                            </p>
-                            <p className="text-[11px] font-bold text-slate-400 tabular-nums">
-                                {retenues.length} sujet{retenues.length > 1 ? 's' : ''}
-                            </p>
-                        </div>
-
-                        <SelectionRecapCopun
-                            pool={pool}
-                            retenues={retenues}
-                            onToggleFiche={toggleFiche}
-                            onFicheInfo={setFicheDetail}
-                        />
-
-                        {!chercherOuvert && retenues.length < MAX_OBJECTIFS && (
-                            <button
-                                onClick={() => setChercherOuvert(true)}
-                                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-white/70 text-[12.5px] font-bold text-slate-500 hover:text-slate-700 hover:bg-white transition-colors"
-                            >
-                                <span className="material-symbols-outlined text-[17px]">add</span>
-                                Ajouter un autre sujet
-                            </button>
-                        )}
-                    </div>
-                )}
-
-                {!vueCopun && !aideConditionsOuverte && chercherOuvert && (
-                    <>
-                        {/* Refermer la recherche pour revenir à sa semaine : sans ça, ouvrir
-                            « ajouter un sujet » enferme dans le catalogue sans retour. */}
-                        {retenues.length > 0 && (
-                            <button
-                                onClick={() => setChercherOuvert(false)}
-                                className="inline-flex items-center gap-1.5 text-[12px] font-black text-slate-500 hover:text-slate-800 transition-colors px-1"
-                            >
-                                <span className="material-symbols-outlined text-[17px]">arrow_back</span>
-                                Revenir à ma semaine
-                            </button>
-                        )}
-
-                        <div className="grid grid-cols-2 gap-1 p-1 rounded-2xl bg-black/5">
-                            <button
-                                onClick={() => setModeDecouverte(true)}
-                                className={clsx(
-                                    'py-2.5 rounded-xl text-[12.5px] font-black transition-all',
-                                    modeDecouverte ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500',
-                                )}
-                            >
-                                Choisir les sujets
-                            </button>
-                            <button
-                                onClick={() => setModeDecouverte(false)}
-                                className={clsx(
-                                    'py-2.5 rounded-xl text-[12.5px] font-black transition-all',
-                                    !modeDecouverte ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500',
-                                )}
-                            >
-                                Ton intention
-                            </button>
-                        </div>
-
-                        {modeDecouverte ? (
-                            <FluxDecouverte
-                                pool={pool}
-                                mode="catalogue"
-                                retenues={retenues}
-                                onToggleFiche={toggleFiche}
-                                onFicheInfo={setFicheDetail}
-                                historique={historique}
-                                initialTheme={initialTheme}
-                                initialGroup={initialGroup}
-                            />
-                        ) : (
-                            <button
-                                onClick={() => setAideConditionsOuverte(true)}
-                                className="w-full flex items-center gap-3 px-4 py-4 rounded-[1.25rem] bg-slate-900 text-left shadow-[var(--shadow-lift)] active:scale-[0.99] transition-all"
-                            >
-                                <span className="size-11 rounded-2xl bg-white/10 flex items-center justify-center shrink-0">
-                                    <span className="material-symbols-outlined text-[22px] text-cyan-300">tsunami</span>
-                                </span>
-                                <span className="flex-1 min-w-0">
-                                    <span className="block text-[14px] font-black text-white leading-snug">
-                                        Qu&apos;as-tu envie de faire vivre au groupe&nbsp;?
-                                    </span>
-                                    <span className="block text-[11.5px] text-white/50 mt-0.5">
-                                        Le terrain t&apos;aide à trouver une porte d&apos;entrée
-                                    </span>
-                                </span>
-                                <span className="material-symbols-outlined text-white/30 shrink-0">chevron_right</span>
-                            </button>
-                        )}
-                    </>
-                )}
-
-            </main>
-
-            {plafond && (
-                <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[95] bg-amber-500 text-white text-sm font-black px-6 py-4 rounded-2xl shadow-2xl shadow-amber-500/40 max-w-[85vw] flex items-center gap-3">
-                    <span className="material-symbols-outlined text-2xl shrink-0">warning</span>
-                    5 objectifs max — mieux vaut 2-3 fiches bien travaillées.
-                </div>
-            )}
-
-            {/* Affichée aussi à 0 fiche retenue tant que ce n'est pas encore enregistré :
-                vider une sélection existante doit rester une action qu'on peut valider,
-                pas un état invisible qui fait disparaître le bouton Enregistrer. */}
-            {(retenues.length > 0 || !dejaEnBase) && (
-                <div className="above-nav fixed left-0 right-0 z-40 px-4 pt-10 pb-4 bg-linear-to-t from-[#e9eef7] via-[#e9eef7]/95 to-transparent pointer-events-none">
-                    <div className="max-w-2xl mx-auto flex items-center gap-3 pointer-events-auto">
-                        <button
-                            onClick={() => setVoirSelection(true)}
-                            disabled={retenues.length === 0}
-                            className="flex-1 min-w-0 h-14 px-4 rounded-2xl bg-white shadow-[var(--shadow-lift)] flex items-center gap-2 active:scale-[0.98] transition disabled:opacity-60"
-                        >
-                            {/* « 1 / 5 retenue » se lisait comme un quota de sujets, en
-                                contradiction avec la règle des trois annoncée en haut d'écran.
-                                Ce sont des questions, et le plafond n'a d'intérêt qu'une fois
-                                approché. */}
-                            <span className="text-base font-black text-slate-900">{retenues.length}</span>
-                            <span className="text-xs font-bold text-slate-400">
-                                question{retenues.length > 1 ? 's' : ''} retenue{retenues.length > 1 ? 's' : ''}
-                                {retenues.length >= MAX_OBJECTIFS - 1 && ` · ${MAX_OBJECTIFS} max`}
-                            </span>
-                            {retenues.length > 0 && (
-                                <span className="material-symbols-outlined text-slate-300 text-lg ml-auto">expand_less</span>
-                            )}
-                        </button>
-                        {/* Une fois la sélection enregistrée, l'écran ne doit pas être un
-                            cul-de-sac : choisir des fiches n'est pas préparer, l'étape
-                            suivante est le vrai bénéfice pour le moniteur. Mais si tout a
-                            été retiré, il n'y a plus de « préparer » qui tienne. */}
-                        {retenues.length > 0 && (enregistre || dejaEnBase) ? (
-                            <Link
-                                href={`/stages/${stage.id}/preparer`}
-                                className="h-14 px-7 rounded-2xl bg-linear-to-br from-indigo-500 to-indigo-700 text-white text-xs font-black tracking-[0.15em] uppercase shadow-[var(--shadow-glow-indigo)] active:scale-95 transition-all flex items-center gap-2"
-                            >
-                                Préparer
-                                <span className="material-symbols-outlined text-lg">arrow_forward</span>
-                            </Link>
-                        ) : (
-                            <button
-                                onClick={enregistrer}
-                                disabled={saving}
-                                className="h-14 px-8 rounded-2xl bg-slate-900 disabled:bg-slate-300 text-white text-xs font-black tracking-[0.15em] uppercase shadow-[var(--shadow-lift)] active:scale-95 transition-all flex items-center gap-2"
-                            >
-                                {saving ? (
-                                    <span className="animate-spin material-symbols-outlined text-lg">progress_activity</span>
-                                ) : (
-                                    <><span className="material-symbols-outlined text-lg">save</span> Enregistrer</>
-                                )}
-                            </button>
-                        )}
-                    </div>
-                </div>
-            )}
-
-            {/* Ce qui est retenu — remplace l'ancien onglet « Sélection ». Consultable à tout
-                moment, indépendamment des filtres en cours. */}
-            <AnimatePresence>
-                {voirSelection && (
-                    <>
-                        <motion.div
-                            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                            onClick={() => setVoirSelection(false)}
-                            className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[70]"
-                        />
-                        <motion.div
-                            initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
-                            transition={{ type: 'spring', damping: 32, stiffness: 320 }}
-                            className="fixed inset-x-0 bottom-0 z-[71] bg-[#EBF0F7] rounded-t-[2rem] max-h-[80vh] flex flex-col shadow-2xl"
-                        >
-                            <div className="px-5 pt-5 pb-3 flex items-center gap-3 shrink-0">
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Ma sélection</p>
-                                    <p className="text-lg font-black text-slate-900 leading-tight">
-                                        {retenues.length} objectif{retenues.length > 1 ? 's' : ''} pour la semaine
-                                    </p>
-                                    {retenues.length > 1 && (
-                                        <p className="text-[11px] font-bold text-slate-400 mt-0.5">
-                                            L&apos;ordre est celui du traitement — glissez pour réorganiser.
-                                        </p>
-                                    )}
-                                </div>
-                                <button
-                                    onClick={() => setVoirSelection(false)}
-                                    className="size-9 rounded-full bg-white flex items-center justify-center text-slate-400 active:scale-90 transition shrink-0"
-                                >
-                                    <span className="material-symbols-outlined text-[20px]">close</span>
-                                </button>
-                            </div>
-
-                            <Reorder.Group
-                                axis="y"
-                                values={retenues}
-                                onReorder={ids => { if (saveLock.current) return; setRetenues(ids); setEnregistre(false); }}
-                                className="flex-1 overflow-y-auto px-5 pb-8 space-y-2"
-                            >
-                                {fichesRetenues.map((f, i) => (
-                                    <LigneSelection
-                                        key={f.id}
-                                        fiche={f}
-                                        rang={i + 1}
-                                        onVoir={() => { setFicheDetail(f); setVoirSelection(false); }}
-                                        onRetirer={() => toggleFiche(f.id)}
-                                    />
-                                ))}
-                            </Reorder.Group>
-                        </motion.div>
-                    </>
-                )}
-            </AnimatePresence>
-
-            <TagsPanel
-                open={tagsOuverts}
-                onClose={() => setTagsOuverts(false)}
-                pool={pool}
-                selection={tags}
-                onToggle={t => setTags(p => (p.includes(t) ? p.filter(x => x !== t) : [...p, t]))}
-                onReset={() => setTags([])}
-                resultCount={total}
-            />
-
-            <CardDetailModal
-                isOpen={!!ficheDetail}
-                content={ficheDetail}
-                onClose={() => setFicheDetail(null)}
-                retenue={!!ficheDetail && retenues.includes(ficheDetail.id)}
-                onGarder={ficheDetail ? () => toggleFiche(ficheDetail.id) : undefined}
-                plafondAtteint={retenues.length >= MAX_OBJECTIFS}
-            />
-
-        </div>
-    );
-}
-
-
-/**
- * Une fiche retenue, déplaçable dans l'ordre de traitement.
- *
- * Le glisser part de la poignée seule (`dragListener={false}` + `useDragControls`) : une
- * carte entièrement draggable capturerait le geste de défilement et rendrait le panneau
- * impossible à parcourir au doigt.
- */
-function LigneSelection({
-    fiche,
-    rang,
-    onVoir,
-    onRetirer,
-}: {
-    fiche: PedagogicalContent;
-    rang: number;
-    onVoir: () => void;
-    onRetirer: () => void;
-}) {
-    const controls = useDragControls();
-    const [saisi, setSaisi] = useState(false);
-
-    const d = (fiche.dimension ?? '').toUpperCase();
-    const cle = d.startsWith('COMPR') ? 'COMPRENDRE' : d.startsWith('OBSERV') ? 'OBSERVER' : 'PROTÉGER';
-    const p = PILLARS.find(x => x.id === cle);
-
-    return (
-        <Reorder.Item
-            value={fiche.id}
-            dragListener={false}
-            dragControls={controls}
-            onDragStart={() => setSaisi(true)}
-            onDragEnd={() => setSaisi(false)}
-            className={clsx(
-                'relative flex items-center gap-2 bg-white rounded-xl overflow-hidden transition-shadow',
-                saisi ? 'shadow-lg shadow-indigo-500/15' : 'shadow-sm',
-            )}
-        >
-            <span className={clsx('absolute left-0 top-0 bottom-0 w-1', p?.bg)} />
-
-            <span className="text-[12px] font-black text-slate-300 tabular-nums shrink-0 pl-3.5 w-6">
-                {rang}
-            </span>
-
-            <button onClick={onVoir} className="flex-1 min-w-0 text-left py-3">
-                <span className={clsx('block text-[9px] font-black uppercase tracking-widest', p?.color)}>
-                    {p?.label}
-                </span>
-                <span className="block text-[13px] font-bold text-slate-800 leading-snug mt-0.5">
-                    {fiche.question}
-                </span>
-            </button>
-
-            <span
-                onPointerDown={e => controls.start(e)}
-                aria-label={`Déplacer : ${fiche.question}`}
-                className="size-10 flex items-center justify-center text-slate-300 hover:text-slate-500 cursor-grab active:cursor-grabbing touch-none shrink-0 transition-colors"
-            >
-                <span className="material-symbols-outlined text-[20px]">drag_indicator</span>
-            </span>
-
-            <button
-                onClick={onRetirer}
-                aria-label="Retirer"
-                className="size-8 mr-2.5 rounded-full bg-red-50 text-red-400 flex items-center justify-center shrink-0 active:scale-90 transition"
-            >
-                <span className="material-symbols-outlined text-[17px]">remove</span>
-            </button>
-        </Reorder.Item>
-    );
+                Pas de bloc « À jouer avec le groupe » ici : le quiz d'animation et le vote
+                de fin sont déjà les actions principales de « Mes semaines », d'où on arrive
+                toujours sur cet écran. Le dupliquer casserait la hiérarchie — cette page sert
+                à préparer le contenu, pas à lancer une activité live. */}
+            {suggestions.length > 0 && <button className="co-field-complete-entry" onClick={() => setMode('complete')}>Pour compléter ce sujet <span aria-hidden>＋</span></button>}
+        </> : <section className="co-field-catalogue">
+            <button className="co-field-back" onClick={() => setMode('week')}>← Revenir à ma semaine</button>
+            <h2>{mode === 'discussed' ? 'Quel sujet avez-vous abordé ?' : mode === 'complete' ? 'Pour compléter ce sujet' : 'Choisir les sujets'}</h2>
+            <input type="search" value={search} onChange={event => setSearch(event.target.value)} placeholder="Marée, laisse de mer, oiseaux…" aria-label="Rechercher un sujet"/>
+            {/* Les mots-clés qui existent réellement dans le catalogue : sans eux, taper un
+                terme absent renvoie zéro résultat sans dire s'il faut chercher autrement ou
+                si le sujet n'y est tout simplement pas. Un tap complète la recherche, il ne
+                la remplace pas — on peut préciser en tapant à la suite. */}
+            <details className="co-field-tags">
+                <summary>Voir les mots-clés du catalogue</summary>
+                <div>{motsCles.map(mot => <button key={mot} type="button" aria-pressed={search.toLocaleLowerCase('fr') === mot.toLocaleLowerCase('fr')} onClick={() => setSearch(mot)}>{mot}</button>)}</div>
+            </details>
+            <div className="co-field-sources">{(['all', 'saved', 'terrain'] as const).map(item => <button key={item} aria-pressed={source === item} onClick={() => setSource(item)}>{item === 'all' ? (mode === 'complete' ? 'Suggestions' : 'Toutes les cartes') : item === 'saved' ? 'Mises de côté' : 'Partir du terrain'}</button>)}</div>
+            {restreintAuxSuggestions && <p className="co-field-feedback">Deux idées pour aller plus loin sur ce que vous avez déjà retenu. <button className="co-field-widen" onClick={() => setElargi(true)}>Voir tout le catalogue</button></p>}
+            {source === 'saved' && savedError && <p role="alert">{savedError}</p>}
+            {source === 'terrain' ? <AideConditions open pool={filteredComplete} retenues={ids} onToggleFiche={id => setEditing(pool.find(card => card.id === id) ?? null)} onFicheInfo={setEditing} historique={historique}/> :
+                <FluxDecouverte pool={filteredComplete} mode="catalogue" retenues={ids} onToggleFiche={id => setEditing(pool.find(card => card.id === id) ?? null)} onFicheInfo={setEditing} historique={historique} initialTheme={initialTheme} initialGroup={initialGroup}/>}
+            {filteredComplete.length === 0 && <p className="co-field-feedback">Aucune carte ne correspond. Essayez un autre mot ou revenez à toutes les cartes ; ne retenez pas un sujet différent de celui réellement abordé.</p>}
+        </section>}
+        {editing && <WeekCardEditor key={editing.id} card={editing} initialChoice={getChoice(editing)} label={mode === 'discussed' ? 'Ajouter comme sujet abordé' : ids.includes(editing.id) ? 'Enregistrer mes choix' : 'Ajouter à ma semaine'} onSave={choice => saveCard(editing, choice)} onClose={() => setEditing(null)}/>}
+    </main>;
 }

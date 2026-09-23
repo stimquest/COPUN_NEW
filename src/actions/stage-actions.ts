@@ -5,6 +5,7 @@ import { requireStageOwner, requireAuth } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 import { encodeIntention, ObjectifId } from '@/data/objectifs';
 import { StageRessenti, isRessentiNiveau } from '@/lib/stage-ressenti';
+import type { CardChoices } from '@/lib/card-choice';
 
 /**
  * Persists the selected pedagogical pool for a stage.
@@ -15,24 +16,20 @@ import { StageRessenti, isRessentiNiveau } from '@/lib/stage-ressenti';
  * dérivent avec lui). Cette action sert donc aussi bien à la sélection qu'au
  * réordonnancement.
  */
-export async function updateStagePool(stageId: string, contentIds: string[]) {
+export async function updateStagePool(stageId: string, contentIds: string[], actionChoices: Record<string, string> = {}, choices: CardChoices = {}, append = false) {
     const ctx = await requireStageOwner(stageId);
-    if (!ctx) return { success: false, error: 'Stage inaccessible.' };
-    if (!Array.isArray(contentIds) || contentIds.length > 200 || !contentIds.every(id => typeof id === 'string')) return { success: false, error: 'Selection invalide.' };
-    const supabase = ctx.supabase;
-    const { error } = await supabase
-        .from('stages')
-        .update({ selected_content: contentIds })
-        .eq('id', stageId);
-
-    if (error) {
-        console.error('Error updating stage pool:', error);
-        return { success: false, error: error.message };
-    }
-
+    if (!ctx) return { success: false, error: 'Semaine inaccessible.' };
+    if (!Array.isArray(contentIds) || contentIds.length > 5 || !contentIds.every(id => typeof id === 'string' && id.length <= 200)) return { success: false, error: 'Sélection invalide.' };
+    const merged: Record<string, { accroche?: string; actionId?: string | null }> = { ...choices };
+    for (const [id, actionId] of Object.entries(actionChoices)) merged[id] = { ...merged[id], actionId };
+    const { error } = await ctx.supabase.rpc('set_week_cards', {
+        p_stage_id: stageId, p_content_ids: contentIds, p_choices: merged, p_append: append,
+    });
+    if (error) return { success: false, error: error.message };
     revalidatePath('/stages');
     revalidatePath(`/stages/${stageId}/program`);
     revalidatePath(`/stages/${stageId}/preparer`);
+    revalidatePath('/stages/semaines');
     return { success: true };
 }
 
@@ -63,7 +60,7 @@ export async function updateStageConditions(stageId: string, suggestedThematics:
     return { success: true };
 }
 
-export async function createStage(data: { title: string, activity: string, level: string, dates: string, nb_stagiaires?: number, suggested_thematics?: string[], intention?: ObjectifId | null, selectedContentIds?: string[] }) {
+export async function createStage(data: { title: string, activity: string, level: string, dates: string, nb_stagiaires?: number, suggested_thematics?: string[], intention?: ObjectifId | null, selectedContentIds?: string[], alreadyDiscussed?: boolean }) {
     const ctx = await requireAuth();
     if (!ctx) return { success: false, error: 'Vous devez être connecté pour créer une semaine.' };
 
@@ -72,27 +69,25 @@ export async function createStage(data: { title: string, activity: string, level
 
     const selectedContentIds = Array.from(new Set(data.selectedContentIds ?? [])).filter(id => typeof id === 'string').slice(0, 5);
 
-    const { data: created, error } = await ctx.supabase
-        .from('stages')
-        .insert([
-            {
+    const { data: createdId, error } = await ctx.supabase.rpc('create_week_with_choices', {
+        p_content_ids: selectedContentIds,
+        p_discussed: data.alreadyDiscussed ?? false,
+        p_data: {
                 title: data.title,
                 activity: data.activity,
                 level: data.level,
                 dates: data.dates,
                 nb_stagiaires: data.nb_stagiaires ?? null,
-                selected_content: selectedContentIds,
                 suggested_thematics: suggestedThematics,
-                owner_id: ctx.user.id
-            }
-        ])
-        .select('id')
-        .single();
+        },
+    });
 
     if (error) {
         console.error('[createStage]', error.message);
         return { success: false, error: error.message };
     }
+    if (!createdId) return { success: false, error: 'La semaine n’a pas pu être créée.' };
+    const created = { id: createdId };
 
     // Auto-assigner le défi fil rouge du moniteur si défini
     const { data: profile } = await ctx.supabase

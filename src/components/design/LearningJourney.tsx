@@ -23,15 +23,14 @@ export function LearningJourney({ progressions }: { progressions: Record<string,
             <p className="co-eyebrow">Parcours environnement</p>
             <p>Choisissez librement les sujets que vous souhaitez approfondir.</p>
         </header>
+        {/* Le mode d'emploi en 3 étapes (Approfondir / Trouver son angle / Essayer) est
+            retiré : utile une fois, à la découverte, il occupait ensuite la même place à
+            chaque visite sans rien apporter de plus. Le cadre, la boussole et le statut
+            réel restent — c'est l'identité de l'écran et sa seule info contextuelle. */}
         <section className="co-journey-hero">
             <div>
                 <span className="co-eyebrow">Votre progression</span>
                 <h2>Apprendre. Essayer.<br/>Faire vivre.</h2>
-                <div className="co-journey-steps" aria-label="Fonctionnement des parcours">
-                    <span><strong>01</strong>Approfondir un sujet</span>
-                    <span><strong>02</strong>Trouver son angle</span>
-                    <span><strong>03</strong>L’essayer sur le terrain</span>
-                </div>
                 <p className="co-journey-status">{valides || enCours ? `${enCours} en cours · ${valides} terminé${valides > 1 ? 's' : ''}` : 'Commencez par le sujet qui vous intéresse.'}</p>
             </div>
             <Image className="co-journey-compass" src="/illustrations/boussole-aquarelle.png" alt="" width={120} height={120}/>

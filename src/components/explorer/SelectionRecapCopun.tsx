@@ -10,6 +10,8 @@ type Props = {
     retenues: string[];
     onToggleFiche: (id: string) => void;
     onFicheInfo: (fiche: PedagogicalContent) => void;
+    actionChoices: Record<string, string>;
+    onChooseAction: (contentId: string, actionId: string) => void;
 };
 
 const TOUS_LES_THEMES = Object.values(THEMES_BY_PILLAR).flat();
@@ -25,7 +27,7 @@ const TOUS_LES_THEMES = Object.values(THEMES_BY_PILLAR).flat();
  * prisme COP ; l'organisation par phénomène ne redevient visible qu'en passant par
  * l'entonnoir « Par sujet de terrain ».
  */
-export default function SelectionRecapCopun({ pool, retenues, onToggleFiche, onFicheInfo }: Props) {
+export default function SelectionRecapCopun({ pool, retenues, onToggleFiche, onFicheInfo, actionChoices, onChooseAction }: Props) {
     const fiches = retenues
         .map(id => pool.find(f => f.id === id))
         .filter((f): f is PedagogicalContent => !!f);
@@ -38,7 +40,7 @@ export default function SelectionRecapCopun({ pool, retenues, onToggleFiche, onF
     if (groupes.length === 0) return null;
 
     return (
-        <div className="space-y-6">
+        <div className="co-selection-recap space-y-6">
             {groupes.map(({ pillar, fiches }) => (
                 <section key={pillar.id} className="space-y-2">
                     <div className="flex items-center gap-2 px-1 py-2">
@@ -57,13 +59,13 @@ export default function SelectionRecapCopun({ pool, retenues, onToggleFiche, onF
                             return (
                                 <div
                                     key={fiche.id}
-                                    className="relative flex items-start gap-2 rounded-xl overflow-hidden transition-colors shadow-sm bg-indigo-50"
+                                    className="co-program-choice-card relative grid grid-cols-[minmax(0,1fr)_auto] overflow-hidden transition-colors"
                                 >
                                     <span className={clsx('absolute left-0 top-0 bottom-0 w-1', pillar.bg)} />
 
                                     <button
                                         onClick={() => onFicheInfo(fiche)}
-                                        className="flex-1 min-w-0 text-left pl-4 py-3"
+                                        className="col-start-1 row-start-1 min-w-0 text-left pl-4 py-3"
                                     >
                                         {themesLabels.length > 0 && (
                                             <span className="block text-[9px] font-black uppercase tracking-widest text-slate-400 mb-0.5">
@@ -80,10 +82,24 @@ export default function SelectionRecapCopun({ pool, retenues, onToggleFiche, onF
                                         )}
                                     </button>
 
+                                    {!!fiche.actions?.length && <div className="co-program-actions col-span-2 row-start-2 w-full px-4 py-3">
+                                        <p className="mb-2 text-[10px] font-black uppercase tracking-widest text-slate-400">Action avec le groupe</p>
+                                        <div className="space-y-2">
+                                            {fiche.actions.map(action => {
+                                                const selected = (actionChoices[fiche.id] ?? fiche.actions?.[0]?.id) === action.id;
+                                                return <button key={action.id} type="button" aria-pressed={selected} onClick={() => onChooseAction(fiche.id, action.id)}
+                                                    className={clsx('co-program-action-option block w-full px-3 py-3 text-left transition', selected && 'is-selected')}>
+                                                    <strong className="block text-[12px]">{action.label}</strong>
+                                                    <span className="mt-1 block text-[11px] font-medium leading-relaxed">{action.consigne}</span>
+                                                </button>;
+                                            })}
+                                        </div>
+                                    </div>}
+
                                     <button
                                         onClick={() => onToggleFiche(fiche.id)}
                                         aria-label="Retirer"
-                                        className="size-8 my-2.5 mr-2.5 rounded-full flex items-center justify-center shrink-0 transition-all active:scale-90 bg-indigo-600 text-white"
+                                        className="co-program-remove col-start-2 row-start-1 size-8 my-2.5 mr-2.5 rounded-full flex items-center justify-center shrink-0 transition-all active:scale-90"
                                     >
                                         <span className="material-symbols-outlined text-[17px]">check</span>
                                     </button>

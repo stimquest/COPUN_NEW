@@ -723,16 +723,22 @@ export type Database = {
       }
       saved_pedagogical_cards: {
         Row: {
+          accroche_choisie: string | null
+          action_id: string | null
           content_id: string
           created_at: string
           user_id: string
         }
         Insert: {
+          accroche_choisie?: string | null
+          action_id?: string | null
           content_id: string
           created_at?: string
           user_id: string
         }
         Update: {
+          accroche_choisie?: string | null
+          action_id?: string | null
           content_id?: string
           created_at?: string
           user_id?: string
@@ -1648,6 +1654,28 @@ export type Database = {
       }
     }
     Functions: {
+      create_week_with_choices: {
+        Args: { p_content_ids: string[]; p_data: Json; p_discussed?: boolean }
+        Returns: string
+      }
+      use_week_card: {
+        Args: {
+          p_choice: Json
+          p_content_id: string
+          p_discussed?: boolean
+          p_stage_id: string
+        }
+        Returns: undefined
+      }
+      set_week_cards: {
+        Args: {
+          p_append?: boolean
+          p_choices?: Json
+          p_content_ids: string[]
+          p_stage_id: string
+        }
+        Returns: undefined
+      }
       admin_activite_journaliere: {
         Args: { p_depuis?: string }
         Returns: {

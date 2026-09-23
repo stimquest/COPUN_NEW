@@ -8,15 +8,20 @@ import { formulationsFiche } from '@/data/formulations-fiche';
 import { FORMES_ACCROCHE } from '@/data/formes-accroche';
 import styles from './AccrochesCarousel.module.css';
 
-export default function AccrochesCarousel({ fiche }: { fiche: PedagogicalContent }) {
+export default function AccrochesCarousel({ fiche, value, onChange }: { fiche: PedagogicalContent; value?: string; onChange?: (value: string) => void }) {
     const propositions = formulationsFiche(fiche);
     const [position, setPosition] = useState(0);
     const reduceMotion = useReducedMotion();
-    const active = position % propositions.length;
+    const selected = propositions.findIndex(proposition => proposition.texte === value);
+    const active = selected >= 0 ? selected : position % propositions.length;
     const canNavigate = propositions.length > 1;
     const current = propositions[active];
     const forme = 'forme' in current ? FORMES_ACCROCHE.find(item => item.id === current.forme)?.nom : undefined;
-    const move = (offset: number) => setPosition(previous => (previous + offset + propositions.length) % propositions.length);
+    const move = (offset: number) => {
+        const next = (active + offset + propositions.length) % propositions.length;
+        setPosition(next);
+        onChange?.(propositions[next].texte);
+    };
 
     return <section aria-label="Façons d’ouvrir le sujet">
         <div className={styles.heading}>

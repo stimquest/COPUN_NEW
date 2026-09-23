@@ -7,18 +7,24 @@ import FluxDecouverte from '@/components/explorer/FluxDecouverte';
 import { setCardSaved } from '@/actions/saved-card-actions';
 import { Dimension, PedagogicalContent } from '@/types';
 import { ThematicTag } from '@/data/seasonal-context';
+import type { CardChoice, CardChoices } from '@/lib/card-choice';
+import { resolveCardChoice } from '@/lib/card-choice';
 
 /**
  * L'espace Decouvrir n'est pas une semaine en attente de creation : il sert a
  * feuilleter librement la methode et les situations de transmission.
  */
-export default function DecouvrirClient({ pool, theme, group, pillar, entry, initialSavedIds = [], savedError, initialSavedView = false }: {
+export default function DecouvrirClient({ pool, theme, group, pillar, entry, initialSavedIds = [], savedError, initialSavedView = false, initialChoices = {} }: {
     pool: PedagogicalContent[]; theme?: ThematicTag; group?: string;
     pillar?: Dimension; entry?: string;
     initialSavedIds?: string[]; savedError?: string; initialSavedView?: boolean;
+    initialChoices?: CardChoices;
 }) {
     const router = useRouter();
     const [savedIds, setSavedIds] = useState(initialSavedIds);
+    const [choices, setChoices] = useState<CardChoices>(initialChoices);
+    const [savedChoices, setSavedChoices] = useState<CardChoices>(() => Object.fromEntries(pool.filter(card => initialSavedIds.includes(card.id)).map(card => [card.id, resolveCardChoice(card, initialChoices[card.id])])));
+    const changeChoice = (id: string, choice: CardChoice) => setChoices(current => ({ ...current, [id]: choice }));
     const [savedView, setSavedView] = useState(initialSavedView);
     // Le retrait d'un favori pendant sa lecture ne doit pas faire disparaître la carte.
     const [savedSnapshot, setSavedSnapshot] = useState<string[] | null>(initialSavedView ? initialSavedIds : null);
@@ -27,7 +33,7 @@ export default function DecouvrirClient({ pool, theme, group, pillar, entry, ini
     const [feedback, setFeedback] = useState('');
     const [saveError, setSaveError] = useState('');
     const savedPool = useMemo(() => pool.filter(card => savedSnapshot?.includes(card.id)), [pool, savedSnapshot]);
-    const toggleSaved = async (id: string) => {
+    const toggleSaved = async (id: string, choice?: CardChoice) => {
         if (pending.current) return;
         pending.current = true;
         const wanted = !savedIds.includes(id);
@@ -35,13 +41,29 @@ export default function DecouvrirClient({ pool, theme, group, pillar, entry, ini
         setFeedback('');
         setSaveError('');
         try {
-            const result = await setCardSaved(id, wanted);
+            const result = await setCardSaved(id, wanted, choice);
             if (!result.success) { setSaveError(result.error ?? 'Enregistrement impossible. Réessayez.'); return; }
             setSavedIds(current => wanted ? [...current, id] : current.filter(value => value !== id));
-            setFeedback(wanted ? 'Carte mise de côté. Vous pourrez la relire ou la retrouver dans la préparation.' : 'Carte retirée de vos cartes mises de côté.');
+            setSavedChoices(current => {
+                const next = { ...current };
+                if (wanted && choice) next[id] = choice; else delete next[id];
+                return next;
+            });
+            setFeedback(wanted ? 'Carte mise de côté. Vous pourrez la relire ou l’ajouter directement à une semaine.' : 'Carte retirée de vos cartes mises de côté.');
         } catch {
             setSaveError('La connexion a été interrompue. Réessayez pour enregistrer votre choix.');
         } finally { pending.current = false; setSavingId(null); }
+    };
+    const saveChoice = async (id: string, choice: CardChoice) => {
+        if (pending.current) { setSaveError('Un enregistrement est en cours. Réessayez dans un instant.'); return; }
+        pending.current = true; setSavingId(id); setSaveError('');
+        try {
+            const result = await setCardSaved(id, true, choice);
+            if (!result.success) { setSaveError(result.error ?? 'Enregistrement impossible.'); return; }
+            setSavedChoices(current => ({ ...current, [id]: choice }));
+            setFeedback('Vos nouveaux choix sont conservés.');
+        } catch { setSaveError('Connexion interrompue. Réessayez.'); }
+        finally { pending.current = false; setSavingId(null); }
     };
 
     return (
@@ -63,6 +85,8 @@ export default function DecouvrirClient({ pool, theme, group, pillar, entry, ini
             <main className="max-w-2xl mx-auto px-4">
                 <div hidden={savedView}><FluxDecouverte
                     pool={pool}
+                    initialChoices={initialChoices}
+                    choices={choices} savedChoices={savedChoices} onChoiceChange={changeChoice} onSaveChoice={saveChoice}
                     initialTheme={theme}
                     initialGroup={group}
                     initialPillar={pillar}
@@ -73,6 +97,8 @@ export default function DecouvrirClient({ pool, theme, group, pillar, entry, ini
                 {savedSnapshot !== null && <div hidden={!savedView}>
                     {savedPool.length ? <FluxDecouverte
                         pool={savedPool} mode="lecture"
+                        initialChoices={initialChoices}
+                        choices={choices} savedChoices={savedChoices} onChoiceChange={changeChoice} onSaveChoice={saveChoice}
                         savedIds={savedIds} onToggleSaved={toggleSaved} savingId={savingId} savedUnavailable={!!savedError}
                     /> : !savedError && <div className="rounded-3xl bg-white px-6 py-10 text-center">
                         <span className="material-symbols-outlined text-3xl text-indigo-400" aria-hidden>bookmark_add</span>

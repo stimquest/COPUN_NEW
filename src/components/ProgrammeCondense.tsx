@@ -269,12 +269,12 @@ export default function ProgrammeCondense({ stageId, contents, preparations, rea
 
                             {!estPret && (
                                 <Link
-                                    href={`/stages/${stageId}/preparer`}
+                                    href={`/stages/${stageId}/program`}
                                     className="inline-flex items-center gap-1.5 mt-4 text-[12.5px] font-bold hover:opacity-70 transition-opacity"
                                     style={{ color: teinte.vif }}
                                 >
                                     <span className="material-symbols-outlined text-[16px]">edit_note</span>
-                                    {prep?.accroche_choisie ? 'Compléter ce fil' : 'Préparer ce sujet'}
+                                    Choisir une action
                                 </Link>
                             )}
                         </div>

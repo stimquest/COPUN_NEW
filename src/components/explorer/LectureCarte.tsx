@@ -4,6 +4,9 @@ import { useState } from 'react';
 import Link from 'next/link';
 import type { PedagogicalContent } from '@/types';
 import AccrochesCarousel from './AccrochesCarousel';
+import { useCardChoices } from './CardChoicesContext';
+import { resolveCardChoice, type CardChoice } from '@/lib/card-choice';
+import UseCardWithGroup from './UseCardWithGroup';
 
 /**
  * Lecture d'une seule face : la carte se parcourt par le scroll vertical de la page,
@@ -22,19 +25,30 @@ import AccrochesCarousel from './AccrochesCarousel';
  * et l'idée reçue ferment la carte en retrait typographique : on les consulte quand on
  * les cherche, ils ne coupent pas le déroulé.
  */
-export default function LectureCarte({ fiche }: { fiche: PedagogicalContent }) {
-    const [actionIndex, setActionIndex] = useState(0);
+export default function LectureCarte({ fiche, value, onChange, allowUse = true }: { fiche: PedagogicalContent; value?: CardChoice; onChange?: (choice: CardChoice) => void; allowUse?: boolean }) {
+    const context = useCardChoices();
+    const [localChoice, setLocalChoice] = useState<CardChoice>(() => resolveCardChoice(fiche));
+    const [savingChoice, setSavingChoice] = useState(false);
+    const choice = resolveCardChoice(fiche, value ?? context?.choices[fiche.id] ?? localChoice);
+    const change = (next: CardChoice) => {
+        setLocalChoice(next);
+        context?.change(fiche.id, next);
+        onChange?.(next);
+    };
     const labelClass = 'text-[10px] font-extrabold uppercase tracking-[0.12em] text-[#56706a]';
     const bodyClass = 'whitespace-pre-line text-[15px] leading-[1.65] text-[#405653]';
     const actions = fiche.actions ?? [];
+    const actionIndex = Math.max(0, actions.findIndex(action => action.id === choice.actionId));
     const action = actions[actionIndex];
     const aDesReperes = !!(fiche.tip || fiche.objectif || fiche.erreur_frequente);
+    const saved = context?.savedChoices?.[fiche.id];
+    const changedSavedChoice = saved && (saved.accroche !== choice.accroche || saved.actionId !== choice.actionId);
 
     return (
         <div className="mt-5 space-y-7 text-[15px] leading-relaxed text-[#405653]" onPointerDown={event => {
             if ((event.target as HTMLElement).closest('button, a, summary')) event.stopPropagation();
         }}>
-            <AccrochesCarousel fiche={fiche} />
+            <AccrochesCarousel fiche={fiche} value={choice.accroche} onChange={accroche => change({ ...choice, accroche })} />
 
             {fiche.explication && <section className="border-t border-[#193d3b1a] pt-6"><p className={labelClass}>Pour l’expliquer simplement</p><p className={`mt-2 ${bodyClass}`}>{fiche.explication}</p></section>}
 
@@ -48,7 +62,7 @@ export default function LectureCarte({ fiche }: { fiche: PedagogicalContent }) {
                 <h4 className="mt-3 text-[17px] font-bold leading-snug text-[#173d3a]">{action.label}</h4>
                 <p className={`mt-2 ${bodyClass}`}>{action.consigne}</p>
                 {actions.length > 1 && <button type="button" className="mt-5 flex min-h-12 w-full items-center justify-between rounded-xl border border-[#193d3b38] bg-[#fffdf8] px-4 text-left text-[13px] font-bold text-[#173d3a] transition active:scale-[.98]"
-                    onClick={() => setActionIndex(index => (index + 1) % actions.length)}>
+                    onClick={() => change({ ...choice, actionId: actions[(actionIndex + 1) % actions.length].id })}>
                     Voir l’action suivante <span aria-hidden>→</span>
                 </button>}
             </section>}
@@ -57,6 +71,12 @@ export default function LectureCarte({ fiche }: { fiche: PedagogicalContent }) {
                 <h4 className={labelClass}>L’idée à faire passer</h4>
                 <p className="mt-2 text-[17px] font-semibold leading-[1.55] text-[#173d3a]">{fiche.a_retenir}</p>
             </section>}
+
+            {allowUse && context?.allowUse !== false && <UseCardWithGroup card={fiche} choice={choice}/>}
+            {changedSavedChoice && context?.saveChoice && <button type="button" disabled={savingChoice} className="co-choice-secondary" onClick={async () => {
+                setSavingChoice(true);
+                try { await context.saveChoice?.(fiche.id, choice); } finally { setSavingChoice(false); }
+            }}>{savingChoice ? 'Enregistrement…' : 'Mettre à jour mes choix mis de côté'}</button>}
 
             {/* Repères de fond : même contenu qu'avant, en retrait typographique pour ne pas
                 peser autant que le déroulé de la séquence. */}

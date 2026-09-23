@@ -10,6 +10,7 @@ import ProgrammeCondense from '@/components/ProgrammeCondense';
 import { getStageById, getStageCockpitStats, getPedagogicalPool } from '@/services/data-service';
 import { getStageExploits } from '@/actions/defi-actions';
 import { getStageQuiz } from '@/actions/quiz-actions';
+import { getResumeVote } from '@/actions/vote-actions';
 import { getStagePreparations } from '@/actions/preparation-actions';
 import { getObservationsForStage } from '@/actions/observation-actions';
 import { RESSENTI_OPTIONS, isRessentiNiveau } from '@/lib/stage-ressenti';
@@ -20,12 +21,13 @@ export default async function StageBilanPage({ params }: { params: Promise<{ id:
     noStore();
     const { id } = await params;
 
-    const [stage, stats, copunPool, defisAssigned, quizData, observations, preparations] = await Promise.all([
+    const [stage, stats, copunPool, defisAssigned, quizData, vote, observations, preparations] = await Promise.all([
         getStageById(id),
         getStageCockpitStats(id),
         getPedagogicalPool(),
         getStageExploits(id),
         getStageQuiz(id),
+        getResumeVote(id),
         getObservationsForStage(id),
         getStagePreparations(id),
     ]);
@@ -40,8 +42,8 @@ export default async function StageBilanPage({ params }: { params: Promise<{ id:
     const isClosed = !!stage.closed_at;
 
     const totalPts = stats?.stageTotalPoints ?? 0;
-    const quizScore = stats?.quizScore ?? 0;
-    const quizTotal = stats?.quizTotal ?? 0;
+    const quizScore = vote.done ? vote.score : stats?.quizScore ?? 0;
+    const quizTotal = vote.done ? vote.total : stats?.quizTotal ?? 0;
     const defisDone = stats?.defisDone ?? 0;
     const defisTotal = stats?.defisTotal ?? 0;
 
@@ -49,11 +51,13 @@ export default async function StageBilanPage({ params }: { params: Promise<{ id:
         ? new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long' }).format(new Date(stage.closed_at))
         : null;
 
-    const quizReviewData = quizData ? {
-        done: !!quizData.completed_at,
-        score: quizData.score_correct,
-        total: quizData.score_total,
-    } : null;
+    const quizReviewData = vote.done
+        ? { done: true, score: vote.score, total: vote.total }
+        : quizData ? {
+            done: !!quizData.completed_at,
+            score: quizData.score_correct,
+            total: quizData.score_total,
+        } : null;
 
     // Le bilan est accessible toute la semaine (bouton permanent sur l'accueil), mais
     // avant le dernier jour le programme n'est pas encore complet — on prévient plutôt

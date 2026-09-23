@@ -4,10 +4,18 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { requireAuth, requireStageOwner } from '@/lib/auth';
 import { PARCOURS_FORMATION } from '@/data/parcours-formation';
+import { updateStagePool } from './stage-actions';
 
 const sequenceSchema = z.enum(PARCOURS_FORMATION.map(sequence => sequence.id) as [string, ...string[]]);
 const answersSchema = z.object({ sequenceId: sequenceSchema, answers: z.record(z.string(), z.string()) });
-const practiceSchema = z.object({ sequenceId: sequenceSchema, stageId: z.string().uuid(), actionId: z.string().min(1).max(80), cardIds: z.array(z.string().uuid()).min(1).max(3) });
+const practiceSchema = z.object({
+    sequenceId: sequenceSchema,
+    stageId: z.string().uuid(),
+    actionId: z.string().min(1).max(80),
+    cardIds: z.array(z.string().min(1).max(200)).min(1).max(3).refine(ids => new Set(ids).size === ids.length),
+    actionChoices: z.record(z.string(), z.string()).optional(),
+    choices: z.record(z.string(), z.object({ accroche: z.string().min(1).max(10000), actionId: z.string().nullable() })).optional(),
+});
 
 export type SequenceProgress = { parcouru: boolean; acquisVerifie: boolean; mission: { stageId: string; actionId: string; cardIds: string[]; completed: boolean } | null };
 
@@ -23,7 +31,17 @@ export async function getSequenceProgress(sequenceId: string): Promise<SequenceP
     return progressions[sequenceId] ?? progressionVide();
 }
 
-/** Charge tous les parcours demandés en deux requêtes, quel que soit leur nombre. */
+/**
+ * Charge tous les parcours demandés en trois requêtes, quel que soit leur nombre.
+ *
+ * Une mission est « terminée » quand au moins une de ses cartes est marquée abordée
+ * (`done` ou `partial`) dans le suivi réel de la semaine (`stage_objective_reviews`) —
+ * pas quand le moniteur revient cliquer un bouton dédié dans l'écran du parcours. Ce
+ * bouton (« Je l'ai fait avec mon groupe ») demandait un aller-retour que personne ne
+ * faisait : le parcours restait ouvert indéfiniment alors que la sortie avait bien eu
+ * lieu et était déjà cochée « Abordé » sur l'écran « Mes semaines ». Un seul geste de
+ * validation compte désormais, fait au bon endroit — sur la carte, dans sa semaine.
+ */
 export async function getSequencesProgress(sequenceIds: readonly string[]): Promise<Record<string, SequenceProgress>> {
     const ids = Array.from(new Set(sequenceIds.filter(id => sequenceSchema.safeParse(id).success)));
     const resultat = Object.fromEntries(ids.map(id => [id, progressionVide()])) as Record<string, SequenceProgress>;
@@ -45,10 +63,21 @@ export async function getSequencesProgress(sequenceIds: readonly string[]): Prom
             acquisVerifie: !!progression.acquis_verifie_le,
         };
     }
+
+    const stageIds = Array.from(new Set((missions ?? []).map(mission => mission.stage_id)));
+    const { data: reviews } = stageIds.length
+        ? await ctx.supabase.from('stage_objective_reviews')
+            .select('stage_id, pedagogical_content_id, execution_status')
+            .in('stage_id', stageIds)
+            .in('execution_status', ['done', 'partial'])
+        : { data: [] };
+    const abordees = new Set((reviews ?? []).map(review => `${review.stage_id}:${review.pedagogical_content_id}`));
+
     for (const mission of missions ?? []) {
+        const completed = !!mission.completed_at || mission.card_ids.some(cardId => abordees.has(`${mission.stage_id}:${cardId}`));
         resultat[mission.sequence_id] = {
             ...resultat[mission.sequence_id],
-            mission: { stageId: mission.stage_id, actionId: mission.action_id, cardIds: mission.card_ids, completed: !!mission.completed_at },
+            mission: { stageId: mission.stage_id, actionId: mission.action_id, cardIds: mission.card_ids, completed },
         };
     }
     return resultat;
@@ -94,16 +123,8 @@ export async function ajouterMissionPratique(input: unknown) {
     if (parsed.data.actionId !== 'carte-question' && !sequence?.actionsTerrain.some(action => action.id === parsed.data.actionId)) return { error: 'Action inconnue.' };
     const ctx = await requireStageOwner(parsed.data.stageId);
     if (!ctx) return { error: 'Semaine inaccessible.' };
-    const [{ data: cards }, { data: stage }] = await Promise.all([
-        ctx.supabase.from('pedagogical_content').select('id').in('id', parsed.data.cardIds),
-        ctx.supabase.from('stages').select('selected_content, closed_at').eq('id', parsed.data.stageId).maybeSingle(),
-    ]);
-    if (!stage || stage.closed_at) return { error: 'Choisissez une semaine encore en cours.' };
-    if ((cards ?? []).length !== parsed.data.cardIds.length) return { error: 'Une carte-question choisie est introuvable.' };
-    const selected = Array.from(new Set([...(stage.selected_content ?? []), ...parsed.data.cardIds]));
-    if (selected.length > 5) return { error: 'Cette semaine contient déjà trop de cartes. Retirez-en une avant d’ajouter cette mission.' };
-    const { error: stageError } = await ctx.supabase.from('stages').update({ selected_content: selected }).eq('id', parsed.data.stageId);
-    if (stageError) return { error: stageError.message };
+    const selection = await updateStagePool(parsed.data.stageId, parsed.data.cardIds, parsed.data.actionChoices, parsed.data.choices, true);
+    if (!selection.success) return { error: selection.error };
     const { error } = await ctx.supabase.from('formation_practice_missions').upsert({
         user_id: ctx.user.id, sequence_id: parsed.data.sequenceId, stage_id: parsed.data.stageId, action_id: parsed.data.actionId, card_ids: parsed.data.cardIds, completed_at: null,
     }, { onConflict: 'user_id,sequence_id' });
@@ -113,6 +134,14 @@ export async function ajouterMissionPratique(input: unknown) {
     return { success: true };
 }
 
+/**
+ * @deprecated Plus aucun écran n'appelle cette action : la validation d'une mission se
+ * fait désormais en marquant la carte « Abordé » dans le suivi de la semaine
+ * (`saveObjectiveStatus`), lu par `getSequencesProgress`. Le bouton dédié qui appelait
+ * cette fonction demandait un aller-retour que personne ne faisait, laissant les
+ * parcours ouverts indéfiniment. Conservée pour compatibilité avec d'éventuelles
+ * missions déjà marquées `completed_at` par ce chemin.
+ */
 export async function validerMissionPratique(sequenceId: string) {
     if (!sequenceSchema.safeParse(sequenceId).success) return { error: 'Parcours inconnu.' };
     const ctx = await requireAuth();

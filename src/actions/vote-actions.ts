@@ -81,6 +81,52 @@ export async function enregistrerVote(stageId: string, resultats: ResultatAffirm
 
 export type ActionConfirmee = { contentId: string; actionId: string; votesVrai: number; votesFaux: number; votesIncertain: number };
 
+export type ResumeVote = {
+    done: boolean;
+    score: number;
+    total: number;
+    actionsConfirmees: number;
+    actionsTotal: number;
+};
+
+/** Résumé persistant utilisé par « Mes semaines » et le bilan de clôture. */
+export async function getResumeVote(stageId: string): Promise<ResumeVote> {
+    const ctx = await requireStageOwner(stageId);
+    if (!ctx) return { done: false, score: 0, total: 0, actionsConfirmees: 0, actionsTotal: 0 };
+
+    const { data, error } = await ctx.supabase
+        .from('stage_vote_results')
+        .select('action_id, attendu, votes_vrai, votes_faux, votes_incertain, origine')
+        .eq('stage_id', stageId);
+
+    if (error) {
+        console.error('[getResumeVote]', error.message);
+        return { done: false, score: 0, total: 0, actionsConfirmees: 0, actionsTotal: 0 };
+    }
+
+    const lignes = data ?? [];
+    const savoirs = lignes.filter(ligne => ligne.action_id == null && ligne.attendu != null);
+    const actions = lignes.filter(ligne => ligne.action_id != null);
+    const score = savoirs.filter(ligne => {
+        const vraiMajoritaire = ligne.votes_vrai > ligne.votes_faux && ligne.votes_vrai > ligne.votes_incertain;
+        const fauxMajoritaire = ligne.votes_faux > ligne.votes_vrai && ligne.votes_faux > ligne.votes_incertain;
+        return ligne.attendu ? vraiMajoritaire : fauxMajoritaire;
+    }).length;
+    const actionsConfirmees = actions.filter(ligne => {
+        if (ligne.origine !== 'camera') return false;
+        const total = ligne.votes_vrai + ligne.votes_faux + ligne.votes_incertain;
+        return total > 0 && ligne.votes_vrai * 2 > total;
+    }).length;
+
+    return {
+        done: lignes.length > 0,
+        score,
+        total: savoirs.length,
+        actionsConfirmees,
+        actionsTotal: actions.length,
+    };
+}
+
 /**
  * Les actions que le groupe a confirmées pour cette semaine.
  *

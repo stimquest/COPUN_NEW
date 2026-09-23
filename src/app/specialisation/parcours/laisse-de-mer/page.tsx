@@ -6,5 +6,5 @@ import { getSavedCards } from '@/actions/saved-card-actions';
 
 export default async function ParcoursLaisseDeMerPage() {
     const [progression, cards, stages, saved] = await Promise.all([getSequenceProgress(PARCOURS_LAISSE_DE_MER.id), getPedagogicalPool(), getStages(), getSavedCards()]);
-    return <main className="co-lesson-page"><ParcoursLaisseDeMerClient sequence={PARCOURS_LAISSE_DE_MER} progression={progression} cards={cards} stages={stages} savedIds={saved.ids} /></main>;
+    return <main className="co-lesson-page"><ParcoursLaisseDeMerClient sequence={PARCOURS_LAISSE_DE_MER} progression={progression} cards={cards} stages={stages} savedIds={saved.ids} initialChoices={saved.choices} /></main>;
 }

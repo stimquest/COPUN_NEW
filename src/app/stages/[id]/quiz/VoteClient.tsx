@@ -31,17 +31,18 @@ import type { LectureCartons } from '@/lib/detection-cartons';
 /** Ce que le groupe a répondu, tel que le moniteur l'a jugé en regardant les panneaux. */
 type Reponse = 'oui' | 'non' | 'partage';
 
-export default function VoteClient({ stageId, affirmations, dejaFait }: {
+export default function VoteClient({ stageId, affirmations, resultatsInitiaux }: {
     stageId: string;
     affirmations: AffirmationVote[];
-    dejaFait: boolean;
+    resultatsInitiaux: ResultatAffirmation[];
 }) {
     const [index, setIndex] = useState(0);
     const [reponses, setReponses] = useState<Record<string, Reponse>>({});
     /** Décompte réel quand la caméra a lu les cartons ; absent en saisie manuelle. */
     const [decomptes, setDecomptes] = useState<Record<string, LectureCartons['decompte']>>({});
     const [camera, setCamera] = useState(false);
-    const [termine, setTermine] = useState(false);
+    const [resultatsEnregistres, setResultatsEnregistres] = useState(resultatsInitiaux);
+    const [termine, setTermine] = useState(resultatsInitiaux.length > 0);
     const [error, setError] = useState('');
     const [isPending, startTransition] = useTransition();
 
@@ -99,6 +100,7 @@ export default function VoteClient({ stageId, affirmations, dejaFait }: {
             if (!resultats.length) { setError('Répondez à au moins une affirmation.'); return; }
             const res = await enregistrerVote(stageId, resultats);
             if (!res.success) { setError(res.error ?? 'Enregistrement impossible.'); return; }
+            setResultatsEnregistres(resultats);
             setTermine(true);
         });
     };
@@ -117,13 +119,25 @@ export default function VoteClient({ stageId, affirmations, dejaFait }: {
         // retenu regarde le moniteur, ce qu'il a confirmé alimente sa démarche et le club.
         // Les fondre en un seul chiffre reviendrait à noter le moniteur sur le travail de
         // ses stagiaires, ou à valider des actions avec un score de connaissances.
+        const parAffirmation = new Map(resultatsEnregistres.map(resultat => [resultat.affirmationId, resultat]));
+        const verdict = (resultat: ResultatAffirmation | undefined): Reponse | null => {
+            if (!resultat) return null;
+            if (resultat.votesVrai > resultat.votesFaux && resultat.votesVrai > resultat.votesIncertain) return 'oui';
+            if (resultat.votesFaux > resultat.votesVrai && resultat.votesFaux > resultat.votesIncertain) return 'non';
+            return 'partage';
+        };
         const savoirs = affirmations.filter(a => a.type === 'savoir');
-        const justes = savoirs.filter(a => a.type === 'savoir' && reponses[a.id] === (a.reponse ? 'oui' : 'non')).length;
+        const justes = savoirs.filter(a => verdict(parAffirmation.get(a.id)) === (a.reponse ? 'oui' : 'non')).length;
         const actions = affirmations.filter(a => a.type === 'action');
         // Seules les actions lues par la caméra valent validation : une réponse saisie par
         // le moniteur ne peut pas le valider auprès de son propre club.
-        const confirmees = actions.filter(a => reponses[a.id] === 'oui' && decomptes[a.id]).length;
-        const saisiesMain = affirmations.filter(a => reponses[a.id] && !decomptes[a.id]).length;
+        const confirmees = actions.filter(a => {
+            const resultat = parAffirmation.get(a.id);
+            if (!resultat || resultat.origine !== 'camera') return false;
+            const total = resultat.votesVrai + resultat.votesFaux + resultat.votesIncertain;
+            return total > 0 && resultat.votesVrai * 2 > total;
+        }).length;
+        const saisiesMain = resultatsEnregistres.filter(resultat => resultat.origine === 'manuel').length;
         return <main className="co-vote">
             <p className="co-vote-kicker">Vote terminé</p>
             <h1>Ce que votre groupe a répondu</h1>
@@ -158,8 +172,6 @@ export default function VoteClient({ stageId, affirmations, dejaFait }: {
 
     return <main className="co-vote">
         <div className="co-vote-progress" aria-hidden="true"><span style={{ width: `${((index + 1) / affirmations.length) * 100}%` }}/></div>
-
-        {dejaFait && index === 0 && <p className="co-vote-note">Un vote a déjà été enregistré pour cette semaine. Le refaire remplacera les réponses précédentes.</p>}
 
         {/* L'affirmation dans une carte qui occupe la hauteur disponible : c'est la seule
             chose que le moniteur doit trouver du regard en parlant à un groupe. Posée à plat

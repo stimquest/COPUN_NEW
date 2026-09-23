@@ -47,12 +47,10 @@ export function HomeLearning({ firstName, resume, progressions, semaineEnCours }
                 <strong>Explorer les cartes-questions</strong>
                 <span className="co-mini-action">Explorer <ArrowRight size={17}/></span>
             </Link>
-            {/* « Préparer » ne vaut que tant qu'aucune semaine n'est commencée : pendant, il
-                ne prépare plus, il mène. Le libellé suit donc l'état plutôt que de rester fixe. */}
             <Link href="/stages/semaines" className="co-home-mini-card co-home-mini-week">
                 <span className="co-eyebrow">Sur le terrain</span>
-                <strong>{semaineEnCours ? 'Ma semaine en cours' : 'Préparer une semaine'}</strong>
-                <span className="co-mini-action">{semaineEnCours ? 'Reprendre' : 'Organiser'} <ArrowRight size={17}/></span>
+                <strong>{semaineEnCours ? 'Ma semaine en cours' : 'Mes semaines'}</strong>
+                <span className="co-mini-action">{semaineEnCours ? 'Reprendre' : 'Voir et organiser'} <ArrowRight size={17}/></span>
             </Link>
         </div>
     </div>;

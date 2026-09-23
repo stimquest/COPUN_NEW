@@ -10,6 +10,8 @@ import { NIVEAUX } from '@/data/niveaux';
 import { HistoriqueMoniteur } from '@/lib/historique-moniteur';
 import LectureCarte from './LectureCarte';
 import { ENTREES_DECOUVERTE, cartesDuTheme } from '@/data/decouverte-accueil';
+import { CardChoicesProvider, useCardChoices } from './CardChoicesContext';
+import { resolveCardChoice, type CardChoice, type CardChoices } from '@/lib/card-choice';
 
 /**
  * Le second chemin de l'écran : consommer le catalogue comme un flux, pas comme une
@@ -46,7 +48,13 @@ type Props = {
     initialPillar?: Dimension;
     initialEntry?: string;
     savedIds?: string[];
-    onToggleSaved?: (id: string) => void;
+    onToggleSaved?: (id: string, choice?: CardChoice) => void;
+    initialChoices?: CardChoices;
+    choices?: CardChoices;
+    savedChoices?: CardChoices;
+    onSaveChoice?: (id: string, choice: CardChoice) => Promise<void>;
+    allowUse?: boolean;
+    onChoiceChange?: (id: string, choice: CardChoice) => void;
     savingId?: string | null;
     savedUnavailable?: boolean;
 };
@@ -124,7 +132,12 @@ const THEME_TONES: Record<Dimension, { active: string }> = {
     },
 };
 
-export default function FluxDecouverte({ pool, mode = 'selection', retenues = [], onToggleFiche, onFicheInfo, historique, initialTheme, initialGroup, initialPillar, initialEntry, savedIds = [], onToggleSaved, savingId, savedUnavailable }: Props) {
+export default function FluxDecouverte(props: Props) {
+    return <CardChoicesProvider initialChoices={props.initialChoices} value={props.choices} savedChoices={props.savedChoices} saveChoice={props.onSaveChoice} onChange={props.onChoiceChange} allowUse={props.allowUse}><FluxContent {...props}/></CardChoicesProvider>;
+}
+
+function FluxContent({ pool, mode = 'selection', retenues = [], onToggleFiche, onFicheInfo, historique, initialTheme, initialGroup, initialPillar, initialEntry, savedIds = [], onToggleSaved, savingId, savedUnavailable }: Props) {
+    const choicesContext = useCardChoices();
     const [entry, setEntry] = useState(() => ENTREES_DECOUVERTE.find(rail => rail.dimension === initialPillar)?.themes.find(theme => theme.id === initialEntry));
     const [group, setGroup] = useState(() => GROUPES.find(item => item.id === initialGroup));
     const [filtresOuverts, setFiltresOuverts] = useState(false);
@@ -269,7 +282,10 @@ export default function FluxDecouverte({ pool, mode = 'selection', retenues = []
                     nbFiltres={nbFiltres}
                     mode={mode}
                     savedIds={savedIds}
-                    onToggleSaved={onToggleSaved}
+                    onToggleSaved={id => {
+                        const card = pool.find(item => item.id === id);
+                        onToggleSaved?.(id, card ? resolveCardChoice(card, choicesContext?.choices[id]) : undefined);
+                    }}
                     savingId={savingId}
                     savedUnavailable={savedUnavailable}
                     retenues={retenues}
@@ -303,8 +319,11 @@ function CatalogueDecouverte({ fiches, retenues, onToggleFiche, onFicheInfo }: {
 
     return (
         <section className="space-y-2.5 pt-1">
-            <div className="flex items-baseline justify-between px-1">
-                <p className="text-[13px] font-black text-slate-900">Choisir des questions</p>
+            {/* Pas de titre ici : le mode « catalogue » n'a qu'un seul appelant
+                (ExplorerClient), qui affiche déjà « Choisir les sujets » juste au-dessus —
+                le répéter ne faisait qu'empiler un troisième niveau de titre avant la
+                première carte. Seul le compte reste, utile en lui-même. */}
+            <div className="flex items-baseline justify-end px-1">
                 <p className="text-[11px] font-bold tabular-nums text-slate-400">{fiches.length} idées</p>
             </div>
             <div className="space-y-2">

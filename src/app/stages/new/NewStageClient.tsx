@@ -67,6 +67,7 @@ type Props = {
     initialTheme?: string;
     initialGroup?: string;
     initialParcours?: string;
+    alreadyDiscussed?: boolean;
 };
 
 /**
@@ -105,7 +106,7 @@ type Props = {
  * connaît vraiment plutôt qu'estimé avant même que le groupe soit constitué — utile plus
  * tard pour mesurer combien de personnes ont été sensibilisées.
  */
-export function NewStageClient({ existingStage, initialSelection = [], initialTheme, initialGroup, initialParcours }: Props) {
+export function NewStageClient({ existingStage, initialSelection = [], initialTheme, initialGroup, initialParcours, alreadyDiscussed = false }: Props) {
     const router = useRouter();
     const isEditing = !!existingStage;
     const [isSaving, setIsSaving] = useState(false);
@@ -162,6 +163,7 @@ export function NewStageClient({ existingStage, initialSelection = [], initialTh
             nb_stagiaires: existingStage?.nb_stagiaires ?? undefined,
             suggested_thematics: isEditing ? existingStage!.suggested_thematics : [],
             selectedContentIds: isEditing ? existingStage!.selected_content : initialSelection,
+            alreadyDiscussed,
         };
 
         try {

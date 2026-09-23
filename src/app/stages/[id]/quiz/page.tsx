@@ -52,11 +52,13 @@ export default async function StageQuizPage({ params }: { params: Promise<{ id: 
         ...memeNiveau.filter(carte => !groupes.has(groupeDe(carte.id)?.id) && milieux.has(groupeDe(carte.id)?.milieu)),
     ];
     const supabase = await createClient();
-    const [{ data: preparations }, { count }] = await Promise.all([
+    const [{ data: preparations }, { data: resultatsEnregistres }] = await Promise.all([
         // L'action que le moniteur a retenue pour chaque carte : c'est elle qu'on fait
         // confirmer, pas une variante qu'il n'a jamais proposée au groupe.
         supabase.from('stage_preparations').select('pedagogical_content_id, actions').eq('stage_id', id),
-        supabase.from('stage_vote_results').select('id', { count: 'exact', head: true }).eq('stage_id', id),
+        supabase.from('stage_vote_results')
+            .select('affirmation_id, content_id, action_id, attendu, votes_vrai, votes_faux, votes_incertain, participants, origine')
+            .eq('stage_id', id),
     ]);
     const choix = Object.fromEntries(
         (preparations ?? []).map(ligne => [ligne.pedagogical_content_id, ligne.actions?.[0]]),
@@ -74,7 +76,17 @@ export default async function StageQuizPage({ params }: { params: Promise<{ id: 
                 </div>
             </header>
 
-            <VoteClient stageId={id} affirmations={affirmations} dejaFait={(count ?? 0) > 0}/>
+            <VoteClient stageId={id} affirmations={affirmations} resultatsInitiaux={(resultatsEnregistres ?? []).map(resultat => ({
+                affirmationId: resultat.affirmation_id,
+                contentId: resultat.content_id,
+                actionId: resultat.action_id,
+                attendu: resultat.attendu,
+                votesVrai: resultat.votes_vrai,
+                votesFaux: resultat.votes_faux,
+                votesIncertain: resultat.votes_incertain,
+                participants: resultat.participants,
+                origine: resultat.origine === 'camera' ? 'camera' : 'manuel',
+            }))}/>
         </div>
     );
 }

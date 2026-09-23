@@ -2,8 +2,8 @@ import { notFound } from 'next/navigation';
 import { getStageById, getPedagogicalPool } from '@/services/data-service';
 import { NewStageClient } from './NewStageClient';
 
-export default async function NewStagePage({ searchParams }: { searchParams: Promise<{ edit?: string; selection?: string; theme?: string; group?: string; parcours?: string }> }) {
-    const { edit, selection, theme, group, parcours } = await searchParams;
+export default async function NewStagePage({ searchParams }: { searchParams: Promise<{ edit?: string; selection?: string; theme?: string; group?: string; parcours?: string; aborde?: string }> }) {
+    const { edit, selection, theme, group, parcours, aborde } = await searchParams;
 
     if (edit) {
         const stage = await getStageById(edit);
@@ -14,5 +14,5 @@ export default async function NewStagePage({ searchParams }: { searchParams: Pro
     const pool = selection ? await getPedagogicalPool() : [];
     const validIds = new Set(pool.map(card => card.id));
     const initialSelection = Array.from(new Set((selection ?? '').split(',').filter(id => validIds.has(id)))).slice(0, 5);
-    return <NewStageClient initialSelection={initialSelection} initialTheme={theme} initialGroup={group} initialParcours={parcours} />;
+    return <NewStageClient initialSelection={initialSelection} initialTheme={theme} initialGroup={group} initialParcours={parcours} alreadyDiscussed={aborde === '1'} />;
 }

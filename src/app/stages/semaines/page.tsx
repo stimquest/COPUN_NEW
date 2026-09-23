@@ -6,6 +6,9 @@ import { DeleteStageButton } from '@/components/DeleteStageButton';
 import { parseStageDateRange, pickCurrentStage } from '@/lib/stage-dates';
 import type { PedagogicalContent, Stage } from '@/types';
 import { WeekObjectiveTracker } from './WeekObjectiveTracker';
+import { getResumeVote } from '@/actions/vote-actions';
+import { getStagePreparations, type StagePreparation } from '@/actions/preparation-actions';
+import { formulationsFiche } from '@/data/formulations-fiche';
 
 type WeekWithCards = Stage & { cards: PedagogicalContent[] };
 
@@ -45,7 +48,9 @@ export default async function SemainesPage() {
     });
     const future = remaining.filter(week => !late.some(item => item.id === week.id));
     const archived = weeks.filter(week => Boolean(week.closed_at));
-    const activeObjectives = active ? await getStageObjectiveReviewItems(active.id) : [];
+    const [activeObjectives, vote, preparations] = active
+        ? await Promise.all([getStageObjectiveReviewItems(active.id), getResumeVote(active.id), getStagePreparations(active.id)])
+        : [[], null, {} as Record<string, StagePreparation>];
     // Ce que le moniteur déclare avoir abordé — pas ce que le groupe a confirmé, qui ne se
     // mesure qu'au quiz de fin et par la caméra. 'partial' vient de l'ancien suivi à trois
     // états : il compte comme abordé.
@@ -58,7 +63,6 @@ export default async function SemainesPage() {
                 <h1>Mes semaines</h1>
                 <p>Les cartes choisies pendant vos parcours deviennent ici des actions à faire vivre avec votre groupe.</p>
             </div>
-            <Link href="/stages/new" className="co-weeks-new"><Plus size={17}/> Nouvelle semaine</Link>
         </header>
 
         {active ? <section className="co-current-week">
@@ -73,7 +77,9 @@ export default async function SemainesPage() {
                 id: item.pedagogicalContent.id,
                 question: item.pedagogicalContent.question,
                 objectif: item.pedagogicalContent.objectif,
-                action: item.pedagogicalContent.actions?.[0]?.consigne ?? item.pedagogicalContent.a_observer ?? null,
+                accroche: preparations[item.pedagogicalContent.id]?.accroche_choisie || formulationsFiche(item.pedagogicalContent)[0].texte,
+                action: item.pedagogicalContent.actions?.filter(action => preparations[item.pedagogicalContent.id]?.actions?.includes(action.id)).map(action => action.consigne).join('\n\n') || item.pedagogicalContent.a_observer || null,
+                retenir: preparations[item.pedagogicalContent.id]?.chute || item.pedagogicalContent.a_retenir,
                 initialStatus: item.review?.executionStatus ?? 'not_done',
             }))} extra={active.cards.length > 0 ? {
                 href: `/stages/${active.id}/quiz/animation`,
@@ -81,11 +87,14 @@ export default async function SemainesPage() {
                 detail: 'Des questions prêtes à poser : attente avant d’embarquer, averse, retour en minibus.',
             } : undefined}/> : <div className="co-current-week-empty"><p>Cette semaine ne contient pas encore de carte-question.</p><Link href={`/stages/${active.id}/program`}>Choisir des cartes <ArrowRight size={16}/></Link></div>}
 
-            {/* Le quiz de fin passe en premier : c'est l'aboutissement de la semaine, et la
-                seule action qui fasse valider quelque chose par le groupe. Revoir les objectifs
-                est un ajustement de préparation, qui a sa place après. */}
+            {/* Le quiz de fin (ou le bilan une fois voté) passe en premier : c'est
+                l'aboutissement de la semaine, et la seule action qui fasse valider quelque
+                chose par le groupe. Les deux ajustements de préparation suivent. */}
             <footer>
-                {active.cards.length > 0 && <Link href={`/stages/${active.id}/quiz`} className="co-week-primary">Le quiz de fin <ArrowRight size={17}/></Link>}
+                {vote?.done
+                    ? <Link href={`/stages/${active.id}/bilan`} className="co-week-primary">Faire le bilan <ArrowRight size={17}/></Link>
+                    : active.cards.length > 0 && <Link href={`/stages/${active.id}/quiz`} className="co-week-primary">Le quiz de fin <ArrowRight size={17}/></Link>}
+                {!vote?.done && <Link href={`/stages/${active.id}/program?aborde=1`} className="co-week-secondary">＋ Ajouter un sujet abordé</Link>}
                 <Link href={`/stages/${active.id}/program`} className="co-week-secondary">Voir et modifier les objectifs</Link>
             </footer>
         </section> : <section className="co-no-current-week">
@@ -104,6 +113,11 @@ export default async function SemainesPage() {
             <div className="co-weeks-section-title"><div><p className="co-eyebrow">À venir</p><h2>Prochaines mises en pratique</h2></div><span>{future.length}</span></div>
             <div className="co-week-list">{future.map(week => <WeekRow key={week.id} week={week} state="future"/>)}</div>
         </section>}
+
+        {/* Le planning de la semaine en cours prime : ce bouton n'intervient qu'une fois
+            qu'on sait où on en est, jamais avant. Il précède l'historique plutôt que de le
+            suivre — créer une semaine reste une action à prendre, pas une archive à consulter. */}
+        <Link href="/stages/new" className="co-weeks-new co-weeks-new-inline"><Plus size={17}/> Nouvelle semaine</Link>
 
         {archived.length > 0 && <section className="co-weeks-section co-weeks-archives">
             <div className="co-weeks-section-title"><div><p className="co-eyebrow">Historique</p><h2>Semaines terminées</h2></div><span>{archived.length}</span></div>
