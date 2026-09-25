@@ -10,7 +10,7 @@ import {
     type ModulePlanifie, type SectionFormation,
 } from '@/data/formation-methode';
 import { marquerLeconTerminee } from '@/actions/formation-actions';
-import { Motif, type NomMotif } from './Motifs';
+import { Motif, sceneDePlanche, type NomMotif } from './Motifs';
 import { TEINTE_THEME } from '@/data/formation-teintes';
 import { CoastalMark } from '@/components/design/Coastal';
 
@@ -106,7 +106,12 @@ function Bandeau({ illustration, motif }: {
     motif: NomMotif;
 }) {
     const [photoAbsente, setPhotoAbsente] = useState(false);
+    // Les illustrations propres à une carte viennent d'abord de la planche aquarelle ; un
+    // fichier isolé ne sert plus que si la planche ne le couvre pas.
+    const scene = illustration ? sceneDePlanche(illustration.fichier) : null;
     const photo = illustration && !photoAbsente;
+
+    if (scene) return <div className="-mx-6 -mt-7 mb-3.5 h-[22vh] max-h-40 min-h-24 shrink-0 overflow-hidden" role="img" aria-label={illustration?.alt}>{scene}</div>;
 
     return (
         // Marges négatives : le bandeau touche les bords de la carte, comme dans Primer,
@@ -357,7 +362,7 @@ function Exercice({ carte, onReponduChange }: {
     return (
         <div className="flex flex-col">
             <Bandeau motif="exercice" />
-            <Nature Icone={PenLine} libelle="À toi de jouer" teinte="indigo" />
+            <Nature Icone={PenLine} libelle="Mise en situation" teinte="indigo" />
             <EnTete titre={carte.titre} />
             <Paragraphes texte={carte.enonce} className="text-[15.5px] text-slate-600 leading-[1.6]" />
 

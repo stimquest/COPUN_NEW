@@ -417,6 +417,7 @@ export const LECONS_FORMATION: LeconFormation[] = [
             {
                 genre: 'procede',
                 titre: 'La fausse évidence',
+                illustration: { fichier: 'illus/fausse-evidence.webp', alt: "Un goéland sûr de lui touche une méduse échouée et prend une décharge" },
                 texte: "La croyance a l'air logique — c'est justement pour ça qu'elle est répandue. Le retournement montre l'angle mort.",
                 exemples: [
                     { texte: "On veut s'approcher pour mieux voir. Plus on s'approche, moins il reste d'animaux à regarder.", source: 'Observer sans déranger' },
@@ -432,6 +433,7 @@ export const LECONS_FORMATION: LeconFormation[] = [
             {
                 genre: 'procede',
                 titre: 'La fausse tranquillité',
+                illustration: { fichier: 'illus/fausse-tranquillite.webp', alt: "Un goéland fier d'emporter une grosse bouteille, sans voir les petits déchets" },
                 texte: "La croyance rassure — elle dit « tout va bien, pas besoin de faire attention ». Le retournement montre que ce n'est pas si simple.",
                 exemples: [
                     { texte: "On pense qu'il suffit qu'il revienne. Il a dépensé une énergie qu'il ne récupère pas forcément.", source: 'Cohabitation avec le vivant' },
@@ -536,6 +538,7 @@ export const LECONS_FORMATION: LeconFormation[] = [
             {
                 genre: 'procede',
                 titre: 'Observer : ce qui se voit maintenant',
+                illustration: { fichier: 'illus/observer-maintenant.webp', alt: "Un goéland à la longue-vue voit arriver une rafale, un crabe retient son chapeau" },
                 texte: "Ce pilier répond à « qu'est-ce qu'on regarde ». Entre par ce qui est visible aujourd'hui, sur l'eau ou sur l'estran, pas par un phénomène qu'il faudrait attendre.",
                 exemples: [
                     { texte: "Quelle alerte visuelle peut indiquer une montée rapide du vent ?", source: 'Interactions climatiques' },
@@ -1177,6 +1180,7 @@ export const LECONS_FORMATION: LeconFormation[] = [
             {
                 genre: 'procede',
                 titre: 'Faire chercher, faire rapporter',
+                illustration: { fichier: 'illus/chercher-rapporter.webp', alt: "Des animaux posent chacun un galet au bord de l'eau et guettent la vague" },
                 texte: "Une consigne courte, réalisable avec ce qu'on a sous la main, qui produit un résultat visible par tout le groupe.",
                 exemples: [
                     { texte: "Faites lister les milieux traversés depuis chez eux jusqu'ici : mer, dune, plaine, bocage. La densité surprend.", source: 'Lecture du paysage' },
@@ -1205,6 +1209,7 @@ export const LECONS_FORMATION: LeconFormation[] = [
             {
                 genre: 'procede',
                 titre: 'Faire parier, puis montrer',
+                illustration: { fichier: 'illus/parier-montrer.webp', alt: "Un vote sur la plage, pinces, ailes et nageoires levées" },
                 texte: "On demande une prédiction avant de révéler la réalité. L'écart entre les deux fait tout le travail de mémorisation.",
                 exemples: [
                     { texte: "Faites voter entre marée haute, marée basse et mi-marée. La majorité se trompe : c'est à mi-marée.", source: 'Les marées' },
@@ -1293,6 +1298,7 @@ export const LECONS_FORMATION: LeconFormation[] = [
             {
                 genre: 'procede',
                 titre: 'Déjà sensibilisé',
+                illustration: { fichier: 'illus/deja-sensibilise.webp', alt: "Une leçon plus poussée, pour un groupe qui connaît déjà le sujet" },
                 texte: "Le pourquoi technique, et les conséquences pratiques du phénomène.",
                 exemples: [
                     { texte: "Pourquoi il est important de connaître le coefficient de marée ?", source: 'Les marées, niveau 2' },
@@ -1379,6 +1385,7 @@ export const LECONS_FORMATION: LeconFormation[] = [
             {
                 genre: 'procede',
                 titre: 'La relance courte',
+                illustration: { fichier: 'illus/relance-courte.webp', alt: "Un simple geste, et le groupe se souvient du sujet" },
                 texte: "Pas besoin de tout redire. Une phrase qui rappelle l'accroche du lundi suffit à relancer le sujet mercredi.",
                 exemples: [
                     { texte: "On avait parlé des méduses lundi — vous vous souvenez pourquoi elles sont là certains jours et pas d'autres ?", source: 'Relance de sujet' },

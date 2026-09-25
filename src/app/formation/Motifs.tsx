@@ -1,23 +1,37 @@
 /**
- * Bandeaux des cartes sans photo : un pictogramme aquarelle par type de carte.
+ * Bandeaux des cartes de formation, tirés de planches aquarelle (sprite sheets).
  *
- * Chaque type de carte (à comprendre, règles, mécanisme, contraste, exercice, bilan) a son
- * personnage, toujours le même : le moniteur reconnaît d'un coup d'œil ce que la carte lui
- * demande.
- *
- * Les pictogrammes viennent d'une seule planche (sprite sheet) : `public/formation/Picto.webp`,
- * 1448 × 4000 px, huit bandes de 1448 × 500 empilées. Un seul fichier, chargé une fois et mis
- * en cache pour toutes les cartes ; chaque carte n'en montre que sa bande. Le cadre garde les
- * proportions exactes d'une bande, pour qu'elle ne soit jamais déformée ni rognée.
+ * Une planche = un seul fichier, chargé une fois et mis en cache pour toutes les cartes ;
+ * chaque carte n'en montre qu'une bande. Le cadre garde les proportions exactes de la bande,
+ * pour qu'elle ne soit jamais déformée ni rognée. Les positions sont mesurées sur l'image
+ * (haut de chaque bande, en pixels) plutôt que calculées : les bandes générées ne tombent pas
+ * toujours pile sur une grille régulière.
  */
+type Planche = { src: string; largeur: number; hauteur: number; bande: number };
+
+function BandePlanche({ planche, haut }: { planche: Planche; haut: number }) {
+    const { src, largeur, hauteur, bande } = planche;
+    return <div className="flex h-full w-full items-center justify-center overflow-hidden bg-[#fbfaf6]">
+        <div role="presentation" aria-hidden className="w-full"
+            style={{
+                aspectRatio: `${largeur} / ${bande}`,
+                backgroundImage: `url(${src})`,
+                backgroundSize: `100% ${(hauteur / bande) * 100}%`,
+                // En CSS, un pourcentage de position vaut (haut / (hauteur image − hauteur cadre)).
+                backgroundPosition: `0 ${(haut / (hauteur - bande)) * 100}%`,
+                backgroundRepeat: 'no-repeat',
+            }}/>
+    </div>;
+}
+
+// ── Pictogrammes par type de carte ───────────────────────────────────────────
+
 export type NomMotif = 'regles' | 'comprendre' | 'mecanisme' | 'contraste' | 'exercice' | 'bilan';
 
-const LARGEUR = 1448, HAUTEUR = 4000, BANDE = 500;
-/** Haut de chaque bande dans la planche, en pixels. Mesuré sur l'image plutôt que calculé
- *  (rang × 500) : les scènes du bas ne tombent pas exactement sur la grille — la course
- *  commence à 2946 px, la bande du poulpe aux nœuds à 3446. Les bandes non utilisées (la
- *  scène des enfants, le poulpe aux nœuds) ne servent pas aux cartes pour l'instant. */
-const HAUT: Record<NomMotif, number> = {
+/** `Picto.webp` : huit bandes de 1448 × 500. La scène des enfants et le poulpe aux nœuds ne
+ *  servent pas pour l'instant. */
+const PICTOS: Planche = { src: '/formation/Picto.webp', largeur: 1448, hauteur: 4000, bande: 500 };
+const HAUT_PICTO: Record<NomMotif, number> = {
     comprendre: 0,
     regles: 500,
     mecanisme: 1000,
@@ -27,15 +41,24 @@ const HAUT: Record<NomMotif, number> = {
 };
 
 export function Motif({ nom }: { nom: NomMotif }) {
-    return <div className="flex h-full w-full items-center justify-center overflow-hidden bg-[#fbfaf6]">
-        <div role="presentation" aria-hidden className="w-full"
-            style={{
-                aspectRatio: `${LARGEUR} / ${BANDE}`,
-                backgroundImage: 'url(/formation/Picto.webp)',
-                backgroundSize: `100% ${(HAUTEUR / BANDE) * 100}%`,
-                // En CSS, un pourcentage de position vaut (haut / (hauteur image − hauteur cadre)).
-                backgroundPosition: `0 ${(HAUT[nom] / (HAUTEUR - BANDE)) * 100}%`,
-                backgroundRepeat: 'no-repeat',
-            }}/>
-    </div>;
+    return <BandePlanche planche={PICTOS} haut={HAUT_PICTO[nom]}/>;
+}
+
+// ── Scènes propres à une carte ───────────────────────────────────────────────
+
+/** `illustration.webp` : les cinq scènes du module « Fabriquer une accroche », repérées par
+ *  le nom de fichier déclaré dans les cartes (`illustration.fichier`). */
+const SCENES: Planche = { src: '/formation/illustration.webp', largeur: 1448, hauteur: 2387, bande: 470 };
+const HAUT_SCENE: Record<string, number> = {
+    'decrochage.jpg': 8,
+    'pari.jpg': 510,
+    'piege.jpg': 985,
+    'constat.jpg': 1456,
+    'choix.jpg': 1891,
+};
+
+/** La scène de la planche qui remplace ce fichier, s'il y en a une. */
+export function sceneDePlanche(fichier: string) {
+    const haut = HAUT_SCENE[fichier];
+    return haut === undefined ? null : <BandePlanche planche={SCENES} haut={haut}/>;
 }
