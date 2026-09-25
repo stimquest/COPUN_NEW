@@ -766,7 +766,7 @@ function CarteTheme({ section, nbFaits, onOuvrir }: {
     return <motion.button onClick={onOuvrir} whileTap={{ scale: 0.98 }} className="co-course" style={{ background: visual.tone }}>
         <CoastalMark kind={visual.kind}/>
         <h2>{section.titre}</h2>
-        <div className="co-course-meta"><span>{nbRediges} modules</span><span>{nbFaits} parcourus</span></div>
+        <div className="co-course-meta"><span>{nbRediges} modules · {section.modules.filter(m => m.leconId).reduce((total, m) => total + m.duree_min, 0)} min</span><span>{nbFaits} parcourus</span></div>
         <div className="co-progress" aria-label={`${nbFaits} modules parcourus sur ${nbRediges}`}><span style={{ width: `${pct}%` }}/></div>
     </motion.button>;
 }

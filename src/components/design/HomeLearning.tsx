@@ -3,6 +3,7 @@ import type { ResumeFormation } from '@/actions/formation-actions';
 import type { SequenceProgress } from '@/actions/parcours-formation-actions';
 import { CoastalMark } from './Coastal';
 import { PARCOURS_FORMATION } from '@/data/parcours-formation';
+import { dureeTotaleFormation } from '@/data/formation-methode';
 
 import { iconeMaterial } from '@/components/ui/Icone';
 const ArrowRight = iconeMaterial('arrow_forward');
@@ -43,6 +44,8 @@ export function HomeLearning({ firstName, resume, progressions, semaineEnCours }
                     <span className="co-eyebrow">Formation générale</span>
                     <strong>{resume.nbFaits} / {resume.nbRediges}<small> modules parcourus</small></strong>
                     <span className="co-progress"><span style={{ width: `${resume.nbRediges ? resume.nbFaits / resume.nbRediges * 100 : 0}%` }}/></span>
+                    {/* Le temps total rassure : la formation entière tient dans une pause café longue. */}
+                    <span className="co-home-formation-note">Environ {dureeTotaleFormation()} min au total</span>
                     <span className="co-inline-action">{resume.nbFaits ? 'Reprendre' : 'Commencer'} <ArrowRight size={16}/></span>
                 </Link>
                 <Link href="/specialisation">

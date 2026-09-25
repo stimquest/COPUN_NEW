@@ -18,7 +18,7 @@
  * pratiquer. Ce qu'ils ne savent pas, c'est expliquer. D'où une formation professionnelle
  * sur le savoir-faire de transmission, avec validation interne.
  *
- * Format Google Primer : micro-modules de 5-7 min, cartes feuilletées une par une, ton
+ * Format Google Primer : micro-modules de 2 à 6 min, cartes feuilletées une par une, ton
  * direct, technique nommée plutôt que conseils vagues. Rien n'est bloquant : la préparation
  * de semaine reste accessible sans être passé par ici.
  *
@@ -387,7 +387,7 @@ export const LECONS_FORMATION: LeconFormation[] = [
         numero: 5,
         titre: 'Retourner une idée reçue',
         accroche: 'Le levier le plus efficace pour faire retenir une chose : la corriger, pas l\'énoncer.',
-        duree_min: 6,
+        duree_min: 4,
         piles: [
         {
             titre: 'Pourquoi ça marche mieux',
@@ -499,7 +499,7 @@ export const LECONS_FORMATION: LeconFormation[] = [
         numero: 1,
         titre: 'Choisir quoi transmettre',
         accroche: 'Sur 131 fiches, comment repérer les trois qui valent le coup cette semaine.',
-        duree_min: 6,
+        duree_min: 4,
         piles: [
         {
             titre: 'Le problème du choix',
@@ -612,7 +612,7 @@ export const LECONS_FORMATION: LeconFormation[] = [
         numero: 1,
         titre: 'Ton terrain, c\'est déjà de l\'environnement',
         accroche: 'Pourquoi le milieu où tu encadres n\'est jamais un simple décor.',
-        duree_min: 5,
+        duree_min: 2,
         piles: [
         {
             titre: 'Un décor qui agit sur toi',
@@ -674,7 +674,7 @@ export const LECONS_FORMATION: LeconFormation[] = [
         numero: 2,
         titre: 'Ce que ça change pour toi',
         accroche: 'Les temps morts remplis, le groupe qui accroche, le coût réel — deux minutes.',
-        duree_min: 5,
+        duree_min: 2,
         piles: [
         {
             titre: 'Le bénéfice concret',
@@ -738,7 +738,7 @@ export const LECONS_FORMATION: LeconFormation[] = [
         numero: 1,
         titre: 'Repérer le bon moment pour en parler',
         accroche: 'Le milieu te tend l\'occasion : à toi de savoir la reconnaître et la saisir.',
-        duree_min: 5,
+        duree_min: 3,
         piles: [
         {
             titre: 'Deux façons d\'entrer',
@@ -821,7 +821,7 @@ export const LECONS_FORMATION: LeconFormation[] = [
         numero: 2,
         titre: 'Comprendre, Observer, Protéger',
         accroche: 'La grille de lecture COPUN : trois angles sur un même sujet, dans l\'ordre que tu veux.',
-        duree_min: 6,
+        duree_min: 3,
         piles: [
         {
             titre: 'Trois angles, pas un escalier',
@@ -919,7 +919,7 @@ export const LECONS_FORMATION: LeconFormation[] = [
         numero: 3,
         titre: 'Quand ça ne se passe pas comme prévu',
         accroche: 'Tu ne sais pas répondre, quelqu\'un conteste, personne n\'accroche : que faire.',
-        duree_min: 6,
+        duree_min: 3,
         piles: [
         {
             titre: 'Tu ne sais pas répondre',
@@ -1008,7 +1008,7 @@ export const LECONS_FORMATION: LeconFormation[] = [
         numero: 4,
         titre: 'Vérifier si ça a pris',
         accroche: 'Savoir si le message est passé, sans faire un contrôle.',
-        duree_min: 5,
+        duree_min: 3,
         piles: [
         {
             titre: 'Pas un contrôle',
@@ -1084,7 +1084,7 @@ export const LECONS_FORMATION: LeconFormation[] = [
         numero: 1,
         titre: 'Observer avant d\'expliquer',
         accroche: 'Poser une question et vraiment attendre la réponse — le silence comme outil.',
-        duree_min: 5,
+        duree_min: 3,
         piles: [
         {
             titre: 'Le réflexe à casser',
@@ -1162,7 +1162,7 @@ export const LECONS_FORMATION: LeconFormation[] = [
         numero: 2,
         titre: 'Faire faire, pas seulement dire',
         accroche: 'Transformer une explication en une action concrète que le groupe réalise.',
-        duree_min: 6,
+        duree_min: 4,
         piles: [
         {
             titre: 'Deux familles d\'actions',
@@ -1262,7 +1262,7 @@ export const LECONS_FORMATION: LeconFormation[] = [
         numero: 3,
         titre: 'Adapter selon l\'exposition du groupe',
         accroche: 'Pas l\'âge : ce que le groupe a déjà vu ou pas du sujet.',
-        duree_min: 6,
+        duree_min: 4,
         piles: [
         {
             titre: 'Un repère mal nommé',
@@ -1359,7 +1359,7 @@ export const LECONS_FORMATION: LeconFormation[] = [
         numero: 4,
         titre: 'Filer un sujet sur la semaine',
         accroche: 'Revenir sur ce qu\'on a commencé lundi, sans que ça devienne un cours.',
-        duree_min: 6,
+        duree_min: 3,
         piles: [
         {
             titre: 'Une fois ne suffit pas',
@@ -1496,7 +1496,7 @@ export const PLAN_FORMATION: SectionFormation[] = [
                 numero: 2,
                 titre: 'Ce que ça change pour toi',
                 accroche: 'Les temps morts remplis, le groupe qui accroche, le coût réel — deux minutes.',
-                duree_min: 5,
+                duree_min: 2,
                 leconId: 'ce-que-ca-change',
             },
         ],
@@ -1510,14 +1510,14 @@ export const PLAN_FORMATION: SectionFormation[] = [
                 numero: 1,
                 titre: 'Choisir quoi transmettre',
                 accroche: 'Sur 131 fiches, comment repérer les trois qui valent le coup cette semaine.',
-                duree_min: 6,
+                duree_min: 2,
                 leconId: 'choisir-quoi-transmettre',
             },
             {
                 numero: 2,
                 titre: 'Fabriquer une accroche',
                 accroche: 'Quatre formes de première phrase, chacune expliquée et illustrée.',
-                duree_min: 7,
+                duree_min: 4,
                 leconId: 'fabriquer-accroche',
             },
             {
@@ -1545,21 +1545,21 @@ export const PLAN_FORMATION: SectionFormation[] = [
                 numero: 2,
                 titre: 'Faire faire, pas seulement dire',
                 accroche: 'Transformer une explication en une action concrète que le groupe réalise.',
-                duree_min: 6,
+                duree_min: 2,
                 leconId: 'faire-faire',
             },
             {
                 numero: 3,
                 titre: 'Adapter selon l\'exposition du groupe',
                 accroche: 'Pas l\'âge : ce que le groupe a déjà vu ou pas du sujet.',
-                duree_min: 6,
+                duree_min: 3,
                 leconId: 'adapter-exposition-groupe',
             },
             {
                 numero: 4,
                 titre: 'Filer un sujet sur la semaine',
                 accroche: 'Revenir sur ce qu\'on a commencé lundi, sans que ça devienne un cours.',
-                duree_min: 6,
+                duree_min: 3,
                 leconId: 'filer-sujet-semaine',
             },
         ],
@@ -1580,26 +1580,40 @@ export const PLAN_FORMATION: SectionFormation[] = [
                 numero: 2,
                 titre: 'Comprendre, Observer, Protéger',
                 accroche: 'La grille de lecture COPUN : trois angles sur un même sujet, dans l\'ordre que tu veux.',
-                duree_min: 6,
+                duree_min: 2,
                 leconId: 'comprendre-observer-proteger',
             },
             {
                 numero: 3,
                 titre: 'Quand ça ne se passe pas comme prévu',
                 accroche: 'Tu ne sais pas répondre, quelqu\'un conteste, personne n\'accroche : que faire.',
-                duree_min: 6,
+                duree_min: 3,
                 leconId: 'gerer-imprevu',
             },
             {
                 numero: 4,
                 titre: 'Vérifier si ça a pris',
                 accroche: 'Savoir si le message est passé, sans faire un contrôle.',
-                duree_min: 5,
+                duree_min: 3,
                 leconId: 'verifier-si-ca-a-pris',
             },
         ],
     },
 ];
+
+/* Une seule source pour la durée d'un module : celle de sa leçon. La durée du plan est
+   recopiée ici, pour qu'on n'ait jamais deux chiffres différents pour un même module.
+   Durées recalées sur un passage réel (septembre 2026), ajustées module par module pour
+   une formation de 45 min au total. */
+PLAN_FORMATION.forEach(section => section.modules.forEach(module => {
+    const lecon = module.leconId ? LECONS_FORMATION.find(l => l.id === module.leconId) : undefined;
+    if (lecon) module.duree_min = lecon.duree_min;
+}));
+
+/** Durée totale des modules rédigés, en minutes. */
+export function dureeTotaleFormation(): number {
+    return PLAN_FORMATION.flatMap(s => s.modules).filter(m => m.leconId).reduce((total, m) => total + m.duree_min, 0);
+}
 
 /** Tous les modules planifiés, sections confondues — pour un accès direct par leconId. */
 export function tousLesModules(): ModulePlanifie[] {
