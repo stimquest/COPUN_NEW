@@ -756,6 +756,7 @@ export const LECONS_FORMATION: LeconFormation[] = [
             {
                 genre: 'procede',
                 titre: 'Entrer par l\'observé',
+                illustration: { fichier: 'illus/entrer-par-observe.webp', alt: "Tout le groupe penché sur une méduse échouée, la leçon préparée oubliée sur son ardoise" },
                 texte: "Une méduse échouée, une trace sur le sable, un nuage qui change de forme : quelque chose apparaît devant vous, tu pars de là.",
                 exemples: [
                     { texte: "Que faire quand on trouve une méduse échouée sur la plage ?", source: 'Cohabitation avec le vivant' },
@@ -946,6 +947,7 @@ export const LECONS_FORMATION: LeconFormation[] = [
             {
                 genre: 'procede',
                 titre: 'Un enfant qui sait déjà',
+                illustration: { fichier: 'illus/enfant-qui-sait.webp', alt: "Un poussin de goéland fait la leçon au tableau, le goéland moniteur l'écoute au premier rang" },
                 texte: "Il connaît la réponse, parfois mieux que ce que tu allais dire. Ce n'est pas un problème à gérer — c'est une ressource.",
                 exemples: [
                     { texte: "Fais-le préciser devant le groupe : « Tu en sais plus que moi là-dessus, tu peux nous expliquer ? »", source: 'Posture' },
@@ -1110,6 +1112,7 @@ export const LECONS_FORMATION: LeconFormation[] = [
             {
                 genre: 'procede',
                 titre: 'Donner un point précis à observer',
+                illustration: { fichier: 'illus/point-precis.webp', alt: "Un goéland trace un cercle dans le sable autour d'un seul trou, d'où sort un petit crabe" },
                 texte: "Une consigne vague (« regardez autour de vous ») ne produit rien. Une consigne précise — un détail, un comportement, un repère — oriente le regard et donne une vraie chance de trouver.",
                 exemples: [
                     { texte: "Le comportement de l'animal : il se nourrit tranquillement, ou il s'arrête et nous fixe ?", source: 'Cohabitation avec le vivant' },
@@ -1289,6 +1292,7 @@ export const LECONS_FORMATION: LeconFormation[] = [
             {
                 genre: 'procede',
                 titre: 'Premier contact',
+                illustration: { fichier: 'illus/premier-contact.webp', alt: "Un vieux crabe laisse son sac de schémas fermé et montre simplement la mer à un petit bernard-l'ermite émerveillé" },
                 texte: "Le fait brut, sans mécanisme derrière — ce qui se voit et se nomme.",
                 exemples: [
                     { texte: 'Pourquoi y a-t-il plusieurs marées par jour ?', source: 'Les marées, niveau 1' },

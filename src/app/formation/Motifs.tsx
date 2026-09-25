@@ -9,16 +9,27 @@
  */
 type Planche = { src: string; largeur: number; hauteur: number; bande: number };
 
-function BandePlanche({ planche, haut }: { planche: Planche; haut: number }) {
+/**
+ * `zoom` agrandit la bande autour de son centre : les pictogrammes n'occupent qu'un tiers de
+ * leur bande, entourés de papier blanc, et restaient trop petits sur mobile. Le cadre garde
+ * les proportions de la bande ; seul le papier autour du dessin est rogné.
+ */
+function BandePlanche({ planche, haut, zoom = 1, centre }: { planche: Planche; haut: number; zoom?: number; centre?: number }) {
     const { src, largeur, hauteur, bande } = planche;
+    // Position CSS en pourcentage = décalage / (taille de l'image affichée − taille du cadre).
+    // On vise centre (le milieu du dessin, en px dans la planche), par défaut le milieu de la bande.
+    const vise = centre ?? haut + bande / 2;
+    const y = (zoom * vise / bande - 0.5) / (zoom * hauteur / bande - 1);
     return <div className="flex h-full w-full items-center justify-center overflow-hidden bg-[#fbfaf6]">
-        <div role="presentation" aria-hidden className="w-full"
+        {/* Calé sur la hauteur du bandeau (plafonnée à 160 px) : calé sur la largeur, le cadre
+            devenait plus haut que le bandeau sur grand écran et le haut du dessin était rogné.
+            S'il est plus large que la carte, seul le papier des côtés est coupé. */}
+        <div role="presentation" aria-hidden className="h-full max-w-none shrink-0"
             style={{
                 aspectRatio: `${largeur} / ${bande}`,
                 backgroundImage: `url(${src})`,
-                backgroundSize: `100% ${(hauteur / bande) * 100}%`,
-                // En CSS, un pourcentage de position vaut (haut / (hauteur image − hauteur cadre)).
-                backgroundPosition: `0 ${(haut / (hauteur - bande)) * 100}%`,
+                backgroundSize: `${zoom * 100}% ${(hauteur / bande) * zoom * 100}%`,
+                backgroundPosition: `50% ${y * 100}%`,
                 backgroundRepeat: 'no-repeat',
             }}/>
     </div>;
@@ -40,8 +51,22 @@ const HAUT_PICTO: Record<NomMotif, number> = {
     exercice: 2946,
 };
 
+/** Milieu vertical du dessin de chaque pictogramme dans la planche (mesuré), pour centrer
+ *  le zoom sur le personnage et non sur la bande. */
+const CENTRE_PICTO: Partial<Record<NomMotif, number>> = {
+    comprendre: 270, regles: 728, mecanisme: 1232, contraste: 1715, bilan: 2211,
+};
+
+/** Zoom des pictogrammes : un peu plus fort sur mobile, où le bandeau est étroit. À × 1,5 la
+ *  fenêtre fait 333 px de haut autour du dessin, qui en mesure au plus 330 : rien n'est coupé.
+ *  La course (exercice) est une scène pleine largeur, laissée entière. */
 export function Motif({ nom }: { nom: NomMotif }) {
-    return <BandePlanche planche={PICTOS} haut={HAUT_PICTO[nom]}/>;
+    const centre = CENTRE_PICTO[nom];
+    if (centre === undefined) return <BandePlanche planche={PICTOS} haut={HAUT_PICTO[nom]}/>;
+    // Validé à l'écran : bande calée sur la hauteur du bandeau, recadrée sur les côtés, plus
+    // un léger zoom centré sur le dessin.
+    // La carte a la même largeur maximale sur tous les écrans (440 px) : un seul réglage.
+    return <BandePlanche planche={PICTOS} haut={HAUT_PICTO[nom]} zoom={1.5} centre={centre}/>;
 }
 
 // ── Scènes propres à une carte ───────────────────────────────────────────────

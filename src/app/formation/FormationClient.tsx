@@ -500,8 +500,10 @@ function Carte({
 }) {
     const x = useMotionValue(0);
     const rotation = useTransform(x, [-200, 200], [-8, 8]);
-    const opaciteAvant = useTransform(x, [20, 120], [0, 1]);
-    const opaciteArriere = useTransform(x, [-120, -20], [1, 0]);
+    // Glisser vers la gauche avance (voir `relacher`) : « Suite » apparaît quand x devient
+    // négatif, « Retour » quand x devient positif.
+    const opaciteAvant = useTransform(x, [-120, -20], [1, 0]);
+    const opaciteArriere = useTransform(x, [20, 120], [0, 1]);
     /** La respiration s'habille en sombre : badges et bordures s'y adaptent. */
     const sombre = carte.genre === 'respiration';
     // Une carte `exercice`/`vrai_faux` peut dépasser la hauteur d'écran une fois la
@@ -648,7 +650,7 @@ function CarteLecteur({
             {/* Une jauge par pile, segmentée en autant de traits que de cartes (respiration
                 comprise) : le moniteur voit à la fois où il en est dans l'étape et combien
                 d'étapes composent le module. Une seule barre ne disait ni l'un ni l'autre. */}
-            <div className="flex gap-2 px-5 pt-[calc(env(safe-area-inset-top)+1rem)] pb-3">
+            <div className="mx-auto flex w-full max-w-[440px] gap-2 px-5 pt-[calc(env(safe-area-inset-top)+1rem)] pb-3">
                 {lecon.piles.map((pile, iPile) => {
                     // Rang de la première carte de cette pile dans le flux, respirations
                     // des piles précédentes incluses.
@@ -670,7 +672,7 @@ function CarteLecteur({
                 })}
             </div>
 
-            <div className="flex items-center justify-between px-5 pb-3">
+            <div className="mx-auto flex w-full max-w-[440px] items-center justify-between px-5 pb-3">
                 <button onClick={onQuitter} aria-label="Fermer" className="text-white/70 active:text-white">
                     <X size={22} strokeWidth={2.5} />
                 </button>
@@ -682,7 +684,7 @@ function CarteLecteur({
             {/* Les cartes sont en `absolute inset-0`, qui ignore le padding : le cadre
                 intérieur `relative` porte la marge avec les bords de l'écran. */}
             <div className="flex-1 px-3 pb-4 min-h-0">
-                <div className="relative h-full">
+                <div className="relative mx-auto h-full w-full max-w-[440px]">
                 <AnimatePresence>
                     {[...visibles].reverse().map(({ carte, i }) => (
                         <Carte
@@ -698,7 +700,7 @@ function CarteLecteur({
                 </div>
             </div>
 
-            <div className="px-5 pb-[calc(env(safe-area-inset-bottom)+1.25rem)] pt-2 flex gap-3">
+            <div className="mx-auto flex w-full max-w-[440px] gap-3 px-5 pb-[calc(env(safe-area-inset-bottom)+1.25rem)] pt-2">
                 {/* La place du retour est toujours réservée : le faire apparaître décalait
                     le bouton principal d'une carte à l'autre. Sur la première carte il est
                     seulement masqué, pas retiré. */}
