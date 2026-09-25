@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import { ArrowRight, Compass, NotebookPen, Plus } from 'lucide-react';
 import { unstable_noStore as noStore } from 'next/cache';
 import { getPedagogicalPool, getStageObjectiveReviewItems, getStages } from '@/services/data-service';
 import { DeleteStageButton } from '@/components/DeleteStageButton';
@@ -10,6 +9,12 @@ import { getResumeVote } from '@/actions/vote-actions';
 import { getStagePreparations, type StagePreparation } from '@/actions/preparation-actions';
 import { formulationsFiche } from '@/data/formulations-fiche';
 import { FORMES_ACCROCHE } from '@/data/formes-accroche';
+
+import { iconeMaterial } from '@/components/ui/Icone';
+const ArrowRight = iconeMaterial('arrow_forward');
+const Compass = iconeMaterial('explore');
+const NotebookPen = iconeMaterial('edit_note');
+const Plus = iconeMaterial('add');
 
 type WeekWithCards = Stage & { cards: PedagogicalContent[] };
 

@@ -41,7 +41,7 @@ export default async function StageQuizAnimationPage({ params }: { params: Promi
                     <span className="material-symbols-outlined">arrow_back</span>
                 </Link>
                 <div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Quiz d&apos;animation</p>
+                    <p className="text-[12px] font-bold text-slate-400">Quiz d&apos;animation</p>
                     <h1 className="text-base font-extrabold text-white leading-tight">{stage.title}</h1>
                 </div>
             </header>

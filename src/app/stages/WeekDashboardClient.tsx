@@ -597,7 +597,7 @@ export function WeekDashboardClient({
                     cliquer en priorité. */}
                 <div className="relative z-10 mx-4 mb-5">
                     <div className="flex items-center justify-between gap-3 mb-1">
-                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/50">Cette semaine</p>
+                        <p className="text-[12px] font-bold text-white/50">Cette semaine</p>
                         {dayIndex !== null && (
                             <span className="text-[10px] font-black text-white/80 bg-white/15 px-2 py-0.5 rounded-full shrink-0">
                                 Jour {dayIndex}/{dayTotal}
@@ -618,7 +618,7 @@ export function WeekDashboardClient({
                             className="flex items-center gap-3 bg-white/15 backdrop-blur-sm rounded-2xl p-4 border border-white/20 active:scale-[0.99] transition-transform"
                         >
                             <div className="flex-1 min-w-0">
-                                <p className="text-[10px] font-black uppercase tracking-widest text-white/50">Mes objectifs</p>
+                                <p className="text-[12px] font-bold text-white/50">Mes objectifs</p>
                                 <p className="text-sm font-black text-white leading-snug mt-0.5">Voir et modifier mes cartes</p>
                             </div>
                             <span className="size-9 rounded-full bg-white/20 border border-white/30 flex items-center justify-center text-white shrink-0">
@@ -632,7 +632,7 @@ export function WeekDashboardClient({
                             className="flex items-center gap-3 mt-2 bg-white/15 backdrop-blur-sm rounded-2xl p-4 border border-white/20 active:scale-[0.99] transition-transform"
                         >
                             <div className="flex-1 min-w-0">
-                                <p className="text-[10px] font-black uppercase tracking-widest text-white/50">Fin de semaine</p>
+                                <p className="text-[12px] font-bold text-white/50">Fin de semaine</p>
                                 <p className="text-sm font-black text-white leading-snug mt-0.5">Faites voter le groupe sur ce que vous avez fait ensemble</p>
                             </div>
                             <span className="size-9 rounded-full bg-white/20 border border-white/30 flex items-center justify-center text-white shrink-0">
@@ -646,7 +646,7 @@ export function WeekDashboardClient({
                             className="flex items-center gap-3 mt-2 bg-white/15 backdrop-blur-sm rounded-2xl p-4 border border-white/20 active:scale-[0.99] transition-transform"
                         >
                             <div className="flex-1 min-w-0">
-                                <p className="text-[10px] font-black uppercase tracking-widest text-white/50">Fin de semaine</p>
+                                <p className="text-[12px] font-bold text-white/50">Fin de semaine</p>
                                 <p className="text-sm font-black text-white leading-snug mt-0.5">Fais le bilan de ta semaine</p>
                             </div>
                             <span className="size-9 rounded-full bg-white/20 border border-white/30 flex items-center justify-center text-white shrink-0">
@@ -866,7 +866,7 @@ export function WeekDashboardClient({
 
                                     {/* Type d'observation */}
                                     <div>
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Type d&apos;observation</p>
+                                        <p className="text-[12px] font-bold text-slate-400 mb-2">Type d&apos;observation</p>
                                         <div className="flex flex-wrap gap-2">
                                             {OBSERVATION_TYPES.map(t => (
                                                 <button
@@ -901,7 +901,7 @@ export function WeekDashboardClient({
                                         return (
                                             <div className="space-y-2">
                                                 <div className="flex items-center justify-between">
-                                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Espèce</p>
+                                                    <p className="text-[12px] font-bold text-slate-400">Espèce</p>
                                                     {obsType === 'faune' && activeCategory && (
                                                         <button
                                                             type="button"
@@ -993,7 +993,7 @@ export function WeekDashboardClient({
                                     {/* Type de déchet — liste rapide + libre */}
                                     {obsType === 'pollution' && (
                                         <div className="space-y-2">
-                                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Type de déchet</p>
+                                            <p className="text-[12px] font-bold text-slate-400">Type de déchet</p>
                                             <div className="flex flex-wrap gap-2">
                                                 {DEFAULT_WASTE_TYPES.map(w => (
                                                     <button
@@ -1027,7 +1027,7 @@ export function WeekDashboardClient({
                                     {obsType && (
                                         <div className="grid grid-cols-2 gap-3">
                                             <div>
-                                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">
+                                                <p className="text-[12px] font-bold text-slate-400 mb-2">
                                                     Nombre
                                                     <span className="font-semibold normal-case tracking-normal text-slate-300 ml-1">— optionnel</span>
                                                 </p>
@@ -1041,7 +1041,7 @@ export function WeekDashboardClient({
                                                 />
                                             </div>
                                             <div>
-                                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">
+                                                <p className="text-[12px] font-bold text-slate-400 mb-2">
                                                     Lieu
                                                     <span className="font-semibold normal-case tracking-normal text-slate-300 ml-1">— optionnel</span>
                                                 </p>
@@ -1059,7 +1059,7 @@ export function WeekDashboardClient({
                                     {/* Date et heure de l'observation */}
                                     <div>
                                         <div className="flex items-center justify-between mb-2">
-                                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                                            <p className="text-[12px] font-bold text-slate-400">
                                                 Date et heure de l&apos;observation
                                                 <span className="text-red-400 ml-1">*</span>
                                             </p>
@@ -1081,7 +1081,7 @@ export function WeekDashboardClient({
 
                                     {/* Ce qui s'est passé */}
                                     <div>
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Ce que j&apos;ai observé / vécu</p>
+                                        <p className="text-[12px] font-bold text-slate-400 mb-2">Ce que j&apos;ai observé / vécu</p>
                                         <textarea
                                             ref={textRef}
                                             value={obsText}
@@ -1093,7 +1093,7 @@ export function WeekDashboardClient({
 
                                     {/* Ce que ça a permis */}
                                     <div>
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">J&apos;en ai profité pour…</p>
+                                        <p className="text-[12px] font-bold text-slate-400 mb-2">J&apos;en ai profité pour…</p>
                                         <div className="grid grid-cols-2 gap-2">
                                             {PEDAGOGICAL_ACTIONS.map(a => (
                                                 <button
@@ -1289,7 +1289,7 @@ export function WeekDashboardClient({
                         className="flex items-center justify-between bg-slate-900 text-white rounded-2xl px-4 py-3.5 hover:bg-slate-800 transition active:scale-95"
                     >
                         <div>
-                            <p className="text-[10px] font-black uppercase tracking-widest text-white/50 mb-0.5">Semaine suivante</p>
+                            <p className="text-[12px] font-bold text-white/50 mb-0.5">Semaine suivante</p>
                             <p className="text-sm font-bold">Créer une nouvelle semaine</p>
                         </div>
                         <span className="material-symbols-outlined text-xl text-white/60">add_circle</span>

@@ -132,7 +132,7 @@ export default function PlayClient({ game }: { game: Game }) {
 
                     {/* Message groupe collectif */}
                     <h2 className={clsx(
-                        'text-3xl font-black uppercase tracking-tight mb-2',
+                        'text-3xl font-bold tracking-tight mb-2',
                         isExcellent ? 'text-amber-400' : isGood ? 'text-emerald-400' : 'text-slate-300'
                     )}>
                         {isExcellent ? 'Tes stagiaires sont de vraies sentinelles de l\'Océan !' : isGood ? 'Tes stagiaires ont brillamment joué !' : 'Tes stagiaires ont bien progressé !'}
@@ -152,7 +152,7 @@ export default function PlayClient({ game }: { game: Game }) {
 
                     <button
                         onClick={() => router.push(`/stages/${game.stage_id}/bilan`)}
-                        className="w-full max-w-xs px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black text-sm uppercase tracking-widest active:scale-95 transition-transform"
+                        className="w-full max-w-xs px-8 py-4 bg-indigo-600 text-white rounded-2xl font-bold text-sm active:scale-95 transition-transform"
                     >
                         Passer au bilan de la semaine
                     </button>
@@ -305,7 +305,7 @@ function TriageCard({ data, onAnswer, showFeedback, isCorrect }: {
                 <span className="size-8 rounded-full bg-green-100 flex items-center justify-center text-green-600">
                     <span className="material-symbols-outlined text-lg">rule</span>
                 </span>
-                <span className="text-sm font-bold text-green-600 uppercase">Vrai ou Faux</span>
+                <span className="text-sm font-bold text-green-600">Vrai ou Faux</span>
             </div>
             <p className="text-xl font-medium text-slate-900 mb-8">{data.statement}</p>
 
@@ -380,7 +380,7 @@ function QuizzCard({ data, onAnswer, showFeedback }: {
                 <span className="size-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
                     <span className="material-symbols-outlined text-lg">quiz</span>
                 </span>
-                <span className="text-sm font-bold text-blue-600 uppercase">Quizz</span>
+                <span className="text-sm font-bold text-blue-600">Quizz</span>
             </div>
             <p className="text-xl font-medium text-slate-900 mb-6">{data.question || 'Question non disponible'}</p>
 
@@ -437,11 +437,11 @@ function MotsCard({ data, onAnswer, showFeedback }: {
                 <span className="size-8 rounded-full bg-amber-100 flex items-center justify-center text-amber-600">
                     <span className="material-symbols-outlined text-lg">edit_note</span>
                 </span>
-                <span className="text-sm font-bold text-amber-600 uppercase">Mots en Rafale</span>
+                <span className="text-sm font-bold text-amber-600">Mots en Rafale</span>
             </div>
 
             <div className="bg-slate-50 rounded-xl p-6 mb-6">
-                <p className="text-sm text-slate-500 mb-2 uppercase font-bold">Définition :</p>
+                <p className="text-sm text-slate-500 mb-2 font-bold">Définition :</p>
                 <p className="text-2xl font-medium text-slate-900">{data.definition}</p>
             </div>
 
@@ -455,7 +455,7 @@ function MotsCard({ data, onAnswer, showFeedback }: {
                 </button>
             ) : (
                 <div className="p-6 bg-amber-100 rounded-xl text-center">
-                    <p className="text-sm text-amber-600 uppercase font-bold mb-2">Réponse :</p>
+                    <p className="text-sm text-amber-600 font-bold mb-2">Réponse :</p>
                     <p className="text-3xl font-black text-amber-800">{data.answer}</p>
                 </div>
             )}
@@ -481,7 +481,7 @@ function DilemmeCard({ data, onAnswer, showFeedback }: {
                 <span className="size-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600">
                     <span className="material-symbols-outlined text-lg">call_split</span>
                 </span>
-                <span className="text-sm font-bold text-purple-600 uppercase">Dilemme</span>
+                <span className="text-sm font-bold text-purple-600">Dilemme</span>
             </div>
             <p className="text-lg font-medium text-slate-900 mb-6">Que choisiriez-vous ?</p>
 

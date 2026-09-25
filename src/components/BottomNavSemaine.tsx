@@ -34,7 +34,7 @@ export function BottomNav() {
                             <span className="material-symbols-outlined">
                                 {item.icon}
                             </span>
-                            <span className="text-[10px] font-black uppercase tracking-widest hidden sm:block">{item.name}</span>
+                            <span className="text-[12px] font-bold hidden sm:block">{item.name}</span>
                         </Link>
                     );
                 })}

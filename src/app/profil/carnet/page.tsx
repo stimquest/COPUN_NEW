@@ -1,9 +1,12 @@
 import { unstable_noStore as noStore } from 'next/cache';
 import Link from 'next/link';
-import { ArrowUpRight, NotebookPen } from 'lucide-react';
 import { getPracticeJournal } from '@/services/practice-journal';
 import { CarnetClient } from './CarnetClient';
 import { CoastalMark, PageHeading } from '@/components/design/Coastal';
+
+import { iconeMaterial } from '@/components/ui/Icone';
+const ArrowUpRight = iconeMaterial('north_east');
+const NotebookPen = iconeMaterial('edit_note');
 
 export default async function CarnetPage() {
     noStore();

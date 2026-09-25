@@ -37,7 +37,7 @@ export default function ClassementClient({ monitors, clubs, myPoints }: Props) {
                     <span className="material-symbols-outlined text-white text-3xl">emoji_events</span>
                 </div>
                 <div>
-                    <p className="text-[10px] font-black text-indigo-200 uppercase tracking-widest">Mon score</p>
+                    <p className="text-[12px] font-bold text-indigo-200">Mon score</p>
                     <p className="text-4xl font-black text-white leading-none">{myPoints} <span className="text-lg text-indigo-300">pts</span></p>
                 </div>
             </div>
@@ -47,7 +47,7 @@ export default function ClassementClient({ monitors, clubs, myPoints }: Props) {
                 <button
                     onClick={() => setTab('monitors')}
                     className={clsx(
-                        'flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all',
+                        'flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[12px] font-bold transition-all',
                         tab === 'monitors' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'
                     )}
                 >
@@ -57,7 +57,7 @@ export default function ClassementClient({ monitors, clubs, myPoints }: Props) {
                 <button
                     onClick={() => setTab('clubs')}
                     className={clsx(
-                        'flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all',
+                        'flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[12px] font-bold transition-all',
                         tab === 'clubs' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'
                     )}
                 >
@@ -90,7 +90,7 @@ export default function ClassementClient({ monitors, clubs, myPoints }: Props) {
                                 <div className="flex-1 min-w-0">
                                     <p className="font-black text-slate-900 truncate">{entry.full_name}</p>
                                     {entry.club_name && (
-                                        <p className="text-[10px] font-bold text-slate-400 uppercase truncate">{entry.club_name}</p>
+                                        <p className="text-[12px] font-bold text-slate-400 truncate">{entry.club_name}</p>
                                     )}
                                 </div>
                                 <div className="text-right shrink-0">
@@ -130,7 +130,7 @@ export default function ClassementClient({ monitors, clubs, myPoints }: Props) {
 
             {/* Barème */}
             <section className="bg-white rounded-2xl border border-slate-100 p-5 space-y-3">
-                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Barème des points</h3>
+                <h3 className="text-[12px] font-bold text-slate-400">Barème des points</h3>
                 {[
                     { label: 'Quiz — par bonne réponse', pts: '2 pts', icon: 'quiz' },
                     { label: 'Quiz de 10 réussi sans faute', pts: '+5 pts', icon: 'workspace_premium' },

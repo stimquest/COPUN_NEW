@@ -62,7 +62,7 @@ export default function FicheCard({ fiche, currentUserId, isAdmin, isModerator }
             {/* Zone cliquable → détail */}
             <Link href={versFiche} className="block flex-1">
                 {fiche.statut === 'brouillon' && (
-                    <span className="inline-block mb-2 px-2 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-bold uppercase rounded-full tracking-widest">
+                    <span className="inline-block mb-2 px-2 py-0.5 bg-amber-100 text-amber-700 text-[12px] font-bold rounded-full">
                         Brouillon
                     </span>
                 )}

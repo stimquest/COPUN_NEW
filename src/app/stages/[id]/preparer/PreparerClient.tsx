@@ -248,7 +248,7 @@ export default function PreparerClient({
                     <div role="alert" className="mt-4 rounded-2xl bg-red-50 border border-red-200 px-5 py-4 flex items-start gap-3">
                         <span className="material-symbols-outlined text-red-600 text-[20px] shrink-0">cloud_off</span>
                         <div className="flex-1 min-w-0">
-                            <p className="text-xs font-black text-red-900 uppercase tracking-widest">Choix non enregistré</p>
+                            <p className="text-[12px] font-bold text-red-900">Choix non enregistré</p>
                             <p className="text-[13px] font-medium text-red-800 leading-relaxed mt-1">{echec}</p>
                         </div>
                         <button
@@ -285,7 +285,7 @@ export default function PreparerClient({
                     plat, qu'on peut traverser sans rien faire. L'outil propose des idées
                     d'animation, il n'impose pas un rituel de plus à tenir. */}
                 <div className="mt-12 pt-6 border-t border-slate-200/70">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                    <p className="text-[12px] font-bold text-slate-400">
                         Si vous voulez aller plus loin
                     </p>
                     <p className="text-[14px] font-medium text-slate-500 leading-relaxed mt-1.5">
@@ -419,13 +419,13 @@ function Sujet({
                 )}>
                     {choisie ? '✓' : rang + 1}
                 </span>
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                <span className="text-[12px] font-bold text-slate-400">
                     Sujet {rang + 1} sur {total}
                 </span>
                 <span className="flex-1 h-px bg-slate-200/70" />
             </div>
 
-            <span className={clsx('text-[10px] font-black uppercase tracking-widest', pilier?.color)}>
+            <span className={clsx('text-[12px] font-bold', pilier?.color)}>
                 {pilier?.label}
             </span>
             <h2 className="text-[24px] font-black text-slate-900 leading-[1.15] mt-1.5 text-balance">
@@ -445,13 +445,13 @@ function Sujet({
                   cartes blanches à trait plein — le pointillé ambre ne désigne que le trou ;
                 - DONNÉ PAR LA FICHE : texte simple, sans carte, avec une icône. */}
             <div className="mt-6">
-                <p className="mb-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Le fil de la séance</p>
+                <p className="mb-3 text-[12px] font-bold text-slate-400">Le fil de la séance</p>
                 <div className="relative space-y-5 border-l-2 border-slate-200 pl-5">
                     <div className="relative">
                         <span className="absolute -left-[31px] top-0 size-7 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center">
                             <span className="material-symbols-outlined text-[16px]">record_voice_over</span>
                         </span>
-                        <h3 className="pb-2 text-[10px] font-black text-amber-700 uppercase tracking-widest">J&apos;ouvre avec</h3>
+                        <h3 className="pb-2 text-[12px] font-bold text-amber-700">J&apos;ouvre avec</h3>
 
                     {/* J'ouvre avec — décision 1 */}
                     <div>
@@ -463,7 +463,7 @@ function Sujet({
                                 <p className="text-[18px] font-bold text-amber-950 leading-[1.4] italic">
                                     «&nbsp;{choisie}&nbsp;»
                                 </p>
-                                <span className="inline-flex items-center gap-1 text-[10px] font-black text-amber-600/70 group-hover:text-amber-800 uppercase tracking-widest mt-1.5 transition-colors">
+                                <span className="inline-flex items-center gap-1 text-[12px] font-bold text-amber-600/70 group-hover:text-amber-800 mt-1.5 transition-colors">
                                     <span className="material-symbols-outlined text-[13px]">edit</span>
                                     Changer
                                 </span>
@@ -511,7 +511,7 @@ function Sujet({
                                             setVoirFormes(false);
                                         }}>
                                             {'forme' in v && (
-                                                <span className="mb-1.5 block text-[9px] font-black uppercase tracking-widest text-amber-600">
+                                                <span className="mb-1.5 block text-[12px] font-bold text-amber-600">
                                                     {FORMES_ACCROCHE.find(f => f.id === v.forme)?.nom}
                                                 </span>
                                             )}
@@ -537,7 +537,7 @@ function Sujet({
                         <span className="material-symbols-outlined text-[16px]">visibility</span>
                     </span>
                     <div>
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">
+                        <span className="text-[12px] font-bold text-slate-400 block mb-1">
                             Je leur fais observer
                         </span>
                         <p className="text-[15px] font-semibold text-slate-700 leading-relaxed">{content.a_observer}</p>
@@ -552,7 +552,7 @@ function Sujet({
                     <span className="absolute -left-[31px] top-0 size-7 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center">
                         <span className="material-symbols-outlined text-[16px]">back_hand</span>
                     </span>
-                    <h3 className="pb-2 text-[10px] font-black text-amber-700 uppercase tracking-widest">Je leur fais faire</h3>
+                    <h3 className="pb-2 text-[12px] font-bold text-amber-700">Je leur fais faire</h3>
                         {/* Pas d'animation de hauteur sur le conteneur : combinée au `layout`
                             des cartes, elle laissait la hauteur se figer avant la fin de la
                             transition et le texte débordait du cadre. Chaque carte porte sa
@@ -617,7 +617,7 @@ function Sujet({
                         <span className="material-symbols-outlined text-[16px]">backpack</span>
                     </span>
                     <div>
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">
+                        <span className="text-[12px] font-bold text-slate-400 block mb-1">
                             Ils repartent avec
                         </span>
                         <p className="text-[15px] font-semibold text-slate-700 leading-relaxed">{content.a_retenir}</p>
@@ -640,7 +640,7 @@ function Sujet({
                         )}
                         {content.erreur_frequente && (
                             <div className="border-l-2 border-slate-200 pl-3">
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">L&apos;idée fausse à corriger</span>
+                                <span className="text-[12px] font-bold text-slate-400 block mb-1">L&apos;idée fausse à corriger</span>
                                 <p className="text-[13px] font-medium text-slate-600 leading-relaxed">{content.erreur_frequente}</p>
                             </div>
                         )}
@@ -737,7 +737,7 @@ function EmplacementVide({
             <span className="flex-1 text-left text-[15px] font-bold text-amber-900/70 group-hover:text-amber-900 transition-colors">
                 {invite}
             </span>
-            <span className="text-[11px] font-black text-amber-600/60 uppercase tracking-widest shrink-0">
+            <span className="text-[12px] font-bold text-amber-600/60 shrink-0">
                 {nombre} propositions
             </span>
         </motion.button>
@@ -761,7 +761,7 @@ function RappelFormes({ onFermer }: { onFermer: () => void }) {
             className="rounded-xl bg-amber-50/70 border border-amber-100 p-3 overflow-hidden"
         >
             <div className="flex items-center justify-between">
-                <p className="text-[10px] font-black text-amber-700 uppercase tracking-widest">
+                <p className="text-[12px] font-bold text-amber-700">
                     Quatre formes qui marchent
                 </p>
                 <button
@@ -863,7 +863,7 @@ function FeuilleSemaine({
                     >
                         <div className="px-5 pt-5 pb-3 flex items-start gap-3 shrink-0">
                             <div className="flex-1 min-w-0">
-                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                                <p className="text-[12px] font-bold text-slate-400">
                                     Facultatif
                                 </p>
                                 <p className="text-lg font-black text-slate-900 leading-tight">
@@ -893,7 +893,7 @@ function FeuilleSemaine({
                                 return (
                                     <div key={p}>
                                         <span className={clsx(
-                                            'text-[10px] font-black uppercase tracking-widest block mb-2',
+                                            'text-[12px] font-bold block mb-2',
                                             pil?.color ?? 'text-slate-400',
                                         )}>
                                             {p}

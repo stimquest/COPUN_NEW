@@ -38,7 +38,7 @@ function LoginForm() {
                 <>
                     <div className="text-center mb-6">
                         <h2 className="text-white font-bold tracking-tight">Connexion Pro</h2>
-                        <p className="text-white/40 text-xs font-bold uppercase tracking-widest">Accès réservé aux moniteurs et clubs</p>
+                        <p className="text-white/40 text-[12px] font-bold">Accès réservé aux moniteurs et clubs</p>
                     </div>
 
                     {urlError === 'lien_invalide' && (
@@ -49,7 +49,7 @@ function LoginForm() {
 
                     <form action={handleLogin} className="space-y-5">
                         <div>
-                            <label className="block text-[10px] font-black text-white/40 uppercase tracking-widest mb-2 px-1">Email</label>
+                            <label className="block text-[12px] font-bold text-white/40 mb-2 px-1">Email</label>
                             <input
                                 name="email"
                                 type="email"
@@ -59,7 +59,7 @@ function LoginForm() {
                             />
                         </div>
                         <div>
-                            <label className="block text-[10px] font-black text-white/40 uppercase tracking-widest mb-2 px-1">Mot de passe</label>
+                            <label className="block text-[12px] font-bold text-white/40 mb-2 px-1">Mot de passe</label>
                             <input
                                 name="password"
                                 type="password"
@@ -81,7 +81,7 @@ function LoginForm() {
                         <button
                             disabled={loading}
                             type="submit"
-                            className="w-full py-5 bg-indigo-500 hover:bg-indigo-400 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-indigo-500/20 active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                            className="w-full py-5 bg-indigo-500 hover:bg-indigo-400 text-white rounded-2xl font-bold shadow-xl shadow-indigo-500/20 active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                         >
                             {loading
                                 ? <span className="material-symbols-outlined animate-spin text-[20px]">refresh</span>
@@ -91,7 +91,7 @@ function LoginForm() {
                         <button
                             type="button"
                             onClick={() => { setForgotMode(true); setMessage(null); }}
-                            className="w-full text-center text-white/30 hover:text-white/60 text-xs font-bold uppercase tracking-widest transition-colors pt-1"
+                            className="w-full text-center text-white/30 hover:text-white/60 text-[12px] font-bold transition-colors pt-1"
                         >
                             Mot de passe oublié ?
                         </button>
@@ -101,12 +101,12 @@ function LoginForm() {
                 <>
                     <div className="text-center mb-6">
                         <h2 className="text-white font-bold tracking-tight">Mot de passe oublié</h2>
-                        <p className="text-white/40 text-xs font-bold uppercase tracking-widest">On vous envoie un lien</p>
+                        <p className="text-white/40 text-[12px] font-bold">On vous envoie un lien</p>
                     </div>
 
                     <form action={handleForgot} className="space-y-5">
                         <div>
-                            <label className="block text-[10px] font-black text-white/40 uppercase tracking-widest mb-2 px-1">Votre email</label>
+                            <label className="block text-[12px] font-bold text-white/40 mb-2 px-1">Votre email</label>
                             <input
                                 name="email"
                                 type="email"
@@ -128,7 +128,7 @@ function LoginForm() {
                         <button
                             disabled={loading}
                             type="submit"
-                            className="w-full py-5 bg-indigo-500 hover:bg-indigo-400 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-indigo-500/20 active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                            className="w-full py-5 bg-indigo-500 hover:bg-indigo-400 text-white rounded-2xl font-bold shadow-xl shadow-indigo-500/20 active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                         >
                             {loading
                                 ? <span className="material-symbols-outlined animate-spin text-[20px]">refresh</span>
@@ -138,7 +138,7 @@ function LoginForm() {
                         <button
                             type="button"
                             onClick={() => { setForgotMode(false); setMessage(null); }}
-                            className="w-full text-center text-white/30 hover:text-white/60 text-xs font-bold uppercase tracking-widest transition-colors pt-1"
+                            className="w-full text-center text-white/30 hover:text-white/60 text-[12px] font-bold transition-colors pt-1"
                         >
                             ← Retour à la connexion
                         </button>
@@ -160,7 +160,7 @@ export default function LoginPage() {
                     <div className="size-16 bg-white/10 backdrop-blur-xl rounded-2xl mx-auto flex items-center justify-center border border-white/20 mb-6 shadow-2xl">
                         <span className="material-symbols-outlined text-white text-3xl">waves</span>
                     </div>
-                    <h1 className="text-3xl font-black text-white mb-2 uppercase tracking-tight">Copun</h1>
+                    <h1 className="text-3xl font-bold text-white mb-2 tracking-tight">Copun</h1>
                     <p className="text-slate-400 font-medium tracking-tight leading-relaxed">
                         L&apos;Accompagnateur des Sentinelles du Littoral
                     </p>
@@ -171,7 +171,7 @@ export default function LoginPage() {
                 </Suspense>
 
                 <div className="mt-10 text-center">
-                    <p className="text-slate-500 text-sm font-bold uppercase tracking-widest opacity-40 italic">
+                    <p className="text-slate-500 text-sm font-bold opacity-40 italic">
                         &ldquo;Pour un littoral vivant et protégé&rdquo;
                     </p>
                 </div>

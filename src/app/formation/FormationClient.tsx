@@ -6,10 +6,6 @@ import { useMemo, useState } from 'react';
 import { AnimatePresence, motion, useMotionValue, useTransform, type PanInfo } from 'framer-motion';
 import clsx from 'clsx';
 import {
-    ArrowLeft, ArrowLeftRight, Check, CircleCheck, Clock, Cog, Lightbulb, ListChecks, PenLine, Sparkles, X,
-    type LucideIcon,
-} from 'lucide-react';
-import {
     cartesDe, type CarteFormation, type IllustrationCarte, type LeconFormation,
     type ModulePlanifie, type SectionFormation,
 } from '@/data/formation-methode';
@@ -17,6 +13,19 @@ import { marquerLeconTerminee } from '@/actions/formation-actions';
 import { Motif, type NomMotif } from './Motifs';
 import { TEINTE_THEME } from '@/data/formation-teintes';
 import { CoastalMark } from '@/components/design/Coastal';
+
+import { iconeMaterial, type IconeComposant } from '@/components/ui/Icone';
+const ArrowLeft = iconeMaterial('arrow_back');
+const ArrowLeftRight = iconeMaterial('swap_horiz');
+const Check = iconeMaterial('check');
+const CircleCheck = iconeMaterial('check_circle');
+const Clock = iconeMaterial('schedule');
+const Cog = iconeMaterial('settings');
+const Lightbulb = iconeMaterial('lightbulb');
+const ListChecks = iconeMaterial('checklist');
+const PenLine = iconeMaterial('edit');
+const Sparkles = iconeMaterial('auto_awesome');
+const X = iconeMaterial('close');
 
 /**
  * Parcours « Savoir en parler » — liste des modules, puis lecteur en cartes.
@@ -132,11 +141,11 @@ function Bandeau({ illustration, motif }: {
  * titre tombe toujours à la même hauteur d'une carte à l'autre. Sans cette régularité, le
  * texte saute à chaque swipe et l'œil doit le rechercher.
  *
- * Icônes Lucide (déjà installé) plutôt que Material Symbols : un trait fin et régulier
- * qui s'accorde à la typographie, là où les Material Symbols pleins alourdissaient la carte.
+ * Icônes Material Symbols en trait fin (charte : un seul jeu d'icônes), réglées assez
+ * légères pour s'accorder à la typographie sans alourdir la carte.
  */
 function Nature({ Icone, libelle, teinte }: {
-    Icone: LucideIcon;
+    Icone: IconeComposant;
     libelle: string;
     teinte: 'indigo' | 'emeraude' | 'rose';
 }) {
@@ -148,7 +157,7 @@ function Nature({ Icone, libelle, teinte }: {
             teinte === 'rose' && 'text-rose-500',
         )}>
             <Icone size={15} strokeWidth={2.5} />
-            <span className="text-[10.5px] font-black uppercase tracking-[0.13em]">{libelle}</span>
+            <span className="text-[12px] font-bold">{libelle}</span>
         </div>
     );
 }
@@ -206,7 +215,7 @@ function RenduCarte({ carte, onReponduChange }: {
                                     « {ex.texte} »
                                 </p>
                                 {ex.source && (
-                                    <p className="text-[9.5px] font-black uppercase tracking-widest text-slate-400 mt-1.5">
+                                    <p className="text-[12px] font-bold text-slate-400 mt-1.5">
                                         {ex.source}
                                     </p>
                                 )}
@@ -230,7 +239,7 @@ function RenduCarte({ carte, onReponduChange }: {
 
                     {carte.attention && (
                         <div className="rounded-2xl bg-amber-50 px-4 py-3.5 mt-2.5">
-                            <p className="text-[9.5px] font-black uppercase tracking-widest text-amber-600 mb-1.5">
+                            <p className="text-[12px] font-bold text-amber-600 mb-1.5">
                                 À savoir
                             </p>
                             <p className="text-[14px] text-amber-900 leading-[1.55]">{carte.attention}</p>
@@ -249,13 +258,13 @@ function RenduCarte({ carte, onReponduChange }: {
 
                     <div className="space-y-2.5">
                         <div className="rounded-xl bg-rose-50 border border-rose-100 px-3.5 py-3">
-                            <p className="text-[9.5px] font-black uppercase tracking-widest text-rose-500 mb-1.5">
+                            <p className="text-[12px] font-bold text-rose-500 mb-1.5">
                                 Ce qui ne marche pas
                             </p>
                             <p className="text-[14px] text-rose-900 italic leading-snug">« {carte.mauvais} »</p>
                         </div>
                         <div className="rounded-xl bg-emerald-50 border border-emerald-100 px-3.5 py-3">
-                            <p className="text-[9.5px] font-black uppercase tracking-widest text-emerald-600 mb-1.5">
+                            <p className="text-[12px] font-bold text-emerald-600 mb-1.5">
                                 Ce qui marche
                             </p>
                             <p className="text-[14px] text-emerald-900 italic leading-snug">« {carte.bon} »</p>
@@ -282,7 +291,7 @@ function RenduCarte({ carte, onReponduChange }: {
                         <Check size={26} strokeWidth={3} className="text-emerald-300" />
                     </div>
 
-                    <p className="text-[10px] font-black uppercase tracking-[0.15em] text-white/40 mb-2">
+                    <p className="text-[12px] font-bold text-white/40 mb-2">
                         Étape {carte.numero} sur {carte.total}
                     </p>
                     <h2 className="text-[22px] font-black text-white leading-tight mb-3 text-balance">
@@ -292,7 +301,7 @@ function RenduCarte({ carte, onReponduChange }: {
 
                     {carte.suite && (
                         <div className="mt-7 pt-5 border-t border-white/10 w-full">
-                            <p className="text-[10px] font-black uppercase tracking-[0.15em] text-white/40 mb-1.5">
+                            <p className="text-[12px] font-bold text-white/40 mb-1.5">
                                 La suite
                             </p>
                             <p className="text-[15px] font-bold text-white/90">{carte.suite}</p>
@@ -546,7 +555,7 @@ function Carte({
                         <motion.span
                             style={{ opacity: opaciteArriere }}
                             className={clsx(
-                                'absolute top-4 left-4 text-[10px] font-black uppercase tracking-widest rounded-lg px-2 py-1 -rotate-12 z-10 border-2',
+                                'absolute top-4 left-4 text-[12px] font-bold rounded-lg px-2 py-1 -rotate-12 z-10 border-2',
                                 sombre
                                     ? 'text-white/40 border-white/25'
                                     : 'text-slate-300 border-slate-200',
@@ -557,7 +566,7 @@ function Carte({
                         <motion.span
                             style={{ opacity: opaciteAvant }}
                             className={clsx(
-                                'absolute top-4 right-4 text-[10px] font-black uppercase tracking-widest rounded-lg px-2 py-1 rotate-12 z-10 border-2',
+                                'absolute top-4 right-4 text-[12px] font-bold rounded-lg px-2 py-1 rotate-12 z-10 border-2',
                                 sombre
                                     ? 'text-emerald-300 border-emerald-400/50'
                                     : 'text-indigo-400 border-indigo-300',
@@ -660,12 +669,15 @@ function CarteLecteur({
                 <button onClick={onQuitter} aria-label="Fermer" className="text-white/70 active:text-white">
                     <X size={22} strokeWidth={2.5} />
                 </button>
-                <p className="text-[10px] font-black uppercase tracking-widest text-white/50">
+                <p className="text-[12px] font-bold text-white/50">
                     {lecon.titre} · {index + 1}/{cartes.length}
                 </p>
             </div>
 
-            <div className="flex-1 relative px-4 pb-4 min-h-0">
+            {/* Les cartes sont en `absolute inset-0`, qui ignore le padding : le cadre
+                intérieur `relative` porte la marge avec les bords de l'écran. */}
+            <div className="flex-1 px-3 pb-4 min-h-0">
+                <div className="relative h-full">
                 <AnimatePresence>
                     {[...visibles].reverse().map(({ carte, i }) => (
                         <Carte
@@ -678,6 +690,7 @@ function CarteLecteur({
                         />
                     ))}
                 </AnimatePresence>
+                </div>
             </div>
 
             <div className="px-5 pb-[calc(env(safe-area-inset-bottom)+1.25rem)] pt-2 flex gap-3">
@@ -786,11 +799,11 @@ function LigneModule({ module, lecon, fait, teinte, onOuvrir }: {
                 <p className="text-[12px] text-slate-500 mt-0.5 leading-snug">{module.accroche}</p>
             </div>
             {lecon ? (
-                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 shrink-0">
+                <p className="text-[12px] font-bold text-slate-400 shrink-0">
                     {module.duree_min} min
                 </p>
             ) : (
-                <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-slate-300 shrink-0">
+                <span className="flex items-center gap-1 text-[12px] font-bold text-slate-300 shrink-0">
                     <Clock size={12} strokeWidth={2.5} />
                     Bientôt
                 </span>
@@ -863,7 +876,7 @@ function EcranTheme({ section, leconParId, termine, onRetour, onOuvrirModule }: 
                 >
                     <ArrowLeft size={22} strokeWidth={2.5} />
                 </button>
-                <p className="relative text-[11px] font-black uppercase tracking-[0.14em] text-white/70 mb-1.5">
+                <p className="relative text-[12px] font-bold text-white/70 mb-1.5">
                     {section.modules.length} module{section.modules.length > 1 ? 's' : ''}
                 </p>
                 <h1 className="relative text-[32px] font-semibold tracking-[-.045em] text-white leading-tight text-balance">
@@ -917,8 +930,16 @@ export function FormationClient({ plan, lecons, termine: termineInitial, parcour
                 des guides nature — voir AGENTS.md), puis l'avancement. L'ancien sous-titre
                 et le second surtitre empilaient cinq niveaux de texte avant les thèmes. */}
             <header className="co-formation-intro">
+                <div className="flex items-start gap-2">
+                {/* Retour en flèche seule, comme Explorer et les parcours. */}
+                <Link href="/stages" aria-label="Retour à l’accueil" className="-ml-2 mt-5 flex size-11 shrink-0 items-center justify-center rounded-full text-encre hover:bg-white/60">
+                    <span className="material-symbols-outlined" aria-hidden>arrow_back</span>
+                </Link>
+                <div>
                 <p className="co-eyebrow">Formation</p>
                 <h1>Comment parler d’environnement</h1>
+                </div>
+                </div>
                 {/* Le message fondateur mis en exergue, comme une citation : c'est la promesse
                     de la formation, pas un paragraphe d'introduction parmi d'autres. */}
                 <blockquote className="co-formation-quote">

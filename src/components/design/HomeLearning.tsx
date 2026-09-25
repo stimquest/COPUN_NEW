@@ -1,9 +1,11 @@
 import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
 import type { ResumeFormation } from '@/actions/formation-actions';
 import type { SequenceProgress } from '@/actions/parcours-formation-actions';
 import { CoastalMark } from './Coastal';
 import { PARCOURS_FORMATION } from '@/data/parcours-formation';
+
+import { iconeMaterial } from '@/components/ui/Icone';
+const ArrowRight = iconeMaterial('arrow_forward');
 
 export function HomeLearning({ firstName, resume, progressions, semaineEnCours }: {
     firstName: string;

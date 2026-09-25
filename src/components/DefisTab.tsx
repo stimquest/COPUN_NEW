@@ -110,7 +110,7 @@ export default function DefisTab({ stageId, availableDefis, assignedExploits, su
                 <section>
                     <div className="flex items-center gap-2 mb-3">
                         <span className="material-symbols-outlined text-emerald-500 text-lg">timeline</span>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600">Défi de saison — Fil rouge</p>
+                        <p className="text-[12px] font-bold text-emerald-600">Défi de saison — Fil rouge</p>
                     </div>
                     {filRougeExploit ? (
                         <div className="p-4 rounded-2xl border-2 border-emerald-300 bg-linear-to-br from-emerald-50 to-teal-50">
@@ -159,7 +159,7 @@ export default function DefisTab({ stageId, availableDefis, assignedExploits, su
 
             {/* Assigned Defis */}
             <section>
-                <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3 flex items-center gap-2">
+                <h3 className="text-[12px] font-bold text-slate-400 mb-3 flex items-center gap-2">
                     <span className="material-symbols-outlined text-base">checklist</span>
                     Défis assignés ({assignedExploits.length})
                 </h3>
@@ -277,7 +277,7 @@ export default function DefisTab({ stageId, availableDefis, assignedExploits, su
                     <div className="space-y-8">
                         {suggestedUnassigned.length > 0 && (
                             <div>
-                                <h4 className="text-xs font-black text-indigo-500 uppercase tracking-widest mb-3">Suggérés pour votre programme</h4>
+                                <h4 className="text-[12px] font-bold text-indigo-500 mb-3">Suggérés pour votre programme</h4>
                                 <div className="space-y-3">
                                     {suggestedUnassigned.map(defi => (
                                         <DefiListItem key={defi.id} defi={defi} onAssign={handleAssign} isPending={isPending} variant="suggested" />
@@ -287,7 +287,7 @@ export default function DefisTab({ stageId, availableDefis, assignedExploits, su
                         )}
                         {otherUnassigned.length > 0 && (
                             <div>
-                                {suggestedUnassigned.length > 0 && <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Autres Défis</h4>}
+                                {suggestedUnassigned.length > 0 && <h4 className="text-[12px] font-bold text-slate-400 mb-3">Autres Défis</h4>}
                                 <div className="space-y-3">
                                     {otherUnassigned.map(defi => (
                                         <DefiListItem key={defi.id} defi={defi} onAssign={handleAssign} isPending={isPending} variant="other" />
@@ -355,7 +355,7 @@ function DefiDetailDrawer({ defi, onClose, onAssign, isPending, variant }: {
                 <div className="px-5 py-5 space-y-5">
                     {/* Ce qu'il faut faire */}
                     <section>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Ce qu&apos;il faut faire</p>
+                        <p className="text-[12px] font-bold text-slate-400 mb-2">Ce qu&apos;il faut faire</p>
                         <p className="text-sm text-slate-700 leading-relaxed">{defi.instruction}</p>
                     </section>
 
@@ -363,7 +363,7 @@ function DefiDetailDrawer({ defi, onClose, onAssign, isPending, variant }: {
                     <section className="bg-slate-50 rounded-2xl p-4 flex items-center gap-3">
                         <span className="material-symbols-outlined text-slate-400 text-xl">{preuve.icon}</span>
                         <div>
-                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Preuve attendue</p>
+                            <p className="text-[12px] font-bold text-slate-400">Preuve attendue</p>
                             <p className="text-sm font-bold text-slate-700">{preuve.label}</p>
                         </div>
                     </section>
@@ -371,7 +371,7 @@ function DefiDetailDrawer({ defi, onClose, onAssign, isPending, variant }: {
                     {/* Thématiques */}
                     {defi.tags_theme?.length > 0 && (
                         <section>
-                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Thématiques</p>
+                            <p className="text-[12px] font-bold text-slate-400 mb-2">Thématiques</p>
                             <div className="flex flex-wrap gap-1.5">
                                 {defi.tags_theme.map(tag => (
                                     <span key={tag} className="text-xs px-3 py-1 rounded-full font-semibold bg-emerald-50 text-emerald-700">
@@ -389,7 +389,7 @@ function DefiDetailDrawer({ defi, onClose, onAssign, isPending, variant }: {
                         onClick={() => { onAssign(defi.id); onClose(); }}
                         disabled={isPending}
                         className={clsx(
-                            "w-full py-3.5 rounded-xl font-black text-sm uppercase tracking-widest transition active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2",
+                            "w-full py-3.5 rounded-xl font-bold text-sm transition active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2",
                             variant === 'suggested' ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-slate-900 text-white hover:bg-slate-700'
                         )}
                     >

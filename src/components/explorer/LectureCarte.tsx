@@ -35,7 +35,7 @@ export default function LectureCarte({ fiche, value, onChange, allowUse = true }
         context?.change(fiche.id, next);
         onChange?.(next);
     };
-    const labelClass = 'text-[10px] font-extrabold uppercase tracking-[0.12em] text-[#56706a]';
+    const labelClass = 'text-[12px] font-extrabold text-[#56706a]';
     const bodyClass = 'whitespace-pre-line text-[15px] leading-[1.65] text-[#405653]';
     const actions = fiche.actions ?? [];
     const actionIndex = Math.max(0, actions.findIndex(action => action.id === choice.actionId));

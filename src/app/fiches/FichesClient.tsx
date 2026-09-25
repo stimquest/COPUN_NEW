@@ -81,7 +81,7 @@ function FicheCard({
 
             {fiche.todos.length > 0 && (
                 <div className="mt-4 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">
+                    <p className="text-[12px] font-bold text-slate-400 mb-2">
                         Points de cours ({fiche.todos.length})
                     </p>
                     <ul className="space-y-1.5">
@@ -138,7 +138,7 @@ export function FichesClient({ initialFiches }: { initialFiches: FicheWithTodos[
                         <span className="material-symbols-outlined text-[20px]">arrow_back</span>
                     </Link>
                     <div className="min-w-0 flex-1">
-                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-500">Mes fiches</p>
+                        <p className="text-[12px] font-bold text-indigo-500">Mes fiches</p>
                         <h1 className="text-sm font-extrabold text-slate-900">Contenu sportif</h1>
                     </div>
                     <button

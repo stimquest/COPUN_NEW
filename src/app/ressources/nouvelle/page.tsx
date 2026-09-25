@@ -20,7 +20,7 @@ export default async function NouvelleFichePage() {
                     <span className="material-symbols-outlined text-base">arrow_back</span>
                     Ressources
                 </Link>
-                <h1 className="text-3xl font-black text-slate-900 uppercase tracking-tighter italic">
+                <h1 className="text-3xl font-bold text-slate-900 tracking-tighter italic">
                     Nouvelle fiche mémo
                 </h1>
                 <p className="text-slate-500 mt-1">

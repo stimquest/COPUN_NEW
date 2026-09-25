@@ -100,7 +100,7 @@ export default function DatePicker({ value, onChange, placeholder = 'Choisir une
                         {/* Jours de la semaine */}
                         <div className="grid grid-cols-7 mb-1">
                             {DAYS.map(d => (
-                                <span key={d} className="text-[10px] font-black uppercase text-slate-300 text-center py-1">{d}</span>
+                                <span key={d} className="text-[12px] font-bold text-slate-300 text-center py-1">{d}</span>
                             ))}
                         </div>
 

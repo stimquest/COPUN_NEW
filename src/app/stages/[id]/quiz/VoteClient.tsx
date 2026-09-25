@@ -2,11 +2,15 @@
 
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Camera, Check } from 'lucide-react';
 import type { AffirmationVote } from '@/data/vote-fin-de-stage';
 import { enregistrerVote, type ResultatAffirmation } from '@/actions/vote-actions';
 import CaptureCartons from './CaptureCartons';
 import type { LectureCartons } from '@/lib/detection-cartons';
+
+import { iconeMaterial } from '@/components/ui/Icone';
+const ArrowRight = iconeMaterial('arrow_forward');
+const Camera = iconeMaterial('photo_camera');
+const Check = iconeMaterial('check');
 
 /**
  * Le vote de fin de stage, côté moniteur.
@@ -40,6 +44,9 @@ export default function VoteClient({ stageId, affirmations, resultatsInitiaux }:
     const [reponses, setReponses] = useState<Record<string, Reponse>>({});
     /** Décompte réel quand la caméra a lu les cartons ; absent en saisie manuelle. */
     const [decomptes, setDecomptes] = useState<Record<string, LectureCartons['decompte']>>({});
+    /* Cartons distincts vus par la caméra sur l'ensemble du vote : un marqueur par enfant,
+       donc le nombre de participants. Il préremplit le nombre de stagiaires du bilan. */
+    const [cartonsVus, setCartonsVus] = useState<number[]>([]);
     const [camera, setCamera] = useState(false);
     const [resultatsEnregistres, setResultatsEnregistres] = useState(resultatsInitiaux);
     const [termine, setTermine] = useState(resultatsInitiaux.length > 0);
@@ -68,6 +75,7 @@ export default function VoteClient({ stageId, affirmations, resultatsInitiaux }:
         const { vrai, faux, incertain } = lecture.decompte;
         const majoritaire: Reponse = vrai >= faux && vrai >= incertain ? 'oui' : faux >= incertain ? 'non' : 'partage';
         setDecomptes(prev => ({ ...prev, [courante.id]: lecture.decompte }));
+        setCartonsVus(prev => [...new Set([...prev, ...lecture.cartons.map(carton => carton.id)])]);
         setCamera(false);
         repondre(majoritaire);
     };
@@ -94,7 +102,7 @@ export default function VoteClient({ stageId, affirmations, resultatsInitiaux }:
                         votesFaux: decomptes[a.id]?.faux ?? (r === 'non' ? 1 : 0),
                         votesIncertain: decomptes[a.id]?.incertain ?? (r === 'partage' ? 1 : 0),
                         origine: decomptes[a.id] ? 'camera' : 'manuel',
-                        participants: null,
+                        participants: cartonsVus.length || null,
                     };
                 });
             if (!resultats.length) { setError('Répondez à au moins une affirmation.'); return; }

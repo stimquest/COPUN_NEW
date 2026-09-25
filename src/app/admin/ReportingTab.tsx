@@ -124,7 +124,7 @@ export function ReportingTab({ userRole }: { userRole?: string | null }) {
                 <>
                     {/* KPIs globaux */}
                     <section>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">
+                        <p className="text-[12px] font-bold text-slate-400 mb-3">
                             {isGlobalAdmin ? `Vue nationale — ${annee}` : `Mon club — ${annee}`}
                         </p>
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -144,7 +144,7 @@ export function ReportingTab({ userRole }: { userRole?: string | null }) {
 
                     {/* Graphique mensuel défis */}
                     <section>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Défis validés par mois</p>
+                        <p className="text-[12px] font-bold text-slate-400 mb-3">Défis validés par mois</p>
                         <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
                             <div className="flex items-end gap-1.5 h-28">
                                 {data.par_mois.map((m, i) => {
@@ -166,11 +166,11 @@ export function ReportingTab({ userRole }: { userRole?: string | null }) {
 
                     {/* Par club — visible uniquement pour l'admin général */}
                     {isGlobalAdmin && <section>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Par club</p>
+                        <p className="text-[12px] font-bold text-slate-400 mb-3">Par club</p>
                         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
                             <table className="w-full text-sm">
                                 <thead>
-                                    <tr className="border-b border-slate-100 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                                    <tr className="border-b border-slate-100 text-[12px] font-bold text-slate-400">
                                         <th className="text-left px-4 py-3">Club</th>
                                         <th className="text-center px-3 py-3">Semaines</th>
                                         <th className="text-center px-3 py-3">Stagiaires</th>
@@ -204,7 +204,7 @@ export function ReportingTab({ userRole }: { userRole?: string | null }) {
                     {/* Thématiques les plus pratiquées */}
                     {data.par_thematique.length > 0 && (
                         <section>
-                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Défis les plus réalisés</p>
+                            <p className="text-[12px] font-bold text-slate-400 mb-3">Défis les plus réalisés</p>
                             <div className="space-y-2">
                                 {data.par_thematique.slice(0, 5).map((t, i) => {
                                     const max = data.par_thematique[0].nb_validations;

@@ -53,7 +53,7 @@ export function ImpactToggle({
     return (
         <div>
             <div className="flex items-center justify-between mb-2">
-                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                <p className="text-[12px] font-bold text-slate-400">
                     Ce que le groupe a retenu
                 </p>
                 {!value && (
@@ -242,7 +242,7 @@ function ReviewCard({
                         Case "Autre" ouvre la note libre. */}
                     {reasonOptions.length > 0 && (
                         <div>
-                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5">
+                            <p className="text-[12px] font-bold text-slate-400 mb-1.5">
                                 {isNotDone ? 'Pourquoi non abordé ?' : 'Pourquoi ce niveau ?'}
                             </p>
                             <div className="flex flex-wrap gap-1.5">
@@ -293,7 +293,7 @@ function ReviewCard({
                     {/* Note contextuelle selon statut */}
                     {showNote && (
                         <div>
-                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5 block">
+                            <label className="text-[12px] font-bold text-slate-400 mb-1.5 block">
                                 {noteLabel}
                             </label>
                             <textarea
@@ -418,7 +418,7 @@ export function StageObjectiveReviewList({ items, editable = false, drafts, onCh
                                 <div className={cn('size-6 rounded-lg flex items-center justify-center shrink-0', pillar.bg)}>
                                     <span className="material-symbols-outlined text-white text-sm">{pillar.icon}</span>
                                 </div>
-                                <p className={cn('text-xs font-black uppercase tracking-tight', pillar.color)}>{pillar.label}</p>
+                                <p className={cn('text-[12px] font-bold tracking-tight', pillar.color)}>{pillar.label}</p>
                                 <span className="text-[10px] font-bold text-slate-300">{pillarItems.length}</span>
                             </div>
                             <div className="space-y-2">{pillarItems.map(renderCard)}</div>
@@ -431,7 +431,7 @@ export function StageObjectiveReviewList({ items, editable = false, drafts, onCh
                             <div className="size-6 rounded-lg flex items-center justify-center shrink-0 bg-indigo-500">
                                 <span className="material-symbols-outlined text-white text-sm">sailing</span>
                             </div>
-                            <p className="text-xs font-black uppercase tracking-tight text-indigo-600">Objectifs sportifs</p>
+                            <p className="text-[12px] font-bold tracking-tight text-indigo-600">Objectifs sportifs</p>
                             <span className="text-[10px] font-bold text-slate-300">{sportItems.length}</span>
                         </div>
                         <div className="space-y-2">{sportItems.map(renderCard)}</div>

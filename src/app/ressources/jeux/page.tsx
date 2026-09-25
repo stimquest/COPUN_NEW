@@ -11,7 +11,7 @@ export default async function RessourcesJeuxPage() {
             <header className="mb-10">
                 <div className="flex items-start justify-between gap-4 mb-6">
                     <div>
-                        <h1 className="text-4xl font-black text-slate-900 uppercase tracking-tighter italic mb-2">
+                        <h1 className="text-4xl font-bold text-slate-900 tracking-tighter italic mb-2">
                             Ressources
                         </h1>
                         <p className="text-slate-500 font-medium">

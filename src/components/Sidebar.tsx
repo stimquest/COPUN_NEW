@@ -1,9 +1,11 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { House } from 'lucide-react';
 import { NAV_POLES, SECONDARY_NAV, SPORT_NAV, ADMIN_NAV, activeNavigation } from '@/data/navigation';
 import { SPORT_FEATURES_ENABLED } from '@/lib/feature-flags';
+
+import { iconeMaterial } from '@/components/ui/Icone';
+const House = iconeMaterial('home');
 
 type SidebarProps = { role?: string | null; fullName?: string | null; email?: string | null; clubName?: string | null; formationEnCours?: boolean };
 

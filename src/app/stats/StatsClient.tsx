@@ -43,7 +43,7 @@ function KnowledgeProgressCard({ explored, total }: { explored: number; total: n
 
     return (
         <div className="rounded-3xl p-4 ring-1 ring-black/5 bg-amber-100 text-amber-950">
-            <p className="text-[10px] font-black uppercase tracking-widest opacity-70">Tes connaissances</p>
+            <p className="text-[12px] font-bold opacity-70">Tes connaissances</p>
             <div className="mt-1 flex items-baseline gap-2">
                 <p className="text-3xl font-black leading-none">{explored}<span className="text-lg opacity-60">/{total}</span></p>
                 <span className="material-symbols-outlined text-xl text-amber-600">workspace_premium</span>
@@ -62,7 +62,7 @@ function KnowledgeProgressCard({ explored, total }: { explored: number; total: n
 function MetricCard({ label, value, helper, className }: { label: string; value: string; helper: string; className: string }) {
     return (
         <div className={clsx('rounded-3xl p-4 ring-1 ring-black/5', className)}>
-            <p className="text-[10px] font-black uppercase tracking-widest opacity-70">{label}</p>
+            <p className="text-[12px] font-bold opacity-70">{label}</p>
             <p className="mt-1 text-3xl font-black leading-none">{value}</p>
             <p className="mt-2 text-xs font-semibold opacity-75">{helper}</p>
         </div>
@@ -112,8 +112,8 @@ export default function StatsClient({ monitors, clubs, currentUserId, myPoints, 
             <header className="bg-slate-900 text-white pt-12 pb-24 px-6 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500 rounded-full blur-[100px] opacity-20 translate-x-1/2 -translate-y-1/2" />
                 <div className="relative z-10">
-                    <h1 className="text-[10px] font-black tracking-[0.2em] text-indigo-400 uppercase mb-2">Impact Environnemental</h1>
-                    <h2 className="text-4xl font-black uppercase leading-none">Le Podium<br /><span className="text-slate-500">Du Changement</span></h2>
+                    <h1 className="text-[12px] font-bold text-indigo-400 mb-2">Impact Environnemental</h1>
+                    <h2 className="text-4xl font-bold leading-none">Le Podium<br /><span className="text-slate-500">Du Changement</span></h2>
                 </div>
             </header>
 
@@ -123,7 +123,7 @@ export default function StatsClient({ monitors, clubs, currentUserId, myPoints, 
                 <section className="rounded-[2rem] border border-orange-100 bg-gradient-to-br from-white via-amber-50 to-sky-50 p-5 shadow-xl shadow-slate-200/70">
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                         <div>
-                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-500">Carnets de semaine</p>
+                            <p className="text-[12px] font-bold text-orange-500">Carnets de semaine</p>
                             <h3 className="mt-1 text-2xl font-black tracking-tight text-slate-950">Progression pédagogique</h3>
                         </div>
                         <p className="text-xs font-bold text-slate-500">
@@ -166,7 +166,7 @@ export default function StatsClient({ monitors, clubs, currentUserId, myPoints, 
                                         className="w-full flex items-center justify-between gap-2 text-left"
                                     >
                                         <div>
-                                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Vos orientations</p>
+                                            <p className="text-[12px] font-bold text-slate-400">Vos orientations</p>
                                             <p className="text-xs text-slate-500 mt-0.5">Répartition précise de vos choix par notion — reste-t-on toujours sur les mêmes sujets (marée, vent…) ?</p>
                                         </div>
                                         <span className={clsx(
@@ -212,7 +212,7 @@ export default function StatsClient({ monitors, clubs, currentUserId, myPoints, 
 
                                                 {neverExploredKeywords.length > 0 && (
                                                     <div className="pt-3">
-                                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1.5">
+                                                        <p className="text-[12px] font-bold text-slate-400 mb-1.5">
                                                             Jamais explorés ({neverExploredKeywords.length})
                                                         </p>
                                                         <div className="flex flex-wrap gap-1.5">
@@ -237,7 +237,7 @@ export default function StatsClient({ monitors, clubs, currentUserId, myPoints, 
                                         onClick={() => setShowPillarDetail(o => !o)}
                                         className="w-full flex items-center justify-between gap-2"
                                     >
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Suivi par pilier</p>
+                                        <p className="text-[12px] font-bold text-slate-400">Suivi par pilier</p>
                                         <span className={clsx(
                                             'material-symbols-outlined text-slate-300 text-base shrink-0 transition-transform duration-200',
                                             showPillarDetail && 'rotate-180'
@@ -255,7 +255,7 @@ export default function StatsClient({ monitors, clubs, currentUserId, myPoints, 
                                                     <div className={clsx('size-6 rounded-lg flex items-center justify-center shrink-0', pillar.bg)}>
                                                         <span className="material-symbols-outlined text-white text-sm">{pillar.icon}</span>
                                                     </div>
-                                                    <p className={clsx('text-xs font-black uppercase tracking-tight flex-1', pillar.color)}>{pillar.label}</p>
+                                                    <p className={clsx('text-[12px] font-bold tracking-tight flex-1', pillar.color)}>{pillar.label}</p>
                                                     <span className="text-xs font-bold text-slate-500">
                                                         {pillarTotal > 0 ? `${pillarWorked}/${pillarTotal} travaillées` : 'Aucune fiche sélectionnée'}
                                                     </span>
@@ -318,7 +318,7 @@ export default function StatsClient({ monitors, clubs, currentUserId, myPoints, 
 
                             {objectiveDashboard.recentStages.length > 0 && (
                                 <div className="space-y-2">
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Derniers carnets</p>
+                                    <p className="text-[12px] font-bold text-slate-400">Derniers carnets</p>
                                     {objectiveDashboard.recentStages.map(stage => (
                                         <Link key={stage.id} href={`/stages/${stage.id}/bilan`} className="flex items-center justify-between gap-3 rounded-2xl bg-white/80 px-4 py-3 text-sm font-bold text-slate-700 ring-1 ring-white transition hover:bg-white">
                                             <span className="min-w-0 truncate">{stage.title}</span>
@@ -345,7 +345,7 @@ export default function StatsClient({ monitors, clubs, currentUserId, myPoints, 
                         className="w-full flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between text-left"
                     >
                         <div>
-                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500">Sciences participatives</p>
+                            <p className="text-[12px] font-bold text-emerald-500">Sciences participatives</p>
                             <h3 className="mt-1 text-2xl font-black tracking-tight text-slate-950">Retours terrain</h3>
                         </div>
                         <div className="flex items-center gap-2">
@@ -386,7 +386,7 @@ export default function StatsClient({ monitors, clubs, currentUserId, myPoints, 
 
                                         {observationsDashboard.topSpecies.length > 0 && (
                                             <div className="rounded-3xl border border-white bg-white/80 p-4">
-                                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Espèces / éléments les plus observés</p>
+                                                <p className="text-[12px] font-bold text-slate-400 mb-3">Espèces / éléments les plus observés</p>
                                                 <ul className="space-y-1.5">
                                                     {observationsDashboard.topSpecies.map(s => (
                                                         <li key={`${s.type}-${s.name}`} className="text-xs font-bold text-slate-700 flex justify-between items-center">
@@ -412,13 +412,13 @@ export default function StatsClient({ monitors, clubs, currentUserId, myPoints, 
                 <div className="bg-white p-1.5 rounded-2xl shadow-xl flex border border-slate-100">
                     <button
                         onClick={() => setActiveTab('MONITEURS')}
-                        className={clsx("flex-1 py-4 rounded-xl text-[11px] font-black tracking-widest uppercase transition-all", activeTab === 'MONITEURS' ? "bg-slate-900 text-white shadow-lg" : "text-slate-400 hover:bg-slate-50")}
+                        className={clsx("flex-1 py-4 rounded-xl text-[12px] font-bold transition-all", activeTab === 'MONITEURS' ? "bg-slate-900 text-white shadow-lg" : "text-slate-400 hover:bg-slate-50")}
                     >
                         Moniteurs
                     </button>
                     <button
                         onClick={() => setActiveTab('CLUBS')}
-                        className={clsx("flex-1 py-4 rounded-xl text-[11px] font-black tracking-widest uppercase transition-all", activeTab === 'CLUBS' ? "bg-slate-900 text-white shadow-lg" : "text-slate-400 hover:bg-slate-50")}
+                        className={clsx("flex-1 py-4 rounded-xl text-[12px] font-bold transition-all", activeTab === 'CLUBS' ? "bg-slate-900 text-white shadow-lg" : "text-slate-400 hover:bg-slate-50")}
                     >
                         Clubs
                     </button>
@@ -470,18 +470,18 @@ export default function StatsClient({ monitors, clubs, currentUserId, myPoints, 
                                 {/* Nom + sous-titre — bloc qui rétrécit */}
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-1.5 min-w-0">
-                                        <h3 className="text-sm sm:text-base font-black text-slate-900 uppercase leading-tight truncate">
+                                        <h3 className="text-sm sm:text-base font-bold text-slate-900 leading-tight truncate">
                                             {item.name}
                                         </h3>
                                         {item.isMe && <span className="shrink-0 text-[9px] bg-indigo-600 text-white px-1.5 py-0.5 rounded-full tracking-widest">VOUS</span>}
                                     </div>
-                                    {item.sub && <p className="text-[11px] font-bold text-slate-400 uppercase mt-0.5 truncate">{item.sub}</p>}
+                                    {item.sub && <p className="text-[12px] font-bold text-slate-400 mt-0.5 truncate">{item.sub}</p>}
                                 </div>
 
                                 {/* Points */}
                                 <div className="text-right shrink-0 pl-1">
                                     <span className={clsx("text-xl sm:text-2xl font-black block leading-none", index < 3 ? "text-indigo-600" : "text-slate-900")}>{item.points}</span>
-                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Points</span>
+                                    <span className="text-[12px] font-bold text-slate-400">Points</span>
                                 </div>
                             </motion.div>
                         ))}
@@ -492,9 +492,9 @@ export default function StatsClient({ monitors, clubs, currentUserId, myPoints, 
                 <div className="bg-indigo-600 rounded-[2.5rem] p-8 text-white relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
                     <span className="material-symbols-outlined text-4xl mb-4">campaign</span>
-                    <h3 className="text-xl font-black uppercase mb-2">Votre score : {myPoints} pts</h3>
+                    <h3 className="text-xl font-bold mb-2">Votre score : {myPoints} pts</h3>
                     <p className="text-sm font-medium opacity-80 mb-6 leading-relaxed">Chaque défi validé et chaque quiz de fin de semaine rapportent des points à votre club. Continuez à transmettre !</p>
-                    <Link href="/classement" className="w-full h-14 bg-white text-indigo-600 rounded-2xl font-black text-xs tracking-widest uppercase flex items-center justify-center">
+                    <Link href="/classement" className="w-full h-14 bg-white text-indigo-600 rounded-2xl font-bold text-[12px] flex items-center justify-center">
                         Voir le barème détaillé
                     </Link>
                 </div>

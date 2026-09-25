@@ -83,7 +83,7 @@ export default function FichesBrowser({ fiches, currentUserId, isAdmin, isModera
             {showFilters && (
                 <div className="bg-white border border-slate-200 rounded-2xl p-4 mb-5 space-y-4">
                     <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Thème</p>
+                        <p className="text-[12px] font-bold text-slate-400 mb-2">Thème</p>
                         <div className="flex flex-wrap gap-1.5">
                             {ALL_THEMATIC_TAGS.map(t => (
                                 <button key={t} onClick={() => setTheme(theme === t ? null : t)}
@@ -96,7 +96,7 @@ export default function FichesBrowser({ fiches, currentUserId, isAdmin, isModera
                         </div>
                     </div>
                     <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Saison</p>
+                        <p className="text-[12px] font-bold text-slate-400 mb-2">Saison</p>
                         <div className="flex flex-wrap gap-1.5">
                             {ALL_SAISON_IDS.map(id => (
                                 <button key={id} onClick={() => setSaison(saison === id ? null : id)}
@@ -110,7 +110,7 @@ export default function FichesBrowser({ fiches, currentUserId, isAdmin, isModera
                     </div>
                     {allTags.length > 0 && (
                         <div>
-                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Mots-clés</p>
+                            <p className="text-[12px] font-bold text-slate-400 mb-2">Mots-clés</p>
                             <div className="flex flex-wrap gap-1.5">
                                 {allTags.map(t => (
                                     <button key={t} onClick={() => setTag(tag === t ? null : t)}

@@ -105,14 +105,14 @@ export function StageClosureReview({
 
             {/* Intro */}
             <div className="rounded-2xl bg-amber-50 border border-amber-200 px-4 py-4">
-                <p className="text-xs font-black uppercase tracking-widest text-amber-600 mb-1">Clôture de la semaine</p>
+                <p className="text-[12px] font-bold text-amber-600 mb-1">Clôture de la semaine</p>
                 <p className="text-sm font-semibold text-amber-900">{stageTitle}</p>
             </div>
 
             {/* Le programme, rappelé pour se souvenir de ce qui était prévu avant de juger */}
             {objectives.length > 0 && (
                 <section>
-                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400 mb-3">
+                    <p className="text-[12px] font-bold text-slate-400 mb-3">
                         Ce qui était prévu
                     </p>
                     <ProgrammeCondense stageId={stageId} contents={objectives} preparations={preparations} />
@@ -121,7 +121,7 @@ export function StageClosureReview({
 
             {/* Le ressenti global */}
             <section>
-                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400 mb-3">
+                <p className="text-[12px] font-bold text-slate-400 mb-3">
                     Dans l&apos;ensemble
                 </p>
                 <p className="text-sm font-bold text-slate-900 mb-3">
@@ -189,7 +189,7 @@ export function StageClosureReview({
                 constitué. Utile plus tard pour mesurer combien de personnes ont été
                 sensibilisées sur une saison. */}
             <section>
-                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400 mb-3">
+                <p className="text-[12px] font-bold text-slate-400 mb-3">
                     Combien de stagiaires cette semaine
                 </p>
                 <input
@@ -206,7 +206,7 @@ export function StageClosureReview({
             {/* Défis Terrain */}
             {defisTotal > 0 && (
                 <section>
-                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400 mb-3">
+                    <p className="text-[12px] font-bold text-slate-400 mb-3">
                         Défis terrain
                     </p>
                     <StageDefisReview defis={defisAssigned} />
@@ -216,7 +216,7 @@ export function StageClosureReview({
             {/* Retours terrain */}
             {observations.length > 0 && (
                 <section>
-                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400 mb-3">
+                    <p className="text-[12px] font-bold text-slate-400 mb-3">
                         Retours terrain
                         <span className="ml-2 text-slate-300">{observations.length}</span>
                     </p>
@@ -227,7 +227,7 @@ export function StageClosureReview({
             {/* Quiz de fin de semaine */}
             {quizData && (
                 <section>
-                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400 mb-3">
+                    <p className="text-[12px] font-bold text-slate-400 mb-3">
                         Quiz de fin de semaine
                     </p>
                     <div className={clsx(
@@ -269,7 +269,7 @@ export function StageClosureReview({
 
             {/* Mémo libre */}
             <section>
-                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400 mb-3">
+                <p className="text-[12px] font-bold text-slate-400 mb-3">
                     Mémo moniteur <span className="font-semibold normal-case tracking-normal text-slate-300">— optionnel</span>
                 </p>
                 <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">

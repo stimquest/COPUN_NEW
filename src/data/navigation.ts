@@ -1,4 +1,16 @@
-import { BookOpen, Compass, GraduationCap, House, NotebookPen, Waves, Settings, ChartNoAxesColumn, CalendarDays, ShieldCheck, Library } from 'lucide-react';
+
+import { iconeMaterial } from '@/components/ui/Icone';
+const BookOpen = iconeMaterial('menu_book');
+const Compass = iconeMaterial('explore');
+const GraduationCap = iconeMaterial('school');
+const House = iconeMaterial('home');
+const NotebookPen = iconeMaterial('edit_note');
+const Waves = iconeMaterial('waves');
+const Settings = iconeMaterial('settings');
+const ChartNoAxesColumn = iconeMaterial('bar_chart');
+const CalendarDays = iconeMaterial('calendar_month');
+const ShieldCheck = iconeMaterial('verified_user');
+const Library = iconeMaterial('local_library');
 
 /**
  * L'application a deux pôles, et le menu les reflète :

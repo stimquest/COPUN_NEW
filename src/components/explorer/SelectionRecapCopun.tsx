@@ -47,7 +47,7 @@ export default function SelectionRecapCopun({ pool, retenues, onToggleFiche, onF
                         <div className={clsx('size-7 rounded-lg flex items-center justify-center shrink-0', pillar.bg)}>
                             <span className="material-symbols-outlined text-white text-base">{pillar.icon}</span>
                         </div>
-                        <p className={clsx('flex-1 text-sm font-black uppercase tracking-tight', pillar.color)}>{pillar.label}</p>
+                        <p className={clsx('flex-1 text-sm font-bold tracking-tight', pillar.color)}>{pillar.label}</p>
                         <span className="text-[10px] font-bold text-slate-400 bg-white px-2 py-0.5 rounded-full">{fiches.length}</span>
                     </div>
 
@@ -68,7 +68,7 @@ export default function SelectionRecapCopun({ pool, retenues, onToggleFiche, onF
                                         className="col-start-1 row-start-1 min-w-0 text-left pl-4 py-3"
                                     >
                                         {themesLabels.length > 0 && (
-                                            <span className="block text-[9px] font-black uppercase tracking-widest text-slate-400 mb-0.5">
+                                            <span className="block text-[12px] font-bold text-slate-400 mb-0.5">
                                                 {themesLabels.map(t => t.label).join(' · ')}
                                             </span>
                                         )}
@@ -83,7 +83,7 @@ export default function SelectionRecapCopun({ pool, retenues, onToggleFiche, onF
                                     </button>
 
                                     {!!fiche.actions?.length && <div className="co-program-actions col-span-2 row-start-2 w-full px-4 py-3">
-                                        <p className="mb-2 text-[10px] font-black uppercase tracking-widest text-slate-400">Action avec le groupe</p>
+                                        <p className="mb-2 text-[12px] font-bold text-slate-400">Action avec le groupe</p>
                                         <div className="space-y-2">
                                             {fiche.actions.map(action => {
                                                 const selected = (actionChoices[fiche.id] ?? fiche.actions?.[0]?.id) === action.id;

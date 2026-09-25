@@ -15,7 +15,7 @@ export default async function LeaderboardPage() {
                     <span className="material-symbols-outlined">arrow_back</span>
                 </Link>
                 <div>
-                    <h1 className="text-[10px] font-black tracking-widest text-amber-500 uppercase">Classement</h1>
+                    <h1 className="text-[12px] font-bold text-amber-500">Classement</h1>
                     <p className="text-lg font-bold leading-none text-slate-900">Leaderboard Défis</p>
                 </div>
             </header>

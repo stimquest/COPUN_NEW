@@ -87,21 +87,23 @@ export type ResumeVote = {
     total: number;
     actionsConfirmees: number;
     actionsTotal: number;
+    /** Cartons distincts lus par la caméra pendant le vote (un par enfant), sinon null. */
+    participants: number | null;
 };
 
 /** Résumé persistant utilisé par « Mes semaines » et le bilan de clôture. */
 export async function getResumeVote(stageId: string): Promise<ResumeVote> {
     const ctx = await requireStageOwner(stageId);
-    if (!ctx) return { done: false, score: 0, total: 0, actionsConfirmees: 0, actionsTotal: 0 };
+    if (!ctx) return { done: false, score: 0, total: 0, actionsConfirmees: 0, actionsTotal: 0, participants: null };
 
     const { data, error } = await ctx.supabase
         .from('stage_vote_results')
-        .select('action_id, attendu, votes_vrai, votes_faux, votes_incertain, origine')
+        .select('action_id, attendu, votes_vrai, votes_faux, votes_incertain, origine, participants')
         .eq('stage_id', stageId);
 
     if (error) {
         console.error('[getResumeVote]', error.message);
-        return { done: false, score: 0, total: 0, actionsConfirmees: 0, actionsTotal: 0 };
+        return { done: false, score: 0, total: 0, actionsConfirmees: 0, actionsTotal: 0, participants: null };
     }
 
     const lignes = data ?? [];
@@ -124,6 +126,7 @@ export async function getResumeVote(stageId: string): Promise<ResumeVote> {
         total: savoirs.length,
         actionsConfirmees,
         actionsTotal: actions.length,
+        participants: lignes.reduce<number | null>((max, ligne) => ligne.participants ? Math.max(max ?? 0, ligne.participants) : max, null),
     };
 }
 

@@ -2,11 +2,14 @@
 
 import { useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { PedagogicalContent } from '@/types';
 import { formulationsFiche } from '@/data/formulations-fiche';
 import { FORMES_ACCROCHE } from '@/data/formes-accroche';
 import styles from './AccrochesCarousel.module.css';
+
+import { iconeMaterial } from '@/components/ui/Icone';
+const ChevronLeft = iconeMaterial('chevron_left');
+const ChevronRight = iconeMaterial('chevron_right');
 
 export default function AccrochesCarousel({ fiche, value, onChange }: { fiche: PedagogicalContent; value?: string; onChange?: (value: string) => void }) {
     const propositions = formulationsFiche(fiche);

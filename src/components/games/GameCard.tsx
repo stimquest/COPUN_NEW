@@ -29,7 +29,7 @@ export default function GameCard({ game }: GameCardProps) {
                             game.type === 'triage' ? 'rule' :
                                 game.type === 'mots' ? 'edit_note' : 'call_split'}
                     </span>
-                    <span className="text-xs font-bold text-indigo-900 uppercase tracking-widest">
+                    <span className="text-[12px] font-bold text-indigo-900">
                         {game.theme || 'Jeu'}
                     </span>
                 </div>

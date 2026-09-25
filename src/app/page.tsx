@@ -17,7 +17,7 @@ export default function LandingPage() {
                 </div>
 
                 {/* Title */}
-                <h1 className="text-5xl font-black text-white uppercase tracking-tight mb-3 text-center">COP&apos;UN</h1>
+                <h1 className="text-5xl font-bold text-white tracking-tight mb-3 text-center">COP&apos;UN</h1>
                 <p className="text-slate-400 font-medium text-center max-w-xs leading-relaxed mb-12">
                     Un outil pour intégrer l&apos;environnement marin dans vos séances et faire de chaque vague une vague de conscience.
                 </p>
@@ -40,13 +40,13 @@ export default function LandingPage() {
                 {/* CTA */}
                 <Link
                     href="/login"
-                    className="w-full max-w-xs py-5 bg-indigo-500 hover:bg-indigo-400 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-indigo-500/30 active:scale-[0.98] transition-all text-center flex items-center justify-center gap-2"
+                    className="w-full max-w-xs py-5 bg-indigo-500 hover:bg-indigo-400 text-white rounded-2xl font-bold shadow-xl shadow-indigo-500/30 active:scale-[0.98] transition-all text-center flex items-center justify-center gap-2"
                 >
                     <span className="material-symbols-outlined text-[20px]">login</span>
                     Se connecter
                 </Link>
 
-                <p className="mt-6 text-slate-600 text-xs font-bold uppercase tracking-widest">Accès réservé aux moniteurs et clubs</p>
+                <p className="mt-6 text-slate-600 text-[12px] font-bold">Accès réservé aux moniteurs et clubs</p>
             </main>
 
             <footer className="relative z-10 text-center pb-8">

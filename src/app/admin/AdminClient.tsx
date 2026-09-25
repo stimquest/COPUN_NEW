@@ -91,14 +91,14 @@ export function AdminClient({ users: initialUsers, clubs, error, userRole }: {
                     <span className="material-symbols-outlined">arrow_back</span>
                 </Link>
                 <div>
-                    <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Administration</p>
+                    <p className="text-[12px] font-bold text-slate-400">Administration</p>
                     <p className="text-lg font-bold leading-none text-slate-900">
                         {tab === 'fiches' ? 'Fiches pédagogiques' : 'Gestion des accès'}
                     </p>
                 </div>
                 <div className="ml-auto flex items-center gap-2 bg-violet-50 text-violet-700 px-3 py-1.5 rounded-full border border-violet-200">
                     <span className="material-symbols-outlined text-sm">admin_panel_settings</span>
-                    <span className="text-xs font-black uppercase tracking-widest">Admin</span>
+                    <span className="text-[12px] font-bold">Admin</span>
                 </div>
             </header>
 
@@ -116,7 +116,7 @@ export function AdminClient({ users: initialUsers, clubs, error, userRole }: {
                         <button
                             key={t.key}
                             onClick={() => { setTab(t.key); setMessage(null); }}
-                            className={`flex items-center gap-1.5 py-2 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+                            className={`flex items-center gap-1.5 py-2 px-4 rounded-xl text-[12px] font-bold transition-all ${
                                 tab === t.key
                                     ? 'bg-slate-900 text-white shadow-sm'
                                     : 'text-slate-400 hover:text-slate-700 hover:bg-slate-50'
@@ -198,7 +198,7 @@ export function AdminClient({ users: initialUsers, clubs, error, userRole }: {
                                     <p className="font-bold text-slate-900 text-sm truncate">{u.full_name || '—'}</p>
                                     <p className="text-xs text-slate-400 truncate">{u.email}</p>
                                     <div className="flex items-center gap-1.5 mt-1">
-                                        <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${roleColor(u.role)}`}>
+                                        <span className={`text-[12px] font-bold px-2 py-0.5 rounded-full ${roleColor(u.role)}`}>
                                             {roleLabel(u.role)}
                                         </span>
                                         {u.clubs?.name ? (
@@ -233,7 +233,7 @@ export function AdminClient({ users: initialUsers, clubs, error, userRole }: {
 
                         <form action={handleCreate} className="space-y-4">
                             <div>
-                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Nom complet</label>
+                                <label className="block text-[12px] font-bold text-slate-400 mb-1.5">Nom complet</label>
                                 <input
                                     name="fullName"
                                     type="text"
@@ -243,7 +243,7 @@ export function AdminClient({ users: initialUsers, clubs, error, userRole }: {
                                 />
                             </div>
                             <div>
-                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Email</label>
+                                <label className="block text-[12px] font-bold text-slate-400 mb-1.5">Email</label>
                                 <input
                                     name="email"
                                     type="email"
@@ -254,7 +254,7 @@ export function AdminClient({ users: initialUsers, clubs, error, userRole }: {
                             </div>
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Rôle</label>
+                                    <label className="block text-[12px] font-bold text-slate-400 mb-1.5">Rôle</label>
                                     <select
                                         name="role"
                                         defaultValue="instructor"
@@ -266,7 +266,7 @@ export function AdminClient({ users: initialUsers, clubs, error, userRole }: {
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Club</label>
+                                    <label className="block text-[12px] font-bold text-slate-400 mb-1.5">Club</label>
                                     <select
                                         name="clubId"
                                         className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 focus:outline-none focus:border-indigo-400 transition-colors"
@@ -281,7 +281,7 @@ export function AdminClient({ users: initialUsers, clubs, error, userRole }: {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full py-3.5 bg-slate-900 hover:bg-slate-700 text-white rounded-xl font-black uppercase tracking-widest text-sm active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                                className="w-full py-3.5 bg-slate-900 hover:bg-slate-700 text-white rounded-xl font-bold text-sm active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                             >
                                 {loading
                                     ? <span className="material-symbols-outlined animate-spin text-lg">refresh</span>
@@ -304,7 +304,7 @@ export function AdminClient({ users: initialUsers, clubs, error, userRole }: {
 
                         <form action={handleInvite} className="space-y-4">
                             <div>
-                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Email à inviter</label>
+                                <label className="block text-[12px] font-bold text-slate-400 mb-1.5">Email à inviter</label>
                                 <input
                                     name="email"
                                     type="email"
@@ -322,7 +322,7 @@ export function AdminClient({ users: initialUsers, clubs, error, userRole }: {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full py-3.5 bg-indigo-500 hover:bg-indigo-400 text-white rounded-xl font-black uppercase tracking-widest text-sm active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                                className="w-full py-3.5 bg-indigo-500 hover:bg-indigo-400 text-white rounded-xl font-bold text-sm active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                             >
                                 {loading
                                     ? <span className="material-symbols-outlined animate-spin text-lg">refresh</span>

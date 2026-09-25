@@ -82,7 +82,7 @@ export default function FiltresPanel({
                         <div className="flex-1 overflow-y-auto px-5 py-4 space-y-6">
                             <div className="space-y-2">
                                 <div className="flex items-center justify-between gap-2">
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Niveau</p>
+                                    <p className="text-[12px] font-bold text-slate-400">Niveau</p>
                                     <button
                                         onClick={() => setShowNiveauInfo(v => !v)}
                                         className="text-[10px] font-bold text-indigo-500 hover:text-indigo-700 transition"
@@ -117,10 +117,10 @@ export default function FiltresPanel({
                             </div>
 
                             <div className="space-y-3">
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Thématiques</p>
+                                <p className="text-[12px] font-bold text-slate-400">Thématiques</p>
                                 {PILLARS.map(pillar => (
                                     <div key={pillar.id} className="space-y-1.5">
-                                        <p className={clsx('text-[9px] font-black uppercase tracking-[0.15em]', pillar.color)}>{pillar.label}</p>
+                                        <p className={clsx('text-[12px] font-bold', pillar.color)}>{pillar.label}</p>
                                         <div className="flex flex-wrap gap-1.5">
                                             {THEMES_BY_PILLAR[pillar.id].map(theme => {
                                                 const active = selectedThemes.includes(theme.id);
@@ -145,7 +145,7 @@ export default function FiltresPanel({
 
                             {availableTags.length > 0 && (
                                 <div className="space-y-2">
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Mots-clés</p>
+                                    <p className="text-[12px] font-bold text-slate-400">Mots-clés</p>
                                     <div className="relative">
                                         <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 text-base">search</span>
                                         <input
@@ -162,7 +162,7 @@ export default function FiltresPanel({
                                                 <button
                                                     key={tag}
                                                     onClick={() => toggleTag(tag)}
-                                                    className="bg-slate-800 text-white pl-2.5 pr-1.5 py-1 rounded-lg text-[10px] font-bold uppercase flex items-center gap-1"
+                                                    className="bg-slate-800 text-white pl-2.5 pr-1.5 py-1 rounded-lg text-[12px] font-bold flex items-center gap-1"
                                                 >
                                                     {tag}<span className="material-symbols-outlined text-[12px]">close</span>
                                                 </button>
@@ -174,7 +174,7 @@ export default function FiltresPanel({
                                             <button
                                                 key={tag}
                                                 onClick={() => toggleTag(tag)}
-                                                className="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase bg-slate-100 text-slate-500 hover:bg-slate-200 transition"
+                                                className="px-2.5 py-1 rounded-lg text-[12px] font-bold bg-slate-100 text-slate-500 hover:bg-slate-200 transition"
                                             >
                                                 {tag}
                                             </button>

@@ -118,7 +118,7 @@ export default function ProgrammeCondense({ stageId, contents, preparations, rea
                     {contents.length > 1 && <span className="text-slate-300"> · glissez pour feuilleter</span>}
                 </p>
                 {prochains > 0 && (
-                    <span className="text-[10px] font-black uppercase tracking-wide text-indigo-500">
+                    <span className="text-[12px] font-bold text-indigo-500">
                         Fiche {indexActif + 1}/{contents.length}
                     </span>
                 )}
@@ -209,13 +209,13 @@ export default function ProgrammeCondense({ stageId, contents, preparations, rea
                             </span>
 
                             <div className="relative order-2 flex flex-wrap items-center gap-2 mt-3">
-                                <span className="text-[10px] font-black uppercase tracking-[0.14em] text-white/75">
+                                <span className="text-[12px] font-bold text-white/75">
                                     {pilier.label}
                                 </span>
                                 {repere && (
                                     <span className="text-[10px] font-semibold text-white/45">· {repere}</span>
                                 )}
-                                <span className="ml-auto rounded-full bg-white/15 px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-white/85">
+                                <span className="ml-auto rounded-full bg-white/15 px-2 py-0.5 text-[12px] font-bold text-white/85">
                                     {fait ? 'Traité' : estPret ? 'Prêt' : estProchain ? 'À poursuivre' : 'À préparer'}
                                 </span>
                             </div>
@@ -301,7 +301,7 @@ export default function ProgrammeCondense({ stageId, contents, preparations, rea
             {/* Le rituel : transversal à tous les sujets, donc hors de la liste. */}
             {actionsSemaine.length > 0 && (
                 <div className="rounded-2xl bg-white/60 border border-dashed border-slate-200 px-4 py-3.5 mt-4">
-                    <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400 mb-2">
+                    <p className="text-[12px] font-bold text-slate-400 mb-2">
                         Chaque jour de la semaine
                     </p>
                     <div className="space-y-2.5">
@@ -432,7 +432,7 @@ function Ligne({
                 </span>
             </span>
             <div className="flex-1 min-w-0">
-                <span className="block text-[10px] font-bold uppercase tracking-wide text-slate-400 mb-0.5">
+                <span className="block text-[12px] font-bold text-slate-400 mb-0.5">
                     {intitule}
                 </span>
                 <div lang="fr" className="text-[13.5px] leading-[1.5] space-y-1">

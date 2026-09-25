@@ -124,7 +124,7 @@ function IntentionDropdown({ intentionId, setIntentionId, suggestions }: { inten
                                         <p className={clsx("text-xs font-black leading-snug flex items-center gap-1.5", isActive ? obj.color : "text-slate-700")}>
                                             {obj.label}
                                             {reason && (
-                                                <span className="shrink-0 text-[9px] font-black uppercase tracking-wide bg-indigo-100 text-indigo-600 px-1.5 py-0.5 rounded-full">
+                                                <span className="shrink-0 text-[12px] font-bold bg-indigo-100 text-indigo-600 px-1.5 py-0.5 rounded-full">
                                                     Suggéré
                                                 </span>
                                             )}
@@ -184,7 +184,7 @@ export default function SeasonalGuide({ startDate, activities = [], initialInten
             <div className="bg-slate-900 rounded-2xl p-5 space-y-3">
                 <div className="flex items-center gap-2">
                     <span className="material-symbols-outlined text-indigo-400 text-lg">calendar_month</span>
-                    <span className="text-[10px] font-black tracking-widest text-indigo-400 uppercase">{period.label}</span>
+                    <span className="text-[12px] font-bold text-indigo-400">{period.label}</span>
                 </div>
                 <p className="text-sm text-slate-300 leading-relaxed">{period.description}</p>
                 <div className="flex flex-wrap gap-2 pt-1">
@@ -198,7 +198,7 @@ export default function SeasonalGuide({ startDate, activities = [], initialInten
 
             {/* Coefficient */}
             <div className="space-y-3">
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">
+                <label className="text-[12px] font-bold text-slate-400 px-1">
                     Coefficient de marée prévu
                 </label>
                 <div className="grid grid-cols-3 gap-2">
@@ -222,7 +222,7 @@ export default function SeasonalGuide({ startDate, activities = [], initialInten
 
             {/* Météo */}
             <div className="space-y-3">
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">
+                <label className="text-[12px] font-bold text-slate-400 px-1">
                     Tendance météo de la semaine
                 </label>
                 <div className="grid grid-cols-2 gap-2">
@@ -246,7 +246,7 @@ export default function SeasonalGuide({ startDate, activities = [], initialInten
 
             {/* Intention / objectif de la semaine */}
             <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">
+                <label className="text-[12px] font-bold text-slate-400 px-1">
                     Mon objectif pour cette semaine
                     <span className="font-semibold normal-case tracking-normal text-slate-300 ml-1">— optionnel</span>
                 </label>
@@ -267,7 +267,7 @@ export default function SeasonalGuide({ startDate, activities = [], initialInten
             {/* Suggestions */}
             {suggestions && (
                 <div className="bg-indigo-50 border-2 border-indigo-100 rounded-2xl p-4 space-y-3">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-indigo-500">
+                    <p className="text-[12px] font-bold text-indigo-500">
                         Thématiques suggérées
                     </p>
                     <div className="space-y-1.5">
@@ -300,7 +300,7 @@ export default function SeasonalGuide({ startDate, activities = [], initialInten
                     type="button"
                     onClick={() => onSkip(intentionId, coeff, meteo)}
                     disabled={isSaving}
-                    className="flex-1 h-12 border-2 border-slate-200 rounded-2xl text-xs font-black text-slate-500 uppercase tracking-wider hover:bg-slate-50 transition-all disabled:opacity-40"
+                    className="flex-1 h-12 border-2 border-slate-200 rounded-2xl text-[12px] font-bold text-slate-500 hover:bg-slate-50 transition-all disabled:opacity-40"
                 >
                     Passer cette étape
                 </button>
@@ -308,7 +308,7 @@ export default function SeasonalGuide({ startDate, activities = [], initialInten
                     type="button"
                     onClick={handleValidate}
                     disabled={!suggestions || isSaving}
-                    className="flex-1 h-12 bg-indigo-600 text-white rounded-2xl text-xs font-black uppercase tracking-wider disabled:opacity-40 hover:bg-indigo-700 transition-all flex items-center justify-center gap-2"
+                    className="flex-1 h-12 bg-indigo-600 text-white rounded-2xl text-[12px] font-bold disabled:opacity-40 hover:bg-indigo-700 transition-all flex items-center justify-center gap-2"
                 >
                     {isSaving ? (
                         <>

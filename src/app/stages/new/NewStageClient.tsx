@@ -224,7 +224,7 @@ export function NewStageClient({ existingStage, initialSelection = [], initialTh
                         calendrier — les moniteurs préparent au fil de l'eau, rarement
                         à plus de quelques jours d'avance. */}
                     <div>
-                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 block">
+                        <label className="text-[12px] font-bold text-slate-400 mb-2 block">
                             Quelle semaine ?
                         </label>
 
@@ -277,7 +277,7 @@ export function NewStageClient({ existingStage, initialSelection = [], initialTh
                     )}
 
                     {initialSelection.length > 0 && !isEditing && <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-4">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-emerald-700">Cartes déjà choisies</p>
+                        <p className="text-[12px] font-bold text-emerald-700">Cartes déjà choisies</p>
                         <p className="mt-1 text-sm font-bold text-emerald-950">{initialSelection.length} carte{initialSelection.length > 1 ? 's' : ''} du parcours seront ajoutées automatiquement.</p>
                     </div>}
 

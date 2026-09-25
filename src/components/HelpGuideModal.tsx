@@ -102,7 +102,7 @@ export function HelpGuideModal({ isOpen, onClose }: { isOpen: boolean; onClose: 
                         <div className="px-6 sm:px-8 py-6 border-b bg-indigo-50 border-indigo-100 shrink-0">
                             <div className="flex items-start justify-between gap-4">
                                 <div>
-                                    <span className="inline-block px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mb-3 bg-indigo-100 text-indigo-700">
+                                    <span className="inline-block px-3 py-1 rounded-full text-[12px] font-bold mb-3 bg-indigo-100 text-indigo-700">
                                         Guide rapide
                                     </span>
                                     <h2 className="text-2xl font-black text-slate-900 leading-tight">
@@ -150,14 +150,14 @@ export function HelpGuideModal({ isOpen, onClose }: { isOpen: boolean; onClose: 
 
                             {/* Gérer sa semaine au quotidien */}
                             <div className="pt-6 border-t border-slate-100">
-                                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">En détail</h3>
+                                <h3 className="text-[12px] font-bold text-slate-400 mb-1">En détail</h3>
                                 <p className="text-lg font-black text-slate-900 mb-4">Gérer sa semaine au quotidien</p>
                                 <div className="space-y-2.5">
                                     {MANAGE_CARDS.map(card => (
                                         <div key={card.title} className="bg-slate-50 border border-slate-100 rounded-2xl px-4 py-3.5">
                                             <div className="flex items-center gap-2 mb-1">
                                                 <h4 className="text-sm font-black text-slate-800">{card.title}</h4>
-                                                <span className="text-[9px] font-black uppercase tracking-widest text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded">
+                                                <span className="text-[12px] font-bold text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded">
                                                     {card.pill}
                                                 </span>
                                             </div>
@@ -169,7 +169,7 @@ export function HelpGuideModal({ isOpen, onClose }: { isOpen: boolean; onClose: 
 
                             {/* À retenir */}
                             <div className="bg-slate-900 rounded-2xl px-5 py-4">
-                                <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-3">À retenir</p>
+                                <p className="text-[12px] font-bold text-white/40 mb-3">À retenir</p>
                                 <div className="space-y-2.5">
                                     <div>
                                         <p className="text-xs font-black text-white">Fréquence</p>

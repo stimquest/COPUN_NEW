@@ -55,7 +55,7 @@ export default function DilemmeComponent({ data, onComplete }: Props) {
                 <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl">
                     <div className="flex items-center gap-2 mb-2">
                         <span className="material-symbols-outlined text-blue-500">info</span>
-                        <span className="font-bold text-blue-800 text-xs uppercase">Analyse</span>
+                        <span className="font-bold text-blue-800 text-[12px]">Analyse</span>
                     </div>
                     <p className="text-sm text-blue-900">{data.explanation}</p>
                 </div>

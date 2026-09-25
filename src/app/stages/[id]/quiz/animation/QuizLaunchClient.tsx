@@ -2,8 +2,11 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, Play } from 'lucide-react';
 import { generateStageQuiz } from '@/actions/quiz-actions';
+
+import { iconeMaterial } from '@/components/ui/Icone';
+const ArrowRight = iconeMaterial('arrow_forward');
+const Play = iconeMaterial('play_arrow');
 
 type Props = { stageId: string; existingGameId: string | null };
 const QUESTION_OPTIONS = [5, 7, 10];

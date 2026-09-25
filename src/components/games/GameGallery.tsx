@@ -85,7 +85,7 @@ export default function GameGallery({ initialGames }: Props) {
                     Object.entries(gamesByTheme).map(([theme, games]) => (
                         <div key={theme} className="space-y-6">
                             <div className="flex items-center gap-3">
-                                <h2 className="text-xl font-black text-slate-900 uppercase tracking-widest italic">{theme}</h2>
+                                <h2 className="text-xl font-bold text-slate-900 italic">{theme}</h2>
                                 <div className="h-[2px] flex-1 bg-linear-to-r from-slate-200 to-transparent"></div>
                                 <span className="text-xs font-bold text-slate-400">{games.length} jeu(x)</span>
                             </div>

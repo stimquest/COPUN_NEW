@@ -1,9 +1,13 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Camera, RotateCcw, X } from 'lucide-react';
 import { LIBELLES_REPONSE, type ReponseCarton } from '@/data/marqueurs-vote';
 import { lireCartons, type LectureCartons } from '@/lib/detection-cartons';
+
+import { iconeMaterial } from '@/components/ui/Icone';
+const Camera = iconeMaterial('photo_camera');
+const RotateCcw = iconeMaterial('undo');
+const X = iconeMaterial('close');
 
 /**
  * La lecture des cartons par la caméra.

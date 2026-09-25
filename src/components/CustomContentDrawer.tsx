@@ -147,7 +147,7 @@ export function CustomContentDrawer({ open, initialData, onClose, onSaved }: Pro
                 {/* Header */}
                 <div className="flex items-center justify-between px-5 pb-4 shrink-0">
                     <div>
-                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-500">Fiche sportive</p>
+                        <p className="text-[12px] font-bold text-indigo-500">Fiche sportive</p>
                         <h2 className="text-xl font-black text-slate-900">
                             {initialData ? 'Modifier la fiche' : 'Nouvelle fiche'}
                         </h2>
@@ -162,7 +162,7 @@ export function CustomContentDrawer({ open, initialData, onClose, onSaved }: Pro
 
                     {/* Titre */}
                     <div>
-                        <label className="block text-xs font-black uppercase tracking-[0.15em] text-slate-400 mb-2">
+                        <label className="block text-[12px] font-bold text-slate-400 mb-2">
                             Titre de la notion <span className="text-red-400">*</span>
                         </label>
                         <input
@@ -175,7 +175,7 @@ export function CustomContentDrawer({ open, initialData, onClose, onSaved }: Pro
 
                     {/* Objectif */}
                     <div>
-                        <label className="block text-xs font-black uppercase tracking-[0.15em] text-slate-400 mb-2">
+                        <label className="block text-[12px] font-bold text-slate-400 mb-2">
                             Objectif pédagogique <span className="text-red-400">*</span>
                         </label>
                         <textarea
@@ -188,7 +188,7 @@ export function CustomContentDrawer({ open, initialData, onClose, onSaved }: Pro
 
                     {/* Niveau FFVoile */}
                     <div>
-                        <label className="block text-xs font-black uppercase tracking-[0.15em] text-slate-400 mb-2">
+                        <label className="block text-[12px] font-bold text-slate-400 mb-2">
                             Niveau FFVoile cible <span className="text-slate-300 font-semibold normal-case tracking-normal">optionnel</span>
                         </label>
                         <div className="flex flex-wrap gap-2">
@@ -210,7 +210,7 @@ export function CustomContentDrawer({ open, initialData, onClose, onSaved }: Pro
 
                     {/* Supports */}
                     <div>
-                        <label className="block text-xs font-black uppercase tracking-[0.15em] text-slate-400 mb-2">
+                        <label className="block text-[12px] font-bold text-slate-400 mb-2">
                             Supports <span className="text-slate-300 font-semibold normal-case tracking-normal">optionnel</span>
                         </label>
                         <div className="flex flex-wrap gap-2">
@@ -232,7 +232,7 @@ export function CustomContentDrawer({ open, initialData, onClose, onSaved }: Pro
 
                     {/* Points de cours */}
                     <div>
-                        <label className="block text-xs font-black uppercase tracking-[0.15em] text-slate-400 mb-2">
+                        <label className="block text-[12px] font-bold text-slate-400 mb-2">
                             Points de cours
                             <span className="ml-1 text-slate-300 font-semibold normal-case tracking-normal">— à cocher en séance</span>
                         </label>
@@ -296,7 +296,7 @@ export function CustomContentDrawer({ open, initialData, onClose, onSaved }: Pro
 
                     {/* Conseil moniteur */}
                     <div>
-                        <label className="block text-xs font-black uppercase tracking-[0.15em] text-slate-400 mb-2">
+                        <label className="block text-[12px] font-bold text-slate-400 mb-2">
                             Conseil moniteur <span className="text-slate-300 font-semibold normal-case tracking-normal">optionnel</span>
                         </label>
                         <textarea

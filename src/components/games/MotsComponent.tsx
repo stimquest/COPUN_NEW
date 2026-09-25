@@ -26,7 +26,7 @@ export default function MotsComponent({ data, onComplete }: Props) {
     return (
         <div className="space-y-4">
             <div>
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Définition</span>
+                <span className="text-[12px] font-bold text-slate-400">Définition</span>
                 <p className="font-medium text-slate-800">{data.definition}</p>
             </div>
 
@@ -50,7 +50,7 @@ export default function MotsComponent({ data, onComplete }: Props) {
 
             {submitted && (
                 <div className="p-3 bg-slate-50 rounded-lg text-sm border border-slate-100">
-                    <span className="font-bold text-slate-500 text-xs uppercase block mb-1">Réponse</span>
+                    <span className="font-bold text-slate-500 text-[12px] block mb-1">Réponse</span>
                     <p className="font-bold text-indigo-700">{data.answer}</p>
                 </div>
             )}

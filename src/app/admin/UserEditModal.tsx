@@ -89,7 +89,7 @@ export function UserEditModal({ user, clubs, onClose, onSaved, onDeleted }: Prop
 
                 {/* Nom complet */}
                 <div>
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Nom complet</label>
+                    <label className="block text-[12px] font-bold text-slate-400 mb-1.5">Nom complet</label>
                     <input
                         type="text"
                         value={fullName}
@@ -102,7 +102,7 @@ export function UserEditModal({ user, clubs, onClose, onSaved, onDeleted }: Prop
                 {/* Rôle + Club */}
                 <div className="grid grid-cols-2 gap-3">
                     <div>
-                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Rôle</label>
+                        <label className="block text-[12px] font-bold text-slate-400 mb-1.5">Rôle</label>
                         <select
                             value={role}
                             onChange={e => setRole(e.target.value)}
@@ -115,7 +115,7 @@ export function UserEditModal({ user, clubs, onClose, onSaved, onDeleted }: Prop
                         </select>
                     </div>
                     <div>
-                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Club</label>
+                        <label className="block text-[12px] font-bold text-slate-400 mb-1.5">Club</label>
                         <select
                             value={clubId}
                             onChange={e => setClubId(e.target.value)}
@@ -131,7 +131,7 @@ export function UserEditModal({ user, clubs, onClose, onSaved, onDeleted }: Prop
                 <button
                     onClick={handleSave}
                     disabled={saving}
-                    className="w-full py-3.5 bg-slate-900 hover:bg-slate-700 text-white rounded-xl font-black uppercase tracking-widest text-sm active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                    className="w-full py-3.5 bg-slate-900 hover:bg-slate-700 text-white rounded-xl font-bold text-sm active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                     {saving
                         ? <span className="material-symbols-outlined animate-spin text-lg">refresh</span>

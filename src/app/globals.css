@@ -17,7 +17,7 @@
 .co-field-card > header { display: flex; justify-content: space-between; align-items: center; color: #6c817a; }
 .co-field-card > header > span { font-size: 13px; font-variant-numeric: tabular-nums; }
 .co-field-card h2 { font-size: 22px; font-weight: 650; letter-spacing: -.025em; line-height: 1.25; margin: 12px 0 24px; }
-.co-field-card h3 { margin-bottom: 8px; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #637971; }
+.co-field-card h3 { margin-bottom: 8px; font-size: 12px; font-weight: 700; color: #637971; }
 .co-field-hook blockquote { font-size: 19px; line-height: 1.55; font-weight: 550; }
 .co-field-action { padding: 18px; margin: 22px 0; border-radius: 16px; background: #eaf0e6; }
 .co-field-action strong { display: block; margin-bottom: 8px; font-size: 16px; }
@@ -92,6 +92,10 @@
 .co-heading { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 30px; }
 .co-heading h1 { font-size: clamp(30px, 5vw, 46px); font-weight: 650; line-height: 1.08; letter-spacing: -.055em; margin-top: 10px; text-wrap: balance; }
 .co-eyebrow { font-size: 11px; font-weight: 650; letter-spacing: .07em; }
+/* Charte : la seule étiquette en majuscules (surtitre de section), et l'intertitre
+   normal qui remplace toutes les autres. */
+.co-surtitre { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--co-muted); }
+.co-intertitre { font-size: 12px; font-weight: 600; line-height: 1.4; color: var(--co-muted); }
 .co-intro { font-size: 14px; color: var(--co-muted); line-height: 1.6; max-width: 380px; margin-top: 12px; }
 .co-wordmark { font-size: 31px; font-weight: 800; letter-spacing: -.08em; color: var(--co-ink); white-space: nowrap; }
 .co-wordmark-dot { color: #d58d66; }
@@ -186,11 +190,11 @@
 .co-hand-card { padding: 22px 20px 20px; border: 1px solid #ffffff22; border-radius: 20px; background: #2c625c; box-shadow: 0 -10px 24px #00000033; }
 .co-hand-card h3 { font-size: 20px; font-weight: 650; line-height: 1.3; letter-spacing: -.02em; }
 .co-week-article-open { margin-top: 16px; }
-.co-week-article-caption { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 10px; font-size: 10px; font-weight: 800; letter-spacing: .12em; line-height: 1.4; text-transform: uppercase; color: #9fb5ad; }
+.co-week-article-caption { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 10px; font-size: 12px; font-weight: 650; line-height: 1.4; color: #9fb5ad; }
 .co-week-article-caption strong { font-weight: 700; color: var(--co-sand); }
 .co-week-article-open blockquote { margin: 6px 0 0; font-size: 18px; font-weight: 700; line-height: 1.45; letter-spacing: -.015em; color: #fff; }
 .co-week-article-groupe { margin-top: 18px; padding: 16px 16px 17px; border-radius: 16px; background: #ffffff12; border: 1px solid #ffffff1c; }
-.co-week-article-groupe h4 { margin-bottom: 6px; font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--co-sand); }
+.co-week-article-groupe h4 { margin-bottom: 6px; font-size: 12px; font-weight: 650; color: var(--co-sand); }
 .co-week-article-groupe p { white-space: pre-line; font-size: 15px; line-height: 1.6; color: #e4ece8; }
 .co-week-article-part { margin-top: 18px; }
 .co-week-article-part h4 { margin-bottom: 4px; font-size: 12px; font-weight: 700; letter-spacing: .02em; color: #9fb5ad; }
@@ -198,7 +202,7 @@
 .co-week-article-retenir p { font-weight: 600; color: #fff; }
 .co-week-objective-body > p { margin-top: 5px; color: #b9c9c3; font-size: 11px; line-height: 1.5; }
 .co-week-objective-action { display: grid; gap: 3px; margin-top: 12px !important; padding: 11px 12px; border-radius: 11px; background: #ffffff0d; }
-.co-week-objective-action strong { color: var(--co-sand); font-size: 9px; letter-spacing: .07em; text-transform: uppercase; }
+.co-week-objective-action strong { color: var(--co-sand); font-size: 12px; }
 /* Un seul bouton, dimensionné sur son texte : la grille à trois colonnes étirait
    l'unique geste restant sur toute la largeur, ce qui le faisait lire comme une
    bannière plutôt que comme une case à cocher. */
@@ -363,7 +367,7 @@
 .co-practice-question { max-width: calc(100% - 34px); font-size: 18px; font-weight: 700; line-height: 1.28; }
 .co-practice-hook { margin-top: 14px; padding: 12px 14px; border-radius: 12px; background: #edf0e8; font-size: 14px; line-height: 1.45; }
 .co-practice-card > p:not(.co-practice-question):not(.co-practice-hook) { display: grid; gap: 4px; margin-top: 14px; color: var(--co-muted); font-size: 13px; line-height: 1.45; }
-.co-practice-card strong { color: var(--co-ink); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; }
+.co-practice-card strong { color: var(--co-ink); font-size: 12px; }
 .co-pro-feedback { display: flex; align-items: center; gap: 8px; margin-top: 18px; color: #36554d; font-size: 13px; line-height: 1.55; }
 .co-pro-note-label { display: block; margin-top: 30px; }
 .co-pro-note { width: 100%; min-height: 158px; margin-top: 10px; padding: 15px; border: 1px solid #193d3b35; border-radius: 14px; background: #fffdf8; color: var(--co-ink); font-size: 14px; line-height: 1.5; }
@@ -382,8 +386,8 @@
 .co-practice-objectives article > span { color: var(--co-muted); font-size: 10px; font-weight: 800; letter-spacing: .08em; }
 .co-practice-objectives h2 { margin-top: 7px; font-size: 18px; line-height: 1.3; }
 .co-practice-objectives p { display: grid; gap: 4px; margin-top: 14px; color: var(--co-muted); font-size: 13px; line-height: 1.5; }
-.co-practice-objectives p strong { color: var(--co-ink); font-size: 11px; text-transform: uppercase; letter-spacing: .05em; }
-.co-practice-action-choices { display: grid; gap: 8px; margin-top: 16px; color: var(--co-muted); font-size: 11px; text-transform: uppercase; letter-spacing: .05em; }
+.co-practice-objectives p strong { color: var(--co-ink); font-size: 12px; }
+.co-practice-action-choices { display: grid; gap: 8px; margin-top: 16px; color: var(--co-muted); font-size: 12px; }
 .co-practice-action-choices > button { display: grid; gap: 4px; padding: 13px 14px; border: 1px solid #193d3b2c; border-radius: 13px; background: #fff; color: var(--co-ink); text-align: left; text-transform: none; letter-spacing: normal; }
 .co-practice-action-choices > button[aria-pressed="true"] { border-color: var(--co-ink); background: var(--co-ink); color: #fff; }
 .co-practice-action-choices b { font-size: 13px; }
@@ -528,32 +532,105 @@
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-inter), ui-sans-serif, system-ui;
 
-  /* Colors */
-  --color-primary: #4c40e7;
-  --color-primary-dark: #3b30bd;
+  /* ── Charte COP'UN (voir src/styles/CHARTE.md) ───────────────────────────
+     Palette nommée : chaque écran pioche ici, jamais une couleur inventée. */
+  --color-encre: #173d3a;
+  --color-encre-douce: #405653;
+  --color-discret: #62746e;
+  --color-papier: #f6f5ed;
+  --color-carte: #fffdf8;
+  --color-sable: #f2dfa6;
+  --color-sauge: #dfe8e2;
+  --color-terracotta: #b97351;
+  --color-filet: #193d3b1a;
+
+  /* Tailles de texte : 4 seulement. */
+  --text-titre: 28px;
+  --text-titre--line-height: 1.1;
+  --text-intertitre: 17px;
+  --text-intertitre--line-height: 1.3;
+  --text-corps: 15px;
+  --text-corps--line-height: 1.6;
+  --text-note: 12px;
+  --text-note--line-height: 1.45;
+
+  /* Rayons et ombres */
+  --radius-carte: 20px;
+  --radius-bloc: 14px;
+  --shadow-carte: 0 2px 10px -4px rgb(25 61 59 / 0.10), 0 12px 32px -14px rgb(25 61 59 / 0.18);
+  --shadow-flottant: 0 22px 50px -18px rgb(25 61 59 / 0.35);
+
+  --color-primary: #173d3a;
+  --color-primary-dark: #0f2a28;
   --color-nature: #059669;
   --color-emerald-accent: #059669;
-  --color-slate-bg: #f8fafc;
+  --color-slate-bg: #f6f5ed;
 
-  --color-indigo-50: #eef2ff;
-  --color-indigo-100: #e0e7ff;
+  /* ── Anciennes couleurs, redirigées vers la charte ───────────────────────
+     Le gris « slate » (froid, bleuté) devient un neutre vert encre ; indigo,
+     violet et purple deviennent une gamme sauge → encre. Des centaines de
+     classes héritées basculent ainsi dans la palette sans être réécrites.
+     Les couleurs COP (amber, blue, emerald) ne sont PAS touchées. */
+  --color-slate-50: #f7f6f0;
+  --color-slate-100: #efede4;
+  --color-slate-200: #e2dfd4;
+  --color-slate-300: #cbc9bd;
+  --color-slate-400: #95a09a;
+  --color-slate-500: #6f817d;
+  --color-slate-600: #56706a;
+  --color-slate-700: #405653;
+  --color-slate-800: #2a4542;
+  --color-slate-900: #173d3a;
+  --color-slate-950: #0f2a28;
+
+  --color-indigo-50: #edf1ea;
+  --color-indigo-100: #dfe8e2;
+  --color-indigo-200: #c3d4cb;
+  --color-indigo-300: #9fbab0;
+  --color-indigo-400: #6f978c;
+  --color-indigo-500: #3f6f66;
+  --color-indigo-600: #2c5a53;
+  --color-indigo-700: #214c48;
+  --color-indigo-800: #1b403d;
+  --color-indigo-900: #173d3a;
+  --color-indigo-950: #0f2a28;
+
+  --color-violet-50: #edf1ea;
+  --color-violet-100: #dfe8e2;
+  --color-violet-200: #c3d4cb;
+  --color-violet-300: #9fbab0;
+  --color-violet-400: #6f978c;
+  --color-violet-500: #3f6f66;
+  --color-violet-600: #2c5a53;
+  --color-violet-700: #214c48;
+  --color-violet-800: #1b403d;
+  --color-violet-900: #173d3a;
+  --color-violet-950: #0f2a28;
+
+  --color-purple-50: #edf1ea;
+  --color-purple-100: #dfe8e2;
+  --color-purple-200: #c3d4cb;
+  --color-purple-300: #9fbab0;
+  --color-purple-400: #6f978c;
+  --color-purple-500: #3f6f66;
+  --color-purple-600: #2c5a53;
+  --color-purple-700: #214c48;
+  --color-purple-800: #1b403d;
+  --color-purple-900: #173d3a;
+  --color-purple-950: #0f2a28;
 
   --color-emerald-50: #ecfdf5;
   --color-emerald-100: #d1fae5;
 
   /* Shadows */
-  --shadow-card: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05), 0 0 0 1px rgba(15, 23, 42, 0.05);
-  --shadow-nav: 0 10px 40px -10px rgba(0, 0, 0, 0.1);
-  --shadow-active: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --shadow-card: 0 4px 6px -1px rgb(25 61 59 / 0.05), 0 2px 4px -2px rgb(25 61 59 / 0.05), 0 0 0 1px rgb(25 61 59 / 0.05);
+  --shadow-nav: 0 10px 40px -10px rgb(25 61 59 / 0.12);
+  --shadow-active: 0 2px 4px rgb(25 61 59 / 0.1);
 
-  /* ── Ombres teintées ──────────────────────────────────────────────────────
-     Les ombres grises par défaut posent les cartes sur l'écran sans les y
-     rattacher : sur un fond coloré, une ombre prend la teinte du fond. C'est
-     ce qui donne aux apps de référence leur profondeur douce plutôt qu'un
-     empilement de rectangles blancs. */
-  --shadow-soft: 0 2px 8px -2px rgb(30 58 138 / 0.08), 0 8px 24px -8px rgb(30 58 138 / 0.10);
-  --shadow-lift: 0 4px 12px -2px rgb(30 58 138 / 0.10), 0 16px 40px -12px rgb(30 58 138 / 0.18);
-  --shadow-glow-indigo: 0 8px 24px -6px rgb(76 64 231 / 0.45);
+  /* Ombres teintées encre (et non plus bleu nuit). */
+  --shadow-soft: 0 2px 8px -2px rgb(25 61 59 / 0.08), 0 8px 24px -8px rgb(25 61 59 / 0.10);
+  --shadow-lift: 0 4px 12px -2px rgb(25 61 59 / 0.10), 0 16px 40px -12px rgb(25 61 59 / 0.18);
+  --shadow-glow-indigo: 0 8px 24px -6px rgb(25 61 59 / 0.35);
   --shadow-glow-amber: 0 8px 24px -6px rgb(245 158 11 / 0.40);
   --shadow-glow-blue: 0 8px 24px -6px rgb(37 99 235 / 0.40);
   --shadow-glow-emerald: 0 8px 24px -6px rgb(16 185 129 / 0.40);
@@ -568,17 +645,15 @@
    désormais une teinte et une profondeur : deux halos très diffus en haut
    d'écran, sous le bandeau, comme une lumière qui vient du ciel. */
 .fond-ciel {
+  /* Charte : le fond papier, avec un halo sable très léger en haut d'écran. */
   background:
-    radial-gradient(1200px 500px at 15% -10%, rgb(199 210 254 / 0.55), transparent 65%),
-    radial-gradient(900px 420px at 95% 0%, rgb(165 243 252 / 0.45), transparent 60%),
-    linear-gradient(180deg, #eef2ff 0%, #eff4fb 28%, #ebf0f7 60%);
-  background-attachment: fixed;
+    radial-gradient(1000px 420px at 20% -12%, rgb(242 223 166 / 0.28), transparent 65%),
+    var(--color-papier);
 }
 
-/* Bandeau haut : la zone d'identité de l'écran, colorée et franche, dont les
-   cartes se détachent — au lieu de flotter sur un fond uniforme. */
+/* Bandeau haut : la zone d'identité de l'écran, en encre. */
 .bandeau-ciel {
-  background: linear-gradient(160deg, #4c40e7 0%, #5b56ea 45%, #3f7fd6 100%);
+  background: linear-gradient(160deg, #173d3a 0%, #214c48 60%, #2c5a53 100%);
 }
 
 :root {
@@ -590,7 +665,7 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.55 0.21 256);
+  --primary: #173d3a;
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
@@ -601,7 +676,7 @@
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
-  --ring: oklch(0.55 0.21 256);
+  --ring: #173d3a;
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -673,7 +748,8 @@ body {
   direction: ltr;
   -webkit-font-feature-settings: 'liga';
   -webkit-font-smoothing: antialiased;
-  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  /* Charte : trait fin, pour s'accorder au style éditorial de l'app. */
+  font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
 }
 
 .filled-icon {
@@ -802,7 +878,7 @@ body {
 /* Nomme ce que le moniteur a sous les yeux, sans rien dire de sa nature : le
    dispositif tient à ce que confirmations et questions de savoir soient
    indiscernables. */
-.co-vote-etiquette { margin-bottom: 14px; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--co-muted); }
+.co-vote-etiquette { margin-bottom: 14px; font-size: 12px; font-weight: 700; color: var(--co-muted); }
 .co-vote-affirmation { margin: 0; font-size: clamp(23px, 5.4vw, 31px); font-weight: 550; line-height: 1.28; letter-spacing: -.02em; color: var(--co-ink); }
 .co-vote h1 { font-size: clamp(25px, 5vw, 32px); font-weight: 600; letter-spacing: -.035em; line-height: 1.15; }
 .co-vote-kicker { font-size: 11px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: var(--co-muted); }
@@ -817,7 +893,7 @@ body {
    moniteur, les actions confirmées alimentent sa démarche. Un seul chiffre mélangerait
    deux mesures qui ne disent pas la même chose. */
 .co-vote-result { display: grid; gap: 4px; padding: 16px 18px; border-radius: 18px; background: #193d3b0d; }
-.co-vote-result-label { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--co-muted); }
+.co-vote-result-label { font-size: 12px; font-weight: 700; color: var(--co-muted); }
 .co-vote-result strong { font-size: 34px; font-weight: 650; line-height: 1.05; font-variant-numeric: tabular-nums; }
 .co-vote-result p { font-size: 13.5px; line-height: 1.5; color: var(--co-muted); }
 .co-vote-hint { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--co-muted); }
@@ -831,7 +907,7 @@ body {
 .cv-intro { margin-bottom: 22px; }
 .cv-intro h1 { font-size: 24px; font-weight: 650; letter-spacing: -.03em; }
 .cv-intro p { margin-top: 8px; font-size: 13.5px; line-height: 1.55; color: var(--co-muted); }
-.cv-planche-titre { margin-bottom: 8px; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--co-muted); }
+.cv-planche-titre { margin-bottom: 8px; font-size: 12px; font-weight: 700; color: var(--co-muted); }
 .cv-grille { display: grid; grid-template-columns: repeat(3, 62mm); gap: 0; }
 /* Le recto-verso retourne la feuille : sans cette inversion de colonnes, chaque
    marqueur se retrouverait au dos des réponses d'un autre carton. */
@@ -857,7 +933,7 @@ body {
    et le décompte se lire d'un coup d'œil sans quitter les enfants des yeux. */
 .co-capture { display: grid; gap: 12px; padding: 14px; border-radius: 20px; background: var(--co-ink); color: var(--co-paper); }
 .co-capture-head { display: flex; align-items: center; justify-content: space-between; }
-.co-capture-head p { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #ffffff9e; }
+.co-capture-head p { font-size: 12px; font-weight: 700; color: #ffffff9e; }
 .co-capture-head button { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; background: #ffffff1f; color: var(--co-paper); }
 .co-capture-vue { position: relative; overflow: hidden; border-radius: 15px; background: #000; aspect-ratio: 4 / 3; }
 .co-capture-vue video { width: 100%; height: 100%; object-fit: cover; }
@@ -963,7 +1039,7 @@ body {
 .co-course-parcours { grid-column: 1 / -1; min-height: 200px; background: var(--co-ink); color: var(--co-paper); }
 .co-course-parcours .co-mark { color: var(--co-leaf); }
 .co-course-parcours .co-course-meta { color: #c9d8c6; }
-.co-course-tag { align-self: flex-start; padding: 4px 10px; border-radius: 99px; background: var(--co-leaf); color: var(--co-ink); font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.co-course-tag { align-self: flex-start; padding: 4px 10px; border-radius: 99px; background: var(--co-leaf); color: var(--co-ink); font-size: 12px; font-weight: 700; }
 
 /* Outils du pôle séances, sous la semaine en cours : deux accès côte à côte. */
 .co-seances-outils { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 18px; }
@@ -998,9 +1074,42 @@ body {
 .co-formation-intro h1 { margin-top: 8px; font-size: clamp(32px, 6vw, 48px); font-weight: 650; line-height: 1.05; letter-spacing: -.05em; }
 .co-formation-quote { position: relative; margin: 24px 0 0; padding: 26px 24px 22px 26px; border-left: 4px solid #b97351; border-radius: 0 22px 22px 0; background: linear-gradient(135deg, #f6e7dc, #fbf4ec); }
 .co-formation-quote::before { content: "“"; position: absolute; top: -18px; right: 18px; font-family: Georgia, "Times New Roman", serif; font-size: 110px; line-height: 1; color: #b9735140; pointer-events: none; }
-.co-formation-quote p { position: relative; max-width: 34em; font-family: Georgia, "Times New Roman", serif; font-size: clamp(19px, 3.6vw, 23px); font-style: italic; line-height: 1.4; letter-spacing: -.01em; color: #8f4f31; }
+.co-formation-quote p { position: relative; max-width: 34em; font-family: Georgia, "Times New Roman", serif; font-size: clamp(16px, 3vw, 19px); font-style: italic; line-height: 1.45; letter-spacing: -.01em; color: #8f4f31; }
 .co-formation-avancement { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 22px; padding-top: 16px; border-top: 1px solid #193d3b1a; font-size: 13px; color: var(--co-muted); }
 .co-formation-avancement strong { font-size: 20px; font-weight: 650; color: var(--co-ink); }
 .co-formation-avancement .co-progress { width: 110px; margin: 0; }
 /* Les trois gestes de la formation : trois colonnes égales, numérotées, sur fond
    papier — le regard, la compréhension, la parole. */
+
+/* Profil */
+.co-profil-head { display: flex; align-items: center; gap: 16px; margin-bottom: 34px; }
+.co-profil-avatar { display: grid; flex-shrink: 0; place-items: center; width: 64px; height: 64px; overflow: hidden; border-radius: 50%; background: var(--co-ink); color: var(--co-paper); font-size: 26px; font-weight: 650; }
+.co-profil-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.co-profil-head h1 { font-size: clamp(26px, 5vw, 36px); font-weight: 650; line-height: 1.1; letter-spacing: -.04em; }
+.co-profil-head p { margin-top: 4px; font-size: 13px; color: var(--co-muted); }
+.co-profil-section { margin-bottom: 34px; }
+.co-profil-section-head { display: flex; align-items: baseline; justify-content: space-between; }
+.co-profil-section-head > span { font-size: 13px; font-weight: 650; color: var(--co-muted); }
+.co-profil-suivis { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.co-profil-suivis a { display: flex; flex-direction: column; gap: 8px; padding: 16px; border-radius: 20px; background: var(--co-ink); color: var(--co-paper); }
+.co-profil-suivis .co-eyebrow { color: #c9d8c6; }
+.co-profil-suivis strong { font-size: 24px; font-weight: 650; letter-spacing: -.03em; }
+.co-profil-suivis small { font-size: 12px; font-weight: 500; color: #c9d8c6; }
+.co-profil-suivis .co-progress { margin: auto 0 0; }
+.co-badges { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 0; padding: 0; list-style: none; }
+.co-badge { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 16px 8px 14px; border-radius: 20px; background: #fffdf8; border: 1px solid #193d3b12; text-align: center; }
+.co-badge-icon { position: relative; display: grid; place-items: center; width: 56px; height: 56px; margin-bottom: 6px; border-radius: 50%; background: #193d3b0d; color: #193d3b40; }
+.co-badge-icon em { position: absolute; right: -6px; bottom: -2px; padding: 1px 6px; border-radius: 999px; background: var(--co-ink); color: var(--co-paper); font-size: 10px; font-style: normal; font-weight: 700; }
+.co-badge strong { font-size: 13px; font-weight: 650; color: #193d3b73; }
+.co-badge small { font-size: 10.5px; line-height: 1.35; color: var(--co-muted); }
+.co-badge-on .co-badge-icon { background: #f2dfa6; color: var(--co-ink); }
+.co-badge-on strong { color: var(--co-ink); }
+.co-profil-seances { display: flex; flex-direction: column; gap: 8px; padding: 18px; border-radius: 20px; background: #fffdf8; border: 1px solid #193d3b12; color: var(--co-muted); font-size: 14px; }
+.co-profil-seances strong { font-size: 18px; font-weight: 650; color: var(--co-ink); }
+.co-profil-seances .co-inline-action { margin-top: 4px; color: var(--co-ink); font-size: 13px; }
+.co-profil-liens { display: flex; flex-direction: column; border-top: 1px solid #193d3b1a; }
+.co-profil-liens a { display: flex; align-items: center; justify-content: space-between; padding: 15px 2px; border-bottom: 1px solid #193d3b1a; font-size: 14px; font-weight: 600; color: var(--co-ink); }
+.co-profil-liens a svg { color: var(--co-muted); }
+.co-profil-signout { margin-top: 24px; }
+.co-profile-empty { display: grid; place-items: center; gap: 14px; min-height: 60vh; text-align: center; color: var(--co-muted); }
+@media (max-width: 400px) { .co-badges { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

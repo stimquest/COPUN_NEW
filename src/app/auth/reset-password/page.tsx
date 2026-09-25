@@ -40,14 +40,14 @@ export default function ResetPasswordPage() {
                     <div className="size-16 bg-white/10 backdrop-blur-xl rounded-2xl mx-auto flex items-center justify-center border border-white/20 mb-6 shadow-2xl">
                         <span className="material-symbols-outlined text-white text-3xl">lock_reset</span>
                     </div>
-                    <h1 className="text-3xl font-black text-white mb-2 uppercase tracking-tight">COPUN</h1>
+                    <h1 className="text-3xl font-bold text-white mb-2 tracking-tight">COPUN</h1>
                     <p className="text-slate-400 font-medium">Choisir un nouveau mot de passe</p>
                 </div>
 
                 <div className="bg-white/10 backdrop-blur-2xl border border-white/20 rounded-[32px] p-8 shadow-2xl shadow-black/50">
                     <form action={handleSubmit} className="space-y-5">
                         <div>
-                            <label className="block text-[10px] font-black text-white/40 uppercase tracking-widest mb-2 px-1">
+                            <label className="block text-[12px] font-bold text-white/40 mb-2 px-1">
                                 Nouveau mot de passe
                             </label>
                             <input
@@ -60,7 +60,7 @@ export default function ResetPasswordPage() {
                             />
                         </div>
                         <div>
-                            <label className="block text-[10px] font-black text-white/40 uppercase tracking-widest mb-2 px-1">
+                            <label className="block text-[12px] font-bold text-white/40 mb-2 px-1">
                                 Confirmer le mot de passe
                             </label>
                             <input
@@ -81,7 +81,7 @@ export default function ResetPasswordPage() {
                         <button
                             disabled={loading}
                             type="submit"
-                            className="w-full py-5 bg-indigo-500 hover:bg-indigo-400 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-indigo-500/20 active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                            className="w-full py-5 bg-indigo-500 hover:bg-indigo-400 text-white rounded-2xl font-bold shadow-xl shadow-indigo-500/20 active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                         >
                             {loading
                                 ? <span className="material-symbols-outlined animate-spin text-[20px]">refresh</span>

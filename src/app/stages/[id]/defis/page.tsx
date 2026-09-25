@@ -43,7 +43,7 @@ export default async function DefisPage({ params }: { params: Promise<{ id: stri
                     <span className="material-symbols-outlined">arrow_back</span>
                 </Link>
                 <div className="flex-1">
-                    <h1 className="text-[10px] font-black tracking-widest text-emerald-500 uppercase">Défis Terrain</h1>
+                    <h1 className="text-[12px] font-bold text-emerald-500">Défis Terrain</h1>
                     <p className="text-lg font-bold leading-none text-slate-900">{stage.title}</p>
                 </div>
                 {completedCount > 0 && (

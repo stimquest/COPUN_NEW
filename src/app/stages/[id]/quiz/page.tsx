@@ -1,11 +1,13 @@
 import { getStageById, getStageObjectiveReviewItems, getPedagogicalPool } from '@/services/data-service';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { composerVote } from '@/data/vote-fin-de-stage';
 import { groupeDe } from '@/data/groupes';
 import VoteClient from './VoteClient';
+
+import { iconeMaterial } from '@/components/ui/Icone';
+const ArrowLeft = iconeMaterial('arrow_back');
 
 /**
  * Le vote de fin de stage a pris la place du quiz sur ce chemin.

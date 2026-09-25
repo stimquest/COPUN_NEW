@@ -69,14 +69,14 @@ export default function DecouvrirClient({ pool, theme, group, pillar, entry, ini
     return (
         <div className="min-h-screen fond-ciel pb-28">
             <header className="px-4 pt-4 pb-2 max-w-2xl mx-auto">
-                <div className="flex min-h-12 items-center gap-2">
+                {/* Marge droite : l'avatar flottant ne doit pas masquer « Mises de côté ». */}
+                <div className="flex min-h-12 items-center gap-2 pr-12">
                     <Link href="/stages" aria-label="Retour à l’accueil" className="-ml-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-slate-600 hover:bg-white/60">
                         <span className="material-symbols-outlined" aria-hidden>arrow_back</span>
                     </Link>
                     <h1 className="min-w-0 flex-1 text-[28px] font-semibold tracking-[-.045em] text-[var(--co-ink)]">{savedView ? 'Mises de côté' : 'Explorer'}</h1>
                     <button onClick={() => { if (!savedView) setSavedSnapshot(savedIds); setSavedView(value => !value); }}
-                        className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full px-2 text-sm font-medium text-slate-600 hover:bg-white/60">
-                        <span className="material-symbols-outlined text-[20px]" aria-hidden>{savedView ? 'explore' : 'bookmarks'}</span>
+                        className="inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-full border border-[#193d3b1f] bg-[#fffdf8] px-3.5 text-[13px] font-semibold text-[#173d3a] hover:bg-white">
                         {savedView ? 'Explorer' : 'Mises de côté'}{!savedView && savedIds.length ? ` · ${savedIds.length}` : ''}
                     </button>
                 </div>
@@ -101,10 +101,10 @@ export default function DecouvrirClient({ pool, theme, group, pillar, entry, ini
                         choices={choices} savedChoices={savedChoices} onChoiceChange={changeChoice} onSaveChoice={saveChoice}
                         savedIds={savedIds} onToggleSaved={toggleSaved} savingId={savingId} savedUnavailable={!!savedError}
                     /> : !savedError && <div className="rounded-3xl bg-white px-6 py-10 text-center">
-                        <span className="material-symbols-outlined text-3xl text-indigo-400" aria-hidden>bookmark_add</span>
+                        <span className="material-symbols-outlined text-3xl text-[#56706a]" aria-hidden>bookmark_add</span>
                         <h2 className="mt-3 font-bold text-slate-900">Vos prochaines idées à transmettre</h2>
                         <p className="mt-2 text-sm text-slate-600">Pendant votre lecture, utilisez « Mettre de côté » pour retrouver ici une carte qui vous intéresse.</p>
-                        <button onClick={() => setSavedView(false)} className="mt-5 rounded-full bg-indigo-600 px-5 py-3 text-sm font-bold text-white">Explorer les cartes</button>
+                        <button onClick={() => setSavedView(false)} className="mt-5 rounded-full bg-[#173d3a] px-5 py-3 text-sm font-bold text-[#fffdf8]">Explorer les cartes</button>
                     </div>}
                 </div>}
             </main>

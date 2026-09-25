@@ -5,10 +5,11 @@ import { animate, motion, useMotionValue, useTransform, type PanInfo } from 'fra
 import clsx from 'clsx';
 import { PedagogicalContent, Dimension } from '@/types';
 import { PILLARS, THEMES_BY_PILLAR } from '@/data/etages';
-import { groupeDe, GROUPES } from '@/data/groupes';
+import { groupeDe, GROUPES, MILIEUX, groupesDuMilieu } from '@/data/groupes';
 import { NIVEAUX } from '@/data/niveaux';
 import { HistoriqueMoniteur } from '@/lib/historique-moniteur';
 import LectureCarte from './LectureCarte';
+import UseCardWithGroup from './UseCardWithGroup';
 import { ENTREES_DECOUVERTE, cartesDuTheme } from '@/data/decouverte-accueil';
 import { CardChoicesProvider, useCardChoices } from './CardChoicesContext';
 import { resolveCardChoice, type CardChoice, type CardChoices } from '@/lib/card-choice';
@@ -76,7 +77,9 @@ function repereChoixForce(texte: string): boolean {
 }
 
 const SWIPE_THRESHOLD = 80;
-const HAUTEUR_TITRE_PILE = 60;
+// Bandeau de titre qui dépasse de chaque carte de derrière : serré, pour montrer 5 cartes.
+const HAUTEUR_TITRE_PILE = 44;
+const CARTES_VISIBLES = 5;
 // La carte reste volontairement plus haute que le viewport utile sur mobile : la page
 // peut défiler naturellement, sans transformer son contenu pédagogique en sous-zone
 // à scroller. La mécanique de pile, elle, ne change pas.
@@ -118,20 +121,6 @@ function brasser<T>(arr: T[], graine: number): T[] {
     return out;
 }
 
-// Les thèmes héritent du pilier choisi, mais sur une teinte plus douce : ils servent de
-// repère de famille, sans prendre la couleur franche réservée au pilier lui-même.
-const THEME_TONES: Record<Dimension, { active: string }> = {
-    COMPRENDRE: {
-        active: 'bg-amber-100 text-amber-900 ring-1 ring-amber-300 shadow-sm',
-    },
-    OBSERVER: {
-        active: 'bg-blue-100 text-blue-900 ring-1 ring-blue-300 shadow-sm',
-    },
-    PROTÉGER: {
-        active: 'bg-emerald-100 text-emerald-900 ring-1 ring-emerald-300 shadow-sm',
-    },
-};
-
 export default function FluxDecouverte(props: Props) {
     return <CardChoicesProvider initialChoices={props.initialChoices} value={props.choices} savedChoices={props.savedChoices} saveChoice={props.onSaveChoice} onChange={props.onChoiceChange} allowUse={props.allowUse}><FluxContent {...props}/></CardChoicesProvider>;
 }
@@ -140,7 +129,8 @@ function FluxContent({ pool, mode = 'selection', retenues = [], onToggleFiche, o
     const choicesContext = useCardChoices();
     const [entry, setEntry] = useState(() => ENTREES_DECOUVERTE.find(rail => rail.dimension === initialPillar)?.themes.find(theme => theme.id === initialEntry));
     const [group, setGroup] = useState(() => GROUPES.find(item => item.id === initialGroup));
-    const [filtresOuverts, setFiltresOuverts] = useState(false);
+    // Sujets cochés dans « Par sujet » (sélection multiple, identifiants de groupe).
+    const [sujets, setSujets] = useState<string[]>([]);
     const dejaVues = useMemo(() => historique?.dejaVues ?? {}, [historique]);
 
     // Orientation COPUN toujours visible : le pilier ouvre ses trois thèmes, jamais
@@ -155,12 +145,13 @@ function FluxContent({ pool, mode = 'selection', retenues = [], onToggleFiche, o
         const candidates = entry && pilier ? cartesDuTheme(pool, pilier, entry) : pool;
         return candidates.filter(f => {
             if (group && !group.fiches.includes(Number(f.id))) return false;
+            if (sujets.length && !sujets.includes(groupeDe(f.id)?.id ?? '')) return false;
             if (pilier && f.dimension !== pilier) return false;
             if (theme && !f.tags_theme?.includes(theme)) return false;
             if (niveau && f.niveau !== niveau) return false;
             return true;
         });
-    }, [pool, pilier, theme, niveau, group, entry]);
+    }, [pool, pilier, theme, niveau, group, sujets, entry]);
 
     // Jamais vues d'abord, puis le reste — mélangé une seule fois par changement de
     // filtre, pas à chaque rendu (sinon la pile change sous les doigts pendant le swipe).
@@ -184,7 +175,49 @@ function FluxContent({ pool, mode = 'selection', retenues = [], onToggleFiche, o
     };
     const choisirTheme = (t: string) => setTheme(prev => (prev === t ? null : t));
     const choisirNiveau = (n: 1 | 2 | 3) => setNiveau(prev => (prev === n ? null : n));
-    const nbFiltres = (pilier ? 1 : 0) + (theme ? 1 : 0) + (niveau ? 1 : 0);
+    const nbFiltres = (pilier ? 1 : 0) + (theme ? 1 : 0) + (niveau ? 1 : 0) + (group || sujets.length ? 1 : 0);
+
+    /* Filtre par sujet (marées, oiseaux, nuages…), rangé par milieu. Il ne propose que
+       les sujets qui ont des cartes avec les autres filtres en cours. */
+    const [sujetsOuverts, setSujetsOuverts] = useState(false);
+    const sujetsDisponibles = useMemo(() => {
+        const ids = new Set(pool.filter(f =>
+            (!pilier || f.dimension === pilier) && (!theme || f.tags_theme?.includes(theme)) && (!niveau || f.niveau === niveau),
+        ).map(f => Number(f.id)));
+        return MILIEUX.map(milieu => ({
+            ...milieu,
+            groupes: groupesDuMilieu(milieu.id).filter(g => g.fiches.some(id => ids.has(Number(id)))),
+        })).filter(milieu => milieu.groupes.length);
+    }, [pool, pilier, theme, niveau]);
+    /* Sélection multiple des sujets ; les milieux ne sont que des intertitres. Le
+       panneau reste ouvert pendant qu'on coche. */
+    const basculerSujet = (id: string) => setSujets(current => current.includes(id) ? current.filter(s => s !== id) : [...current, id]);
+    const outilSujets = mode === 'lecture' ? <div className="flex items-center gap-1.5">
+        <button onClick={() => setSujetsOuverts(value => !value)} aria-expanded={sujetsOuverts}
+            className={clsx('inline-flex min-h-9 items-center rounded-full border px-3.5 text-[12px] font-semibold transition',
+                sujetsOuverts || sujets.length ? 'border-[#173d3a] bg-[#173d3a] text-[#fffdf8]' : 'border-[#193d3b1f] bg-[#fffdf8] text-[#173d3a]')}>
+            {sujets.length ? `${sujets.length} sujet${sujets.length > 1 ? 's' : ''}` : 'Par sujet'}
+        </button>
+        {sujets.length > 0 && <button onClick={() => setSujets([])} className="min-h-9 px-2 text-[12px] font-semibold text-[#56706a] underline underline-offset-2">Effacer</button>}
+    </div> : null;
+    const nomsSujets = sujets.map(id => GROUPES.find(g => g.id === id)?.label).filter(Boolean).join(', ');
+    const panneauSujets = mode === 'lecture' && !sujetsOuverts && sujets.length ? <p className="-mt-1 truncate px-1 text-[12px] text-[#56706a]">{nomsSujets}</p> : mode === 'lecture' && sujetsOuverts ? <div className="space-y-3 rounded-2xl bg-[#fffdf8] p-4 ring-1 ring-[#193d3b14]">
+        {sujetsDisponibles.map(milieu => {
+            return <div key={milieu.id}>
+                <p className="text-[12px] font-extrabold text-[#56706a]">{milieu.label}</p>
+                <div className="mt-1.5 flex flex-wrap gap-1.5">
+                    {milieu.groupes.map(g => <button key={g.id} onClick={() => basculerSujet(g.id)} aria-pressed={sujets.includes(g.id)}
+                        className={clsx('min-h-9 rounded-full px-3 text-[12px] font-semibold ring-1 transition active:scale-[0.97]',
+                            sujets.includes(g.id) ? 'bg-[#f2dfa6] text-[#173d3a] ring-[#e0c77f]' : 'bg-white text-[#173d3a] ring-[#193d3b1a]')}>
+                        {g.label}
+                    </button>)}
+                </div>
+            </div>;
+        })}
+        <button onClick={() => setSujetsOuverts(false)} className="w-full min-h-10 rounded-full bg-[#173d3a] text-[13px] font-bold text-[#fffdf8]">
+            Voir les cartes
+        </button>
+    </div> : null;
 
     return (
         <div className="space-y-3">
@@ -192,24 +225,19 @@ function FluxContent({ pool, mode = 'selection', retenues = [], onToggleFiche, o
                 <p className="text-sm font-semibold text-slate-700">{entry.title}</p>
                 <button onClick={() => setEntry(undefined)} aria-label="Retirer le thème de découverte" className="size-11 shrink-0 rounded-full text-slate-500">✕</button>
             </div>}
-            <div className="flex items-center justify-between gap-2 px-1">
+            <div className={clsx('flex items-center justify-between gap-2 px-1', mode === 'lecture' && 'hidden')}>
                 {group ? (
                     <button onClick={() => setGroup(undefined)} aria-label={`Retirer le filtre ${group.label}`} className="min-h-11 min-w-0 truncate px-2 text-sm font-medium text-slate-600">{group.label} <span className="ml-1 text-slate-400" aria-hidden>×</span></button>
-                ) : <span />}
-                {mode === 'lecture' && (
-                    <button
-                        onClick={() => setFiltresOuverts(value => !value)}
-                        aria-expanded={filtresOuverts}
-                        className={clsx('min-h-11 shrink-0 inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-medium transition', filtresOuverts ? 'bg-white/80 text-indigo-600' : 'text-slate-600 hover:bg-white/60')}
-                    >
-                        <span className="material-symbols-outlined text-[16px]">tune</span>
-                        Filtres{nbFiltres ? ` · ${nbFiltres}` : ''}
-                    </button>
-                )}
+                ) : null}
             </div>
-            {/* Visible d'emblée, mais volontairement compact : le niveau calibre le public
-                sans prendre la place des cartes et de leur contenu. */}
-            <div className={clsx('px-1', mode === 'lecture' && !filtresOuverts && 'hidden')}>
+            {/* Les repères COP d'abord, toujours visibles : c'est l'outil qui guide la
+                lecture, pas un réglage à ouvrir. Une seule rangée légère, jamais un
+                formulaire avant les cartes. Couleurs COP inchangées. */}
+            {/* Un seul contrôle segmenté pour les trois repères : un bloc papier, chaque
+                repère marqué par sa couleur COP (trait en bas au repos, fond plein une fois
+                choisi). */}
+            <div className="space-y-2 px-1">
+                {/* Le niveau en premier : on calibre le public, puis on choisit un repère. */}
                 <div className="grid grid-cols-3 gap-1 rounded-xl bg-white/55 p-1">
                     {NIVEAUX.map(n => (
                         <button
@@ -217,55 +245,68 @@ function FluxContent({ pool, mode = 'selection', retenues = [], onToggleFiche, o
                             onClick={() => choisirNiveau(n.n)}
                             aria-pressed={niveau === n.n}
                             className={clsx(
-                                'rounded-lg px-2 py-1.5 text-[10px] font-bold transition-all active:scale-[0.97]',
-                                niveau === n.n ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-500 hover:bg-white/70',
+                                'relative min-h-9 rounded-lg px-2 text-[11px] transition-all active:scale-[0.97]',
+                                niveau === n.n ? 'bg-[#f2dfa6] font-bold text-[#173d3a] shadow-sm' : 'font-semibold text-[#56706a] hover:bg-white/70',
                             )}
                         >
                             {n.label}
                         </button>
                     ))}
                 </div>
-            </div>
+                {/* Effet « métaballes » : un calque de fond flouté puis recontrasté (filtre
+                    SVG goo) fait fusionner le repère choisi, le bassin de ses thèmes et le
+                    thème choisi comme des gouttes. Le calque de fond et le calque de texte
+                    ont exactement la même structure (même cellule de grille), donc les
+                    mêmes hauteurs ; seul le texte, au-dessus, reste net et cliquable. */}
+                <svg aria-hidden width="0" height="0" className="absolute">
+                    <filter id="co-goo">
+                        <feGaussianBlur in="SourceGraphic" stdDeviation="7" result="flou"/>
+                        <feColorMatrix in="flou" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -7" result="goo"/>
+                        <feComposite in="SourceGraphic" in2="goo" operator="atop"/>
+                    </filter>
+                </svg>
+                <div className="grid rounded-2xl bg-[#fffdf8] ring-1 ring-[#193d3b14]">
+                    {[true, false].map(fond => (
+                        <div key={fond ? 'fond' : 'texte'} aria-hidden={fond || undefined} className={clsx('relative [grid-area:1/1] p-1', fond ? 'pointer-events-none z-0' : 'z-10')}
+                            style={fond ? { filter: 'url(#co-goo)' } : undefined}>
+                            <div className="grid grid-cols-3 gap-1">
+                                {PILLARS.map(p => fond
+                                    ? <div key={p.id} className={clsx('min-h-11 rounded-xl transition-colors duration-200', pilier === p.id && p.bg)}/>
+                                    : <button
+                                        key={p.id}
+                                        onClick={() => choisirPilier(p.id)}
+                                        aria-pressed={pilier === p.id}
+                                        className={clsx(
+                                            'relative flex min-h-11 flex-col items-center justify-center rounded-xl text-[13px] font-bold tracking-[-.01em] transition-all active:scale-[0.97]',
+                                            pilier === p.id ? 'text-white' : 'text-[#173d3a] hover:bg-[#f4f1e8]',
+                                        )}
+                                    >
+                                        {p.label}
+                                        {pilier !== p.id && <span aria-hidden className={clsx('absolute bottom-1.5 h-[3px] w-6 rounded-full', p.bg)}/>}
+                                    </button>)}
+                            </div>
 
-            {/* Les repères de la méthode restent constamment visibles : ils orientent le
-                choix sans devenir un écran de filtres à traverser. Les thèmes n'apparaissent
-                qu'après le choix d'un pilier, car ils n'ont de sens que dans ce contexte. */}
-            <div className={clsx('space-y-1.5 px-1', mode === 'lecture' && !filtresOuverts && 'hidden')}>
-                <div className="grid grid-cols-3 gap-1">
-                    {PILLARS.map(p => (
-                        <button
-                            key={p.id}
-                            onClick={() => choisirPilier(p.id)}
-                            aria-pressed={pilier === p.id}
-                            className={clsx(
-                                'flex items-center justify-center gap-1.5 rounded-xl px-1 py-2 text-[10px] font-bold transition-all active:scale-[0.97]',
-                                pilier === p.id ? clsx(p.bg, 'text-white shadow-sm') : 'bg-white/90 text-slate-500 shadow-sm',
+                            {pilier && (
+                                <div className={clsx('mt-1.5 grid grid-cols-3 gap-1 rounded-xl p-1', fond && PILLARS.find(p => p.id === pilier)?.bg)}>
+                                    {THEMES_BY_PILLAR[pilier].map(t => fond
+                                        ? <div key={t.id} className="min-h-9 rounded-xl px-1.5 py-1 text-center text-[12px] font-semibold leading-tight text-transparent break-words">{t.label}</div>
+                                        : <button
+                                            key={t.id}
+                                            onClick={() => choisirTheme(t.id)}
+                                            aria-pressed={theme === t.id}
+                                            className={clsx(
+                                                'min-w-0 min-h-9 rounded-xl px-1.5 py-1 text-center text-[12px] font-semibold leading-tight break-words transition-all active:scale-[0.97]',
+                                                theme === t.id ? clsx('bg-white shadow-sm', PILLARS.find(p => p.id === pilier)?.color) : 'bg-white/15 text-white hover:bg-white/25',
+                                            )}
+                                        >
+                                            {t.label}
+                                        </button>)}
+                                </div>
                             )}
-                        >
-                            <span className="material-symbols-outlined text-[15px]">{p.icon}</span>
-                            {p.label}
-                        </button>
+                        </div>
                     ))}
                 </div>
 
-                {pilier && (
-                    <div className="grid grid-cols-3 gap-1 pt-0.5">
-                        {THEMES_BY_PILLAR[pilier].map(t => (
-                            <button
-                                key={t.id}
-                                onClick={() => choisirTheme(t.id)}
-                                aria-pressed={theme === t.id}
-                                className={clsx(
-                                    'min-w-0 flex min-h-10 items-center justify-center gap-1 rounded-xl px-1.5 py-1.5 text-[9px] font-bold leading-tight text-center transition-all active:scale-[0.97]',
-                                    theme === t.id ? THEME_TONES[pilier].active : 'bg-white text-slate-400 shadow-sm',
-                                )}
-                            >
-                                <span className="material-symbols-outlined shrink-0 text-[13px]">{t.icon}</span>
-                                <span className="min-w-0 break-words">{t.label}</span>
-                            </button>
-                        ))}
-                    </div>
-                )}
             </div>
 
             {mode === 'catalogue' ? (
@@ -280,6 +321,7 @@ function FluxContent({ pool, mode = 'selection', retenues = [], onToggleFiche, o
                     key={ordreInitial.map(f => f.id).join('|')}
                     ordreInitial={ordreInitial}
                     nbFiltres={nbFiltres}
+                    outil={outilSujets} panneau={panneauSujets}
                     mode={mode}
                     savedIds={savedIds}
                     onToggleSaved={id => {
@@ -339,7 +381,7 @@ function CatalogueDecouverte({ fiches, retenues, onToggleFiche, onFicheInfo }: {
                             <button onClick={() => onFicheInfo?.(fiche)} className="block w-full text-left">
                                 <div className="flex items-center gap-2">
                                     <span className={clsx('size-2 rounded-full', pilier?.bg)} />
-                                    <span className={clsx('text-[9px] font-black uppercase tracking-widest', pilier?.color)}>{pilier?.label}</span>
+                                    <span className={clsx('text-[12px] font-bold', pilier?.color)}>{pilier?.label}</span>
                                     {groupe && <span className="min-w-0 truncate text-[10px] font-bold text-slate-400">· {groupe.label}</span>}
                                 </div>
                                 <h3 className="mt-2 text-[14px] font-black leading-snug text-slate-900">{fiche.question}</h3>
@@ -365,9 +407,48 @@ function CatalogueDecouverte({ fiches, retenues, onToggleFiche, onFicheInfo }: {
     );
 }
 
+/**
+ * La tranche du bac : chaque carte est un trait à sa couleur COP, comme la tranche des
+ * disques vue de dessus. On voit la masse disponible, la répartition COP, et où l'on en
+ * est (cartes passées estompées, carte actuelle plus haute). Glisser le doigt dessus
+ * feuillette le bac ; le swipe de la pile, lui, ne change pas.
+ *
+ * `ordre` suit la convention de la pile : la carte en position k est ordre[n - k].
+ */
+function TrancheDuBac({ ordre, position, onAller }: { ordre: PedagogicalContent[]; position: number; onAller: (k: number) => void }) {
+    const rail = useRef<HTMLDivElement>(null);
+    const n = ordre.length;
+    const viser = (clientX: number) => {
+        // La réglette est centrée : on vise sur l'étendue réelle des traits, pas du conteneur.
+        const premier = rail.current?.firstElementChild?.getBoundingClientRect();
+        const dernier = rail.current?.lastElementChild?.getBoundingClientRect();
+        if (!premier || !dernier) return;
+        const largeur = Math.max(1, dernier.right - premier.left);
+        const k = Math.min(n, Math.max(1, Math.floor((clientX - premier.left) / largeur * n) + 1));
+        if (k !== position) onAller(k);
+    };
+    return <div ref={rail} role="slider" aria-label="Position dans les cartes" aria-valuemin={1} aria-valuemax={n} aria-valuenow={position} tabIndex={0}
+        className="flex h-7 cursor-pointer touch-none select-none items-end justify-center gap-[2px] px-1"
+        onPointerDown={event => { event.currentTarget.setPointerCapture(event.pointerId); viser(event.clientX); }}
+        onPointerMove={event => { if (event.currentTarget.hasPointerCapture(event.pointerId)) viser(event.clientX); }}
+        onKeyDown={event => {
+            if (event.key === 'ArrowRight' && position < n) onAller(position + 1);
+            if (event.key === 'ArrowLeft' && position > 1) onAller(position - 1);
+        }}>
+        {Array.from({ length: n }, (_, index) => {
+            const k = index + 1;
+            const fiche = ordre[n - k];
+            const pilier = PILLARS.find(p => p.id === fiche.dimension);
+            return <span key={fiche.id} aria-hidden className={clsx('min-w-px max-w-[3px] flex-1 rounded-full transition-all duration-150', pilier?.bg,
+                k === position ? 'h-7 min-w-[3px]' : k < position ? 'h-2.5 opacity-25' : 'h-4 opacity-60')}/>;
+        })}
+    </div>;
+}
+
 function DeckDecouverte({
-    ordreInitial, nbFiltres, mode, retenues, onToggleFiche, onFicheInfo, savedIds, onToggleSaved, savingId, savedUnavailable,
+    ordreInitial, nbFiltres, mode, retenues, onToggleFiche, onFicheInfo, savedIds, onToggleSaved, savingId, savedUnavailable, outil, panneau,
 }: {
+    outil?: React.ReactNode; panneau?: React.ReactNode;
     ordreInitial: PedagogicalContent[]; nbFiltres: number; mode: 'lecture' | 'selection'; retenues: string[];
     onToggleFiche?: (id: string) => void; onFicheInfo?: (fiche: PedagogicalContent) => void;
     savedIds: string[]; onToggleSaved?: (id: string) => void; savingId?: string | null; savedUnavailable?: boolean;
@@ -410,7 +491,7 @@ function DeckDecouverte({
                 <p className="mt-3 text-[13px] font-bold text-slate-500">
                     {ordreInitial.length === 0 ? 'Rien avec ces filtres.' : 'Vous avez parcouru ces cartes.'}
                 </p>
-                <button onClick={() => { setPile(ordreInitial); setHistoriquePile([]); }} className="mt-3 text-[12px] font-black text-indigo-600 underline underline-offset-2">
+                <button onClick={() => { setPile(ordreInitial); setHistoriquePile([]); }} className="mt-3 text-[12px] font-black text-[#173d3a] underline underline-offset-2">
                     Recommencer
                 </button>
                 {historiquePile.length > 0 && <button onClick={precedente} className="block mx-auto mt-4 py-2 text-sm font-bold text-slate-600">Revenir à la dernière carte</button>}
@@ -420,12 +501,22 @@ function DeckDecouverte({
 
     return (
         <>
-            <p className={clsx('text-[11px] font-bold text-slate-400 tabular-nums', mode === 'lecture' ? 'px-1 text-right' : 'text-center')}>
-                {position} / {ordreInitial.length} {ordreInitial.length > 1 ? 'cartes' : 'carte'}
-            </p>
-            <div ref={pileRef} className="relative scroll-mt-4" style={{ paddingTop: (Math.min(3, pile.length) - 1) * HAUTEUR_TITRE_PILE }}>
+            {/* Où on en est dans la pile ; le total suit les filtres. */}
+            <div className={clsx('flex items-center gap-3', mode === 'lecture' ? 'justify-between px-1' : 'justify-center')}>
+                {outil ?? <span/>}
+                <p className={clsx('text-[11px] font-semibold tabular-nums', mode === 'lecture' ? 'text-[#6f817d]' : 'text-slate-400')}>
+                    {position} / {ordreInitial.length} {ordreInitial.length > 1 ? 'cartes' : 'carte'}
+                </p>
+            </div>
+            {panneau}
+            {mode === 'lecture' && ordreInitial.length > 1 && <TrancheDuBac ordre={ordreInitial} position={position} onAller={k => {
+                const n = ordreInitial.length;
+                setPile(ordreInitial.slice(0, n - k + 1));
+                setHistoriquePile(ordreInitial.slice(n - k + 1).reverse());
+            }}/>}
+            <div ref={pileRef} className="relative scroll-mt-4" style={{ paddingTop: (Math.min(CARTES_VISIBLES, pile.length) - 1) * HAUTEUR_TITRE_PILE }}>
                 <div className="relative" style={mode === 'lecture' ? undefined : { height: HAUTEUR_CARTE_DECOUVERTE }}>
-                    {pile.slice(-3).map((f, i, arr) => (
+                    {pile.slice(-CARTES_VISIBLES).map((f, i, arr) => (
                         <CarteFlux
                             key={f.id} fiche={f} estTop={i === arr.length - 1} rang={arr.length - 1 - i}
                             mode={mode}
@@ -435,6 +526,24 @@ function DeckDecouverte({
                         />
                     ))}
                 </div>
+                {/* Un tap sur le titre d'une carte de derrière fait avancer le deck jusqu'à
+                    elle : les cartes devant sont passées, comme par autant de swipes (la
+                    réglette et le compteur suivent). Des zones
+                    transparentes posées sur les bandeaux, hors des cartes : la mécanique de
+                    la pile (cartes de derrière inertes, swipe du dessus) ne change pas. */}
+                {pile.slice(-CARTES_VISIBLES, -1).map((f, i, arr) => {
+                    const rang = arr.length - i;
+                    const visibles = Math.min(CARTES_VISIBLES, pile.length);
+                    return <button key={f.id} type="button" aria-label={`Afficher : ${f.question}`}
+                        className="absolute inset-x-0 z-20"
+                        style={{ top: (visibles - 1 - rang) * HAUTEUR_TITRE_PILE, height: HAUTEUR_TITRE_PILE }}
+                        onClick={() => {
+                            const passees = pile.slice(-rang).reverse();
+                            setHistoriquePile(h => [...h, ...passees]);
+                            setPile(p => p.slice(0, -rang));
+                            retrouverDebut();
+                        }}/>;
+                })}
             </div>
         </>
     );
@@ -458,6 +567,7 @@ function CarteFlux({
 }) {
     const pilier = PILLARS.find(p => p.id === fiche.dimension);
     const groupe = groupeDe(fiche.id);
+    const choixCarte = useCardChoices();
     const accroche = (fiche.accroches_variantes ?? [fiche.accroche])[0] ?? fiche.question;
 
     const forme = reperePari(accroche) ? 'Le pari'
@@ -517,8 +627,8 @@ function CarteFlux({
             className={clsx(
                 'rounded-[1.75rem] overflow-hidden',
                 mode === 'lecture' && estTop ? 'relative min-h-[680px]' : 'absolute inset-0',
-                mode === 'lecture' ? 'bg-[#fffdf8] ring-1 ring-[#193d3b14]' : 'bg-white',
-                estTop ? 'shadow-[0_18px_44px_rgba(25,61,59,.10)]' : 'ring-1 ring-slate-900/5',
+                mode === 'lecture' ? 'bg-white ring-1 ring-[#193d3b24]' : 'bg-white',
+                estTop ? 'shadow-[0_22px_50px_rgba(25,61,59,.20)]' : mode === 'lecture' ? 'shadow-[0_-6px_18px_rgba(25,61,59,.10)]' : 'ring-1 ring-slate-900/5',
             )}
             style={{ zIndex: 10 - rang, x: estTop ? x : 0, rotate: estTop ? rotate : 0, transformOrigin: 'center top' }}
             inert={!estTop || sortie}
@@ -536,13 +646,29 @@ function CarteFlux({
             transition={{ type: 'spring', damping: 30, stiffness: 320 }}
         >
             <motion.div
-                className={clsx('flex shrink-0 items-center gap-2.5 overflow-hidden px-5', mode === 'lecture' && estTop ? 'min-h-[76px] border-b border-[#193d3b14] bg-[#f1eee4] py-5' : estTop ? pilier?.bg : 'bg-white')}
+                className={clsx('flex shrink-0 gap-2.5 overflow-hidden px-5', mode === 'lecture' && estTop ? 'min-h-[76px] flex-col pt-5 pb-1' : ['items-center', estTop ? pilier?.bg : 'bg-white'])}
                 initial={false}
                 animate={{ height: mode === 'lecture' && estTop ? 'auto' : HAUTEUR_TITRE_PILE, opacity: 1 }}
                 transition={{ duration: 0.2 }}
             >
-                {!estTop && <span aria-hidden className={clsx('h-5 w-0.5 shrink-0 rounded-full', pilier?.bg)} />}
-                <h3 className={clsx(mode === 'lecture' && estTop ? 'text-[21px] leading-[1.25] font-bold tracking-[-.02em] text-[#173d3a]' : ['leading-[16px] line-clamp-3', estTop ? 'text-[13px] font-bold text-white' : 'text-[12px] font-semibold text-slate-500'])}>{fiche.question}</h3>
+                {!estTop && <span aria-hidden className={clsx('h-5 w-1 shrink-0 rounded-full', pilier?.bg)} />}
+                {/* En lecture, le repère COP devient le surtitre de la carte, avec le signet
+                    discret sur la même ligne : une seule rangée avant le titre. */}
+                {mode === 'lecture' && estTop && <div className="flex min-h-9 items-center gap-2">
+                    <span className={clsx('size-2 rounded-full', pilier?.bg)} />
+                    <span className={clsx('text-[12px] font-bold', pilier?.color)}>{pilier?.label}</span>
+                    {groupe && <span className="text-[11px] font-semibold text-[#6f817d]">· {groupe.label}</span>}
+                    <button
+                        onPointerDown={event => event.stopPropagation()}
+                        onClick={onGarder} disabled={saving || savedUnavailable} aria-pressed={retenue}
+                        aria-label={retenue ? 'Retirer cette carte des cartes mises de côté' : 'Mettre cette carte de côté'}
+                        className="-mr-2 ml-auto flex size-10 shrink-0 items-center justify-center rounded-full text-[#56706a] hover:bg-[#edf1ea] aria-pressed:text-[#173d3a] disabled:opacity-50"
+                    ><span className="material-symbols-outlined text-[22px]" aria-hidden>{saving ? 'hourglass_top' : retenue ? 'bookmark_added' : 'bookmark_add'}</span></button>
+                </div>}
+                <h3 className={clsx(mode === 'lecture' && estTop ? 'text-[21px] leading-[1.25] font-bold tracking-[-.02em] text-[#173d3a]' : ['leading-[16px] line-clamp-3', estTop ? 'text-[13px] font-bold text-white' : mode === 'lecture' ? 'line-clamp-2 font-semibold text-[#173d3a]' : 'text-[12px] font-semibold text-slate-500'])}
+                    // Même taille pour tous les titres de derrière : la profondeur se lit déjà
+                    // par l'échelle des cartes.
+                    style={mode === 'lecture' && !estTop ? { fontSize: 12, lineHeight: 1.2 } : undefined}>{fiche.question}</h3>
             </motion.div>
             {/* Le tap n'ouvre la fiche que si la carte n'est pas en swipe (`enSwipe`) :
                 `onDragStart` de framer-motion ne se déclenche qu'au-delà de son propre
@@ -553,16 +679,16 @@ function CarteFlux({
                 tabIndex={mode === 'lecture' ? undefined : 0}
                 onClick={mode !== 'lecture' && estTop ? () => { if (!enSwipe.current) onInfo(); } : undefined}
                 onKeyDown={mode === 'lecture' ? undefined : e => { if (estTop && (e.key === 'Enter' || e.key === ' ')) onInfo(); }}
-                className={clsx('w-full flex flex-col text-left px-5 sm:px-6 pt-5 touch-pan-y', mode === 'lecture' ? 'pb-6' : 'pb-20 overflow-y-auto cursor-pointer')}
+                className={clsx('w-full flex flex-col text-left px-5 sm:px-6 touch-pan-y', mode === 'lecture' ? 'pt-0 pb-6' : 'pt-5 pb-20 overflow-y-auto cursor-pointer')}
                 style={mode === 'lecture' ? undefined : { height: HAUTEUR_CARTE_DECOUVERTE - HAUTEUR_TITRE_PILE }}
             >
-                <div className="flex items-center gap-2 shrink-0">
+                <div className={clsx('flex items-center gap-2 shrink-0', mode === 'lecture' && 'hidden')}>
                     <span className={clsx('size-2 rounded-full', pilier?.bg)} />
-                    <span className={clsx('text-[10px] font-black uppercase tracking-widest', pilier?.color)}>
+                    <span className={clsx('text-[12px] font-bold', pilier?.color)}>
                         {pilier?.label}
                     </span>
                     {groupe && (
-                        <span className="text-[10px] font-bold text-slate-300">· {groupe.label}</span>
+                        <span className="text-[11px] font-semibold text-[#6f817d]">· {groupe.label}</span>
                     )}
                     {mode === 'lecture' && <button
                         onPointerDown={event => event.stopPropagation()}
@@ -572,23 +698,23 @@ function CarteFlux({
                     ><span className="material-symbols-outlined" aria-hidden>{saving ? 'hourglass_top' : retenue ? 'bookmark_added' : 'bookmark_add'}</span></button>}
                 </div>
 
-                {mode === 'lecture' ? <LectureCarte fiche={fiche} /> : <>
+                {mode === 'lecture' ? <LectureCarte fiche={fiche} allowUse={false} /> : <>
                 <div className="mt-3">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">J&apos;ouvre avec</p>
+                    <p className="text-[12px] font-bold text-slate-400">J&apos;ouvre avec</p>
                     <p className="text-[17px] font-black text-slate-900 leading-snug mt-1.5">
                         «&nbsp;{accroche}&nbsp;»
                     </p>
                 </div>
 
                 {forme && (
-                    <span className="inline-flex self-start items-center gap-1 mt-2 px-2.5 py-1 rounded-full bg-indigo-50 text-[10.5px] font-black text-indigo-600 uppercase tracking-wide">
+                    <span className="inline-flex self-start items-center gap-1 mt-2 px-2.5 py-1 rounded-full bg-[#edf1ea] text-[12px] font-bold text-[#173d3a]">
                         {forme}
                     </span>
                 )}
 
                 {fiche.erreur_frequente && (
                     <div className="mt-4 pt-4 border-t border-slate-100">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                        <p className="text-[12px] font-bold text-slate-400">
                             Ils croient souvent que
                         </p>
                         <p className="text-[13px] text-slate-600 leading-snug mt-1">
@@ -599,7 +725,7 @@ function CarteFlux({
 
                 {fiche.a_observer && (
                     <div className="mt-3 rounded-xl bg-sky-50 px-3 py-2.5">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-sky-600">À leur faire observer</p>
+                        <p className="text-[12px] font-bold text-sky-600">À leur faire observer</p>
                         <p className="text-[12.5px] text-slate-600 leading-snug mt-1">{fiche.a_observer}</p>
                     </div>
                 )}
@@ -615,7 +741,7 @@ function CarteFlux({
 
                 {fiche.a_retenir && (
                     <div className="mt-3 rounded-xl bg-emerald-50 px-3 py-2.5">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600">Ils repartent avec</p>
+                        <p className="text-[12px] font-bold text-emerald-600">Ils repartent avec</p>
                         <p className="text-[12.5px] text-slate-600 leading-snug mt-1">{fiche.a_retenir}</p>
                     </div>
                 )}
@@ -647,16 +773,9 @@ function CarteFlux({
                         {retenue ? 'Gardé' : 'Garder'}
                     </button>
                 ) : (
-                    <button
-                        onClick={onGarder}
-                        disabled={saving || savedUnavailable}
-                        aria-pressed={retenue}
-                        aria-label={retenue ? 'Retirer cette carte des cartes mises de côté' : 'Mettre cette carte de côté'}
-                        className="flex-1 h-11 rounded-full flex items-center justify-center gap-1.5 bg-indigo-50 text-indigo-600 active:scale-[0.98] transition text-[12.5px] font-black"
-                    >
-                        <span className="material-symbols-outlined text-[18px]">{saving ? 'hourglass_top' : retenue ? 'bookmark_added' : 'bookmark_add'}</span>
-                        {saving ? 'Enregistrement…' : retenue ? 'Mise de côté' : 'Mettre de côté'}
-                    </button>
+                    /* L'action finale de la carte, en bas : l'emmener dans une semaine. Mettre
+                       de côté reste accessible par le signet, en haut de la carte. */
+                    choixCarte?.allowUse === false ? <span className="flex-1"/> : <UseCardWithGroup card={fiche} choice={resolveCardChoice(fiche, choixCarte?.choices[fiche.id])} variant="bar"/>
                 )}
 
                 <button

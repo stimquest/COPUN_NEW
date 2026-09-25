@@ -71,7 +71,7 @@ export default async function RessourcesPage({
             {/* Brouillons (référents seulement) */}
             {canModerate && fichesBrouillon.length > 0 && (
                 <section className="mb-10">
-                    <h2 className="text-sm font-black uppercase tracking-widest text-amber-600 mb-4 flex items-center gap-2">
+                    <h2 className="text-sm font-bold text-amber-600 mb-4 flex items-center gap-2">
                         <span className="material-symbols-outlined text-base">pending</span>
                         En attente de validation ({fichesBrouillon.length})
                     </h2>
@@ -93,7 +93,7 @@ export default async function RessourcesPage({
             {fichesPubliees.length > 0 ? (
                 <section>
                     {canModerate && fichesBrouillon.length > 0 && (
-                        <h2 className="text-sm font-black uppercase tracking-widest text-slate-400 mb-4">
+                        <h2 className="text-sm font-bold text-slate-400 mb-4">
                             Publiées ({fichesPubliees.length})
                         </h2>
                     )}

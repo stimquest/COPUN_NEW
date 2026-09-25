@@ -1,8 +1,10 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowRight } from 'lucide-react';
 import type { SequenceProgress } from '@/actions/parcours-formation-actions';
 import { PARCOURS_COP } from '@/data/parcours-cop';
+
+import { iconeMaterial } from '@/components/ui/Icone';
+const ArrowRight = iconeMaterial('arrow_forward');
 
 export function LearningJourney({ progressions }: { progressions: Record<string, SequenceProgress> }) {
     const disponibles = PARCOURS_COP.flatMap(domain => domain.parcours).filter(path => path.disponible);
@@ -19,11 +21,17 @@ export function LearningJourney({ progressions }: { progressions: Record<string,
     const faitsVivre = (domain: typeof PARCOURS_COP[number]) =>
         domain.parcours.filter(path => progressions[path.id]?.mission?.completed).length;
     return <main className="co-page co-journey">
-        <header className="co-journey-intro">
-            {/* Les parcours appartiennent au pôle formation : le retour y mène directement. */}
-            <Link href="/formation" className="co-field-back">← Formation</Link>
-            <p className="co-eyebrow">Parcours environnement</p>
-            <p>Choisissez librement les sujets que vous souhaitez approfondir.</p>
+        {/* Même en-tête que la page Formation : surtitre du pôle, puis le titre. Le retour
+            passe par la navigation, comme sur les autres pages du pôle. */}
+        <header className="co-formation-intro flex items-start gap-2">
+            {/* Retour en flèche seule, comme l'en-tête d'Explorer. */}
+            <Link href="/formation" aria-label="Retour à la formation" className="-ml-2 mt-5 flex size-11 shrink-0 items-center justify-center rounded-full text-encre hover:bg-white/60">
+                <span className="material-symbols-outlined" aria-hidden>arrow_back</span>
+            </Link>
+            <div>
+                <p className="co-eyebrow">Formation</p>
+                <h1>Parcours environnement</h1>
+            </div>
         </header>
         {/* Le mode d'emploi en 3 étapes (Approfondir / Trouver son angle / Essayer) est
             retiré : utile une fois, à la découverte, il occupait ensuite la même place à
@@ -31,15 +39,16 @@ export function LearningJourney({ progressions }: { progressions: Record<string,
             réel restent — c'est l'identité de l'écran et sa seule info contextuelle. */}
         <section className="co-journey-hero">
             <div>
-                <span className="co-eyebrow">Votre progression</span>
-                <h2>Apprendre. Essayer.<br/>Faire vivre.</h2>
-                <p className="co-journey-status">{valides || enCours ? `${enCours} en cours · ${valides} terminé${valides > 1 ? 's' : ''}` : 'Commencez par le sujet qui vous intéresse.'}</p>
+                <span className="co-eyebrow">La démarche COP’UN</span>
+                {/* On n'apprend pas l'environnement : on apprend à le regarder et à en parler. */}
+                <h2>Apprendre à regarder.<br/>Raconter. Faire vivre.</h2>
+                <p className="co-journey-status">{valides || enCours ? `Ma progression : ${enCours} en cours · ${valides} terminé${valides > 1 ? 's' : ''}` : 'Commencez par le sujet qui vous intéresse.'}</p>
             </div>
             <Image className="co-journey-compass" src="/illustrations/boussole-aquarelle.png" alt="" width={120} height={120}/>
         </section>
         <div className="co-domain-list">
             {PARCOURS_COP.map((domain, index) => <section key={domain.id} className={`co-domain co-domain-${domain.id}`}>
-                <header><span className="co-domain-number">0{index + 1}</span><div><p className="co-eyebrow">Repère COP</p><h2>{domain.titre}</h2><p>{domain.intention}</p></div>{faitsVivre(domain) > 0 && <span className="co-domain-count">{faitsVivre(domain)} / {domain.parcours.length}<small>fait{faitsVivre(domain) > 1 ? 's' : ''} vivre</small></span>}</header>
+                <header><span className="co-domain-number">0{index + 1}</span><div><h2>{domain.titre}</h2><p>{domain.intention}</p></div>{faitsVivre(domain) > 0 && <span className="co-domain-count">{faitsVivre(domain)} / {domain.parcours.length}<small>fait{faitsVivre(domain) > 1 ? 's' : ''} vivre</small></span>}</header>
                 <div className="co-path-grid">
                     {domain.parcours.map((path, pathIndex) => {
                         const progression = progressions[path.id];

@@ -96,7 +96,7 @@ export default function GroupeBloc({
                                         <span className={clsx('material-symbols-outlined text-[13px]', pilier.color)}>
                                             {pilier.icon}
                                         </span>
-                                        <p className={clsx('text-[10px] font-black uppercase tracking-[0.15em]', pilier.color)}>
+                                        <p className={clsx('text-[12px] font-bold', pilier.color)}>
                                             {pilier.label}
                                         </p>
                                     </div>
@@ -125,7 +125,7 @@ export default function GroupeBloc({
                                                         className="flex-1 min-w-0 text-left pl-4 py-3"
                                                     >
                                                         {themesFiche.length > 0 && (
-                                                            <span className="block text-[9px] font-black uppercase tracking-widest text-slate-400 mb-0.5">
+                                                            <span className="block text-[12px] font-bold text-slate-400 mb-0.5">
                                                                 {themesFiche.map(t => t.label).join(' · ')}
                                                             </span>
                                                         )}

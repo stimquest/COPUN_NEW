@@ -43,7 +43,7 @@ export function FilRougePicker({ defis, currentId }: { defis: FilRougeDefi[]; cu
                         <span className="material-symbols-outlined text-lg">{current.icon}</span>
                     </div>
                     <div className="flex-1 min-w-0">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600 mb-0.5">Défi de saison actif</p>
+                        <p className="text-[12px] font-bold text-emerald-600 mb-0.5">Défi de saison actif</p>
                         <p className="font-bold text-emerald-900 text-sm truncate">{current.description}</p>
                         <p className="text-xs text-emerald-600 mt-0.5">Assigné automatiquement à chaque nouvelle semaine</p>
                     </div>
@@ -116,7 +116,7 @@ export function FilRougePicker({ defis, currentId }: { defis: FilRougeDefi[]; cu
                 <button
                     onClick={handleSave}
                     disabled={isPending}
-                    className="w-full py-3.5 rounded-xl font-black text-sm uppercase tracking-widest transition active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2 bg-slate-900 text-white hover:bg-slate-700"
+                    className="w-full py-3.5 rounded-xl font-bold text-sm transition active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2 bg-slate-900 text-white hover:bg-slate-700"
                 >
                     {isPending
                         ? <span className="animate-spin material-symbols-outlined text-lg">progress_activity</span>

@@ -128,7 +128,7 @@ export function ThematicSelect({ value, onChange, placeholder = '— Aucune thé
                                 return (
                                     <div key={dim}>
                                         <div className={clsx('flex items-center px-4 py-1.5', d.lightBg)}>
-                                            <span className={clsx('text-[10px] font-black uppercase tracking-widest', d.text)}>{d.label}</span>
+                                            <span className={clsx('text-[12px] font-bold', d.text)}>{d.label}</span>
                                         </div>
                                         {tags.map(([tag, info]) => {
                                             const isSelected = value === tag;

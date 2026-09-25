@@ -209,7 +209,7 @@ export default function AideChoixSujet({ open, onClose, onResultat }: Props) {
 
                                         <button
                                             onClick={conclure}
-                                            className="w-full h-14 mt-4 rounded-2xl bg-slate-900 text-white text-xs font-black tracking-[0.15em] uppercase shadow-lg active:scale-[0.98] transition-all"
+                                            className="w-full h-14 mt-4 rounded-2xl bg-slate-900 text-white text-[12px] font-bold shadow-lg active:scale-[0.98] transition-all"
                                         >
                                             Voir les questions
                                         </button>

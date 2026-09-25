@@ -58,7 +58,7 @@ export default function AboutPage() {
                     <span className="material-symbols-outlined">arrow_back</span>
                 </Link>
                 <div>
-                    <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">La démarche</p>
+                    <p className="text-[12px] font-bold text-slate-400">La démarche</p>
                     <p className="text-lg font-bold leading-none text-slate-900">Guide COPUN</p>
                 </div>
             </header>
@@ -73,7 +73,7 @@ export default function AboutPage() {
                     <div className="relative z-10 space-y-4">
                         <div className="flex items-center gap-4 mb-2">
                             <Image src="/logo.jpg" alt="COP'UN logo" width={72} height={72} className="rounded-full shrink-0 shadow-lg" />
-                            <span className="inline-block bg-emerald-500/20 text-emerald-400 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest border border-emerald-500/30">
+                            <span className="inline-block bg-emerald-500/20 text-emerald-400 text-[12px] font-bold px-3 py-1 rounded-full border border-emerald-500/30">
                                 Pour un littoral vivant et protégé
                             </span>
                         </div>
@@ -89,7 +89,7 @@ export default function AboutPage() {
                 {/* Les 3 dimensions */}
                 <section className="space-y-6">
                     <div>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">La démarche</p>
+                        <p className="text-[12px] font-bold text-slate-400 mb-1">La démarche</p>
                         <h2 className="text-2xl font-black text-slate-900">Le cercle vertueux des apprentissages sens marin – environnement</h2>
                         <p className="text-sm text-slate-500 mt-1">On ne protège que ce qu&apos;on comprend. On n&apos;observe bien que ce qu&apos;on connaît.</p>
                         <p className="text-sm text-slate-500 mt-2 leading-relaxed">
@@ -106,8 +106,8 @@ export default function AboutPage() {
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2 mb-1">
-                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{i + 1} / 3</span>
-                                            <span className={`text-[10px] font-black uppercase tracking-widest ${d.keyText}`}>{d.key}</span>
+                                            <span className="text-[12px] font-bold text-slate-400">{i + 1} / 3</span>
+                                            <span className={`text-[12px] font-bold ${d.keyText}`}>{d.key}</span>
                                         </div>
                                         <p className="font-bold text-slate-900 mb-2">{d.tagline}</p>
                                         <p className="text-sm text-slate-600 leading-relaxed mb-3">{d.description}</p>
@@ -124,7 +124,7 @@ export default function AboutPage() {
                 {/* Workflow moniteur */}
                 <section className="space-y-6">
                     <div>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Comment ça marche</p>
+                        <p className="text-[12px] font-bold text-slate-400 mb-1">Comment ça marche</p>
                         <h2 className="text-2xl font-black text-slate-900">4 étapes, une semaine complète</h2>
                     </div>
 
@@ -134,7 +134,7 @@ export default function AboutPage() {
                                 <div className={`size-9 rounded-lg ${e.iconBg} ${e.iconText} flex items-center justify-center mb-3`}>
                                     <span className="material-symbols-outlined text-lg">{e.icon}</span>
                                 </div>
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Étape {e.num}</p>
+                                <p className="text-[12px] font-bold text-slate-400 mb-0.5">Étape {e.num}</p>
                                 <p className="font-bold text-slate-900 text-sm mb-1">{e.title}</p>
                                 <p className="text-xs text-slate-500 leading-relaxed">{e.desc}</p>
                             </div>
@@ -145,7 +145,7 @@ export default function AboutPage() {
                 {/* Défis terrain */}
                 <section className="space-y-6">
                     <div>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Sur le terrain</p>
+                        <p className="text-[12px] font-bold text-slate-400 mb-1">Sur le terrain</p>
                         <h2 className="text-2xl font-black text-slate-900">Des défis, pas des exercices</h2>
                         <p className="text-sm text-slate-500 mt-1">Chaque défi laisse une trace : photo de preuve, observation consignée, données réutilisables par les chercheurs.</p>
                     </div>
@@ -159,7 +159,7 @@ export default function AboutPage() {
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2 mb-0.5">
                                         <p className="font-bold text-slate-900 text-sm">{d.label}</p>
-                                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest bg-slate-100 px-2 py-0.5 rounded-full">{d.type}</span>
+                                        <span className="text-[12px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{d.type}</span>
                                     </div>
                                     <p className="text-xs text-slate-500 leading-relaxed">{d.desc}</p>
                                 </div>
@@ -185,7 +185,7 @@ export default function AboutPage() {
                 {/* Stats du contenu */}
                 <section className="space-y-4">
                     <div>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Le contenu</p>
+                        <p className="text-[12px] font-bold text-slate-400 mb-1">Le contenu</p>
                         <h2 className="text-2xl font-black text-slate-900">Une base solide</h2>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
@@ -198,7 +198,7 @@ export default function AboutPage() {
                             <div key={s.label} className="bg-white rounded-2xl p-4 shadow-sm text-center">
                                 <span className="material-symbols-outlined text-slate-300 text-2xl mb-1 block">{s.icon}</span>
                                 <p className="text-3xl font-black text-slate-900">{s.val}</p>
-                                <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mt-0.5">{s.label}</p>
+                                <p className="text-[12px] font-semibold text-slate-500 mt-0.5">{s.label}</p>
                             </div>
                         ))}
                     </div>

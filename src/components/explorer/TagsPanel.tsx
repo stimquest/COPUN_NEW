@@ -85,7 +85,7 @@ export default function TagsPanel({ open, onClose, pool, selection, onToggle, on
                         <div className="px-5 pt-5 pb-3 shrink-0">
                             <div className="flex items-center gap-3">
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                                    <p className="text-[12px] font-bold text-slate-400">
                                         Tous les mots-clés
                                     </p>
                                     <p className="text-lg font-black text-slate-900 leading-tight">
@@ -159,7 +159,7 @@ export default function TagsPanel({ open, onClose, pool, selection, onToggle, on
                             <div className="px-5 pt-3 pb-[max(env(safe-area-inset-bottom),1.25rem)] shrink-0 bg-[#EBF0F7]">
                                 <button
                                     onClick={onClose}
-                                    className="w-full h-14 rounded-2xl bg-slate-900 text-white text-xs font-black tracking-[0.15em] uppercase shadow-lg active:scale-[0.98] transition"
+                                    className="w-full h-14 rounded-2xl bg-slate-900 text-white text-[12px] font-bold shadow-lg active:scale-[0.98] transition"
                                 >
                                     Voir les {resultCount} question{resultCount > 1 ? 's' : ''}
                                 </button>

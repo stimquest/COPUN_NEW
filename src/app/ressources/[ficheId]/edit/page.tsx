@@ -28,7 +28,7 @@ export default async function EditFichePage({ params }: { params: Promise<{ fich
                     <span className="material-symbols-outlined text-base">arrow_back</span>
                     Retour à la fiche
                 </Link>
-                <h1 className="text-3xl font-black text-slate-900 uppercase tracking-tighter italic">
+                <h1 className="text-3xl font-bold text-slate-900 tracking-tighter italic">
                     Modifier la fiche
                 </h1>
             </div>

@@ -29,7 +29,7 @@ export default async function PreparerPage({ params }: { params: Promise<{ id: s
                     <span className="material-symbols-outlined text-[20px]">arrow_back</span>
                 </Link>
                 <div className="min-w-0">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Le fil de ma semaine</p>
+                    <p className="text-[12px] font-bold text-slate-400">Le fil de ma semaine</p>
                     <h1 className="text-base font-black text-slate-900 leading-tight truncate">{stage.title}</h1>
                 </div>
             </header>

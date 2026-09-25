@@ -8,8 +8,16 @@ import type { CardChoice } from '@/lib/card-choice';
 import { getWeeksForCard, addCardToWeek } from '@/actions/card-week-actions';
 import { setCardSaved } from '@/actions/saved-card-actions';
 
-export default function UseCardWithGroup({ card, choice }: { card: PedagogicalContent; choice: CardChoice }) {
+export default function UseCardWithGroup({ card, choice, variant }: { card: PedagogicalContent; choice: CardChoice; variant?: 'bar' }) {
     const [open, setOpen] = useState(false);
+    /* Dans la barre d'actions de la carte : un seul bouton principal, entre les flèches. */
+    if (variant === 'bar') return <>
+        <button type="button" onClick={() => setOpen(true)}
+            className="flex h-11 flex-1 items-center justify-center rounded-full bg-[#173d3a] text-[13px] font-bold text-[#fffdf8] transition active:scale-[0.98]">
+            Utiliser avec mon groupe
+        </button>
+        {open && <WeekPicker card={card} choice={choice} onClose={() => setOpen(false)}/>}
+    </>;
     return <div className="co-card-use">
         <button type="button" onClick={() => setOpen(true)}>Utiliser avec mon groupe <span aria-hidden>→</span></button>
         <p>L’accroche et l’action affichées seront conservées.</p>

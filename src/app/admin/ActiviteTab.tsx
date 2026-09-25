@@ -79,7 +79,7 @@ function CourbeJours({ jours }: { jours: ActiviteData['par_jour'] }) {
     return (
         <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
             <div className="flex items-baseline justify-between mb-3">
-                <p className="text-xs font-black uppercase tracking-widest text-slate-400">
+                <p className="text-[12px] font-bold text-slate-400">
                     Moniteurs actifs par jour
                 </p>
                 <p className="text-[10px] text-slate-400">
@@ -124,7 +124,7 @@ function LigneMoniteur({ m, suiviActif }: { m: MoniteurActivite; suiviActif: boo
                     <p className={`text-2xl font-black leading-none ${jamais ? 'text-slate-300' : 'text-slate-900'}`}>
                         {m.jours_actifs}
                     </p>
-                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                    <p className="text-[12px] font-bold text-slate-400">
                         {m.jours_actifs > 1 ? 'jours' : 'jour'}
                     </p>
                 </div>
@@ -223,7 +223,7 @@ export function ActiviteTab() {
                         <button
                             key={p.cle}
                             onClick={() => { setPeriode(p.cle); charger(p.cle); }}
-                            className={`px-3 py-1.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${
+                            className={`px-3 py-1.5 rounded-xl text-[12px] font-bold transition-all ${
                                 periode === p.cle
                                     ? 'bg-slate-900 text-white'
                                     : 'text-slate-400 hover:bg-slate-100'
@@ -235,7 +235,7 @@ export function ActiviteTab() {
                 </div>
                 <button
                     onClick={exportCSV}
-                    className="px-3 py-1.5 rounded-xl text-[11px] font-black uppercase tracking-widest text-slate-500 border border-slate-200 hover:bg-slate-50"
+                    className="px-3 py-1.5 rounded-xl text-[12px] font-bold text-slate-500 border border-slate-200 hover:bg-slate-50"
                 >
                     Export CSV
                 </button>
@@ -273,7 +273,7 @@ export function ActiviteTab() {
 
             {data.par_genre.length > 0 && (
                 <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-                    <p className="text-xs font-black uppercase tracking-widest text-slate-400 px-4 pt-4 pb-2">
+                    <p className="text-[12px] font-bold text-slate-400 px-4 pt-4 pb-2">
                         Nature de l&apos;usage
                     </p>
                     {data.par_genre.map(g => (
@@ -289,7 +289,7 @@ export function ActiviteTab() {
             )}
 
             <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-                <p className="text-xs font-black uppercase tracking-widest text-slate-400 px-4 pt-4 pb-2">
+                <p className="text-[12px] font-bold text-slate-400 px-4 pt-4 pb-2">
                     Par moniteur
                 </p>
                 {data.moniteurs.map(m => (
@@ -299,7 +299,7 @@ export function ActiviteTab() {
 
             {data.pages.length > 0 && (
                 <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-                    <p className="text-xs font-black uppercase tracking-widest text-slate-400 px-4 pt-4 pb-2">
+                    <p className="text-[12px] font-bold text-slate-400 px-4 pt-4 pb-2">
                         Écrans les plus consultés
                     </p>
                     {data.pages.map(p => (

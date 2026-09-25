@@ -2,8 +2,12 @@
 
 import { useEffect, useRef, useState, useTransition } from 'react';
 import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
 import { animate, motion, useMotionValue, useTransform, type PanInfo } from 'framer-motion';
+import { saveObjectiveStatus } from '@/actions/stage-actions';
+import type { StageObjectiveExecutionStatus } from '@/types';
+import { iconeMaterial } from '@/components/ui/Icone';
+
+const ArrowRight = iconeMaterial('arrow_forward');
 
 /** Hauteur de la bande de titre qui dépasse de chaque carte de derrière. */
 const DECALAGE_TITRE = 54;
@@ -53,8 +57,6 @@ function CarteDeLaPile({ rang, multiple, onPasser, onAmener, children }: {
         {children}
     </motion.div>;
 }
-import { saveObjectiveStatus } from '@/actions/stage-actions';
-import type { StageObjectiveExecutionStatus } from '@/types';
 
 type Objective = {
     id: string;

@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState, useTransition } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
 import type { SequenceProgress } from '@/actions/parcours-formation-actions';
 import { ajouterMissionPratique, marquerSequenceParcourue, verifierAcquisSequence } from '@/actions/parcours-formation-actions';
 import type { ParcoursFormation } from '@/data/parcours-formation';
@@ -11,6 +10,10 @@ import FluxDecouverte from '@/components/explorer/FluxDecouverte';
 import { setCardSaved } from '@/actions/saved-card-actions';
 import { useRouter } from 'next/navigation';
 import { resolveCardChoice, type CardChoice, type CardChoices } from '@/lib/card-choice';
+
+import { iconeMaterial } from '@/components/ui/Icone';
+const ArrowLeft = iconeMaterial('arrow_back');
+const ArrowRight = iconeMaterial('arrow_forward');
 
 export function ParcoursLaisseDeMerClient({ sequence, progression, cards, stages, savedIds, initialChoices = {} }: { sequence: ParcoursFormation; progression: SequenceProgress; cards: PedagogicalContent[]; stages: Stage[]; savedIds: string[]; initialChoices?: CardChoices }) {
     const router = useRouter();

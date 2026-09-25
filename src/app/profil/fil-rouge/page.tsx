@@ -16,7 +16,7 @@ export default async function FilRougePage() {
                     <span className="material-symbols-outlined">arrow_back</span>
                 </Link>
                 <div>
-                    <p className="text-[10px] font-black tracking-widest text-emerald-500 uppercase">Défi de saison</p>
+                    <p className="text-[12px] font-bold text-emerald-500">Défi de saison</p>
                     <p className="text-lg font-bold leading-none text-slate-900">Mon fil rouge</p>
                 </div>
             </header>
@@ -28,7 +28,7 @@ export default async function FilRougePage() {
                     <div className="text-center py-20 space-y-4">
                         <span className="material-symbols-outlined text-5xl text-slate-200">timeline</span>
                         <p className="text-slate-500 font-semibold">Aucun défi de saison sélectionné.</p>
-                        <Link href="/profil" className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-xl text-sm font-black uppercase tracking-widest">
+                        <Link href="/profil" className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-xl text-sm font-bold">
                             Choisir mon défi
                         </Link>
                     </div>
@@ -43,7 +43,7 @@ export default async function FilRougePage() {
                                     <span className="material-symbols-outlined text-2xl">{defi.icon}</span>
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600 mb-0.5">Défi de saison actif</p>
+                                    <p className="text-[12px] font-bold text-emerald-600 mb-0.5">Défi de saison actif</p>
                                     <h2 className="font-black text-slate-900 text-base leading-tight">{defi.description}</h2>
                                     <p className="text-xs text-slate-500 mt-1 leading-relaxed">{defi.instruction}</p>
                                 </div>
@@ -54,15 +54,15 @@ export default async function FilRougePage() {
                         <div className="grid grid-cols-3 gap-3">
                             <div className="bg-emerald-600 rounded-2xl p-4 text-center shadow-lg shadow-emerald-500/20">
                                 <p className="text-3xl font-black text-white">{validated.length}</p>
-                                <p className="text-[9px] font-black text-emerald-200 uppercase tracking-widest mt-0.5">Validés</p>
+                                <p className="text-[12px] font-bold text-emerald-200 mt-0.5">Validés</p>
                             </div>
                             <div className="bg-white rounded-2xl p-4 text-center shadow-sm border border-slate-100">
                                 <p className="text-3xl font-black text-slate-900">{total}</p>
-                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Semaines</p>
+                                <p className="text-[12px] font-bold text-slate-400 mt-0.5">Semaines</p>
                             </div>
                             <div className="bg-white rounded-2xl p-4 text-center shadow-sm border border-slate-100">
                                 <p className="text-3xl font-black text-amber-500">{streak}</p>
-                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Série</p>
+                                <p className="text-[12px] font-bold text-slate-400 mt-0.5">Série</p>
                             </div>
                         </div>
 
@@ -70,7 +70,7 @@ export default async function FilRougePage() {
                         {total > 0 && (
                             <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
                                 <div className="flex items-center justify-between mb-3">
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Régularité sur la saison</p>
+                                    <p className="text-[12px] font-bold text-slate-400">Régularité sur la saison</p>
                                     <p className="text-sm font-black text-emerald-600">{Math.round((validated.length / total) * 100)}%</p>
                                 </div>
                                 <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
@@ -92,7 +92,7 @@ export default async function FilRougePage() {
                             </div>
                         ) : (
                             <section>
-                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">Historique des passages</p>
+                                <p className="text-[12px] font-bold text-slate-400 mb-4">Historique des passages</p>
                                 <div className="relative">
                                     {/* Ligne verticale */}
                                     <div className="absolute left-5 top-0 bottom-0 w-px bg-slate-200" />
@@ -139,7 +139,7 @@ export default async function FilRougePage() {
                                                             {/* Notes de terrain */}
                                                             {entry.notes && (
                                                                 <div className="bg-amber-50 border border-amber-100 rounded-xl px-3 py-2 mb-3">
-                                                                    <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-0.5">Observation</p>
+                                                                    <p className="text-[12px] font-bold text-amber-600 mb-0.5">Observation</p>
                                                                     <p className="text-xs text-amber-900 leading-relaxed">{entry.notes}</p>
                                                                 </div>
                                                             )}

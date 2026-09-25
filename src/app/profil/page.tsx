@@ -1,224 +1,133 @@
-import { getProfile, getUserStats } from '@/actions/user-actions';
-import { getUserContent } from '@/actions/content-actions';
-import { getStages } from '@/services/data-service';
-import { getMyTotalPoints } from '@/actions/quiz-actions';
-import { getFilRougeDefis, getMonitorFilRouge } from '@/actions/defi-actions';
-import { Profile, PedagogicalContent, Stage } from '@/types';
 import Link from 'next/link';
+import { iconeMaterial, type IconeComposant } from '@/components/ui/Icone';
+import { getProfile } from '@/actions/user-actions';
+import { getResumeFormation } from '@/actions/formation-actions';
+import { getSequencesProgress } from '@/actions/parcours-formation-actions';
+import { getResumeVote } from '@/actions/vote-actions';
+import { getStages } from '@/services/data-service';
 import SignOutButton from '@/components/SignOutButton';
-import { FilRougePicker } from '@/components/FilRougePicker';
-import { SPORT_FEATURES_ENABLED } from '@/lib/feature-flags';
 import { SECONDARY_NAV, ADMIN_NAV } from '@/data/navigation';
+import { PARCOURS_FORMATION } from '@/data/parcours-formation';
+import { BADGES, badgesObtenus, type BadgeId } from '@/data/badges';
+
+const ArrowRight = iconeMaterial('arrow_forward');
+
+/** Material n'a pas de jumelles : tracé maison, trait fin comme les autres emblèmes. */
+function Jumelles({ size = 24 }: { size?: number }) {
+    return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+        <circle cx="6.5" cy="16" r="3.5"/><circle cx="17.5" cy="16" r="3.5"/><path d="M3.5 14 6 5h3l1 6"/><path d="M20.5 14 18 5h-3l-1 6"/><path d="M10 11h4"/>
+    </svg>;
+}
+
+/* Ici l'icône est l'emblème lui-même : elle porte l'information, ce n'est pas un décor.
+   Le sifflet est le « sports » de Material. */
+const ICONES: Record<BadgeId, IconeComposant | typeof Jumelles> = {
+    jumelles: Jumelles, boussole: iconeMaterial('explore'), carte: iconeMaterial('map'),
+    carnet: iconeMaterial('edit_note'), sifflet: iconeMaterial('sports'), sac: iconeMaterial('backpack'),
+};
 
 export default async function ProfilPage() {
-    let profile: Profile | null = null;
-    let stats = { totalValidations: 0, createdContent: 0 };
-    let userContent: PedagogicalContent[] = [];
-    let stages: Stage[] = [];
-
-    let totalPoints = 0;
-    let filRougeDefis: Awaited<ReturnType<typeof getFilRougeDefis>> = [];
-    let filRougeId: string | null = null;
-    try {
-        const results = await Promise.allSettled([
-            getProfile(),
-            getUserStats(),
-            getUserContent(),
-            getStages(),
-            getMyTotalPoints(),
-            getFilRougeDefis(),
-            getMonitorFilRouge(),
-        ]);
-
-        profile = results[0].status === 'fulfilled' ? results[0].value as Profile : null;
-        stats = results[1].status === 'fulfilled' ? (results[1].value || stats) : stats;
-        userContent = results[2].status === 'fulfilled' ? (results[2].value as PedagogicalContent[] || []) : [];
-        stages = results[3].status === 'fulfilled' ? (results[3].value as Stage[] || []) : [];
-        totalPoints = results[4].status === 'fulfilled' ? (results[4].value as number) : 0;
-        filRougeDefis = results[5].status === 'fulfilled' ? results[5].value : [];
-        filRougeId = results[6].status === 'fulfilled' ? results[6].value : null;
-    } catch (err) {
-        console.error('Erreur lors du chargement du profil:', err);
-    }
+    const [profile, resume, stages, progressions] = await Promise.all([
+        getProfile(),
+        getResumeFormation(),
+        getStages(),
+        getSequencesProgress(PARCOURS_FORMATION.map(parcours => parcours.id)),
+    ]);
 
     if (!profile) {
-        return (
-            <div className="flex flex-col items-center justify-center min-h-[80vh] p-6 text-center">
-                <span className="material-symbols-outlined text-4xl text-slate-300 mb-4">account_circle</span>
-                <p className="text-slate-500 font-medium mb-4">Vous n&apos;êtes pas connecté.</p>
-                <Link href="/login" className="px-6 py-2 bg-primary text-white rounded-xl font-bold">
-                    Se connecter
-                </Link>
-            </div>
-        );
+        return <main className="co-page co-profile-empty">
+            <p>Vous n’êtes pas connecté.</p>
+            <Link href="/login" className="co-primary-link">Se connecter <ArrowRight size={16}/></Link>
+        </main>;
     }
 
-    return (
-        <div className="co-page co-profile">
-            {/* Header */}
-            <div className="bg-[var(--co-sea)] p-8 pb-12 rounded-[32px]">
-                <div className="flex flex-col items-center">
-                    <div className="size-24 rounded-full bg-slate-100 border-4 border-white shadow-xl mb-4 overflow-hidden flex items-center justify-center">
-                        {profile.avatar_url ? (
-                            <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
-                        ) : (
-                            <span className="material-symbols-outlined text-4xl text-slate-300">person</span>
-                        )}
-                    </div>
-                    <h1 className="text-2xl font-black text-slate-900 mb-1">{profile.full_name || 'Moniteur'}</h1>
-                    <div className="flex items-center gap-2 mb-3">
-                        {profile.clubs?.name && (
-                            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{profile.clubs.name}</span>
-                        )}
-                    </div>
-                    <span className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-xs font-bold uppercase tracking-wider">
-                        {profile.role === 'admin' ? 'Administrateur' : 'Moniteur'}
-                    </span>
-                </div>
-            </div>
+    // Une semaine bouclée est une semaine dont le bilan est fait.
+    const bouclees = stages.filter(stage => Boolean(stage.closed_at));
+    const votes = await Promise.all(bouclees.map(stage => getResumeVote(stage.id)));
+    const actionsConfirmees = votes.reduce((total, vote) => total + vote.actionsConfirmees, 0);
 
-            <nav className="co-profile-links" aria-label="Outils et compte">
-                {[...SECONDARY_NAV.filter(item => item.href !== '/profil'), ...(['admin', 'club_admin'].includes(profile.role) ? [ADMIN_NAV] : [])].map(item => <Link key={item.href} href={item.href}><item.icon size={19}/><span>{item.name}</span></Link>)}
-            </nav>
-            {/* Stats Grid */}
-            <div className="px-5 -mt-8">
-                <div className={SPORT_FEATURES_ENABLED ? 'grid grid-cols-3 gap-3' : 'grid grid-cols-2 gap-3'}>
-                    <div className="bg-indigo-600 p-5 rounded-2xl shadow-xl shadow-indigo-500/30 flex flex-col items-center justify-center text-center col-span-1">
-                        <span className="text-4xl font-black text-white mb-1">{totalPoints}</span>
-                        <span className="text-[9px] text-indigo-200 font-black uppercase tracking-widest">Points</span>
-                    </div>
-                    <div className="bg-white p-5 rounded-2xl shadow-xl shadow-slate-200/50 flex flex-col items-center justify-center text-center">
-                        <span className="text-4xl font-black text-emerald-500 mb-1">{stats?.totalValidations || 0}</span>
-                        <span className="text-[9px] text-slate-400 font-black uppercase tracking-widest">Validations</span>
-                    </div>
-                    {SPORT_FEATURES_ENABLED && (
-                        <div className="bg-white p-5 rounded-2xl shadow-xl shadow-slate-200/50 flex flex-col items-center justify-center text-center">
-                            <span className="text-4xl font-black text-indigo-500 mb-1">{stats?.createdContent || 0}</span>
-                            <span className="text-[9px] text-slate-400 font-black uppercase tracking-widest">Fiches</span>
-                        </div>
-                    )}
-                </div>
-            </div>
+    const suivis = PARCOURS_FORMATION.map(parcours => progressions[parcours.id]);
+    const parcoursTermines = suivis.filter(progression => progression?.mission?.completed).length;
+    const parcoursEnCours = suivis.filter(progression => progression && !progression.mission?.completed && (progression.parcouru || progression.acquisVerifie || progression.mission)).length;
 
-            {/* Carnet de pratique */}
-            <div className="px-5 mt-8 max-w-md mx-auto w-full">
-                <Link href="/profil/carnet" className="flex items-center gap-4 bg-slate-900 rounded-2xl px-5 py-4 hover:shadow-md active:scale-[0.98] transition-all group">
-                    <div className="size-11 rounded-xl bg-white/10 text-indigo-300 flex items-center justify-center shrink-0">
-                        <span className="material-symbols-outlined">auto_stories</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                        <p className="font-bold text-white text-sm">Mon carnet de pratique</p>
-                        <p className="text-xs text-white/50 mt-0.5">Tes semaines, tes notes, ton évolution</p>
-                    </div>
-                    <span className="material-symbols-outlined text-white/30 group-hover:translate-x-1 transition-transform">arrow_forward_ios</span>
+    const obtenus = badgesObtenus({
+        modulesFaits: resume.nbFaits,
+        modulesRediges: resume.nbRediges,
+        parcoursTermines,
+        semainesBouclees: bouclees.length,
+        actionsConfirmees,
+    });
+    const nbObtenus = BADGES.filter(badge => obtenus[badge.id] > 0).length;
+
+    const avatar = 'avatar_url' in profile ? profile.avatar_url : null;
+    const liens = [
+        { href: '/about', name: 'Guide de la démarche' },
+        ...SECONDARY_NAV.filter(item => item.href !== '/profil'),
+        ...(['admin', 'club_admin'].includes(profile.role ?? '') ? [ADMIN_NAV] : []),
+    ];
+
+    return <main className="co-page co-profil">
+        <header className="co-profil-head">
+            <span className="co-profil-avatar">
+                {avatar
+                    // eslint-disable-next-line @next/next/no-img-element
+                    ? <img src={avatar} alt=""/>
+                    : (profile.full_name || 'M').slice(0, 1).toUpperCase()}
+            </span>
+            <div>
+                <h1>{profile.full_name || 'Moniteur'}</h1>
+                <p>{profile.role === 'admin' ? 'Administrateur' : profile.role === 'club_admin' ? 'Responsable de club' : 'Moniteur'}{profile.clubs?.name ? ` · ${profile.clubs.name}` : ''}</p>
+            </div>
+        </header>
+
+        <section className="co-profil-section">
+            <h2 className="co-home-pole-title">Ma formation</h2>
+            <div className="co-profil-suivis">
+                <Link href="/formation">
+                    <span className="co-eyebrow">Formation générale</span>
+                    <strong>{resume.nbFaits} / {resume.nbRediges}<small> modules</small></strong>
+                    <span className="co-progress"><span style={{ width: `${resume.nbRediges ? resume.nbFaits / resume.nbRediges * 100 : 0}%` }}/></span>
+                </Link>
+                <Link href="/specialisation">
+                    <span className="co-eyebrow">Parcours</span>
+                    <strong>{parcoursTermines}<small> terminé{parcoursTermines > 1 ? 's' : ''}</small></strong>
+                    <small>{parcoursEnCours ? `${parcoursEnCours} en cours` : 'Aucun en cours'}</small>
                 </Link>
             </div>
+        </section>
 
-            {/* Défi de saison — fil rouge */}
-            <div className="px-5 mt-8 max-w-md mx-auto w-full">
-                <div className="flex items-center gap-2 mb-4">
-                    <span className="material-symbols-outlined text-emerald-500">timeline</span>
-                    <h2 className="text-base font-black text-slate-900">Défi de saison</h2>
-                    <span className="text-[10px] font-black bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full uppercase tracking-widest">Fil rouge</span>
-                </div>
-                <p className="text-xs text-slate-500 mb-4 leading-relaxed">
-                    Choisissez un défi d&apos;observation à mener tout au long de la saison.
-                    Il sera automatiquement assigné à chaque stage que vous créez.
-                    Vos stagiaires — différents chaque semaine — contribuent à un suivi scientifique continu sur votre spot.
-                </p>
-
-                {/* Lien vers le suivi si un fil rouge est actif */}
-                {filRougeId && (
-                    <Link
-                        href="/profil/fil-rouge"
-                        className="flex items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-2xl px-4 py-3 mb-4 hover:shadow-md active:scale-[0.98] transition-all group"
-                    >
-                        <span className="material-symbols-outlined text-emerald-500 text-xl">timeline</span>
-                        <div className="flex-1 min-w-0">
-                            <p className="font-bold text-emerald-900 text-sm">Voir le suivi de saison</p>
-                            <p className="text-xs text-emerald-600 mt-0.5">Historique, photos, évolution</p>
-                        </div>
-                        <span className="material-symbols-outlined text-emerald-300 group-hover:translate-x-1 transition-transform">arrow_forward_ios</span>
-                    </Link>
-                )}
-
-                <FilRougePicker defis={filRougeDefis} currentId={filRougeId} />
+        {/* Le sac à dos : tous les emblèmes sont visibles, les obtenus en couleur. On voit
+            ce qui reste à gagner sans que rien ne soit verrouillé. */}
+        <section className="co-profil-section">
+            <div className="co-profil-section-head">
+                <h2 className="co-home-pole-title">Mes badges</h2>
+                <span>{nbObtenus} / {BADGES.length}</span>
             </div>
+            <ul className="co-badges">
+                {BADGES.map(badge => {
+                    const Icone = ICONES[badge.id];
+                    const nombre = obtenus[badge.id];
+                    return <li key={badge.id} className={nombre > 0 ? 'co-badge co-badge-on' : 'co-badge'}>
+                        <span className="co-badge-icon"><Icone size={26}/>{nombre > 1 && <em>×{nombre}</em>}</span>
+                        <strong>{badge.nom}</strong>
+                        <small>{badge.critere}</small>
+                    </li>;
+                })}
+            </ul>
+        </section>
 
-            {/* Accès admin */}
-            {(profile.role === 'admin' || profile.role === 'club_admin') && (
-                <div className="px-5 mt-8 max-w-md mx-auto w-full">
-                    <Link href="/admin" className="flex items-center gap-4 bg-violet-50 border border-violet-100 rounded-2xl px-5 py-4 hover:shadow-md active:scale-[0.98] transition-all group">
-                        <div className="size-11 rounded-xl bg-violet-100 text-violet-600 flex items-center justify-center shrink-0">
-                            <span className="material-symbols-outlined">admin_panel_settings</span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <p className="font-bold text-violet-900 text-sm">Espace administration</p>
-                            <p className="text-xs text-violet-400 mt-0.5">
-                                {profile.role === 'admin' ? 'Comptes, clubs, reporting national' : 'Reporting de votre club'}
-                            </p>
-                        </div>
-                        <span className="material-symbols-outlined text-violet-300 group-hover:translate-x-1 transition-transform">arrow_forward_ios</span>
-                    </Link>
-                </div>
-            )}
+        <section className="co-profil-section">
+            <h2 className="co-home-pole-title">Mes séances</h2>
+            <Link href="/profil/carnet" className="co-profil-seances">
+                <span><strong>{bouclees.length}</strong> semaine{bouclees.length > 1 ? 's' : ''} bouclée{bouclees.length > 1 ? 's' : ''}</span>
+                <span><strong>{actionsConfirmees}</strong> action{actionsConfirmees > 1 ? 's' : ''} confirmée{actionsConfirmees > 1 ? 's' : ''} par les groupes</span>
+                <span className="co-inline-action">Mon carnet <ArrowRight size={16}/></span>
+            </Link>
+        </section>
 
-            {/* Guide COPUN */}
-            <div className="px-5 mt-4 max-w-md mx-auto w-full">
-                <Link href="/about" className="flex items-center gap-4 bg-white rounded-2xl px-5 py-4 shadow-sm border border-slate-100 hover:shadow-md active:scale-[0.98] transition-all group">
-                    <div className="size-11 rounded-xl bg-indigo-50 text-indigo-500 flex items-center justify-center shrink-0">
-                        <span className="material-symbols-outlined">auto_stories</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                        <p className="font-bold text-slate-900 text-sm">Guide de la démarche</p>
-                        <p className="text-xs text-slate-400 mt-0.5">Comprendre, Observer, Protéger — la démarche COPUN</p>
-                    </div>
-                    <span className="material-symbols-outlined text-slate-300 group-hover:translate-x-1 transition-transform">arrow_forward_ios</span>
-                </Link>
-            </div>
-
-            {/* Sign out */}
-            <div className="px-5 mt-4 max-w-md mx-auto w-full">
-                <SignOutButton />
-            </div>
-
-            {/* Content List — fiches perso (sportives), masquées pour le moment */}
-            {SPORT_FEATURES_ENABLED && (
-            <div className="px-5 mt-6 max-w-md mx-auto w-full">
-                <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-black text-slate-900">Mes Fiches</h2>
-                    <Link href={stages.length > 0 ? `/stages/${stages[0].id}/program` : '/stages/new'} className="text-xs font-bold text-indigo-500 uppercase tracking-wider">
-                        Créer +
-                    </Link>
-                </div>
-
-                {userContent.length > 0 ? (
-                    <div className="space-y-4">
-                        {userContent.map((content) => (
-                            <div key={content.id} className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-start gap-4">
-                                <div className="size-10 rounded-lg bg-indigo-50 text-indigo-500 flex items-center justify-center shrink-0">
-                                    <span className="material-symbols-outlined">edit_note</span>
-                                </div>
-                                <div>
-                                    <h3 className="font-bold text-slate-900 text-sm leading-tight mb-1">{content.question}</h3>
-                                    <div className="flex gap-2">
-                                        <span className="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full font-bold uppercase">{content.dimension}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                ) : (
-                    <div className="text-center py-8 border-2 border-dashed border-slate-200 rounded-2xl">
-                        <p className="text-sm text-slate-400 mb-3">Vous n&apos;avez pas encore créé de fiche.</p>
-                        <Link href={stages.length > 0 ? `/stages/${stages[0].id}/program` : '/stages/new'} className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold uppercase tracking-widest">
-                            <span className="material-symbols-outlined text-sm">add</span>
-                            Créer ma première fiche
-                        </Link>
-                    </div>
-                )}
-            </div>
-            )}
-        </div>
-    );
+        <nav className="co-profil-liens" aria-label="Outils et compte">
+            {liens.map(item => <Link key={item.href} href={item.href}>{item.name}<ArrowRight size={16}/></Link>)}
+        </nav>
+        <div className="co-profil-signout"><SignOutButton/></div>
+    </main>;
 }

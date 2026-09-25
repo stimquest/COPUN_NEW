@@ -1,8 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
 import type { ResumeFormation } from '@/actions/formation-actions';
+
+import { iconeMaterial } from '@/components/ui/Icone';
+const ArrowRight = iconeMaterial('arrow_forward');
 
 /** Mot-clé affiché sous chaque cercle — court plutôt qu'une icône abstraite (engrenage,
  *  stylo…) qu'il fallait deviner. Un mot se lit directement, une icône se devine. */
@@ -40,7 +42,7 @@ export function DashboardFormation({ resume }: { resume: ResumeFormation }) {
             className="block bg-white/15 backdrop-blur-sm rounded-2xl p-3 sm:p-4 border border-white/20 active:scale-[0.99] transition-transform"
         >
             <div className="flex items-center justify-between gap-3">
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/50">Formation</p>
+                <p className="text-[12px] font-bold text-white/50">Formation</p>
                 <span className="text-lg font-black text-white leading-none">{pctGlobal}<span className="text-xs text-white/50">%</span></span>
             </div>
 

@@ -225,7 +225,7 @@ export function FichesAdminTab({ initialFiches, fichesMemo }: {
                             <div key={p.id}>
                                 <div className={`flex items-center gap-2 mb-3 pb-2 border-b ${p.border}`}>
                                     <span className={`material-symbols-outlined text-lg ${p.color}`}>{p.icon}</span>
-                                    <span className={`text-xs font-black uppercase tracking-widest ${p.color}`}>{p.label}</span>
+                                    <span className={`text-[12px] font-bold ${p.color}`}>{p.label}</span>
                                     <span className="ml-auto text-xs text-slate-400 font-semibold">{items.length} fiches</span>
                                 </div>
                                 <div className="space-y-2">
@@ -305,7 +305,7 @@ export function FichesAdminTab({ initialFiches, fichesMemo }: {
                         {/* Dimension + Niveau */}
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Dimension</label>
+                                <label className="block text-[12px] font-bold text-slate-400 mb-1.5">Dimension</label>
                                 <div className="flex flex-col gap-1.5">
                                     {PILLARS.map(p => (
                                         <button
@@ -325,7 +325,7 @@ export function FichesAdminTab({ initialFiches, fichesMemo }: {
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Niveau</label>
+                                <label className="block text-[12px] font-bold text-slate-400 mb-1.5">Niveau</label>
                                 <div className="flex flex-col gap-1.5">
                                     {([1, 2, 3, 4] as const).map(n => (
                                         <button
@@ -347,7 +347,7 @@ export function FichesAdminTab({ initialFiches, fichesMemo }: {
 
                         {/* Question */}
                         <div>
-                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">
+                            <label className="block text-[12px] font-bold text-slate-400 mb-1.5">
                                 Question <span className="text-red-400">*</span>
                             </label>
                             <textarea
@@ -361,7 +361,7 @@ export function FichesAdminTab({ initialFiches, fichesMemo }: {
 
                         {/* Objectif */}
                         <div>
-                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">
+                            <label className="block text-[12px] font-bold text-slate-400 mb-1.5">
                                 Objectif pédagogique <span className="text-red-400">*</span>
                             </label>
                             <textarea
@@ -375,7 +375,7 @@ export function FichesAdminTab({ initialFiches, fichesMemo }: {
 
                         {/* Explication courte */}
                         <div>
-                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">
+                            <label className="block text-[12px] font-bold text-slate-400 mb-1.5">
                                 Ce qu&apos;il faut savoir <span className="font-semibold normal-case tracking-normal text-slate-300">— optionnel</span>
                             </label>
                             <textarea
@@ -389,7 +389,7 @@ export function FichesAdminTab({ initialFiches, fichesMemo }: {
 
                         {/* Tip */}
                         <div>
-                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">
+                            <label className="block text-[12px] font-bold text-slate-400 mb-1.5">
                                 Conseil terrain <span className="text-red-400">*</span>
                             </label>
                             <textarea
@@ -403,7 +403,7 @@ export function FichesAdminTab({ initialFiches, fichesMemo }: {
 
                         {/* Tags thématiques */}
                         <div>
-                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Thèmes</label>
+                            <label className="block text-[12px] font-bold text-slate-400 mb-2">Thèmes</label>
                             <div className="flex flex-wrap gap-2">
                                 {THEMES_BY_PILLAR[form.dimension].map(t => (
                                     <button
@@ -425,7 +425,7 @@ export function FichesAdminTab({ initialFiches, fichesMemo }: {
 
                         {/* Tags filtre */}
                         <div>
-                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Tags contextuels</label>
+                            <label className="block text-[12px] font-bold text-slate-400 mb-2">Tags contextuels</label>
                             <div className="flex gap-2 mb-2">
                                 <input
                                     value={tagInput}
@@ -458,7 +458,7 @@ export function FichesAdminTab({ initialFiches, fichesMemo }: {
 
                         {/* Ressources */}
                         <div className="border-t border-slate-100 pt-5">
-                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">
+                            <label className="block text-[12px] font-bold text-slate-400 mb-3">
                                 Ressources liées
                             </label>
 

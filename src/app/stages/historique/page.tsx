@@ -15,7 +15,7 @@ export default async function StagesHistoriquePage() {
                         <span className="material-symbols-outlined text-[20px]">arrow_back</span>
                     </Link>
                     <div className="flex-1 min-w-0">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Historique</p>
+                        <p className="text-[12px] font-bold text-slate-400">Historique</p>
                         <p className="text-sm font-bold text-slate-900">Semaines archivées</p>
                     </div>
                 </div>

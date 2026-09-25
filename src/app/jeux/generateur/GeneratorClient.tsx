@@ -280,7 +280,7 @@ export default function GeneratorClient({ initialCards }: { initialCards: GameCa
                                         <span className={clsx('size-6 rounded-full flex items-center justify-center text-white text-xs', typeInfo?.color)}>
                                             <span className="material-symbols-outlined text-sm">{typeInfo?.icon}</span>
                                         </span>
-                                        <span className="text-xs font-bold text-slate-500 uppercase">{card.type}</span>
+                                        <span className="text-[12px] font-bold text-slate-500">{card.type}</span>
                                         {card.theme && (
                                             <span className="text-xs text-slate-400">• {card.theme}</span>
                                         )}

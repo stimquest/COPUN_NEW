@@ -56,7 +56,7 @@ export default function OrdreSujets({ contents, onReordonner, repliable = false 
                     className="w-full flex items-start justify-between gap-3 text-left group"
                 >
                     <div className="flex-1 min-w-0">
-                        <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">
+                        <h3 className="text-[12px] font-bold text-slate-400">
                             Mes {contents.length} sujets, dans l&apos;ordre
                         </h3>
                         {!ouvert && (
@@ -74,7 +74,7 @@ export default function OrdreSujets({ contents, onReordonner, repliable = false 
                 </button>
             ) : (
                 <>
-                    <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">
+                    <h3 className="text-[12px] font-bold text-slate-400">
                         Dans quel ordre&nbsp;?
                     </h3>
                     <p className="text-[11px] font-semibold text-slate-400 mt-1">
@@ -123,7 +123,7 @@ function Ligne({ content, rang }: { content: PedagogicalContent; rang: number })
             <div className="flex-1 min-w-0">
                 <div className="flex items-baseline gap-1.5">
                     <span className={clsx(
-                        'text-[9px] font-black uppercase tracking-widest',
+                        'text-[12px] font-bold',
                         pilier?.color ?? 'text-slate-400',
                     )}>
                         {pilier?.label}

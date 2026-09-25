@@ -101,7 +101,7 @@ export default function CardDetailModal({ isOpen, onClose, content, onGarder, re
                                 <div className="flex items-center justify-between gap-3 mb-3">
                                     <button
                                         onClick={() => setViewingFicheId(null)}
-                                        className="flex items-center gap-1.5 text-indigo-600 font-bold text-xs uppercase tracking-widest hover:text-indigo-800 transition-colors shrink-0"
+                                        className="flex items-center gap-1.5 text-indigo-600 font-bold text-[12px] hover:text-indigo-800 transition-colors shrink-0"
                                     >
                                         <span className="material-symbols-outlined text-base">arrow_back</span>
                                         Retour à la fiche
@@ -131,7 +131,7 @@ export default function CardDetailModal({ isOpen, onClose, content, onGarder, re
                                                     content.dimension === 'OBSERVER' ? "bg-blue-500" : "bg-emerald-500"
                                             )} />
                                             <span className={clsx(
-                                                "text-[10px] font-black uppercase tracking-widest",
+                                                "text-[12px] font-bold",
                                                 content.dimension === 'COMPRENDRE' ? "text-amber-600" :
                                                     content.dimension === 'OBSERVER' ? "text-blue-600" : "text-emerald-600"
                                             )}>
@@ -205,7 +205,7 @@ export default function CardDetailModal({ isOpen, onClose, content, onGarder, re
                                     savoir, pas quoi dire. Seul bloc mis en avant. */}
                                 {content.accroche && (
                                     <div className="rounded-2xl bg-amber-50/70 border border-amber-100 p-5 space-y-4">
-                                        <p className="text-[10px] font-black text-amber-700 uppercase tracking-widest">
+                                        <p className="text-[12px] font-bold text-amber-700">
                                             Comment en parler
                                         </p>
 
@@ -248,7 +248,7 @@ export default function CardDetailModal({ isOpen, onClose, content, onGarder, re
                                     {/* RESSOURCES SECTION — liens posés à la main */}
                                     {content.ressources && content.ressources.length > 0 && (
                                         <section>
-                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
+                                            <p className="text-[12px] font-bold text-slate-400 mb-2">
                                                 Ressources
                                             </p>
                                             <div className="space-y-1.5">
@@ -284,7 +284,7 @@ export default function CardDetailModal({ isOpen, onClose, content, onGarder, re
                                     {/* FICHES MÉMO LIÉES — retrouvées automatiquement via les tags de la carte */}
                                     {relatedFiches.length > 0 && (
                                         <section>
-                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
+                                            <p className="text-[12px] font-bold text-slate-400 mb-2">
                                                 À lire dans le wiki
                                             </p>
                                             <div className="space-y-1.5">

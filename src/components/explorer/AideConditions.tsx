@@ -107,7 +107,7 @@ export default function AideConditions({
                         <div key={pilier} className="space-y-1">
                             <div className="flex items-center gap-2 px-1 pt-3">
                                 <span className={clsx('size-2 rounded-full shrink-0', p?.bg)} />
-                                <span className={clsx('text-[10px] font-black uppercase tracking-widest', p?.color)}>
+                                <span className={clsx('text-[12px] font-bold', p?.color)}>
                                     {p?.label}
                                 </span>
                             </div>
@@ -249,7 +249,7 @@ function CarteIntention({
                     {fiches.length} question{fiches.length > 1 ? 's' : ''}
                 </span>
                 {nbNeuves > 0 && (
-                    <span className="text-[10px] font-black uppercase tracking-wide text-emerald-600 bg-emerald-50 rounded-full px-2 py-0.5">
+                    <span className="text-[12px] font-bold text-emerald-600 bg-emerald-50 rounded-full px-2 py-0.5">
                         {nbNeuves === fiches.length ? 'Jamais abordé' : `${nbNeuves} nouvelle${nbNeuves > 1 ? 's' : ''}`}
                     </span>
                 )}
