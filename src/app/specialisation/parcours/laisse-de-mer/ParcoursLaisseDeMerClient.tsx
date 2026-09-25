@@ -25,8 +25,8 @@ export function ParcoursLaisseDeMerClient({ sequence, progression, cards, stages
     const [choixEntrainement, setChoixEntrainement] = useState<string | null>(null);
     const [answers, setAnswers] = useState<Record<string, string>>({});
     const [questionIndex, setQuestionIndex] = useState(0);
-    const [resultat, setResultat] = useState<Awaited<ReturnType<typeof verifierAcquisSequence>> | null>(null);
-    const [quizStatus, setQuizStatus] = useState<string | null>(null);
+    /** Questions déjà corrigées : la réponse y est figée et l'explication affichée. */
+    const [corrigees, setCorrigees] = useState<string[]>([]);
     const [cardIds, setCardIds] = useState<string[]>(() => progression.mission?.cardIds ?? []);
     const [stageId, setStageId] = useState(() => progression.mission?.stageId ?? '');
     const [practiceView, setPracticeView] = useState<'cards' | 'recap'>('cards');
@@ -57,6 +57,12 @@ export function ParcoursLaisseDeMerClient({ sequence, progression, cards, stages
     const precedent = () => {
         if (etape > 0) { setEtape(value => value - 1); setError(''); }
     };
+    /** Reprendre le parcours depuis le premier repère, pour réviser. */
+    const revoir = () => {
+        setError(''); setAnswers({}); setCorrigees([]);
+        setRepereIndex(0); setQuestionIndex(0); setEtape(1);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
     const passerALaVerification = () => startTransition(async () => {
         setError('');
         try { const response = await marquerSequenceParcourue(sequence.id); if (response.error) { setError('La progression n’a pas pu être enregistrée. Réessaie.'); return; } setEtape(3); }
@@ -67,15 +73,7 @@ export function ParcoursLaisseDeMerClient({ sequence, progression, cards, stages
         try {
             const response = await verifierAcquisSequence({ sequenceId: sequence.id, answers });
             if ('error' in response) { setError('Les réponses n’ont pas pu être enregistrées. Réessaie.'); return; }
-            setResultat(response);
-            if (response.valide) {
-                setQuizStatus(null);
-                setEtape(4);
-            } else {
-                setAnswers({});
-                setQuestionIndex(0);
-                setQuizStatus('Vos réponses ne permettent pas encore de valider ce parcours. Le quiz recommence à la première question : reprenez les repères et répondez à nouveau.');
-            }
+            setEtape(4);
         }
         catch { setError('La connexion a été interrompue. Réessaie.'); }
     });
@@ -143,25 +141,45 @@ export function ParcoursLaisseDeMerClient({ sequence, progression, cards, stages
             <button className="co-pro-action" disabled={!choixEntrainement || isPending} onClick={passerALaVerification}>{isPending ? 'Enregistrement…' : 'Passer à la validation'} <ArrowRight size={18}/></button>
         </section>}
 
-        {etape === 3 && <section className="co-pro-study">
-            <p className="co-pro-kicker">Validation · {questionIndex + 1} / {sequence.questions.length}</p><h1>{question.question}</h1>
-            {quizStatus && <p className="co-pro-feedback" role="status">{quizStatus}</p>}
-            <div className="co-pro-options">{question.options.map((option, index) => <label key={option.id}><input type="radio" name={question.id} checked={answers[question.id] === option.id} onChange={() => setAnswers(previous => ({ ...previous, [question.id]: option.id }))}/><span>{String.fromCharCode(65 + index)}</span><p>{option.texte}</p></label>)}</div>
-            {resultat && !('error' in resultat) && <p className="co-pro-feedback" role="status">{resultat.corrections.find(c => c.id === question.id)?.retour}</p>}
-            <button className="co-pro-action" disabled={!answers[question.id] || isPending} onClick={questionIndex === sequence.questions.length - 1 ? verifier : () => setQuestionIndex(index => index + 1)}>{isPending ? 'Vérification…' : questionIndex === sequence.questions.length - 1 ? 'Valider mes réponses' : 'Question suivante'} <ArrowRight size={18}/></button>
-        </section>}
+        {/* Correction immédiate, question par question : on répond, on voit tout de suite si
+            c'est juste et pourquoi. Plus de quiz qui recommence en boucle — on apprend au
+            moment de l'erreur, et aller au bout valide le parcours. */}
+        {etape === 3 && (() => {
+            const reponse = answers[question.id];
+            const corrigee = corrigees.includes(question.id);
+            const juste = reponse === question.correct;
+            const derniere = questionIndex === sequence.questions.length - 1;
+            return <section className="co-pro-study">
+                <p className="co-pro-kicker">Validation · {questionIndex + 1} / {sequence.questions.length}</p><h1>{question.question}</h1>
+                <div className="co-pro-options">{question.options.map((option, index) => <label key={option.id}
+                    className={corrigee ? option.id === question.correct ? 'co-pro-option-juste' : option.id === reponse ? 'co-pro-option-faux' : undefined : undefined}>
+                    <input type="radio" name={question.id} disabled={corrigee} checked={reponse === option.id} onChange={() => setAnswers(previous => ({ ...previous, [question.id]: option.id }))}/>
+                    <span>{String.fromCharCode(65 + index)}</span><p>{option.texte}</p>
+                </label>)}</div>
+                {corrigee && <div className={juste ? 'co-pro-correction is-juste' : 'co-pro-correction is-faux'} role="status">
+                    <p className="co-pro-correction-verdict">{juste ? 'Bonne réponse' : 'Pas tout à fait'}</p>
+                    <p>{question.retour}</p>
+                    {!juste && <button type="button" onClick={() => { setRepereIndex(0); setEtape(1); }}>Relire les repères</button>}
+                </div>}
+                {!corrigee
+                    ? <button className="co-pro-action" disabled={!reponse} onClick={() => setCorrigees(liste => [...liste, question.id])}>Vérifier ma réponse <ArrowRight size={18}/></button>
+                    : <button className="co-pro-action" disabled={isPending} onClick={derniere ? verifier : () => setQuestionIndex(index => index + 1)}>{isPending ? 'Enregistrement…' : derniere ? 'Terminer le parcours' : 'Question suivante'} <ArrowRight size={18}/></button>}
+            </section>;
+        })()}
 
         {etape === 4 && <section className="co-pro-study">
             {progression.mission?.completed ? <>
                 <p className="co-pro-kicker">Parcours terminé</p><h1>Vous l’avez fait vivre</h1><p className="co-pro-lead">Vous avez mené cette situation avec un groupe. Ce sujet fait maintenant partie de ce que vous savez transmettre.</p>
-                <div className="co-practice-end-actions"><Link href="/specialisation" className="co-pro-action">Choisir un autre parcours <ArrowRight size={18}/></Link><Link href="/stages/decouvrir" className="co-pro-secondary">Revoir les cartes de ce sujet</Link></div>
+                {/* Terminé ne veut pas dire fermé : on peut toujours réviser le parcours. Le
+                    refaire ne remet rien en cause, le parcours reste compté comme terminé. */}
+                <div className="co-practice-end-actions"><Link href="/specialisation" className="co-pro-action">Choisir un autre parcours <ArrowRight size={18}/></Link><button type="button" className="co-pro-secondary" onClick={revoir}>Revoir le parcours</button><Link href="/stages/decouvrir" className="co-pro-quiet">Revoir les cartes de ce sujet</Link></div>
             </> : progression.mission || missionEnregistree ? <>
                 {/* Plus de bouton « Je l'ai fait avec mon groupe » : personne ne revenait le
                     cliquer, et le parcours restait ouvert indéfiniment même après la sortie.
                     Le geste qui compte se fait sur la carte elle-même, dans la semaine — au
                     même endroit que le suivi de tous les autres sujets. */}
                 <p className="co-pro-kicker">Votre essai</p><h1>C’est noté, à vous de jouer</h1><p className="co-pro-lead">Tentez-le lors d’une prochaine sortie. Une fois fait, marquez le sujet « Abordé » dans votre semaine : c’est ce qui termine le parcours.</p>
-                <div className="co-practice-end-actions"><Link href={`/stages/${progression.mission?.stageId ?? stageId}/program`} className="co-pro-action">Marquer le sujet abordé <ArrowRight size={18}/></Link><Link href="/specialisation" className="co-pro-secondary">Fermer le parcours</Link></div>
+                <div className="co-practice-end-actions"><Link href={`/stages/${progression.mission?.stageId ?? stageId}/program`} className="co-pro-action">Marquer le sujet abordé <ArrowRight size={18}/></Link><button type="button" className="co-pro-secondary" onClick={revoir}>Revoir le parcours</button><Link href="/specialisation" className="co-pro-quiet">Fermer le parcours</Link></div>
             </> : practiceView === 'cards' ? <>
                 <p className="co-pro-kicker">Votre essai</p><h1>Quel angle allez-vous prendre ?</h1><p className="co-pro-lead">Ces cartes-questions sont autant de manières d’entrer dans le sujet. Retenez-en une à trois à tenter lors d’une prochaine sortie.</p>
                 <div className="co-practice-toolbar"><div><strong>{cardIds.length} / 3</strong><span>à essayer</span></div><button type="button" disabled={!cardIds.length} onClick={() => { setPracticeView('recap'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>Voir ce que je vais essayer <ArrowRight size={16}/></button></div>

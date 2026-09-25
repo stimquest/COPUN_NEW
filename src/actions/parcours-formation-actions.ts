@@ -105,7 +105,11 @@ export async function verifierAcquisSequence(input: unknown) {
     if (!sequence) return { error: 'Parcours inconnu.' };
     const corrections = sequence.questions.map(question => ({ id: question.id, correct: parsed.data.answers[question.id] === question.correct, retour: question.retour }));
     const score = corrections.filter(c => c.correct).length;
-    if (score === corrections.length) {
+    // Le quiz sert à apprendre, pas à filtrer : chaque question a été corrigée sur le moment,
+    // et aller au bout suffit à valider. Le vrai critère du parcours reste le terrain (le
+    // sujet marqué « Abordé » dans une semaine). Le score est conservé à titre indicatif.
+    const complet = sequence.questions.every(question => parsed.data.answers[question.id]);
+    if (complet) {
         const { error } = await ctx.supabase.from('formation_sequence_progress').upsert(
             { user_id: ctx.user.id, sequence_id: parsed.data.sequenceId, parcouru_le: new Date().toISOString(), acquis_verifie_le: new Date().toISOString() },
             { onConflict: 'user_id,sequence_id' },
@@ -113,7 +117,7 @@ export async function verifierAcquisSequence(input: unknown) {
         if (error) return { error: error.message };
         revalidatePath('/formation');
     }
-    return { score, total: corrections.length, corrections, valide: score === corrections.length };
+    return { score, total: corrections.length, corrections, valide: complet };
 }
 
 export async function ajouterMissionPratique(input: unknown) {
