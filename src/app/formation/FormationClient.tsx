@@ -5,9 +5,10 @@ import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { AnimatePresence, motion, useMotionValue, useTransform, type PanInfo } from 'framer-motion';
 import clsx from 'clsx';
-import {
-    cartesDe, type CarteFormation, type IllustrationCarte, type LeconFormation,
-    type ModulePlanifie, type SectionFormation,
+import { cartesDe } from '@/data/formation-cartes';
+import type {
+    CarteFormation, IllustrationCarte, LeconFormation,
+    ModulePlanifie, SectionFormation,
 } from '@/data/formation-methode';
 import { marquerLeconTerminee } from '@/actions/formation-actions';
 import { Motif, sceneDePlanche, type NomMotif } from './Motifs';

@@ -67,10 +67,16 @@ export default async function SemainesPage() {
             semaine en cours d'abord, puis les outils du pôle — explorer, le carnet — puis
             les semaines à venir et passées. */}
         <header className="co-weeks-heading">
-            <div>
-                <p className="co-eyebrow">Intégrer l’environnement dans mes séances</p>
-                <h1>Mes séances</h1>
-                <p>Préparer sa semaine, faire vivre les sujets avec son groupe, garder la trace de ce qui a été fait.</p>
+            <div className="flex items-start gap-2">
+                {/* Retour en flèche seule, comme Formation, Explorer et les parcours. */}
+                <Link href="/stages" aria-label="Retour à l’accueil" className="-ml-2 mt-5 flex size-11 shrink-0 items-center justify-center rounded-full text-encre hover:bg-white/60">
+                    <span className="material-symbols-outlined" aria-hidden>arrow_back</span>
+                </Link>
+                <div>
+                    <p className="co-eyebrow">Intégrer l’environnement dans mes séances</p>
+                    <h1>Mes séances</h1>
+                    <p>Préparer sa semaine, faire vivre les sujets avec son groupe, garder la trace de ce qui a été fait.</p>
+                </div>
             </div>
         </header>
 

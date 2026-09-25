@@ -42,9 +42,9 @@ function SemaineDuFil({ week }: { week: JournalWeek }) {
 // ── Évolution des bilans ─────────────────────────────────────────────────────
 
 const NIVEAUX_BILAN: Record<RessentiNiveau, { libelle: string; hauteur: string; couleur: string; score: number }> = {
-    largement: { libelle: 'Oui, largement', hauteur: 'h-14', couleur: 'bg-encre', score: 2 },
-    en_partie: { libelle: 'En partie', hauteur: 'h-9', couleur: 'bg-sable', score: 1 },
-    pas_vraiment: { libelle: 'Pas vraiment', hauteur: 'h-4', couleur: 'bg-terracotta/60', score: 0 },
+    largement: { libelle: 'Oui, largement', hauteur: 'h-24', couleur: 'bg-encre', score: 2 },
+    en_partie: { libelle: 'En partie', hauteur: 'h-14', couleur: 'bg-sable', score: 1 },
+    pas_vraiment: { libelle: 'Pas vraiment', hauteur: 'h-6', couleur: 'bg-terracotta/60', score: 0 },
 };
 
 /** Compare les dernières semaines aux premières, pour dire la tendance en une phrase. */
@@ -71,13 +71,13 @@ function EvolutionDesBilans({ bilans }: { bilans: EvolutionBilans }) {
             <h2 className="mb-1 text-intertitre font-semibold text-encre">Mes bilans, semaine après semaine</h2>
             <p className="mb-4 text-note text-discret">Avez-vous pu raconter ce que vous aviez prévu ?</p>
             <div className="rounded-carte bg-carte p-4 ring-1 ring-filet">
-                <div className="flex h-16 items-end gap-1.5 overflow-x-auto">
+                <div className="flex h-24 items-end gap-2 overflow-x-auto border-b border-filet">
                     {bilans.semaines.map(s => <span key={s.id} title={`${s.titre} : ${NIVEAUX_BILAN[s.niveau].libelle}`}
-                        className={clsx('w-5 shrink-0 rounded-t-md', NIVEAUX_BILAN[s.niveau].hauteur, NIVEAUX_BILAN[s.niveau].couleur)}/>)}
+                        className={clsx('w-9 shrink-0 rounded-t-sm', NIVEAUX_BILAN[s.niveau].hauteur, NIVEAUX_BILAN[s.niveau].couleur)}/>)}
                 </div>
                 <p className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-note text-discret">
                     {(Object.keys(NIVEAUX_BILAN) as RessentiNiveau[]).map(n => <span key={n} className="inline-flex items-center gap-1.5">
-                        <span className={clsx('size-2.5 rounded-sm', NIVEAUX_BILAN[n].couleur)}/>{NIVEAUX_BILAN[n].libelle}
+                        <span className={clsx('size-3 rounded-sm', NIVEAUX_BILAN[n].couleur)}/>{NIVEAUX_BILAN[n].libelle}
                     </span>)}
                 </p>
                 {phrase && <p className="mt-3 border-t border-filet pt-3 text-corps text-encre">{phrase}</p>}

@@ -188,19 +188,8 @@ export type LeconFormation = {
  * déduisent entièrement de la pile (son titre, son acquis, son rang) et les oublier ou les
  * désynchroniser n'aurait aucun intérêt.
  */
-export function cartesDe(lecon: LeconFormation): CarteFormation[] {
-    return lecon.piles.flatMap((pile, i) => [
-        ...pile.cartes,
-        {
-            genre: 'respiration' as const,
-            titre: pile.titre,
-            acquis: pile.acquis,
-            suite: lecon.piles[i + 1]?.titre,
-            numero: i + 1,
-            total: lecon.piles.length,
-        },
-    ]);
-}
+// Déplacée dans un fichier léger pour ne pas embarquer ce fichier côté navigateur.
+export { cartesDe } from './formation-cartes';
 
 export const LECONS_FORMATION: LeconFormation[] = [
     {
