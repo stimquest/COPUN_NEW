@@ -354,6 +354,37 @@
 .co-pro-visual-0 { background-position: left center; }
 .co-pro-visual-1 { background-position: center center; }
 .co-pro-visual-2 { background-position: right center; }
+
+/* Petits cours environnement : les quatre tailles et les jetons de la charte. */
+.co-course-reader { color: var(--color-encre); padding-bottom: 110px; }
+.co-course-reader .co-pro-intro h1,.co-course-reader .co-pro-study h1 { font-size: var(--text-titre); line-height: 1.2; letter-spacing: -.025em; outline: none; }
+.co-course-reader .co-pro-kicker { font-size: var(--text-note); letter-spacing: normal; text-transform: none; color: var(--color-discret); }
+.co-course-reader .co-pro-lead { font-size: var(--text-corps); line-height: 1.65; color: var(--color-encre-douce); }
+.co-course-reader .co-pro-action { font-size: var(--text-corps); border-radius: var(--radius-bloc); background: var(--color-encre); color: var(--color-carte); gap: 12px; }
+.co-course-reader .co-pro-quiet { font-size: var(--text-note); color: var(--color-discret); min-height: 44px; display: flex; align-items: center; }
+.co-course-reader .co-pro-study aside { border-color: var(--color-encre); border-radius: var(--radius-bloc); background: var(--color-sauge); }
+.co-course-reader .co-pro-study aside strong { font-size: var(--text-note); }
+.co-course-reader .co-pro-study aside p { font-size: var(--text-corps); color: var(--color-encre); }
+.co-course-plan { display: grid; gap: 12px; margin-top: 28px; }
+.co-course-plan li { display: flex; align-items: baseline; gap: 12px; font-size: var(--text-corps); }
+.co-course-plan li span { color: var(--color-discret); font-size: var(--text-note); font-variant-numeric: tabular-nums; }
+.co-course-note { margin-top: 22px; color: var(--color-discret); font-size: var(--text-note); line-height: 1.65; }
+.co-course-terrain { margin-top: 24px; }
+.co-course-terrain h2,.co-course-resources h2,.co-course-corrections h2 { font-size: var(--text-intertitre); font-weight: 600; line-height: 1.4; }
+.co-course-terrain p { margin-top: 8px; font-size: var(--text-corps); line-height: 1.65; color: var(--color-encre-douce); }
+.co-course-reader .co-pro-options > label { border-color: var(--color-filet); border-radius: var(--radius-bloc); background: var(--color-carte); }
+.co-course-reader .co-pro-options > label:has(input:checked) { background: var(--color-sauge); border-color: var(--color-encre); }
+.co-course-reader .co-pro-options > label:has(input:focus-visible) { outline: 2px solid var(--color-encre); outline-offset: 3px; }
+.co-course-reader .co-pro-options p { font-size: var(--text-corps); }
+.co-course-reader .co-pro-options span { font-size: var(--text-note); background: var(--color-sauge); }
+.co-course-reader .co-pro-correction { border-radius: var(--radius-bloc); font-size: var(--text-corps); color: var(--color-encre); }
+.co-course-reader .co-pro-correction.is-juste { border-color: var(--color-encre); background: var(--color-sauge); }
+.co-course-reader .co-pro-correction.is-faux { border-color: var(--color-terracotta); background: var(--color-carte); }
+.co-course-reader .co-pro-correction-verdict { font-size: var(--text-note); color: var(--color-encre); margin-top: 12px; }
+.co-course-reader .co-pro-correction p + p { margin-top: 8px; }
+.co-course-reader .co-pro-correction button { font-size: var(--text-note); min-height: 44px; }
+.co-course-resources { margin-top: 30px; padding-top: 22px; border-top: 1px solid var(--color-filet); }
+.co-course-resources a { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; padding: 10px 0; color: var(--color-encre); font-size: var(--text-corps); line-height: 1.5; }
 .co-pro-options { display: grid; gap: 10px; margin-top: 30px; }
 .co-pro-options > button,.co-pro-options > label { display: grid; grid-template-columns: 29px minmax(0,1fr); gap: 12px; width: 100%; padding: 16px; text-align: left; border: 1px solid #193d3b24; border-radius: 14px; background: #fffdf8; cursor: pointer; }
 .co-pro-options > button[aria-pressed=true],.co-pro-options > label:has(input:checked) { border-color: var(--co-ink); background: #e4efdf; }

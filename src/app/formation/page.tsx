@@ -3,6 +3,7 @@ import { getSequencesProgress } from '@/actions/parcours-formation-actions';
 import { LECONS_FORMATION, PLAN_FORMATION } from '@/data/formation-methode';
 import { PARCOURS_FORMATION } from '@/data/parcours-formation';
 import { FormationClient } from './FormationClient';
+import { parcoursTermine } from '@/lib/parcours-cours';
 
 /**
  * Parcours « Savoir en parler » — formation à la démarche COP.
@@ -28,8 +29,8 @@ export default async function FormationPage() {
     const suivis = Object.values(progressions);
     const parcours = {
         disponibles: PARCOURS_FORMATION.length,
-        enCours: suivis.filter(p => !p.mission?.completed && (p.parcouru || p.acquisVerifie || p.mission)).length,
-        termines: suivis.filter(p => p.mission?.completed).length,
+        enCours: suivis.filter(p => !parcoursTermine(p) && (p.parcouru || p.mission)).length,
+        termines: suivis.filter(p => parcoursTermine(p)).length,
     };
 
     return <FormationClient plan={PLAN_FORMATION} lecons={LECONS_FORMATION} termine={termine} parcours={parcours} />;

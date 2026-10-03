@@ -1,3 +1,5 @@
+import { PARCOURS_FORMATION } from './parcours-formation';
+
 export type DomaineCop = {
     id: 'comprendre' | 'observer' | 'proteger';
     titre: string;
@@ -26,3 +28,8 @@ export const PARCOURS_COP: DomaineCop[] = [
         { id: 'connaitre-site', titre: 'Participer à la connaissance du site', resume: 'Observer, signaler et partager des informations utiles.', icon: 'people' },
     ] },
 ];
+
+// La disponibilité suit les cours rédigés, sans deuxième liste à maintenir.
+PARCOURS_COP.forEach(domaine => domaine.parcours.forEach(parcours => {
+    parcours.disponible = PARCOURS_FORMATION.some(cours => cours.id === parcours.id);
+}));

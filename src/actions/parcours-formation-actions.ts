@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { requireAuth, requireStageOwner } from '@/lib/auth';
 import { PARCOURS_FORMATION } from '@/data/parcours-formation';
 import { updateStagePool } from './stage-actions';
+import { corrigerQuiz } from '@/lib/parcours-cours';
 
 const sequenceSchema = z.enum(PARCOURS_FORMATION.map(sequence => sequence.id) as [string, ...string[]]);
 const answersSchema = z.object({ sequenceId: sequenceSchema, answers: z.record(z.string(), z.string()) });
@@ -93,6 +94,10 @@ export async function marquerSequenceParcourue(sequenceId: string) {
     );
     if (error) return { error: error.message };
     revalidatePath('/formation');
+    revalidatePath('/specialisation');
+    revalidatePath(`/specialisation/parcours/${sequenceId}`);
+    revalidatePath('/stages');
+    revalidatePath('/profil');
     return { success: true };
 }
 
@@ -103,21 +108,24 @@ export async function verifierAcquisSequence(input: unknown) {
     if (!ctx) return { error: 'Non connecté.' };
     const sequence = sequenceById(parsed.data.sequenceId);
     if (!sequence) return { error: 'Parcours inconnu.' };
-    const corrections = sequence.questions.map(question => ({ id: question.id, correct: parsed.data.answers[question.id] === question.correct, retour: question.retour }));
-    const score = corrections.filter(c => c.correct).length;
-    // Le quiz sert à apprendre, pas à filtrer : chaque question a été corrigée sur le moment,
-    // et aller au bout suffit à valider. Le vrai critère du parcours reste le terrain (le
-    // sujet marqué « Abordé » dans une semaine). Le score est conservé à titre indicatif.
-    const complet = sequence.questions.every(question => parsed.data.answers[question.id]);
-    if (complet) {
+    const resultat = corrigerQuiz(sequence, parsed.data.answers);
+    if (!resultat.complet) return { error: 'Répondez à chaque question avec une des propositions.' };
+    // Toutes les notions sont vérifiées. Une erreur se révise puis se retente ;
+    // aucune mise en pratique dans une semaine n'est nécessaire pour terminer le cours.
+    // Un essai raté ne remet jamais à zéro une validation déjà obtenue.
+    if (resultat.valide) {
         const { error } = await ctx.supabase.from('formation_sequence_progress').upsert(
             { user_id: ctx.user.id, sequence_id: parsed.data.sequenceId, parcouru_le: new Date().toISOString(), acquis_verifie_le: new Date().toISOString() },
             { onConflict: 'user_id,sequence_id' },
         );
         if (error) return { error: error.message };
         revalidatePath('/formation');
+        revalidatePath('/specialisation');
+        revalidatePath(`/specialisation/parcours/${sequence.id}`);
+        revalidatePath('/stages');
+        revalidatePath('/profil');
     }
-    return { score, total: corrections.length, corrections, valide: complet };
+    return resultat;
 }
 
 export async function ajouterMissionPratique(input: unknown) {

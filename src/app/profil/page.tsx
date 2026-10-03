@@ -9,6 +9,7 @@ import SignOutButton from '@/components/SignOutButton';
 import { SECONDARY_NAV, ADMIN_NAV } from '@/data/navigation';
 import { PARCOURS_FORMATION } from '@/data/parcours-formation';
 import { BADGES, badgesObtenus, type BadgeId } from '@/data/badges';
+import { parcoursTermine } from '@/lib/parcours-cours';
 
 const ArrowRight = iconeMaterial('arrow_forward');
 
@@ -47,8 +48,8 @@ export default async function ProfilPage() {
     const actionsConfirmees = votes.reduce((total, vote) => total + vote.actionsConfirmees, 0);
 
     const suivis = PARCOURS_FORMATION.map(parcours => progressions[parcours.id]);
-    const parcoursTermines = suivis.filter(progression => progression?.mission?.completed).length;
-    const parcoursEnCours = suivis.filter(progression => progression && !progression.mission?.completed && (progression.parcouru || progression.acquisVerifie || progression.mission)).length;
+    const parcoursTermines = suivis.filter(progression => parcoursTermine(progression)).length;
+    const parcoursEnCours = suivis.filter(progression => progression && !parcoursTermine(progression) && (progression.parcouru || progression.mission)).length;
 
     const obtenus = badgesObtenus({
         modulesFaits: resume.nbFaits,

@@ -4,6 +4,7 @@ import type { SequenceProgress } from '@/actions/parcours-formation-actions';
 import { CoastalMark } from './Coastal';
 import { PARCOURS_FORMATION } from '@/data/parcours-formation';
 import { dureeTotaleFormation } from '@/data/formation-methode';
+import { parcoursTermine } from '@/lib/parcours-cours';
 
 import { iconeMaterial } from '@/components/ui/Icone';
 const ArrowRight = iconeMaterial('arrow_forward');
@@ -16,8 +17,8 @@ export function HomeLearning({ firstName, resume, progressions, semaineEnCours }
     semaineEnCours: boolean;
 }) {
     const suivis = PARCOURS_FORMATION.map(parcours => progressions[parcours.id]);
-    const termines = suivis.filter(progression => progression?.mission?.completed).length;
-    const enCours = suivis.filter(progression => progression && !progression.mission?.completed && (progression.parcouru || progression.acquisVerifie || progression.mission)).length;
+    const termines = suivis.filter(progression => parcoursTermine(progression)).length;
+    const enCours = suivis.filter(progression => progression && !parcoursTermine(progression) && (progression.parcouru || progression.mission)).length;
     const misesEnPratique = suivis.filter(progression => progression?.mission && !progression.mission.completed).length;
     return <div className="co-page co-home">
         <header className="co-welcome">
