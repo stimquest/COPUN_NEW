@@ -955,6 +955,7 @@ export type Database = {
       stage_objective_reviews: {
         Row: {
           created_at: string
+          discussed_on: string | null
           execution_status: string
           id: string
           impact_level: string | null
@@ -966,6 +967,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          discussed_on?: string | null
           execution_status: string
           id?: string
           impact_level?: string | null
@@ -977,6 +979,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          discussed_on?: string | null
           execution_status?: string
           id?: string
           impact_level?: string | null
@@ -1011,6 +1014,7 @@ export type Database = {
           created_at: string
           id: string
           pedagogical_content_id: string
+          planned_for: string | null
           raconte: boolean | null
           stage_id: string
           updated_at: string
@@ -1022,6 +1026,7 @@ export type Database = {
           created_at?: string
           id?: string
           pedagogical_content_id: string
+          planned_for?: string | null
           raconte?: boolean | null
           stage_id: string
           updated_at?: string
@@ -1033,6 +1038,7 @@ export type Database = {
           created_at?: string
           id?: string
           pedagogical_content_id?: string
+          planned_for?: string | null
           raconte?: boolean | null
           stage_id?: string
           updated_at?: string
@@ -1216,6 +1222,7 @@ export type Database = {
         Row: {
           actions_semaine: string[] | null
           activity: string
+          calendar_week_start: string | null
           closed_at: string | null
           closing_notes: string | null
           created_at: string
@@ -1232,6 +1239,7 @@ export type Database = {
         Insert: {
           actions_semaine?: string[] | null
           activity: string
+          calendar_week_start?: string | null
           closed_at?: string | null
           closing_notes?: string | null
           created_at?: string
@@ -1248,6 +1256,7 @@ export type Database = {
         Update: {
           actions_semaine?: string[] | null
           activity?: string
+          calendar_week_start?: string | null
           closed_at?: string | null
           closing_notes?: string | null
           created_at?: string
@@ -1791,6 +1800,29 @@ export type Database = {
           p_user_agent?: string
         }
         Returns: string
+      }
+    ensure_calendar_week: {
+        Args: { p_existing_id?: string; p_next?: boolean }
+        Returns: string
+      }
+      record_calendar_week_card: {
+        Args: {
+          p_choice: Json
+          p_content_id: string
+          p_day?: string
+          p_discussed?: boolean
+          p_stage_id: string
+        }
+        Returns: undefined
+      }
+      record_calendar_week_card_with_status: {
+        Args: {
+          p_choice: Json
+          p_content_id: string
+          p_execution_status: string
+          p_stage_id: string
+        }
+        Returns: undefined
       }
     }
     Enums: {

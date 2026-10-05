@@ -81,7 +81,7 @@ export function ParcoursCoursClient({ sequence, progression, vueInitiale }: { se
             <h1 ref={titreRef} tabIndex={-1}>{sequence.titre}</h1>
             <p className="co-pro-lead">{sequence.objectif}</p>
             <ol className="co-course-plan">{sequence.fiches.map((item, index) => <li key={item.titre}><span>{index + 1}</span>{item.titre}</li>)}</ol>
-            <p className="co-course-note">Vos bases de pratique sont le point de départ. Ces {sequence.fiches.length} fiches proposent des angles et des formulations à adapter à votre groupe, puis {sequence.questions.length} situations pour choisir un échange pertinent. Vous pouvez réessayer le quiz.</p>
+            <p className="co-course-note">Vos bases de pratique sont le point de départ. Ces {sequence.fiches.length} fiches proposent des angles et des formulations à adapter à votre groupe, puis {sequence.questions.length} situations pour choisir comment aborder le sujet. Vous pouvez réessayer le quiz.</p>
             <button type="button" className="co-pro-action" onClick={() => revoir()}>Lire les fiches <span className="material-symbols-outlined" aria-hidden>arrow_forward</span></button>
             {progression.parcouru && <button type="button" className="co-pro-quiet" disabled={isPending} onClick={commencerQuiz}>Reprendre le quiz</button>}
         </section>}
@@ -127,7 +127,7 @@ export function ParcoursCoursClient({ sequence, progression, vueInitiale }: { se
 
         {vue === 'bilan' && <section className="co-pro-study">
             <p className="co-pro-kicker">{resultat && !resultat.valide ? 'Correction du quiz' : 'Parcours terminé'}</p>
-            <h1 ref={titreRef} tabIndex={-1}>{resultat ? `${resultat.score} / ${resultat.total} réponses justes` : 'Des clés pour vos échanges sur le terrain'}</h1>
+            <h1 ref={titreRef} tabIndex={-1}>{resultat ? `${resultat.score} / ${resultat.total} réponses justes` : 'Des clés pour parler d’environnement sur le terrain'}</h1>
             <p className="co-pro-lead">{resultat && !resultat.valide
                 ? termine ? 'Votre parcours reste terminé. Cet essai vous indique les notions à revoir.' : 'Quelques notions restent à revoir. Lisez les corrections, puis retentez le quiz pour terminer le parcours.'
                 : 'Vous avez travaillé des façons de relier votre pratique sportive au milieu. Choisissez une formulation ou une question à essayer avec votre groupe pendant une prochaine séance.'}</p>

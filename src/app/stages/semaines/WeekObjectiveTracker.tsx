@@ -68,6 +68,8 @@ type Objective = {
     retenir?: string;
     action?: string | null;
     initialStatus: StageObjectiveExecutionStatus;
+    discussedOn?: string | null;
+    plannedFor?: string | null;
 };
 
 /**
@@ -107,13 +109,17 @@ function ObjectiveCard({ objective, status, pending, error, choisir }: {
                 <h3>{objective.question}</h3>
                 {status !== 'not_done' && <span className={`co-hand-card-status co-hand-card-status-${status}`}>{ETATS.find(etat => etat.valeur === status)?.libelle}</span>}
             </div>
+            {status === 'not_done' && objective.plannedFor && <p className="co-eyebrow">
+                Prévu le {new Date(`${objective.plannedFor}T12:00:00Z`).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', timeZone: 'Europe/Paris' })}
+            </p>}
             {/* Se lit comme un article, au calme, pendant la préparation : l'accroche en
                 citation, puis deux paragraphes à intertitre. Pas de cases. */}
+            {status !== 'not_done' && <p className="my-4 text-corps">Pour continuer à en parler lors d’une prochaine séance, vous pouvez essayer une autre accroche ou proposer cette activité.</p>}
             {objective.accroche && <section className="co-week-article-open">
-                <p className="co-week-article-caption"><span>J’ouvre avec</span>{objective.forme && <strong>{objective.forme}</strong>}</p>
+                <p className="co-week-article-caption"><span>{status === 'not_done' ? 'J’ouvre avec' : 'Une autre façon d’en parler'}</span>{objective.forme && <strong>{objective.forme}</strong>}</p>
                 <blockquote>« {objective.accroche} »</blockquote>
             </section>}
-            {objective.action && <section className="co-week-article-groupe"><h4>Avec le groupe</h4><p>{objective.action}</p></section>}
+            {objective.action && <section className="co-week-article-groupe"><h4>{status === 'not_done' ? 'Avec le groupe' : 'Une idée pour la suite'}</h4><p>{objective.action}</p></section>}
             {objective.retenir && <section className="co-week-article-part co-week-article-retenir"><h4>À retenir</h4><p>{objective.retenir}</p></section>}
             <div className="co-week-objective-status" aria-label="Où j’en suis sur ce sujet">
                 {ETATS.map(etat => (
@@ -212,7 +218,7 @@ export function WeekObjectiveTracker({ stageId, objectives, extra }: {
                     choisir={rang === 0 ? choisir : () => {}}/>
             </CarteDeLaPile>)}
         </div>
-        {n > 1 && toutAborde && aborde(active) && <p className="co-hand-fini">Tous les sujets sont abordés. Place au quiz de fin.</p>}
+        {n > 1 && toutAborde && aborde(active) && <p className="co-hand-fini">Les sujets abordés sont notés. Vous pouvez aussi proposer un quiz au groupe.</p>}
         {extra && <Link href={extra.href} className="co-week-objective co-week-extra">
             <span className="co-week-objective-number" aria-hidden>＋</span>
             <div className="co-week-objective-body">

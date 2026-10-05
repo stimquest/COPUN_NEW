@@ -6,12 +6,13 @@ import { notFound } from 'next/navigation';
 import { getSavedCards } from '@/actions/saved-card-actions';
 import { getStagePreparations } from '@/actions/preparation-actions';
 import { getResumeVote } from '@/actions/vote-actions';
+import { getStageObjectiveReviewItems } from '@/services/data-service';
 
-export default async function ProgramPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ theme?: string; selection?: string; group?: string; aborde?: string }> }) {
+export default async function ProgramPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ theme?: string; selection?: string; group?: string; aborde?: string; prevoir?: string; parcours?: string }> }) {
     const { id } = await params;
-    const { theme, selection, group, aborde } = await searchParams;
+    const { theme, selection, group, aborde, prevoir, parcours } = await searchParams;
 
-    const [stage, systemPool, userPool, tousLesStages, outcomes, bookmarks, preparations, vote] = await Promise.all([
+    const [stage, systemPool, userPool, tousLesStages, outcomes, bookmarks, preparations, vote, reviews] = await Promise.all([
         getStageById(id),
         getPedagogicalPool(),
         getUserContent(),
@@ -20,6 +21,7 @@ export default async function ProgramPage({ params, searchParams }: { params: Pr
         getSavedCards(),
         getStagePreparations(id),
         getResumeVote(id),
+        getStageObjectiveReviewItems(id),
     ]);
 
     if (!stage) return notFound();
@@ -44,6 +46,12 @@ export default async function ProgramPage({ params, searchParams }: { params: Pr
             savedError={bookmarks.error}
             locked={vote?.done}
             initiallyDiscussed={aborde === '1'}
+            initiallyPlanned={prevoir === '1'}
+            initialParcours={parcours}
+            initialEntries={Object.fromEntries(reviews.map(item => {
+                const discussed = item.review?.executionStatus === 'done' || item.review?.executionStatus === 'partial';
+                return [item.pedagogicalContent.id, { discussed, status: item.review?.executionStatus === 'partial' || item.review?.executionStatus === 'done' ? item.review.executionStatus : null, day: discussed ? item.review?.discussedOn ?? null : preparations[item.pedagogicalContent.id]?.planned_for ?? null }];
+            }))}
             initialChoices={{ ...bookmarks.choices, ...Object.fromEntries(Object.entries(preparations).map(([contentId, preparation]) => [contentId, { accroche: preparation.accroche_choisie ?? '', actionId: preparation.actions?.[0] ?? null }])) }}
             initialActionChoices={Object.fromEntries(Object.entries(preparations).flatMap(([contentId, preparation]) => preparation.actions?.[0] ? [[contentId, preparation.actions[0]]] : []))}
             initialTheme={theme}

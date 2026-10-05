@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache';
 import { encodeIntention, ObjectifId } from '@/data/objectifs';
 import { StageRessenti, isRessentiNiveau } from '@/lib/stage-ressenti';
 import type { CardChoices } from '@/lib/card-choice';
+import { dateISOAParis } from '@/lib/stage-dates';
 
 /**
  * Persists the selected pedagogical pool for a stage.
@@ -286,6 +287,10 @@ export async function saveObjectiveStatus(
   const ctx = await requireStageOwner(stageId);
   if (!ctx) return { success: false, error: 'Semaine inaccessible.' };
 
+  const { data: existing, error: existingError } = await ctx.supabase.from('stage_objective_reviews')
+    .select('discussed_on').eq('stage_id', stageId).eq('pedagogical_content_id', contentId).maybeSingle();
+  if (existingError) return { success: false, error: 'Enregistrement impossible. Réessayez.' };
+
   const { error } = await ctx.supabase
     .from('stage_objective_reviews')
     .upsert(
@@ -293,6 +298,7 @@ export async function saveObjectiveStatus(
         stage_id: stageId,
         pedagogical_content_id: contentId,
         execution_status: executionStatus,
+        discussed_on: executionStatus === 'not_done' ? null : existing?.discussed_on ?? dateISOAParis(new Date()),
         impact_level: null,
       },
       { onConflict: 'stage_id,pedagogical_content_id', ignoreDuplicates: false }
@@ -304,6 +310,8 @@ export async function saveObjectiveStatus(
   }
 
   revalidatePath('/stages');
+  revalidatePath('/stages/semaines');
+  revalidatePath(`/stages/${stageId}/program`);
   revalidatePath(`/stages/${stageId}/bilan`);
   return { success: true };
 }

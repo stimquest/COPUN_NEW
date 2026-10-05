@@ -12,6 +12,7 @@ export type StagePreparation = {
     actions: string[] | null;
     /** Sujet raconté au groupe — la rature du carnet, pas un statut de tâche. */
     raconte: boolean | null;
+    planned_for?: string | null;
 };
 
 export async function getStagePreparations(stageId: string): Promise<Record<string, StagePreparation>> {
@@ -20,7 +21,7 @@ export async function getStagePreparations(stageId: string): Promise<Record<stri
 
     const { data, error } = await ctx.supabase
         .from('stage_preparations')
-        .select('pedagogical_content_id, accroche_choisie, chute, actions, raconte')
+        .select('pedagogical_content_id, accroche_choisie, chute, actions, raconte, planned_for')
         .eq('stage_id', stageId);
 
     // Une lecture en échec renvoyait {} — indiscernable d'une semaine non préparée, donc
@@ -162,4 +163,3 @@ export async function saveChute(
     revalidatePath(`/stages/${stageId}/preparer`);
     return { success: true };
 }
-

@@ -2,13 +2,15 @@ import Link from 'next/link';
 import { unstable_noStore as noStore } from 'next/cache';
 import { getPedagogicalPool, getStageObjectiveReviewItems, getStages } from '@/services/data-service';
 import { DeleteStageButton } from '@/components/DeleteStageButton';
-import { parseStageDateRange, pickCurrentStage } from '@/lib/stage-dates';
+import { parseStageDateRange } from '@/lib/stage-dates';
 import type { PedagogicalContent, Stage } from '@/types';
 import { WeekObjectiveTracker } from './WeekObjectiveTracker';
 import { getResumeVote } from '@/actions/vote-actions';
 import { getStagePreparations, type StagePreparation } from '@/actions/preparation-actions';
 import { formulationsFiche } from '@/data/formulations-fiche';
 import { FORMES_ACCROCHE } from '@/data/formes-accroche';
+import { ensureCalendarWeek } from '@/lib/calendar-week';
+import { redirect } from 'next/navigation';
 
 import { iconeMaterial } from '@/components/ui/Icone';
 const ArrowRight = iconeMaterial('arrow_forward');
@@ -20,7 +22,7 @@ type WeekWithCards = Stage & { cards: PedagogicalContent[] };
 
 function WeekRow({ week, state }: { week: WeekWithCards; state: 'future' | 'late' | 'archive' }) {
     const href = state === 'late' || state === 'archive' ? `/stages/${week.id}/bilan` : `/stages/${week.id}/program`;
-    const action = state === 'late' ? 'Faire le bilan' : state === 'archive' ? 'Voir le bilan' : 'Ouvrir la semaine';
+    const action = state === 'late' ? 'Revenir sur la semaine' : state === 'archive' ? 'Voir le bilan' : 'Ouvrir la semaine';
 
     return <article className={`co-week-row co-week-row-${state}`}>
         <Link href={href} className="co-week-row-main">
@@ -37,6 +39,8 @@ function WeekRow({ week, state }: { week: WeekWithCards; state: 'future' | 'late
 
 export default async function SemainesPage() {
     noStore();
+    const currentWeek = await ensureCalendarWeek();
+    if (!currentWeek) redirect('/login');
     const [stages, pool] = await Promise.all([getStages(), getPedagogicalPool()]);
     const cardsById = new Map(pool.map(card => [card.id, card]));
     const weeks: WeekWithCards[] = stages.map(stage => ({
@@ -46,14 +50,14 @@ export default async function SemainesPage() {
 
     const now = new Date();
     const open = weeks.filter(week => !week.closed_at);
-    const active = pickCurrentStage(open, now);
+    const active = weeks.find(week => week.id === currentWeek.id) ?? { ...currentWeek, cards: [] };
     const remaining = open.filter(week => week.id !== active?.id);
     const late = remaining.filter(week => {
         const range = parseStageDateRange(week.dates, now);
-        return range ? range.end.getTime() < now.getTime() : false;
+        return range ? range.end.getTime() < now.getTime() && (!week.calendar_week_start || week.cards.length > 0) : false;
     });
-    const future = remaining.filter(week => !late.some(item => item.id === week.id));
-    const archived = weeks.filter(week => Boolean(week.closed_at));
+    const future = remaining.filter(week => { const range = parseStageDateRange(week.dates, now); return range && range.start > now; });
+    const archived = weeks.filter(week => Boolean(week.closed_at) && week.id !== active.id);
     const [activeObjectives, vote, preparations] = active
         ? await Promise.all([getStageObjectiveReviewItems(active.id), getResumeVote(active.id), getStagePreparations(active.id)])
         : [[], null, {} as Record<string, StagePreparation>];
@@ -75,20 +79,20 @@ export default async function SemainesPage() {
                 <div>
                     <p className="co-eyebrow">Intégrer l’environnement dans mes séances</p>
                     <h1>Mes séances</h1>
-                    <p>Préparer sa semaine, faire vivre les sujets avec son groupe, garder la trace de ce qui a été fait.</p>
+                    <p>Un sujet abordé avec votre groupe ou une idée pour demain ? Vous pouvez les retrouver ici, au fil de vos séances.</p>
                 </div>
             </div>
         </header>
 
-        {active ? <section className="co-current-week">
+        <section className="co-current-week">
             <header>
                 <div><p className="co-eyebrow">Cette semaine</p><h2>{active.title}</h2><span>{active.dates}</span></div>
                 {/* Les sujets abordés, tels que le moniteur les note. Les actions validées
                     par le groupe sont un autre compte, qui ne se fait qu'au quiz de fin. */}
-                <strong>{abordes}<small>abordé{abordes > 1 ? 's' : ''} sur {activeObjectives.length}</small></strong>
+                {abordes > 0 && <strong>{abordes}<small>sujet{abordes > 1 ? 's' : ''} abordé{abordes > 1 ? 's' : ''}</small></strong>}
             </header>
 
-            {activeObjectives.length ? <WeekObjectiveTracker stageId={active.id} objectives={activeObjectives.map(item => {
+            {active.closed_at ? <p>Votre bilan de cette semaine est conservé.</p> : activeObjectives.length ? <WeekObjectiveTracker stageId={active.id} objectives={activeObjectives.map(item => {
                 const formulations = formulationsFiche(item.pedagogicalContent);
                 const accroche = preparations[item.pedagogicalContent.id]?.accroche_choisie || formulations[0].texte;
                 const formulation = formulations.find(f => f.texte === accroche);
@@ -102,28 +106,24 @@ export default async function SemainesPage() {
                 action: item.pedagogicalContent.actions?.filter(action => preparations[item.pedagogicalContent.id]?.actions?.includes(action.id)).map(action => action.consigne).join('\n\n') || item.pedagogicalContent.a_observer || null,
                 retenir: preparations[item.pedagogicalContent.id]?.chute || item.pedagogicalContent.a_retenir,
                 initialStatus: item.review?.executionStatus ?? 'not_done',
+                plannedFor: preparations[item.pedagogicalContent.id]?.planned_for ?? null,
+                discussedOn: item.review?.discussedOn ?? null,
             }; })} extra={active.cards.length > 0 ? {
                 href: `/stages/${active.id}/quiz/animation`,
                 titre: 'Un quiz pour occuper un temps mort',
                 detail: 'Des questions prêtes à poser : attente avant d’embarquer, averse, retour en minibus.',
-            } : undefined}/> : <div className="co-current-week-empty"><p>Cette semaine ne contient pas encore de carte-question.</p><Link href={`/stages/${active.id}/program`}>Choisir des cartes <ArrowRight size={16}/></Link></div>}
+            } : undefined}/> : <div className="co-current-week-empty"><p>Vous avez parlé d’un sujet avec votre groupe ? Retrouvez la carte et notez ce sujet dans votre semaine. Votre semaine se construit au fil des séances.</p></div>}
 
-            {/* Le quiz de fin (ou le bilan une fois voté) passe en premier : c'est
-                l'aboutissement de la semaine, et la seule action qui fasse valider quelque
-                chose par le groupe. Les deux ajustements de préparation suivent. */}
+            {/* Noter un sujet abordé est l'entrée principale. Quiz et bilan restent disponibles. */}
             <footer>
-                {vote?.done
-                    ? <Link href={`/stages/${active.id}/bilan`} className="co-week-primary">Faire le bilan <ArrowRight size={17}/></Link>
-                    : active.cards.length > 0 && <Link href={`/stages/${active.id}/quiz`} className="co-week-primary">Le quiz de fin <ArrowRight size={17}/></Link>}
-                {!vote?.done && <Link href={`/stages/${active.id}/program?aborde=1`} className="co-week-secondary">＋ Ajouter un sujet abordé</Link>}
-                <Link href={`/stages/${active.id}/program`} className="co-week-secondary">Voir et modifier les objectifs</Link>
+                {!vote?.done && !active.closed_at && <>
+                    <Link href={`/stages/${active.id}/program?aborde=1`} className="co-week-primary">Noter ce qu’on a fait <ArrowRight size={17}/></Link>
+                    <Link href={`/stages/${active.id}/program?prevoir=1`} className="co-week-secondary">＋ Prévoir un sujet</Link>
+                </>}
+                <Link href={`/stages/${active.id}/program`} className="co-week-secondary">Retrouver mes cartes</Link>
+                {vote?.done || active.closed_at ? <Link href={`/stages/${active.id}/bilan`} className="co-week-secondary">Voir le bilan</Link> : active.cards.length > 0 && <Link href={`/stages/${active.id}/quiz`} className="co-week-secondary">Un quiz avec le groupe</Link>}
             </footer>
-        </section> : <section className="co-no-current-week">
-            <p className="co-eyebrow">Aucune semaine en cours</p>
-            <h2>Planifiez une mise en pratique quand vous êtes prêt.</h2>
-            <p>Vous pouvez partir des cartes mises de côté ou de celles choisies à la fin d’un parcours.</p>
-            <Link href="/stages/new" className="co-week-primary">Créer une semaine <ArrowRight size={17}/></Link>
-        </section>}
+        </section>
 
         {/* Les outils du pôle, juste après la semaine en cours. */}
         <nav className="co-seances-outils" aria-label="Outils de mes séances">
@@ -132,7 +132,7 @@ export default async function SemainesPage() {
         </nav>
 
         {late.length > 0 && <section className="co-weeks-section">
-            <div className="co-weeks-section-title"><div><p className="co-eyebrow">À terminer</p><h2>Valider ce qui a été fait</h2></div><span>{late.length}</span></div>
+            <div className="co-weeks-section-title"><div><p className="co-eyebrow">Semaines passées</p><h2>Revenir sur mes séances</h2></div><span>{late.length}</span></div>
             <div className="co-week-list">{late.map(week => <WeekRow key={week.id} week={week} state="late"/>)}</div>
         </section>}
 
@@ -141,10 +141,8 @@ export default async function SemainesPage() {
             <div className="co-week-list">{future.map(week => <WeekRow key={week.id} week={week} state="future"/>)}</div>
         </section>}
 
-        {/* Le planning de la semaine en cours prime : ce bouton n'intervient qu'une fois
-            qu'on sait où on en est, jamais avant. Il précède l'historique plutôt que de le
-            suivre — créer une semaine reste une action à prendre, pas une archive à consulter. */}
-        <Link href="/stages/new" className="co-weeks-new co-weeks-new-inline"><Plus size={17}/> Nouvelle semaine</Link>
+        {/* La semaine suivante est une possibilité, après la pratique de cette semaine. */}
+        <Link href="/stages/prochaine" prefetch={false} className="co-weeks-new co-weeks-new-inline"><Plus size={17}/> Préparer la semaine prochaine, si vous le souhaitez</Link>
 
         {archived.length > 0 && <section className="co-weeks-section co-weeks-archives">
             <div className="co-weeks-section-title"><div><p className="co-eyebrow">Historique</p><h2>Semaines terminées</h2></div><span>{archived.length}</span></div>

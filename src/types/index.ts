@@ -6,6 +6,7 @@ export type Stage = {
   activity: string;
   level: string;
   dates: string;
+  calendar_week_start?: string | null;
   nb_stagiaires?: number | null;
   selected_content?: string[];
   suggested_thematics?: string[];
@@ -147,6 +148,7 @@ export type StageObjectiveReviewItem = {
   pedagogicalContent: PedagogicalContent;
   review: {
     executionStatus: StageObjectiveExecutionStatus;
+    discussedOn?: string | null;
     impactLevel: StageObjectiveImpactLevel | null;
     reasons: string[] | null;
     note: string | null;

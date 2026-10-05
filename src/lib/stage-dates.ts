@@ -124,3 +124,17 @@ export function civilDay(date: Date): number {
     const { year, month, day } = ymdAParis(date);
     return Date.UTC(year, month, day) / 86400000;
 }
+
+/** ISO civil dates, independent of the browser/server timezone and daylight saving. */
+export function addCivilDays(iso: string, days: number): string {
+    const date = new Date(`${iso}T12:00:00Z`);
+    date.setUTCDate(date.getUTCDate() + days);
+    return date.toISOString().slice(0, 10);
+}
+
+export function calendarWeek(next = false, referenceDate = new Date()) {
+    const today = dateISOAParis(referenceDate);
+    const weekday = (new Date(`${today}T12:00:00Z`).getUTCDay() + 6) % 7;
+    const start = addCivilDays(today, -weekday + (next ? 7 : 0));
+    return { start, end: addCivilDays(start, 6), today };
+}

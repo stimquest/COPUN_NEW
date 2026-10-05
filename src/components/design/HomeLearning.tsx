@@ -73,8 +73,8 @@ export function HomeLearning({ firstName, resume, progressions, semaineEnCours }
         <div className="co-home-bento">
             <Link href="/stages/semaines" className="co-home-mini-card co-home-mini-week">
                 <span className="co-eyebrow">Sur le terrain</span>
-                <strong>{semaineEnCours ? 'Ma semaine en cours' : 'Préparer une semaine'}</strong>
-                <span className="co-mini-action">{semaineEnCours ? 'Reprendre' : 'Organiser'} <ArrowRight size={17}/></span>
+                <strong>Cette semaine</strong>
+                <span className="co-mini-action">{semaineEnCours ? 'Retrouver mes séances' : 'Garder une trace'} <ArrowRight size={17}/></span>
             </Link>
             <Link href="/stages/decouvrir" className="co-home-mini-card co-home-mini-discover">
                 <span className="co-eyebrow">Exploration libre</span>

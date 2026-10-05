@@ -25,7 +25,7 @@ import UseCardWithGroup from './UseCardWithGroup';
  * et l'idée reçue ferment la carte en retrait typographique : on les consulte quand on
  * les cherche, ils ne coupent pas le déroulé.
  */
-export default function LectureCarte({ fiche, value, onChange, allowUse = true }: { fiche: PedagogicalContent; value?: CardChoice; onChange?: (choice: CardChoice) => void; allowUse?: boolean }) {
+export default function LectureCarte({ fiche, value, onChange, allowUse = true, continuation = false }: { fiche: PedagogicalContent; value?: CardChoice; onChange?: (choice: CardChoice) => void; allowUse?: boolean; continuation?: boolean }) {
     const context = useCardChoices();
     const [localChoice, setLocalChoice] = useState<CardChoice>(() => resolveCardChoice(fiche));
     const [savingChoice, setSavingChoice] = useState(false);
@@ -48,17 +48,17 @@ export default function LectureCarte({ fiche, value, onChange, allowUse = true }
         <div className="mt-5 space-y-7 text-[15px] leading-relaxed text-[#405653]" onPointerDown={event => {
             if ((event.target as HTMLElement).closest('button, a, summary')) event.stopPropagation();
         }}>
-            <AccrochesCarousel fiche={fiche} value={choice.accroche} onChange={accroche => change({ ...choice, accroche })} />
+            <AccrochesCarousel fiche={fiche} value={choice.accroche} onChange={accroche => change({ ...choice, accroche })} caption={continuation ? 'Une accroche pour la suite' : undefined}/>
 
             {fiche.explication && <section className="border-t border-[#193d3b1a] pt-6"><p className={labelClass}>Pour l’expliquer simplement</p><p className={`mt-2 ${bodyClass}`}>{fiche.explication}</p></section>}
 
             {fiche.a_observer && <section className="border-l-[3px] border-[#87b7b0] pl-4">
-                <p className={labelClass}>À faire observer</p>
+                <p className={labelClass}>{continuation ? 'Une observation pour aller plus loin' : 'À faire observer'}</p>
                 <p className={`mt-2 ${bodyClass}`}>{fiche.a_observer}</p>
             </section>}
 
             {action && <section className="rounded-[1.35rem] bg-[#e8eee8] px-5 py-5 ring-1 ring-[#193d3b14]">
-                <div className="flex items-baseline justify-between gap-3"><p className={labelClass}>À faire vivre avec le groupe</p>{actions.length > 1 && <span className="text-[11px] font-semibold tabular-nums text-[#6f817d]">{actionIndex + 1} / {actions.length}</span>}</div>
+                <div className="flex items-baseline justify-between gap-3"><p className={labelClass}>{continuation ? 'Une action pour la suite' : 'À faire vivre avec le groupe'}</p>{actions.length > 1 && <span className="text-[11px] font-semibold tabular-nums text-[#6f817d]">{actionIndex + 1} / {actions.length}</span>}</div>
                 <h4 className="mt-3 text-[17px] font-bold leading-snug text-[#173d3a]">{action.label}</h4>
                 <p className={`mt-2 ${bodyClass}`}>{action.consigne}</p>
                 {actions.length > 1 && <button type="button" className="mt-5 flex min-h-12 w-full items-center justify-between rounded-xl border border-[#193d3b38] bg-[#fffdf8] px-4 text-left text-[13px] font-bold text-[#173d3a] transition active:scale-[.98]"

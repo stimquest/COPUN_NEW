@@ -27,6 +27,7 @@ import { HistoriqueMoniteur } from '@/lib/historique-moniteur';
 
 type Props = {
     open: boolean;
+    allThemes?: boolean;
     pool: PedagogicalContent[];
     retenues: string[];
     onToggleFiche: (id: string) => void;
@@ -48,7 +49,7 @@ const METEO_OPTIONS: { value: MeteoType; label: string; icon: string }[] = [
 ];
 
 export default function AideConditions({
-    open, pool, retenues, onToggleFiche, onFicheInfo, historique,
+    open, pool, retenues, onToggleFiche, onFicheInfo, historique, allThemes = false,
 }: Props) {
     const [coeff, setCoeff] = useState<CoeffType | null>(null);
     const [meteo, setMeteo] = useState<MeteoType | null>(null);
@@ -126,6 +127,12 @@ export default function AideConditions({
             </motion.div>
         );
     }
+
+    if (allThemes) return <div className="grid gap-3 sm:grid-cols-2">
+        {GROUPES.filter(g => fichesDuGroupe(g).length > 0).map(g => <CarteIntention
+            key={g.id} groupe={g} raisons={[]} fiches={fichesDuGroupe(g)} dejaVues={dejaVues}
+            showHistory={false} onAccepter={() => setGroupeOuvertId(g.id)}/>) }
+    </div>;
 
     // ── L'accueil : la question groupée, puis les intentions à accepter ─────────────────
     return (
@@ -222,10 +229,11 @@ function BoutonCondition({
 /** Une intention à accepter — jamais une case parmi d'autres : chaque carte se lit comme
  * une proposition à part entière. */
 function CarteIntention({
-    groupe, raisons, fiches, dejaVues, onAccepter,
+    groupe, raisons, fiches, dejaVues, onAccepter, showHistory = true,
 }: {
     groupe: typeof GROUPES[number]; raisons: string[]; fiches: PedagogicalContent[];
     dejaVues: Record<string, number>; onAccepter: () => void;
+    showHistory?: boolean;
 }) {
     const nbNeuves = fiches.filter(f => !dejaVues[f.id]).length;
 
@@ -248,7 +256,7 @@ function CarteIntention({
                 <span className="text-[11px] font-bold text-slate-400">
                     {fiches.length} question{fiches.length > 1 ? 's' : ''}
                 </span>
-                {nbNeuves > 0 && (
+                {showHistory && nbNeuves > 0 && (
                     <span className="text-[12px] font-bold text-emerald-600 bg-emerald-50 rounded-full px-2 py-0.5">
                         {nbNeuves === fiches.length ? 'Jamais abordé' : `${nbNeuves} nouvelle${nbNeuves > 1 ? 's' : ''}`}
                     </span>

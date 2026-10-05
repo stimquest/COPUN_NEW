@@ -11,7 +11,7 @@ import { iconeMaterial } from '@/components/ui/Icone';
 const ChevronLeft = iconeMaterial('chevron_left');
 const ChevronRight = iconeMaterial('chevron_right');
 
-export default function AccrochesCarousel({ fiche, value, onChange }: { fiche: PedagogicalContent; value?: string; onChange?: (value: string) => void }) {
+export default function AccrochesCarousel({ fiche, value, onChange, caption = 'J’ouvre avec' }: { fiche: PedagogicalContent; value?: string; onChange?: (value: string) => void; caption?: string }) {
     const propositions = formulationsFiche(fiche);
     const [position, setPosition] = useState(0);
     const reduceMotion = useReducedMotion();
@@ -29,7 +29,7 @@ export default function AccrochesCarousel({ fiche, value, onChange }: { fiche: P
     return <section aria-label="Façons d’ouvrir le sujet">
         <div className={styles.heading}>
             <div className={styles.caption}>
-                <span>J’ouvre avec</span>
+                <span>{caption}</span>
                 {forme && <span className={styles.forme}>{forme}</span>}
             </div>
             <div className={styles.controls}
