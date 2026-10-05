@@ -6,11 +6,12 @@ import { useRouter } from 'next/navigation';
 import type { SequenceProgress } from '@/actions/parcours-formation-actions';
 import { marquerSequenceParcourue, verifierAcquisSequence } from '@/actions/parcours-formation-actions';
 import type { ParcoursFormation } from '@/data/parcours-formation';
+import { getOccasionsTerrain } from '@/data/parcours-terrain';
 import { parcoursTermine, type ResultatQuiz } from '@/lib/parcours-cours';
 
-export function ParcoursCoursClient({ sequence, progression }: { sequence: ParcoursFormation; progression: SequenceProgress }) {
+export function ParcoursCoursClient({ sequence, progression, vueInitiale }: { sequence: ParcoursFormation; progression: SequenceProgress; vueInitiale?: 'quiz' }) {
     const router = useRouter();
-    const [vue, setVue] = useState<'intro' | 'cours' | 'quiz' | 'bilan'>(() => parcoursTermine(progression) ? 'bilan' : 'intro');
+    const [vue, setVue] = useState<'intro' | 'cours' | 'quiz' | 'bilan'>(() => vueInitiale ?? (parcoursTermine(progression) ? 'bilan' : 'intro'));
     const [ficheIndex, setFicheIndex] = useState(0);
     const [questionIndex, setQuestionIndex] = useState(0);
     const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -21,6 +22,7 @@ export function ParcoursCoursClient({ sequence, progression }: { sequence: Parco
     const [isPending, startTransition] = useTransition();
     const titreRef = useRef<HTMLHeadingElement>(null);
     const fiche = sequence.fiches[ficheIndex];
+    const occasionsTerrain = getOccasionsTerrain(sequence.id, fiche.titre);
     const question = sequence.questions[questionIndex];
     const total = sequence.fiches.length + sequence.questions.length;
     const position = vue === 'intro' ? 0 : vue === 'cours' ? ficheIndex + 1 : vue === 'quiz' ? sequence.fiches.length + questionIndex + 1 : total;
@@ -75,11 +77,11 @@ export function ParcoursCoursClient({ sequence, progression }: { sequence: Parco
         {error && <p role="alert" className="co-pro-feedback">{error}</p>}
 
         {vue === 'intro' && <section className="co-pro-intro">
-            <p className="co-pro-kicker">L’essentiel du sujet · {sequence.duree}</p>
+            <p className="co-pro-kicker">Des clés pour transmettre · {sequence.duree}</p>
             <h1 ref={titreRef} tabIndex={-1}>{sequence.titre}</h1>
             <p className="co-pro-lead">{sequence.objectif}</p>
             <ol className="co-course-plan">{sequence.fiches.map((item, index) => <li key={item.titre}><span>{index + 1}</span>{item.titre}</li>)}</ol>
-            <p className="co-course-note">{sequence.fiches.length} fiches courtes, puis {sequence.questions.length} questions pour vérifier les notions. Le parcours est terminé quand toutes les réponses sont justes. Vous pouvez réessayer.</p>
+            <p className="co-course-note">Vos bases de pratique sont le point de départ. Ces {sequence.fiches.length} fiches proposent des angles et des formulations à adapter à votre groupe, puis {sequence.questions.length} situations pour choisir un échange pertinent. Vous pouvez réessayer le quiz.</p>
             <button type="button" className="co-pro-action" onClick={() => revoir()}>Lire les fiches <span className="material-symbols-outlined" aria-hidden>arrow_forward</span></button>
             {progression.parcouru && <button type="button" className="co-pro-quiet" disabled={isPending} onClick={commencerQuiz}>Reprendre le quiz</button>}
         </section>}
@@ -87,9 +89,24 @@ export function ParcoursCoursClient({ sequence, progression }: { sequence: Parco
         {vue === 'cours' && <article className="co-pro-study">
             <p className="co-pro-kicker">Fiche {ficheIndex + 1} / {sequence.fiches.length}</p>
             <h1 ref={titreRef} tabIndex={-1}>{fiche.titre}</h1>
-            <p className="co-pro-lead">{fiche.texte}</p>
-            <div className="co-course-terrain"><h2>Sur le terrain</h2><p>{fiche.terrain}</p></div>
-            <aside><strong>À retenir</strong><p>{fiche.retenir}</p></aside>
+            <p className="co-pro-lead">{fiche.angle}</p>
+            <div className="co-course-terrain"><h2>Une formulation possible</h2><blockquote><p>« {fiche.formulation} »</p></blockquote></div>
+            <section key={`${sequence.id}-${ficheIndex}`} className="co-course-terrain" aria-label="Sur le terrain">
+                <h2>Sur le terrain</h2>
+                <p className="co-terrain-principal">{fiche.terrain}</p>
+                {occasionsTerrain.length > 0 && <>
+                    <p>{occasionsTerrain.length === 1 ? 'Une autre occasion, selon votre séance :' : 'D’autres occasions, selon votre séance :'}</p>
+                    {occasionsTerrain.map(occasion => <div key={occasion.moment} className="co-terrain-occasion mt-4">
+                        <h3 className="text-corps font-semibold text-encre">{occasion.moment}</h3>
+                        <p>{occasion.proposition}</p>
+                    </div>)}
+                </>}
+            </section>
+            <section className="co-course-terrain co-course-explication" aria-label="Un appui pour l’explication">
+                <h2>Un appui pour l’explication</h2>
+                <p>{fiche.texte}</p>
+            </section>
+            <aside><strong>L’idée à faire passer</strong><p>{fiche.retenir}</p></aside>
             <button type="button" className="co-pro-action" disabled={isPending} onClick={() => {
                 if (retourBilan) { setVue('bilan'); setRetourBilan(false); }
                 else if (ficheIndex < sequence.fiches.length - 1) setFicheIndex(index => index + 1);
@@ -110,10 +127,10 @@ export function ParcoursCoursClient({ sequence, progression }: { sequence: Parco
 
         {vue === 'bilan' && <section className="co-pro-study">
             <p className="co-pro-kicker">{resultat && !resultat.valide ? 'Correction du quiz' : 'Parcours terminé'}</p>
-            <h1 ref={titreRef} tabIndex={-1}>{resultat ? `${resultat.score} / ${resultat.total} réponses justes` : 'Les repères sont acquis'}</h1>
+            <h1 ref={titreRef} tabIndex={-1}>{resultat ? `${resultat.score} / ${resultat.total} réponses justes` : 'Des clés pour vos échanges sur le terrain'}</h1>
             <p className="co-pro-lead">{resultat && !resultat.valide
                 ? termine ? 'Votre parcours reste terminé. Cet essai vous indique les notions à revoir.' : 'Quelques notions restent à revoir. Lisez les corrections, puis retentez le quiz pour terminer le parcours.'
-                : 'Vous avez vérifié les notions essentielles de ce sujet. Vous pouvez maintenant chercher des façons d’en parler pendant votre séance.'}</p>
+                : 'Vous avez travaillé des façons de relier votre pratique sportive au milieu. Choisissez une formulation ou une question à essayer avec votre groupe pendant une prochaine séance.'}</p>
             {resultat && <div className="co-course-corrections">{resultat.corrections.map((correction, index) => {
                 const item = sequence.questions[index];
                 return <article key={correction.id} className={`co-pro-correction ${correction.correct ? 'is-juste' : 'is-faux'}`}>

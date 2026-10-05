@@ -1,11 +1,11 @@
 /**
- * Les 4 niveaux du catalogue pédagogique.
+ * Les trois niveaux de sensibilisation du catalogue pédagogique.
  *
  * Ce n'est pas une échelle de difficulté rédactionnelle — vérifié : la longueur moyenne
  * des explications ne varie que de 15 % entre niveau 1 et niveau 4. C'est un repère de
- * PUBLIC : le niveau 1 s'adresse à un stagiaire d'une semaine d'été, sans exposition
- * préalable au sujet ; les niveaux 3-4 supposent une sensibilisation déjà installée
- * (jeunes du club à l'année, plusieurs saisons de pratique).
+ * sensibilisation : découverte, prise de conscience, responsabilisation. Le repère
+ * dépend de ce que le groupe a déjà compris et vécu sur le sujet précis.
+ * Le niveau 4 est conservé uniquement pour la compatibilité avec les anciennes données.
  *
  * Le niveau n'est donc jamais un filtre qui exclut par défaut : un phénomène rare (un
  * Fata Morgana observé en début de saison) intéresse un groupe entier quel que soit son
@@ -16,16 +16,16 @@
 
 export const NIVEAU_LABELS: Record<1 | 2 | 3 | 4, string> = {
     1: 'Découverte',
-    2: 'Approfondi',
-    3: 'Engagement',
+    2: 'Prise de conscience',
+    3: 'Responsabilisation',
     4: 'Expert',
 };
 
 /** Libellé complet, pour l'admin ou tout contexte qui bénéficie du numéro. */
 export const NIVEAU_LABELS_LONGS: Record<1 | 2 | 3 | 4, string> = {
     1: 'N1 — Découverte',
-    2: 'N2 — Approfondi',
-    3: 'N3 — Engagement',
+    2: 'N2 — Prise de conscience',
+    3: 'N3 — Responsabilisation',
     4: 'N4 — Expert',
 };
 

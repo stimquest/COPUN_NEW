@@ -677,7 +677,7 @@ function CarteLecteur({
                 <button onClick={onQuitter} aria-label="Fermer" className="text-white/70 active:text-white">
                     <X size={22} strokeWidth={2.5} />
                 </button>
-                <p className="text-[12px] font-bold text-white/50">
+                <p className="min-w-0 truncate text-note font-bold text-white/50" title={lecon.titre}>
                     {lecon.titre} · {index + 1}/{cartes.length}
                 </p>
             </div>
@@ -967,13 +967,12 @@ export function FormationClient({ plan, lecons, termine: termineInitial, parcour
                         onOuvrir={() => setThemeOuvert(section)}
                     />
                 ))}
-                {/* Les parcours, 5e entrée de la formation. Ils se distinguent des quatre
-                    thèmes : ce ne sont pas des modules à lire mais des sujets à approfondir
-                    jusqu'à l'essai avec son groupe — d'où le fond encre et la mention « Parcours ». */}
+                {/* Les cours du milieu complètent la méthode générale de transmission. */}
                 <Link href="/specialisation" className="co-course co-course-parcours">
                     <span className="co-course-tag">Parcours</span>
                     <CoastalMark kind="waves"/>
-                    <h2>Approfondir un sujet du littoral</h2>
+                    <h2>Parcours environnement</h2>
+                    <p className="text-note leading-relaxed">Comprendre un lieu géographique<br/>Observer un espace d’évolution<br/>Protéger un site naturel</p>
                     <div className="co-course-meta"><span>{parcours.disponibles} parcours</span><span>{parcours.termines} terminé{parcours.termines > 1 ? 's' : ''}</span></div>
                     <div className="co-progress" aria-label={`${parcours.termines} parcours terminés sur ${parcours.disponibles}`}><span style={{ width: `${parcours.disponibles ? parcours.termines / parcours.disponibles * 100 : 0}%` }}/></div>
                 </Link>

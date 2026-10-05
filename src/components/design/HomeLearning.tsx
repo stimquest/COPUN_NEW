@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import type { ResumeFormation } from '@/actions/formation-actions';
 import type { SequenceProgress } from '@/actions/parcours-formation-actions';
 import { CoastalMark } from './Coastal';
@@ -23,12 +24,19 @@ export function HomeLearning({ firstName, resume, progressions, semaineEnCours }
     return <div className="co-page co-home">
         <header className="co-welcome">
             <div className="co-home-brand">
-                <Link href="/stages" className="co-wordmark">cop<span>’</span>un<span className="co-wordmark-dot">.</span></Link>
-                <p>Parler d’environnement sur le terrain</p>
+                <Image src="/logo.jpg" alt="COP’UN, avec la mer" width={80} height={80} priority className="rounded-bloc"/>
+                <div>
+                    <Link href="/stages" className="co-wordmark">cop<span>’</span>un<span className="co-wordmark-dot">.</span></Link>
+                    <p>Bienvenue {firstName}</p>
+                </div>
             </div>
             <Link href="/profil" className="co-avatar" aria-label={`Profil de ${firstName}`}>{firstName.slice(0, 1).toUpperCase()}</Link>
         </header>
-        <div className="co-home-title"><h1>Dehors, tout<br/>se raconte<span>.</span></h1></div>
+        <div className="co-home-title"><h1>Pour faire de chaque vague<br/>une vague de conscience<span>.</span></h1></div>
+        <div className="co-home-introduction">
+            <p className="text-corps text-encre leading-relaxed"><strong>Comprendre, observer, protéger</strong>, pour ne faire qu’UN, et être en harmonie avec le milieu.</p>
+            <p className="text-corps text-encre-douce leading-relaxed">Cette application, dédiée à l’approche environnementale intégrée dans la pratique sportive, vise à te guider pour que tu puisses gagner en compétence et transmettre ce que tu sais en reliant les contenus entre eux.</p>
+        </div>
         {/* Deux pôles, deux blocs : se former d'un côté, faire vivre l'environnement dans
             ses séances de l'autre. Quatre tuiles au même niveau ne disaient pas comment
             l'application est rangée. */}
@@ -37,7 +45,10 @@ export function HomeLearning({ firstName, resume, progressions, semaineEnCours }
             formation générale et les parcours environnement, qui en font partie. */}
         <section className="co-home-formation">
             <div className="co-home-formation-head">
-                <h2>Trouver les mots.<br/>Donner envie.</h2>
+                <div>
+                    <h2>Trouver les mots.</h2>
+                    <p className="text-intertitre leading-snug mt-2">Donner envie, rendre curieux et attentif.</p>
+                </div>
                 <CoastalMark kind="talk"/>
             </div>
             <div className="co-home-formation-suivis">

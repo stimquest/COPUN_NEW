@@ -409,8 +409,15 @@ export const LECONS_FORMATION: LeconFormation[] = [
                 illustration: { fichier: 'illus/fausse-evidence.webp', alt: "Un goéland sûr de lui touche une méduse échouée et prend une décharge" },
                 texte: "La croyance a l'air logique — c'est justement pour ça qu'elle est répandue. Le retournement montre l'angle mort.",
                 exemples: [
-                    { texte: "On veut s'approcher pour mieux voir. Plus on s'approche, moins il reste d'animaux à regarder.", source: 'Observer sans déranger' },
-                    { texte: "On croit que c'est le vent qui fait monter la mer. Le vent fait les vagues ; la marée, c'est la Lune.", source: 'Les marées' },
+                    { texte: "On croit qu’on verra mieux en s’approchant. Pourtant, plus on s’approche, moins il reste d’animaux à observer.", source: 'Observer sans déranger' },
+                ],
+            },
+            {
+                genre: 'procede',
+                titre: 'La fausse évidence : les marées',
+                texte: "Distinguer ce qui crée la marée de ce qui peut modifier le niveau de l’eau.",
+                exemples: [
+                    { texte: "On croit que c’est le vent qui fait monter la mer. En réalité, la marée est principalement liée à l’attraction de la Lune. Le vent ne crée pas les marées, mais il peut modifier localement le niveau de l’eau.", source: 'Les marées' },
                 ],
             },
             {
@@ -425,8 +432,15 @@ export const LECONS_FORMATION: LeconFormation[] = [
                 illustration: { fichier: 'illus/fausse-tranquillite.webp', alt: "Un goéland fier d'emporter une grosse bouteille, sans voir les petits déchets" },
                 texte: "La croyance rassure — elle dit « tout va bien, pas besoin de faire attention ». Le retournement montre que ce n'est pas si simple.",
                 exemples: [
-                    { texte: "On pense qu'il suffit qu'il revienne. Il a dépensé une énergie qu'il ne récupère pas forcément.", source: 'Cohabitation avec le vivant' },
-                    { texte: "On juge un déchet à sa taille. Les plus petits sont souvent les plus dangereux, parce qu'ils sont avalés.", source: 'Impact de la présence humaine' },
+                    { texte: "Quand un animal est dérangé, il fuit. On pense que c’est sans conséquence pour sa santé. Mais dans sa fuite, il a dépensé une énergie qu’il ne récupère pas forcément, sans compter le stress auquel il a été soumis.", source: 'Cohabitation avec le vivant' },
+                ],
+            },
+            {
+                genre: 'procede',
+                titre: 'La taille d’un déchet',
+                texte: "Un petit déchet ou une pollution invisible peuvent aussi avoir des conséquences.",
+                exemples: [
+                    { texte: "On juge un déchet à sa taille. En fait, son impact écologique ne dépend pas de sa taille : des éléments invisibles peuvent avoir des conséquences importantes pour l’environnement et la santé, comme les microplastiques ou la pollution chimique.", source: 'Impact de la présence humaine' },
                 ],
             },
             {
@@ -539,14 +553,14 @@ export const LECONS_FORMATION: LeconFormation[] = [
                 titre: 'Protéger : ce qu\'on en fait',
                 texte: "Ce pilier répond à « qu'est-ce qu'on décide de faire ». Entre par un geste concret que le groupe peut poser dans la séance, pas par un principe général.",
                 exemples: [
-                    { texte: 'Comment savoir si on dérange un animal ?', source: 'Cohabitation avec le vivant' },
+                    { texte: 'Comment observer le vivant sans déranger ?', source: 'Cohabitation avec le vivant' },
                     { texte: "Pourquoi chacun peut œuvrer en faveur de la biodiversité ?", source: 'Sciences participatives' },
                 ],
             },
             {
                 genre: 'mecanisme',
                 titre: 'Pourquoi partir du pilier',
-                pourquoi: "Un sujet par pilier donne une semaine équilibrée — comprendre, observer, agir — plutôt que trois variations du même angle. Le groupe reçoit trois façons différentes de se relier au lieu, pas trois fois la même.",
+                pourquoi: "Un sujet par pilier donne une semaine équilibrée — comprendre, observer, protéger — plutôt que trois variations du même angle. Le groupe reçoit trois façons différentes de se relier au lieu, pas trois fois la même.",
                 attention: "Aucun ordre à respecter entre les trois : tu peux commencer par Protéger si c'est ce que la situation du jour impose.",
             },
             {
@@ -576,7 +590,7 @@ export const LECONS_FORMATION: LeconFormation[] = [
                 enonce: "Il fait un temps calme et sans histoire toute la semaine, mais le groupe a trouvé une méduse échouée hier en arrivant.\n\nQuel sujet choisis-tu en priorité ?",
                 options: [
                     { cle: 'A', texte: "Les marées, parce que c'est un sujet incontournable." },
-                    { cle: 'B', texte: "Ce que faire quand on trouve une méduse échouée." },
+                    { cle: 'B', texte: "Ce qu’on peut faire quand on trouve une méduse échouée." },
                     { cle: 'C', texte: "Aucun, on attend un jour où il se passe vraiment quelque chose." },
                 ],
                 bonneReponse: 'B',
@@ -829,13 +843,13 @@ export const LECONS_FORMATION: LeconFormation[] = [
             ],
         },
         {
-            titre: 'Un phénomène, trois portes',
-            acquis: 'Tu as vu un même sujet raconté sous ses trois angles, avec de vraies fiches.',
+            titre: 'Un même sujet, plusieurs angles',
+            acquis: 'Tu as vu comment les marées se racontent sous les angles Comprendre et Observer.',
             cartes: [
             {
                 genre: 'procede',
                 titre: 'Comprendre : les marées',
-                texte: "Pourquoi ça se passe comme ça. Le catalogue en a d'ailleurs le plus grand nombre : le pilier le plus facile à nourrir, pas forcément le plus important.",
+                texte: "Pourquoi ça se passe comme ça. Les marées : un sujet facile à nourrir sous cet angle.",
                 exemples: [
                     { texte: 'Pourquoi y a-t-il plusieurs marées par jour ?', source: 'Les marées' },
                     { texte: 'Pourquoi il est important de connaître le coefficient de marée ?', source: 'Les marées' },
@@ -844,26 +858,18 @@ export const LECONS_FORMATION: LeconFormation[] = [
             {
                 genre: 'procede',
                 titre: 'Observer : les marées',
-                texte: "Ce qu'on vérifie avec ses yeux, pas ce qu'on sait par cœur.",
+                texte: "Des questions sur les marées se trouvent aussi dans Observer, sous un autre angle : les indices à vérifier sur le terrain.",
                 exemples: [
                     { texte: "Comment sait-on que l'eau monte et descend ?", source: 'Les marées' },
                     { texte: "Comment savoir où poser mon matériel quand j'arrive sur l'estran ?", source: 'Les marées' },
                 ],
             },
             {
-                genre: 'procede',
-                titre: 'Protéger : les marées',
-                texte: "Le pilier le plus rare sur ce sujet — une seule fiche sur seize. Ça ne veut pas dire qu'il compte moins, juste qu'il est plus difficile à formuler pour ce phénomène précis.",
-                exemples: [
-                    { texte: 'Pourquoi respecter les zones de reproduction selon les cycles de marée ?', source: 'Les marées' },
-                ],
-            },
-            {
                 genre: 'vrai_faux',
                 titre: 'À toi',
-                affirmation: "Sur les marées, il y a moins de fiches Protéger parce que ce pilier compte moins pour ce sujet.",
+                affirmation: "Un sujet comme les marées appartient uniquement au pilier Comprendre.",
                 reponse: false,
-                explication: "Faux. Le pilier le mieux nourri au catalogue n'est pas le plus important — Protéger est juste plus difficile à formuler pour ce phénomène précis.",
+                explication: "Faux. Un même sujet peut être abordé sous plusieurs angles : comprendre ce qui explique les marées, ou observer les indices qui montrent que l’eau monte ou descend.",
             },
             ],
         },
@@ -873,9 +879,13 @@ export const LECONS_FORMATION: LeconFormation[] = [
             cartes: [
             {
                 genre: 'mecanisme',
-                titre: 'Ce que COP t\'évite',
-                pourquoi: "Sans cette grille, tu réinventes un angle à chaque fois — parfois toujours le même, parfois aucun. Avec elle, tu sais toujours par où continuer si le premier angle épuise l'attention du groupe : \"on vient de voir comment on le vérifie, voyons maintenant ce que ça change\".",
-                attention: "Aucun pilier n'est un prérequis des deux autres. Tu peux ouvrir par Protéger si c'est ce qu'impose la situation — pas besoin d'avoir \"fait\" Comprendre avant.",
+                titre: 'Pourquoi COP’UN est un ami qui te veut du bien',
+                pourquoi: "Avec les trois mots clés « comprendre, observer, protéger », tu es guidé comme dans un chenal : tu as des points de repère faciles à retenir et utiles pour clarifier tes idées.",
+            },
+            {
+                genre: 'texte',
+                titre: 'Tu choisis ton entrée',
+                texte: "Aucun pilier n'est un prérequis des deux autres. Tu peux ouvrir par Protéger si c'est ce qu'impose la situation — pas besoin d'avoir \"fait\" Comprendre avant.",
             },
             {
                 genre: 'exercice',
@@ -894,7 +904,7 @@ export const LECONS_FORMATION: LeconFormation[] = [
                 titre: 'Ce que tu retiens',
                 retenir: [
                     'Trois angles sur un même sujet, jamais un ordre obligé',
-                    'Le pilier le mieux nourri au catalogue n\'est pas le plus important',
+                    'Un même sujet peut se raconter sous plusieurs angles',
                     'Tu entres par le pilier que la situation ou la question impose',
                 ],
                 note: "Les fiches de l'app indiquent toujours leur pilier — un repère pour savoir sous quel angle elles parlent, pas une case à cocher dans l'ordre.",
@@ -1204,8 +1214,15 @@ export const LECONS_FORMATION: LeconFormation[] = [
                 illustration: { fichier: 'illus/parier-montrer.webp', alt: "Un vote sur la plage, pinces, ailes et nageoires levées" },
                 texte: "On demande une prédiction avant de révéler la réalité. L'écart entre les deux fait tout le travail de mémorisation.",
                 exemples: [
-                    { texte: "Faites voter entre marée haute, marée basse et mi-marée. La majorité se trompe : c'est à mi-marée.", source: 'Les marées' },
-                    { texte: "Faites voter si le soleil suffit à décider de sortir. Le vent et la marée comptent bien plus.", source: 'Repères spatio-temporels' },
+                    { texte: "Faites voter pour que chacun dise si la mer monte ou descend. Puis montrez les indices qui permettent de le savoir.", source: 'Les marées' },
+                ],
+            },
+            {
+                genre: 'procede',
+                titre: 'Faire parier sur les conditions de sortie',
+                texte: "Faire réagir le groupe sur les indices à prendre en compte avant de partir.",
+                exemples: [
+                    { texte: "Faites voter pour dire si la présence du soleil est suffisante pour décider de sortir. Le vent et la marée comptent bien plus.", source: 'Repères spatio-temporels' },
                 ],
             },
             {
@@ -1249,38 +1266,44 @@ export const LECONS_FORMATION: LeconFormation[] = [
     {
         id: 'adapter-exposition-groupe',
         numero: 3,
-        titre: 'Adapter selon l\'exposition du groupe',
+        titre: 'Adapter selon le niveau de sensibilisation du groupe',
         accroche: 'Pas l\'âge : ce que le groupe a déjà vu ou pas du sujet.',
         duree_min: 4,
         piles: [
         {
             titre: 'Un repère mal nommé',
-            acquis: 'Tu sais que le niveau des fiches ne mesure pas l\'âge, mais l\'exposition au sujet.',
+            acquis: 'Tu sais que le niveau des fiches ne mesure pas l’âge, mais le niveau de sensibilisation au sujet.',
             cartes: [
             {
                 genre: 'texte',
                 titre: 'Pas une échelle de difficulté',
-                texte: "Les fiches de l'app portent un niveau 1 à 3. Ce n'est pas une échelle d'âge ni de difficulté du texte — vérifié, la longueur ne varie que de 15% entre les niveaux.\n\nC'est un repère de PUBLIC : niveau 1 pour un stagiaire d'une semaine, sans exposition préalable ; niveaux 2-3 pour un groupe déjà sensibilisé, plusieurs saisons de pratique.",
+                texte: "Les fiches de l’app portent un niveau 1 à 3. C’est un repère de sensibilisation au sujet, pas une échelle d’âge ou de difficulté du texte.\n\nDécouverte, prise de conscience, responsabilisation : le moniteur choisit une entrée adaptée à ce que le groupe a déjà compris et vécu.",
             },
             {
                 genre: 'texte',
                 titre: 'Jamais une barrière',
                 texte: "Un phénomène rare intéresse un groupe entier quel que soit son niveau. Le niveau reste un repère à consulter, jamais un filtre qui cache une fiche par défaut.",
+                points: ["Un repère, jamais une exclusion automatique"],
+            },
+            {
+                genre: 'texte',
+                titre: 'Les trois niveaux de sensibilisation',
+                texte: "Un même sujet peut se raconter à trois niveaux.",
                 points: [
-                    "Niveau 1 : premier contact avec le sujet",
-                    "Niveau 2-3 : déjà sensibilisé, plusieurs saisons",
-                    "Un repère, jamais une exclusion automatique",
+                    "Niveau 1 : découverte",
+                    "Niveau 2 : prise de conscience",
+                    "Niveau 3 : responsabilisation",
                 ],
             },
             ],
         },
         {
-            titre: 'Un même sujet, trois profondeurs',
-            acquis: 'Tu as vu comment le même phénomène se dit à trois profondeurs différentes.',
+            titre: 'Un même sujet, trois niveaux',
+            acquis: 'Tu as vu comment un même sujet accompagne la découverte, la prise de conscience et la responsabilisation.',
             cartes: [
             {
                 genre: 'procede',
-                titre: 'Premier contact',
+                titre: 'Découverte',
                 illustration: { fichier: 'illus/premier-contact.webp', alt: "Un vieux crabe laisse son sac de schémas fermé et montre simplement la mer à un petit bernard-l'ermite émerveillé" },
                 texte: "Le fait brut, sans mécanisme derrière — ce qui se voit et se nomme.",
                 exemples: [
@@ -1290,26 +1313,38 @@ export const LECONS_FORMATION: LeconFormation[] = [
             },
             {
                 genre: 'procede',
-                titre: 'Déjà sensibilisé',
+                titre: 'Prise de conscience',
                 illustration: { fichier: 'illus/deja-sensibilise.webp', alt: "Une leçon plus poussée, pour un groupe qui connaît déjà le sujet" },
-                texte: "Le pourquoi technique, et les conséquences pratiques du phénomène.",
+                texte: "Relier le phénomène à ses conséquences sur le vivant et nos activités.",
                 exemples: [
                     { texte: "Pourquoi il est important de connaître le coefficient de marée ?", source: 'Les marées, niveau 2' },
                     { texte: "Pourquoi le rythme des marées a des incidences sur le vivant et les activités humaines ?", source: 'Les marées, niveau 2' },
                 ],
             },
             {
+                genre: 'procede',
+                titre: 'Responsabilisation',
+                texte: "S’appuyer sur ce que le groupe a compris pour ajuster ses choix et ses gestes.",
+                exemples: [
+                    { texte: 'Comment prendre en compte les rythmes naturels ?', source: 'Repères spatio-temporels' },
+                ],
+            },
+            {
                 genre: 'mecanisme',
-                titre: 'Comment passer de l\'un à l\'autre',
-                pourquoi: "Le niveau 1 nomme et montre. Le niveau 2 relie à un usage concret. Tu peux monter en profondeur avec le même groupe au fil de la semaine, en partant toujours du niveau 1 si le sujet est neuf pour eux.",
-                attention: "Ne saute jamais le niveau 1 pour un groupe qui découvre le sujet, même s'il semble déjà grand ou dégourdi — l'exposition au sujet précis compte plus que l'âge général.",
+                titre: 'Comment passer de l’un à l’autre',
+                pourquoi: "La découverte nomme et montre. La prise de conscience relie à un usage concret. La responsabilisation aide à ajuster ses choix. Tu peux accompagner ces trois niveaux avec le même groupe au fil de la semaine.",
+            },
+            {
+                genre: 'texte',
+                titre: 'Partir de la découverte',
+                texte: "Pars de la découverte si le sujet est neuf pour le groupe : sa sensibilisation au sujet précis compte plus que son âge.",
             },
             {
                 genre: 'vrai_faux',
                 titre: 'À toi',
                 affirmation: "Un groupe de jeunes déjà expérimentés en voile peut sauter le niveau 1 sur un sujet qu'ils découvrent.",
                 reponse: false,
-                explication: "Faux. Ne saute jamais le niveau 1 pour un groupe qui découvre le sujet précis, même s'il semble déjà grand ou dégourdi — c'est l'exposition au sujet qui compte, pas l'âge général.",
+                explication: "Faux. Commence par la découverte si le sujet est neuf pour le groupe : c’est sa sensibilisation au sujet précis qui compte, pas son âge ou son expérience en voile.",
             },
             ],
         },
@@ -1327,17 +1362,22 @@ export const LECONS_FORMATION: LeconFormation[] = [
                     { cle: 'C', texte: "Tu évites le sujet, il est trop connu pour être intéressant." },
                 ],
                 bonneReponse: 'B',
-                correction: "**B**. Le niveau suit l'exposition au SUJET précis, pas l'ancienneté générale au club. Des jeunes expérimentés en voile mais neufs sur les marées repartent du niveau 1.\n\n**A** confond ancienneté au club et exposition au sujet précis. **C** part du principe qu'un sujet est \"trop connu\" sans avoir vérifié s'il l'a réellement été abordé.",
+                correction: "**B**. Le niveau suit la sensibilisation au sujet précis, pas l’ancienneté au club. Des jeunes expérimentés en voile mais neufs sur les marées commencent par la découverte.\n\n**A** confond ancienneté au club et sensibilisation au sujet. **C** suppose le sujet connu sans avoir vérifié s’il a déjà été abordé.",
             },
             {
                 genre: 'bilan',
                 titre: 'Ce que tu retiens',
                 retenir: [
-                    'Le niveau mesure l\'exposition au sujet, pas l\'âge',
-                    'Niveau 1 : premier contact, même pour un groupe expérimenté ailleurs',
+                    'Le niveau indique la sensibilisation au sujet, pas l’âge',
+                    'Découverte, prise de conscience, responsabilisation',
+                    'Découverte d’abord si le sujet est neuf, même pour un groupe expérimenté ailleurs',
                     'Jamais une barrière qui cache une fiche par défaut',
                 ],
-                note: "Ce repère complète « Choisir quoi transmettre » : une fois le sujet choisi, le niveau aide à calibrer l'entrée.",
+            },
+            {
+                genre: 'texte',
+                titre: 'Une entrée adaptée au groupe',
+                texte: "Ce repère complète « Choisir quoi transmettre » : une fois le sujet choisi, le niveau aide à calibrer l'entrée.",
             },
             ],
         },
@@ -1492,7 +1532,7 @@ export const PLAN_FORMATION: SectionFormation[] = [
     },
     {
         id: 'quoi-dire',
-        titre: 'Quoi dire',
+        titre: 'De quoi parler',
         description: 'Choisir le sujet et la phrase qui le lance.',
         modules: [
             {
@@ -1539,7 +1579,7 @@ export const PLAN_FORMATION: SectionFormation[] = [
             },
             {
                 numero: 3,
-                titre: 'Adapter selon l\'exposition du groupe',
+                titre: 'Adapter selon le niveau de sensibilisation du groupe',
                 accroche: 'Pas l\'âge : ce que le groupe a déjà vu ou pas du sujet.',
                 duree_min: 3,
                 leconId: 'adapter-exposition-groupe',

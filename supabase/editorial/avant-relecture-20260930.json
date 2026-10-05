@@ -1,0 +1,140 @@
+[
+  {
+    "id": "62",
+    "niveau": 2,
+    "dimension": "OBSERVER",
+    "question": "Comment savoir si on dérange un animal ?",
+    "objectif": "Retenir qu'il y a dérangement dès qu'il y a un changement de comportement.",
+    "tip": "Jumelles et silence. Faites observer un oiseau au groupe : s'il relève la tête ou s'arrête de se nourrir, on a déjà fait un pas de trop — on recule.",
+    "tags_theme": [
+      "cohabitation_vivant"
+    ],
+    "tags_filtre": [
+      "faune",
+      "zone sensible"
+    ],
+    "created_at": "2026-02-06T15:53:04.404251+00:00",
+    "owner_id": null,
+    "is_public": true,
+    "club_id": null,
+    "ressources": [],
+    "source": "copun",
+    "ffv_level": null,
+    "supports": [],
+    "explication": "Le dérangement ne commence pas quand l'animal fuit, mais bien avant : un oiseau qui arrête de se nourrir, qui redresse la tête, qui cesse de couver, montre déjà qu'il a repéré une présence gênante. Observer dans le calme, c'est repérer ces signaux et reculer avant d'aller trop loin.",
+    "accroche": "Cet oiseau vient de relever la tête. Qu'est-ce que ça veut dire ?",
+    "a_observer": "Le comportement de l'animal : il se nourrit tranquillement, ou il s'arrête et nous fixe ?",
+    "a_retenir": "Le dérangement commence bien avant la fuite. Un oiseau qui cesse de manger et lève la tête, c'est déjà trop près.",
+    "erreur_frequente": "On croit que tant qu'il ne s'envole pas, tout va bien. Il a déjà arrêté de se nourrir.",
+    "accroches_variantes": [
+      "Cet oiseau vient de relever la tête. Qu'est-ce que ça veut dire ?",
+      "À partir de quand est-ce qu'on dérange un animal ? Quand il s'envole ?",
+      "On avance de dix pas, puis on s'arrête. Qui voit le premier changement chez l'oiseau ?"
+    ],
+    "actions": [
+      {
+        "id": "f62_il_leve_la_tete",
+        "label": "Il a levé la tête",
+        "consigne": "Approchez lentement d'un oiseau et faites dire stop au premier changement : il cesse de manger, il vous fixe. C'est déjà trop près."
+      },
+      {
+        "id": "f62_tant_qu_il_reste",
+        "label": "Tant qu'il ne s'envole pas ?",
+        "consigne": "Faites voter : y a-t-il dérangement si l'oiseau reste ? Oui, dès qu'il a arrêté de se nourrir."
+      }
+    ],
+    "accroches_formes": null,
+    "vote_vrai": null,
+    "vote_faux": null
+  },
+  {
+    "id": "65",
+    "niveau": 2,
+    "dimension": "PROTÉGER",
+    "question": "Pourquoi ne voit-on pas les mêmes animaux selon les saisons ?",
+    "objectif": "Comprendre la multifonctionnalité des habitats et l'importance de les préserver.",
+    "tip": "Demandez au groupe : qui habite la plage cette semaine ? Cherchez un indice du moment (nid, jeunes, groupe en halte) et expliquez pourquoi cette espèce a choisi ce site à cette saison.",
+    "tags_theme": [
+      "cohabitation_vivant",
+      "biodiversite_saisonnalite"
+    ],
+    "tags_filtre": [
+      "écosystème",
+      "zone sensible"
+    ],
+    "created_at": "2026-02-06T15:53:04.404251+00:00",
+    "owner_id": null,
+    "is_public": true,
+    "club_id": null,
+    "ressources": [],
+    "source": "copun",
+    "ffv_level": null,
+    "supports": [],
+    "explication": "Un même endroit du littoral peut accueillir des usages très différents selon la saison : nurserie au printemps, halte migratoire en automne, zone d'hivernage en hiver. Savoir \"qui est là et pourquoi\" à un moment donné permet d'adapter sa présence pour ne pas perturber ce qui compte le plus à cet instant.",
+    "accroche": "Cette plage ne sert pas à la même chose en avril et en octobre. Pour qui ?",
+    "a_observer": "Les indices du moment : nids, jeunes oiseaux, groupes en halte, terriers actifs.",
+    "a_retenir": "Le même endroit sert de nurserie au printemps et d'étape de voyage en automne. Chaque saison a ses habitants.",
+    "erreur_frequente": "On croit que les mêmes animaux sont là toute l'année. Le littoral change complètement d'occupants selon la saison.",
+    "accroches_variantes": [
+      "Cette plage ne sert pas à la même chose en avril et en octobre. Pour qui ?",
+      "Qui habite cette plage cette semaine ? Cherchons des indices.",
+      "Trouvez un signe de qui vit ici en ce moment : nid, jeunes, groupe posé."
+    ],
+    "actions": [
+      {
+        "id": "f65_qui_est_la_en_ce_moment",
+        "label": "Qui est là en ce moment",
+        "consigne": "Faites chercher les indices de la saison : nids, jeunes, groupes en halte. Puis demandez ce qu'on verrait en janvier."
+      },
+      {
+        "id": "f65_meme_endroit_autre_role",
+        "label": "Le même endroit, un autre rôle",
+        "consigne": "Faites lister à quoi sert cet endroit selon la saison : nurserie, halte, hivernage."
+      }
+    ],
+    "accroches_formes": null,
+    "vote_vrai": null,
+    "vote_faux": null
+  },
+  {
+    "id": "68",
+    "niveau": 1,
+    "dimension": "COMPRENDRE",
+    "question": "Pourquoi on ne part pas à la même heure chaque jour ?",
+    "objectif": "Comprendre que les activités nautiques suivent les rythmes de la nature : la marée chaque jour, les coefficients sur deux semaines, les saisons sur l’année.",
+    "tip": "Choisissez un exemple réel du club ; tous les horaires de séance ne sont pas imposés par la marée.",
+    "tags_theme": [
+      "reperes_spatio_temporels"
+    ],
+    "tags_filtre": [
+      "adaptation"
+    ],
+    "created_at": "2026-02-06T15:53:04.404251+00:00",
+    "owner_id": null,
+    "is_public": true,
+    "club_id": null,
+    "ressources": [],
+    "source": "copun",
+    "ffv_level": null,
+    "supports": [],
+    "explication": "Sur un site soumis aux marées, un accès peut demander une certaine hauteur d’eau ou un courant adapté. D’un jour à l’autre, les horaires de pleine et de basse mer se décalent, mais les hauteurs changent aussi avec des marées qui gagnent ou perdent de l’ampleur. On ne peut donc pas toujours reprendre le créneau de la veille en le décalant simplement : la plage horaire utilisable peut s’allonger, se raccourcir ou disparaître.",
+    "accroche": "Pourquoi ce passage est-il utilisable à une heure un jour, et à une autre heure le lendemain ?",
+    "a_observer": "Un accès réellement dépendant de l’eau et les prévisions de deux journées.",
+    "a_retenir": "Pour retrouver un créneau adapté, on compare les horaires et les hauteurs d’eau de chaque journée.",
+    "erreur_frequente": null,
+    "accroches_variantes": [
+      "Pourquoi ce passage est-il utilisable à une heure un jour, et à une autre heure le lendemain ?"
+    ],
+    "actions": [
+      {
+        "id": "f68_comparer_deux_jours",
+        "label": "Comparer deux journées",
+        "consigne": "Prenez un accès réellement utilisé par le club et deux journées de prévisions. Faites retrouver quand la hauteur nécessaire est disponible ; le moniteur explique ensuite comment le courant et la météo interviennent dans son choix.",
+        "confirmation": "on a cherché dans les prévisions quand il y aurait assez d’eau"
+      }
+    ],
+    "accroches_formes": null,
+    "vote_vrai": "Les horaires de sortie changent chaque jour parce que la hauteur de l’eau change.",
+    "vote_faux": "On part à la même heure tous les jours."
+  }
+]

@@ -6,6 +6,7 @@ import { parcoursTermine } from '@/lib/parcours-cours';
 
 import { iconeMaterial } from '@/components/ui/Icone';
 const ArrowRight = iconeMaterial('arrow_forward');
+const Check = iconeMaterial('check');
 
 export function LearningJourney({ progressions }: { progressions: Record<string, SequenceProgress> }) {
     const disponibles = PARCOURS_COP.flatMap(domain => domain.parcours).filter(path => path.disponible);
@@ -37,7 +38,7 @@ export function LearningJourney({ progressions }: { progressions: Record<string,
             <div>
                 <span className="co-eyebrow">La démarche COP’UN</span>
                 <h2>Les repères du milieu.<br/>Pour en parler juste.</h2>
-                <p className="co-journey-status">Des fiches courtes sur chaque sujet, puis un quiz pour vérifier les notions.</p>
+                <p className="co-journey-intention">Des fiches courtes sur chaque sujet, puis un quiz pour vérifier les notions.</p>
                 <p className="co-journey-status">{valides || enCours ? `Ma progression : ${enCours} en cours · ${valides} terminé${valides > 1 ? 's' : ''}` : 'Commencez par le sujet qui vous intéresse.'}</p>
             </div>
             <Image className="co-journey-compass" src="/illustrations/boussole-aquarelle.png" alt="" width={120} height={120}/>
@@ -48,9 +49,10 @@ export function LearningJourney({ progressions }: { progressions: Record<string,
                 <div className="co-path-grid">
                     {domain.parcours.map((path, pathIndex) => {
                         const progression = progressions[path.id];
-                        const status = path.disponible ? (parcoursTermine(progression) ? 'Terminé' : progression?.parcouru ? 'Quiz à faire' : 'Commencer') : 'En préparation';
-                        const body = <><span className={`co-path-illustration co-path-illustration-${index}-${pathIndex}`} aria-hidden="true"/><div><h3>{path.titre}</h3><p>{path.resume}</p></div><span className="co-path-status">{status}{path.disponible && <ArrowRight size={16}/>}</span></>;
-                        return path.disponible ? <Link key={path.id} href={`/specialisation/parcours/${path.id}`} className="co-path co-path-live">{body}</Link> : <div key={path.id} className="co-path co-path-planned">{body}</div>;
+                        const termine = path.disponible && parcoursTermine(progression);
+                        const status = path.disponible ? (termine ? 'Terminé' : progression?.parcouru ? 'Quiz à faire' : 'Commencer') : 'En préparation';
+                        const body = <><span className={`co-path-illustration co-path-illustration-${index}-${pathIndex}`} aria-hidden="true">{termine && <span className="co-path-completion"><Check size={24}/></span>}</span><div><h3>{path.titre}</h3><p>{path.resume}</p></div><span className="co-path-status">{termine && <Check size={16}/>} {status}{path.disponible && !termine && <ArrowRight size={16}/>}</span></>;
+                        return path.disponible ? <Link key={path.id} href={`/specialisation/parcours/${path.id}`} className={`co-path co-path-live${termine ? ' co-path-completed' : ''}`} aria-label={termine ? `${path.titre} — parcours terminé, revoir le parcours` : undefined}>{body}</Link> : <div key={path.id} className="co-path co-path-planned">{body}</div>;
                     })}
                 </div>
             </section>)}

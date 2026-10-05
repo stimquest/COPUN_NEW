@@ -10,7 +10,7 @@ const ArrowRight = iconeMaterial('arrow_forward');
  *  stylo…) qu'il fallait deviner. Un mot se lit directement, une icône se devine. */
 const MOT_CLE: Record<string, string> = {
     pourquoi: 'Pourquoi',
-    'quoi-dire': 'Quoi dire',
+    'quoi-dire': 'De quoi parler',
     'faire-vivre': 'Faire vivre',
     methode: 'Démarche',
 };
