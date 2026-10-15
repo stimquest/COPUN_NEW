@@ -115,7 +115,8 @@ export async function getUserContent() {
     const { data, error } = await ctx.supabase
         .from('pedagogical_content')
         .select('*')
-        .eq('owner_id', ctx.user.id);
+        .eq('owner_id', ctx.user.id)
+        .eq('source', 'custom');
 
     if (error) {
         console.error('[getUserContent]', error.message);

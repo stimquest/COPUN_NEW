@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { unstable_noStore as noStore } from 'next/cache';
-import { getPedagogicalPool, getStageObjectiveReviewItems, getStages } from '@/services/data-service';
+import { getPedagogicalContentByIds, getStageObjectiveReviewItems, getStages } from '@/services/data-service';
 import { DeleteStageButton } from '@/components/DeleteStageButton';
 import { calendarWeek, parseStageDateRange } from '@/lib/stage-dates';
 import type { PedagogicalContent, Stage } from '@/types';
@@ -44,7 +44,9 @@ export default async function SemainesPage({ searchParams }: { searchParams: Pro
     noStore();
     const currentWeek = await ensureCalendarWeek();
     if (!currentWeek) redirect('/login');
-    const [stages, pool] = await Promise.all([getStages(), getPedagogicalPool(true)]);
+    const stages = await getStages();
+    // Les semaines conservent leurs cartes personnelles ; le catalogue libre reste COP'UN.
+    const pool = await getPedagogicalContentByIds([...new Set(stages.flatMap(stage => stage.selected_content ?? []))]);
     const cardsById = new Map(pool.map(card => [card.id, card]));
     const weeks: WeekWithCards[] = stages.map(stage => ({
         ...stage,

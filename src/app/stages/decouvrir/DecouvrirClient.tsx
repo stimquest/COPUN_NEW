@@ -84,7 +84,7 @@ export default function DecouvrirClient({ pool, theme, group, pillar, entry, ini
             </header>
             <main className="max-w-2xl mx-auto px-4">
                 <div hidden={savedView}><FluxDecouverte
-                    pool={pool.filter(card => !card.id.startsWith('directrice-'))}
+                    pool={pool.filter(card => card.source === 'copun' && !card.id.startsWith('directrice-'))}
                     initialChoices={initialChoices}
                     choices={choices} savedChoices={savedChoices} onChoiceChange={changeChoice} onSaveChoice={saveChoice}
                     initialTheme={theme}

@@ -516,7 +516,8 @@ export async function getPedagogicalPool(includeDirectors = false): Promise<Peda
     const supabase = await createClient();
     let query = supabase
         .from('pedagogical_content')
-        .select('*');
+        .select('*')
+        .eq('source', 'copun');
     if (!includeDirectors) query = query.not('id', 'like', 'directrice-%');
     const { data, error } = await query;
 
