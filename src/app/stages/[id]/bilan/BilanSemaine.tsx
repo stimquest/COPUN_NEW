@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { weekHref } from '@/lib/week-navigation';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import clsx from 'clsx';
@@ -83,7 +84,7 @@ export function BilanSemaine({
     const optionRessenti = RESSENTI_OPTIONS.find(o => o.value === niveau);
 
     return <main className="co-page mx-auto max-w-2xl pb-36">
-        <Link href="/stages/semaines" className="co-field-back">← Mes séances</Link>
+        <Link href={weekHref(stageId)} className="co-field-back">← Mes séances</Link>
         <header className="mt-4 mb-8">
             <p className="co-surtitre">Bilan de la semaine</p>
             <h1 className="mt-2 text-titre font-semibold tracking-[-.04em] text-encre">{titre}</h1>

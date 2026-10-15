@@ -7,6 +7,11 @@ import { PARCOURS_FORMATION, PARCOURS_LAISSE_DE_MER } from '@/data/parcours-form
 import { ParcoursCoursClient } from '@/components/formation/ParcoursCoursClient';
 import { PageHeading, CoastalMark } from '@/components/design/Coastal';
 import { PRIMARY_NAV } from '@/data/navigation';
+import ExplorerClient from '@/app/stages/[id]/program/ExplorerClient';
+import { createPrivilegedClient } from '@/lib/supabase/privileged';
+import { contentModel } from '@/lib/data-models';
+import { CARTES_DIRECTRICES } from '@/data/cartes-directrices';
+import { calendarWeek } from '@/lib/stage-dates';
 
 export default async function PreviewUI({ searchParams }: { searchParams: Promise<{ screen?: string; semaine?: string; parcours?: string; termine?: string; quiz?: string }> }) {
     if (process.env.NODE_ENV !== 'development') notFound();
@@ -15,7 +20,16 @@ export default async function PreviewUI({ searchParams }: { searchParams: Promis
     const { screen = 'home', semaine, parcours, termine, quiz } = await searchParams;
     const sequence = PARCOURS_FORMATION.find(item => item.id === parcours) ?? PARCOURS_LAISSE_DE_MER;
     const resume = { nbFaits: 3, nbRediges: LECONS_FORMATION.length, nbTotal: LECONS_FORMATION.length, prochain: null, themes: [] };
+    let subjectData = null;
+    if (screen === 'subjects') {
+        const { data, error } = await createPrivilegedClient().from('pedagogical_content').select('*').eq('source', 'copun');
+        if (error) throw new Error('Chargement de l’aperçu impossible', { cause: error });
+        const cards = data.map(contentModel);
+        subjectData = [cards.filter(card => !card.id.startsWith('directrice-')), CARTES_DIRECTRICES.flatMap(item => cards.find(card => card.id === item.id) ?? [])];
+    }
+    const { start } = calendarWeek();
     return <>
+        {subjectData && <ExplorerClient stage={{ id: '00000000-0000-4000-8000-000000000000', title: 'Aperçu', activity: 'Voile', level: 'Tous', dates: 'Cette semaine', calendar_week_start: start, selected_content: [] }} copunPool={subjectData[0]} directorPool={subjectData[1]} customPool={[]} initiallyDiscussed={semaine === '1'} initiallyPlanned={semaine !== '1'}/>}
         {screen === 'home' && <HomeLearning firstName="Camille" resume={resume} progressions={{ 'laisse-de-mer': { parcouru: true, acquisVerifie: true, mission: null }, 'littoral-eau': { parcouru: false, acquisVerifie: false, mission: null } }} semaineEnCours={semaine === '1'}/>}
         {screen === 'formation' && <FormationClient plan={PLAN_FORMATION} lecons={LECONS_FORMATION} termine={LECONS_FORMATION.slice(0,3).map(l => l.id)} parcours={{ disponibles: PARCOURS_FORMATION.length, enCours: 1, termines: 0 }}/>}
         {screen === 'journey' && <LearningJourney progressions={{

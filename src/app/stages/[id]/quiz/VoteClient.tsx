@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
+import { weekHref } from '@/lib/week-navigation';
 import type { AffirmationVote } from '@/data/vote-fin-de-stage';
 import { enregistrerVote, type ResultatAffirmation } from '@/actions/vote-actions';
 import CaptureCartons from './CaptureCartons';
@@ -118,7 +119,7 @@ export default function VoteClient({ stageId, affirmations, resultatsInitiaux }:
             <p className="co-vote-kicker">Le quiz de fin</p>
             <h1>Pas encore disponible</h1>
             <p className="co-vote-lead">Les cartes de cette semaine n’ont pas encore d’affirmations à faire voter. Elles arrivent au fil des mises à jour du catalogue.</p>
-            <Link href="/stages/semaines" className="co-vote-secondary">Retour à ma semaine</Link>
+            <Link href={weekHref(stageId)} className="co-vote-secondary">Retour à ma semaine</Link>
         </main>;
     }
 
@@ -174,7 +175,7 @@ export default function VoteClient({ stageId, affirmations, resultatsInitiaux }:
                 </p>}
             </section>}
 
-            <Link href="/stages/semaines" className="co-vote-primary">Retour à ma semaine <ArrowRight size={18}/></Link>
+            <Link href={weekHref(stageId)} className="co-vote-primary">Retour à ma semaine <ArrowRight size={18}/></Link>
         </main>;
     }
 

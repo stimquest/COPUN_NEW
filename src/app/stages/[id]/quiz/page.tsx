@@ -1,6 +1,7 @@
 import { getStageById, getStageObjectiveReviewItems, getPedagogicalPool } from '@/services/data-service';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import { weekHref } from '@/lib/week-navigation';
 import { createClient } from '@/lib/supabase/server';
 import { composerVote } from '@/data/vote-fin-de-stage';
 import { groupeDe } from '@/data/groupes';
@@ -71,7 +72,7 @@ export default async function StageQuizPage({ params }: { params: Promise<{ id: 
     return (
         <div className="co-page co-vote-page">
             <header className="co-vote-topbar">
-                <Link href="/stages/semaines" aria-label="Retour à ma semaine" className="co-vote-back"><ArrowLeft size={19}/></Link>
+                <Link href={weekHref(id)} aria-label="Retour à ma semaine" className="co-vote-back"><ArrowLeft size={19}/></Link>
                 <div>
                     <p className="co-eyebrow">Le quiz de fin</p>
                     <strong>{stage.title}</strong>

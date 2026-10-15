@@ -40,6 +40,7 @@ export async function setCardSaved(contentId: string, saved: boolean, choice?: C
         return { success: false, error: 'La modification n’a pas été enregistrée. Réessayez.' };
     }
     revalidatePath('/stages/decouvrir');
+    revalidatePath('/stages/rebondir');
     revalidatePath('/stages/[id]/program', 'page');
     return { success: true };
 }

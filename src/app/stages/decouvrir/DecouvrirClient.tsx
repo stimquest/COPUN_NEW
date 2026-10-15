@@ -84,7 +84,7 @@ export default function DecouvrirClient({ pool, theme, group, pillar, entry, ini
             </header>
             <main className="max-w-2xl mx-auto px-4">
                 <div hidden={savedView}><FluxDecouverte
-                    pool={pool}
+                    pool={pool.filter(card => !card.id.startsWith('directrice-'))}
                     initialChoices={initialChoices}
                     choices={choices} savedChoices={savedChoices} onChoiceChange={changeChoice} onSaveChoice={saveChoice}
                     initialTheme={theme}
@@ -96,7 +96,7 @@ export default function DecouvrirClient({ pool, theme, group, pillar, entry, ini
                 /></div>
                 {savedSnapshot !== null && <div hidden={!savedView}>
                     {savedPool.length ? <FluxDecouverte
-                        pool={savedPool} mode="lecture"
+                        pool={savedPool} relatedPool={pool} mode="lecture"
                         initialChoices={initialChoices}
                         choices={choices} savedChoices={savedChoices} onChoiceChange={changeChoice} onSaveChoice={saveChoice}
                         savedIds={savedIds} onToggleSaved={toggleSaved} savingId={savingId} savedUnavailable={!!savedError}

@@ -8,7 +8,7 @@ export default async function DecouvrirPage({ searchParams }: { searchParams: Pr
     const { theme, group, saved, pillar, entry } = await searchParams;
     const rail = ENTREES_DECOUVERTE.find(item => item.id === pillar);
     const validEntry = rail?.themes.find(item => item.id === entry)?.id;
-    const [pool, bookmarks] = await Promise.all([getPedagogicalPool(), getSavedCards()]);
+    const [pool, bookmarks] = await Promise.all([getPedagogicalPool(true), getSavedCards()]);
     const validTheme = theme && Object.hasOwn(THEMATIC_LABELS, theme) ? theme as ThematicTag : undefined;
     return <DecouvrirClient key={`${validTheme ?? 'all'}-${group ?? ''}-${rail?.id ?? ''}-${validEntry ?? ''}-${saved ?? ''}-${bookmarks.error ? 'unavailable' : 'ready'}`} pool={pool} theme={validTheme} group={group} pillar={rail?.dimension} entry={validEntry} initialSavedIds={bookmarks.ids} initialChoices={bookmarks.choices} savedError={bookmarks.error} initialSavedView={saved === '1'} />;
 }

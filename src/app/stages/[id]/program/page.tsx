@@ -1,8 +1,9 @@
-import { getStageById, getPedagogicalPool, getStages, getMyFicheOutcomes } from '@/services/data-service';
+import { getStageById, getPedagogicalPool, getDirectorCards, getStages, getMyFicheOutcomes } from '@/services/data-service';
 import { getUserContent } from '@/actions/content-actions';
 import ExplorerClient from './ExplorerClient';
 import { construireHistorique } from '@/lib/historique-moniteur';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
+import { weekHref } from '@/lib/week-navigation';
 import { getSavedCards } from '@/actions/saved-card-actions';
 import { getStagePreparations } from '@/actions/preparation-actions';
 import { getResumeVote } from '@/actions/vote-actions';
@@ -12,7 +13,7 @@ export default async function ProgramPage({ params, searchParams }: { params: Pr
     const { id } = await params;
     const { theme, selection, group, aborde, prevoir, parcours } = await searchParams;
 
-    const [stage, systemPool, userPool, tousLesStages, outcomes, bookmarks, preparations, vote, reviews] = await Promise.all([
+    const [stage, systemPool, userPool, tousLesStages, outcomes, bookmarks, preparations, vote, reviews, directors] = await Promise.all([
         getStageById(id),
         getPedagogicalPool(),
         getUserContent(),
@@ -22,9 +23,12 @@ export default async function ProgramPage({ params, searchParams }: { params: Pr
         getStagePreparations(id),
         getResumeVote(id),
         getStageObjectiveReviewItems(id),
+        getDirectorCards(),
     ]);
 
     if (!stage) return notFound();
+    // L'ancienne page de gestion rejoint l'unique page de semaine.
+    if (stage.closed_at || vote?.done || (!aborde && !prevoir && !theme && !selection && !group && !parcours)) redirect(weekHref(id));
 
     // L'historique des semaines passées — sans la semaine en cours, sinon tout ce qui vient
     // d'être retenu remonterait aussitôt comme « déjà fait ».
@@ -40,6 +44,7 @@ export default async function ProgramPage({ params, searchParams }: { params: Pr
         <ExplorerClient
             stage={stage}
             copunPool={systemPool}
+            directorPool={directors}
             customPool={userPool}
             historique={historique}
             savedIds={bookmarks.ids}

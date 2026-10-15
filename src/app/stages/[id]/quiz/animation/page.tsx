@@ -2,6 +2,7 @@ import { getStageById } from '@/services/data-service';
 import { getStageQuiz } from '@/actions/quiz-actions';
 import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
+import { weekHref } from '@/lib/week-navigation';
 import QuizLaunchClient from './QuizLaunchClient';
 
 /**
@@ -35,7 +36,7 @@ export default async function StageQuizAnimationPage({ params }: { params: Promi
         <div className="flex flex-col min-h-screen bg-slate-900">
             <header className="flex items-center gap-4 px-5 py-4 border-b border-white/10">
                 <Link
-                    href={`/stages/${id}/quiz`}
+                    href={weekHref(id)} aria-label="Retour à ma semaine"
                     className="size-10 rounded-full bg-white/10 flex items-center justify-center text-white active:scale-95 transition-transform"
                 >
                     <span className="material-symbols-outlined">arrow_back</span>

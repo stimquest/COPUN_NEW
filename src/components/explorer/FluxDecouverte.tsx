@@ -6,7 +6,10 @@ import clsx from 'clsx';
 import { PedagogicalContent, Dimension } from '@/types';
 import { PILLARS, THEMES_BY_PILLAR } from '@/data/etages';
 import { groupeDe, GROUPES, MILIEUX, groupesDuMilieu } from '@/data/groupes';
-import { NIVEAUX } from '@/data/niveaux';
+import { NIVEAUX, niveauRepere } from '@/data/niveaux';
+import { directriceDe } from '@/data/cartes-directrices';
+import { repartitionsEssentielles, type RepartitionCOP } from '@/data/relations-essentielles';
+import RepereRepartition from './RepereRepartition';
 import { HistoriqueMoniteur } from '@/lib/historique-moniteur';
 import LectureCarte from './LectureCarte';
 import UseCardWithGroup from './UseCardWithGroup';
@@ -24,9 +27,8 @@ import { resolveCardChoice, type CardChoice, type CardChoices } from '@/lib/card
  * `useTransform` pour suivre le doigt sans re-render, `dragConstraints`/`dragElastic` pour
  * la résistance, puis une animation de retour sous le seuil) — jamais
  * `controls.start()` appelé en boucle dans `onDrag`, qui empile des animations à chaque
- * frame et produit un geste erratique. Le swipe n'avance que dans un seul sens ; revenir
- * en arrière et garder ne passent que par leurs boutons dédiés, jamais par un geste,
- * via une pile d'historique séparée de la pile visible.
+ * frame et produit un geste erratique. Le swipe gauche avance ; le swipe droit
+ * reprend la carte précédente depuis l'historique. Garder reste une action explicite.
  *
  * Priorité aux fiches jamais rencontrées (`historique.dejaVues`) : c'est ce qui traite le
  * « ça tourne en rond » — 65% du catalogue dort faute d'un endroit qui le fasse remonter.
@@ -38,8 +40,12 @@ import { resolveCardChoice, type CardChoice, type CardChoices } from '@/lib/card
 
 type Props = {
     pool: PedagogicalContent[];
+    relatedPool?: PedagogicalContent[];
     /** Le mode lecture laisse explorer sans demarrer ni composer une semaine. */
     mode?: 'lecture' | 'selection' | 'catalogue';
+    /** Change uniquement les cartes rendues ; conserve les contrôles du mode choisi. */
+    cardLayout?: 'pile' | 'catalogue';
+    presentation?: CardPresentation;
     retenues?: string[];
     onToggleFiche?: (id: string) => void;
     onFicheInfo?: (fiche: PedagogicalContent) => void;
@@ -47,6 +53,8 @@ type Props = {
     initialTheme?: string;
     initialGroup?: string;
     initialPillar?: Dimension;
+    pillar?: Dimension | null;
+    onPillarChange?: (pillar: Dimension | null) => void;
     initialEntry?: string;
     savedIds?: string[];
     onToggleSaved?: (id: string, choice?: CardChoice) => void;
@@ -84,6 +92,29 @@ const CARTES_VISIBLES = 5;
 // peut défiler naturellement, sans transformer son contenu pédagogique en sous-zone
 // à scroller. La mécanique de pile, elle, ne change pas.
 const HAUTEUR_CARTE_DECOUVERTE = 680;
+
+type CardPresentation = {
+    actions: (card: PedagogicalContent) => React.ReactNode;
+    extra?: (card: PedagogicalContent) => React.ReactNode;
+    continuation?: boolean;
+};
+
+/** La pile existante, utilisée pour choisir une carte dans une semaine. */
+export function PileCartesSujets({ pool, relatedPool = pool, choices, onChoiceChange, presentation, startCardId }: {
+    pool: PedagogicalContent[];
+    relatedPool?: PedagogicalContent[];
+    choices: CardChoices;
+    onChoiceChange: (id: string, choice: CardChoice) => void;
+    presentation: CardPresentation;
+    startCardId?: string;
+}) {
+    const repartitions = useMemo(() => repartitionsEssentielles(pool, relatedPool), [pool, relatedPool]);
+    return <CardChoicesProvider value={choices} onChange={onChoiceChange} allowUse={false}>
+        <div className="mx-auto max-w-[420px] space-y-3">
+            <DeckDecouverte key={pool.map(card => card.id).join('|')} ordreInitial={[...pool].reverse()} nbFiltres={0} mode="lecture" retenues={[]} savedIds={[]} presentation={presentation} startCardId={startCardId} repartitions={repartitions}/>
+        </div>
+    </CardChoicesProvider>;
+}
 
 /**
  * Graine du mélange : le jour courant à Paris, identique côté serveur et côté navigateur.
@@ -125,7 +156,8 @@ export default function FluxDecouverte(props: Props) {
     return <CardChoicesProvider initialChoices={props.initialChoices} value={props.choices} savedChoices={props.savedChoices} saveChoice={props.onSaveChoice} onChange={props.onChoiceChange} allowUse={props.allowUse}><FluxContent {...props}/></CardChoicesProvider>;
 }
 
-function FluxContent({ pool, mode = 'selection', retenues = [], onToggleFiche, onFicheInfo, historique, initialTheme, initialGroup, initialPillar, initialEntry, savedIds = [], onToggleSaved, savingId, savedUnavailable }: Props) {
+function FluxContent({ pool, relatedPool = pool, mode = 'selection', cardLayout, presentation, retenues = [], onToggleFiche, onFicheInfo, historique, initialTheme, initialGroup, initialPillar, initialEntry, savedIds = [], onToggleSaved, savingId, savedUnavailable, pillar, onPillarChange }: Props) {
+    const repartitions = useMemo(() => repartitionsEssentielles(pool, relatedPool), [pool, relatedPool]);
     const choicesContext = useCardChoices();
     const [entry, setEntry] = useState(() => ENTREES_DECOUVERTE.find(rail => rail.dimension === initialPillar)?.themes.find(theme => theme.id === initialEntry));
     const [group, setGroup] = useState(() => GROUPES.find(item => item.id === initialGroup));
@@ -137,7 +169,12 @@ function FluxContent({ pool, mode = 'selection', retenues = [], onToggleFiche, o
     // l'inverse — un thème n'a de sens qu'à l'intérieur d'un pilier. Le niveau reste
     // visible avant cette orientation : c'est le repère de public de la méthode, pas un
     // filtre technique noyé parmi les autres.
-    const [pilier, setPilier] = useState<Dimension | null>(initialPillar ?? null);
+    const [localPillar, setLocalPillar] = useState<Dimension | null>(initialPillar ?? null);
+    const pilier = pillar === undefined ? localPillar : pillar;
+    const setPilier = (next: Dimension | null | ((current: Dimension | null) => Dimension | null)) => {
+        const value = typeof next === 'function' ? next(pilier) : next;
+        if (onPillarChange) onPillarChange(value); else setLocalPillar(value);
+    };
     const [theme, setTheme] = useState<string | null>(initialTheme ?? null);
     const [niveau, setNiveau] = useState<1 | 2 | 3 | null>(null);
 
@@ -309,7 +346,7 @@ function FluxContent({ pool, mode = 'selection', retenues = [], onToggleFiche, o
 
             </div>
 
-            {mode === 'catalogue' ? (
+            {(cardLayout ?? (mode === 'catalogue' ? 'catalogue' : 'pile')) === 'catalogue' ? (
                 <CatalogueDecouverte
                     fiches={ordreInitial}
                     retenues={retenues}
@@ -317,12 +354,15 @@ function FluxContent({ pool, mode = 'selection', retenues = [], onToggleFiche, o
                     onFicheInfo={onFicheInfo}
                 />
             ) : (
+                <div className={clsx('space-y-3', cardLayout === 'pile' && 'mx-auto max-w-[420px]')}>
                 <DeckDecouverte
                     key={ordreInitial.map(f => f.id).join('|')}
                     ordreInitial={ordreInitial}
+                    repartitions={repartitions}
                     nbFiltres={nbFiltres}
                     outil={outilSujets} panneau={panneauSujets}
-                    mode={mode}
+                    mode={mode === 'catalogue' ? 'lecture' : mode}
+                    presentation={presentation}
                     savedIds={savedIds}
                     onToggleSaved={id => {
                         const card = pool.find(item => item.id === id);
@@ -334,6 +374,7 @@ function FluxContent({ pool, mode = 'selection', retenues = [], onToggleFiche, o
                     onToggleFiche={onToggleFiche}
                     onFicheInfo={onFicheInfo}
                 />
+                </div>
             )}
         </div>
     );
@@ -415,7 +456,7 @@ function CatalogueDecouverte({ fiches, retenues, onToggleFiche, onFicheInfo }: {
  *
  * `ordre` suit la convention de la pile : la carte en position k est ordre[n - k].
  */
-function TrancheDuBac({ ordre, position, onAller }: { ordre: PedagogicalContent[]; position: number; onAller: (k: number) => void }) {
+function TrancheDuBac({ ordre, position, onAller, repartitions }: { ordre: PedagogicalContent[]; position: number; onAller: (k: number) => void; repartitions?: Record<string, RepartitionCOP> }) {
     const rail = useRef<HTMLDivElement>(null);
     const n = ordre.length;
     const viser = (clientX: number) => {
@@ -439,22 +480,29 @@ function TrancheDuBac({ ordre, position, onAller }: { ordre: PedagogicalContent[
             const k = index + 1;
             const fiche = ordre[n - k];
             const pilier = PILLARS.find(p => p.id === fiche.dimension);
-            return <span key={fiche.id} aria-hidden className={clsx('min-w-px max-w-[3px] flex-1 rounded-full transition-all duration-150', pilier?.bg,
+            const repartition = repartitions?.[fiche.id];
+            const dominant = repartition && PILLARS.reduce((best, pillar) => repartition[pillar.id] > repartition[best.id] ? pillar : best, PILLARS[0]);
+            return <span key={fiche.id} aria-hidden className={clsx('min-w-px max-w-[3px] flex-1 rounded-full transition-all duration-150', fiche.id.startsWith('directrice-') ? dominant && repartition && repartition[dominant.id] > 0 ? dominant.bg : 'bg-sauge' : pilier?.bg,
                 k === position ? 'h-7 min-w-[3px]' : k < position ? 'h-2.5 opacity-25' : 'h-4 opacity-60')}/>;
         })}
     </div>;
 }
 
 function DeckDecouverte({
-    ordreInitial, nbFiltres, mode, retenues, onToggleFiche, onFicheInfo, savedIds, onToggleSaved, savingId, savedUnavailable, outil, panneau,
+    ordreInitial, nbFiltres, mode, retenues, onToggleFiche, onFicheInfo, savedIds, onToggleSaved, savingId, savedUnavailable, outil, panneau, presentation, startCardId, repartitions,
 }: {
+    repartitions?: Record<string, RepartitionCOP>;
+    presentation?: CardPresentation;
+    startCardId?: string;
     outil?: React.ReactNode; panneau?: React.ReactNode;
     ordreInitial: PedagogicalContent[]; nbFiltres: number; mode: 'lecture' | 'selection'; retenues: string[];
     onToggleFiche?: (id: string) => void; onFicheInfo?: (fiche: PedagogicalContent) => void;
     savedIds: string[]; onToggleSaved?: (id: string) => void; savingId?: string | null; savedUnavailable?: boolean;
 }) {
-    const [pile, setPile] = useState(ordreInitial);
-    const [historiquePile, setHistoriquePile] = useState<PedagogicalContent[]>([]);
+    const startIndex = startCardId ? ordreInitial.findIndex(card => card.id === startCardId) : -1;
+    const [pile, setPile] = useState(() => startIndex >= 0 ? ordreInitial.slice(0, startIndex + 1) : ordreInitial);
+    const [historiquePile, setHistoriquePile] = useState<PedagogicalContent[]>(() => startIndex >= 0 ? ordreInitial.slice(startIndex + 1).reverse() : []);
+    const [retourId, setRetourId] = useState<string | null>(null);
     const pileRef = useRef<HTMLDivElement>(null);
     const retrouverDebut = () => {
         // Attendre la sortie (0,2 s) pour que l'ancrage du navigateur ne ramène pas
@@ -470,6 +518,7 @@ function DeckDecouverte({
 
     const suivante = () => {
         if (!carteDessus) return;
+        setRetourId(null);
         setHistoriquePile(h => [...h, carteDessus]);
         setPile(p => p.slice(0, -1));
         retrouverDebut();
@@ -477,6 +526,7 @@ function DeckDecouverte({
     const precedente = () => {
         if (!historiquePile.length) return;
         const carte = historiquePile[historiquePile.length - 1];
+        setRetourId(carte.id);
         setHistoriquePile(h => h.slice(0, -1));
         setPile(p => [...p, carte]);
         retrouverDebut();
@@ -491,7 +541,7 @@ function DeckDecouverte({
                 <p className="mt-3 text-[13px] font-bold text-slate-500">
                     {ordreInitial.length === 0 ? 'Rien avec ces filtres.' : 'Vous avez parcouru ces cartes.'}
                 </p>
-                <button onClick={() => { setPile(ordreInitial); setHistoriquePile([]); }} className="mt-3 text-[12px] font-black text-[#173d3a] underline underline-offset-2">
+                <button onClick={() => { setRetourId(null); setPile(ordreInitial); setHistoriquePile([]); }} className="mt-3 text-[12px] font-black text-[#173d3a] underline underline-offset-2">
                     Recommencer
                 </button>
                 {historiquePile.length > 0 && <button onClick={precedente} className="block mx-auto mt-4 py-2 text-sm font-bold text-slate-600">Revenir à la dernière carte</button>}
@@ -509,8 +559,9 @@ function DeckDecouverte({
                 </p>
             </div>
             {panneau}
-            {mode === 'lecture' && ordreInitial.length > 1 && <TrancheDuBac ordre={ordreInitial} position={position} onAller={k => {
+            {mode === 'lecture' && ordreInitial.length > 1 && <TrancheDuBac ordre={ordreInitial} position={position} repartitions={repartitions} onAller={k => {
                 const n = ordreInitial.length;
+                setRetourId(null);
                 setPile(ordreInitial.slice(0, n - k + 1));
                 setHistoriquePile(ordreInitial.slice(n - k + 1).reverse());
             }}/>}
@@ -523,6 +574,9 @@ function DeckDecouverte({
                             retenue={mode === 'lecture' ? savedIds.includes(f.id) : retenues.includes(f.id)} onSwipe={suivante} onPrecedente={precedente}
                             onGarder={() => mode === 'lecture' ? onToggleSaved?.(f.id) : onToggleFiche?.(f.id)} onInfo={() => onFicheInfo?.(f)}
                             saving={savingId === f.id} savedUnavailable={savedUnavailable || (!!savingId && savingId !== f.id)} canGoBack={historiquePile.length > 0}
+                            presentation={presentation}
+                            repartition={repartitions?.[f.id]}
+                            arriveDeGauche={f.id === retourId && i === arr.length - 1}
                         />
                     ))}
                 </div>
@@ -538,6 +592,7 @@ function DeckDecouverte({
                         className="absolute inset-x-0 z-20"
                         style={{ top: (visibles - 1 - rang) * HAUTEUR_TITRE_PILE, height: HAUTEUR_TITRE_PILE }}
                         onClick={() => {
+                            setRetourId(null);
                             const passees = pile.slice(-rang).reverse();
                             setHistoriquePile(h => [...h, ...passees]);
                             setPile(p => p.slice(0, -rang));
@@ -550,8 +605,11 @@ function DeckDecouverte({
 }
 
 function CarteFlux({
-    fiche, estTop, rang, mode, retenue, onSwipe, onPrecedente, onGarder, onInfo, saving, savedUnavailable, canGoBack,
+    fiche, estTop, rang, mode, retenue, onSwipe, onPrecedente, onGarder, onInfo, saving, savedUnavailable, canGoBack, presentation, arriveDeGauche = false, repartition,
 }: {
+    repartition?: RepartitionCOP;
+    presentation?: CardPresentation;
+    arriveDeGauche?: boolean;
     fiche: PedagogicalContent;
     /** La carte du dessus : seule elle est draggable et tapable. */
     estTop: boolean;
@@ -560,13 +618,13 @@ function CarteFlux({
     mode: 'lecture' | 'selection';
     retenue: boolean;
     saving?: boolean; savedUnavailable?: boolean; canGoBack: boolean;
-    /** Swipe (un seul sens : avancer). Revenir en arrière et garder ne passent QUE par
-     * leurs boutons dédiés, jamais par un geste. */
+    /** La gauche avance, la droite reprend la carte précédente. */
     onSwipe: () => void;
     onPrecedente: () => void; onGarder: () => void; onInfo: () => void;
 }) {
     const pilier = PILLARS.find(p => p.id === fiche.dimension);
     const groupe = groupeDe(fiche.id);
+    const essentielle = fiche.id.startsWith('directrice-');
     const choixCarte = useCardChoices();
     const accroche = (fiche.accroches_variantes ?? [fiche.accroche])[0] ?? fiche.question;
 
@@ -580,13 +638,22 @@ function CarteFlux({
     // C'est le pattern documenté par framer-motion pour un drag suivi visuellement — pas
     // `controls.start()` en boucle dans `onDrag`, qui lance une animation à chaque frame
     // et fait s'entrechoquer les transitions.
-    const x = useMotionValue(0);
+    const x = useMotionValue(arriveDeGauche && typeof window !== 'undefined' ? -window.innerWidth : 0);
     const rotate = useTransform(x, [-200, 200], [-12, 12]);
     const animation = useRef<ReturnType<typeof animate> | null>(null);
     const sortieEnCours = useRef(false);
     const [sortie, setSortie] = useState(false);
     const element = useRef<HTMLDivElement>(null);
-    useEffect(() => () => { animation.current?.stop(); }, []);
+    useEffect(() => {
+        if (arriveDeGauche && estTop) {
+            animation.current = animate(x, 0, { duration: 0.25, ease: [0.22, 1, 0.36, 1] });
+        }
+        if (!estTop) {
+            x.set(0);
+            sortieEnCours.current = false;
+        }
+        return () => { animation.current?.stop(); };
+    }, [arriveDeGauche, estTop, x]);
 
     const passer = async () => {
         if (!estTop || sortieEnCours.current) return;
@@ -608,13 +675,19 @@ function CarteFlux({
     const enSwipe = useRef(false);
 
     /**
-     * Le swipe n'avance que dans un seul sens (vers la gauche, comme « passer la carte »).
-     * Sous le seuil, la carte revient au centre. Au-delà, sa sortie se termine avant
-     * de promouvoir la suivante, sans retour automatique concurrent.
+     * Un geste horizontal franc change la carte. Sous le seuil, ou lors d'un
+     * défilement surtout vertical, elle revient au centre.
      */
     const gerer = (_: unknown, info: PanInfo) => {
         enSwipe.current = false;
-        if (info.offset.x < -SWIPE_THRESHOLD) void passer();
+        const horizontal = Math.abs(info.offset.x) > Math.abs(info.offset.y);
+        if (horizontal && info.offset.x < -SWIPE_THRESHOLD) void passer();
+        else if (horizontal && info.offset.x > SWIPE_THRESHOLD && canGoBack && !sortieEnCours.current) {
+            sortieEnCours.current = true;
+            animation.current?.stop();
+            x.set(0);
+            onPrecedente();
+        }
         else animation.current = animate(x, 0, { type: 'spring', damping: 30, stiffness: 320 });
     };
 
@@ -634,9 +707,9 @@ function CarteFlux({
             inert={!estTop || sortie}
             drag={estTop && !sortie ? 'x' : false}
             dragConstraints={{ left: 0, right: 0 }}
-            dragElastic={{ left: 0.6, right: 0.15 }}
+            dragElastic={{ left: 0.6, right: canGoBack ? 0.6 : 0.15 }}
             dragMomentum={false}
-            onDragStart={estTop ? () => { enSwipe.current = true; } : undefined}
+            onDragStart={estTop ? () => { animation.current?.stop(); enSwipe.current = true; } : undefined}
             onDragEnd={estTop ? gerer : undefined}
             // Pleine opacité à tous les rangs : une carte de fond semi-transparente reste
             // visible à travers celle du dessus pendant qu'elle glisse, ce qui donnait
@@ -651,24 +724,25 @@ function CarteFlux({
                 animate={{ height: mode === 'lecture' && estTop ? 'auto' : HAUTEUR_TITRE_PILE, opacity: 1 }}
                 transition={{ duration: 0.2 }}
             >
-                {!estTop && <span aria-hidden className={clsx('h-5 w-1 shrink-0 rounded-full', pilier?.bg)} />}
-                {/* En lecture, le repère COP devient le surtitre de la carte, avec le signet
-                    discret sur la même ligne : une seule rangée avant le titre. */}
+                {!estTop && (essentielle ? <RepereRepartition repartition={repartition} vertical/> : <span aria-hidden className={clsx('h-5 w-1 shrink-0 rounded-full', pilier?.bg)} />)}
+                <h3 className={clsx(mode === 'lecture' && estTop ? 'text-[21px] leading-[1.25] font-bold tracking-[-.02em] text-[#173d3a]' : ['leading-[16px] line-clamp-3', estTop ? 'text-[13px] font-bold text-white' : mode === 'lecture' ? 'line-clamp-2 font-semibold text-[#173d3a]' : 'text-[12px] font-semibold text-slate-500'])}
+                    // Le titre reste le premier repère lorsqu'une carte passe devant.
+                    style={mode === 'lecture' && !estTop ? { fontSize: 12, lineHeight: 1.2 } : undefined}>{fiche.question}</h3>
+                {/* Les repères complètent la question, sans s'intercaler avant elle. */}
                 {mode === 'lecture' && estTop && <div className="flex min-h-9 items-center gap-2">
-                    <span className={clsx('size-2 rounded-full', pilier?.bg)} />
-                    <span className={clsx('text-[12px] font-bold', pilier?.color)}>{pilier?.label}</span>
-                    {groupe && <span className="text-[11px] font-semibold text-[#6f817d]">· {groupe.label}</span>}
-                    <button
+                    {essentielle ? <RepereRepartition repartition={repartition}/> : <span className={clsx('size-2 shrink-0 rounded-full', pilier?.bg)} />}
+                    <p className="min-w-0 text-note leading-relaxed text-discret">
+                        <span className={clsx('font-semibold', essentielle ? 'text-encre' : pilier?.color)}>{essentielle ? (directriceDe(fiche.id)?.sujet ?? 'Question essentielle') : pilier?.label}</span>
+                        {!essentielle && groupe && <span> · {groupe.label}</span>}
+                        {(presentation || essentielle) && niveauRepere(fiche.niveau) && <span> · {niveauRepere(fiche.niveau)}</span>}
+                    </p>
+                    {!presentation && <button
                         onPointerDown={event => event.stopPropagation()}
                         onClick={onGarder} disabled={saving || savedUnavailable} aria-pressed={retenue}
                         aria-label={retenue ? 'Retirer cette carte des cartes mises de côté' : 'Mettre cette carte de côté'}
                         className="-mr-2 ml-auto flex size-10 shrink-0 items-center justify-center rounded-full text-[#56706a] hover:bg-[#edf1ea] aria-pressed:text-[#173d3a] disabled:opacity-50"
-                    ><span className="material-symbols-outlined text-[22px]" aria-hidden>{saving ? 'hourglass_top' : retenue ? 'bookmark_added' : 'bookmark_add'}</span></button>
+                    ><span className="material-symbols-outlined text-[22px]" aria-hidden>{saving ? 'hourglass_top' : retenue ? 'bookmark_added' : 'bookmark_add'}</span></button>}
                 </div>}
-                <h3 className={clsx(mode === 'lecture' && estTop ? 'text-[21px] leading-[1.25] font-bold tracking-[-.02em] text-[#173d3a]' : ['leading-[16px] line-clamp-3', estTop ? 'text-[13px] font-bold text-white' : mode === 'lecture' ? 'line-clamp-2 font-semibold text-[#173d3a]' : 'text-[12px] font-semibold text-slate-500'])}
-                    // Même taille pour tous les titres de derrière : la profondeur se lit déjà
-                    // par l'échelle des cartes.
-                    style={mode === 'lecture' && !estTop ? { fontSize: 12, lineHeight: 1.2 } : undefined}>{fiche.question}</h3>
             </motion.div>
             {/* Le tap n'ouvre la fiche que si la carte n'est pas en swipe (`enSwipe`) :
                 `onDragStart` de framer-motion ne se déclenche qu'au-delà de son propre
@@ -698,7 +772,7 @@ function CarteFlux({
                     ><span className="material-symbols-outlined" aria-hidden>{saving ? 'hourglass_top' : retenue ? 'bookmark_added' : 'bookmark_add'}</span></button>}
                 </div>
 
-                {mode === 'lecture' ? <LectureCarte fiche={fiche} allowUse={false} /> : <>
+                {mode === 'lecture' ? <><LectureCarte fiche={fiche} allowUse={false} continuation={presentation?.continuation}/>{presentation?.extra?.(fiche)}</> : <>
                 <div className="mt-3">
                     <p className="text-[12px] font-bold text-slate-400">J&apos;ouvre avec</p>
                     <p className="text-[17px] font-black text-slate-900 leading-snug mt-1.5">
@@ -748,9 +822,7 @@ function CarteFlux({
                 </>}
             </div>
 
-            {/* Le swipe (vers la gauche uniquement) fait avancer. Revenir en arrière et
-                garder ne sont accessibles QUE par ces boutons — jamais par un geste,
-                pour qu'aucun des deux ne se déclenche par accident pendant un swipe. */}
+            {/* Les boutons complètent les gestes gauche / droite. Garder reste explicite. */}
             <div onPointerDown={event => event.stopPropagation()} className={clsx('flex items-center gap-3 px-5 sm:px-6 py-4 bg-[#fffdf8] border-t border-[#193d3b14]', mode !== 'lecture' && 'absolute bottom-0 inset-x-0')}>
                 <button
                     onClick={onPrecedente}
@@ -761,7 +833,7 @@ function CarteFlux({
                     <span className="material-symbols-outlined text-[20px]">chevron_left</span>
                 </button>
 
-                {mode === 'selection' ? (
+                {presentation ? presentation.actions(fiche) : mode === 'selection' ? (
                     <button
                         onClick={onGarder}
                         className={clsx(

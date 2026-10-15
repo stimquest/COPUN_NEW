@@ -1,0 +1,464 @@
+[
+  {
+    "id": "directrice-marees",
+    "question": "Pourquoi la mer monte et descend ?",
+    "objectif": "Partir d’un changement du niveau de l’eau pour expliquer la marée et ses effets sur le lieu.",
+    "tip": "Une question sur le bord de l’eau, un accès ou un animal découvert suffit. Répondez à partir d’un repère visible, puis choisissez un seul prolongement.",
+    "explication": "La marée est une variation du niveau de la mer liée principalement à l’attraction de la Lune et du Soleil. Sur notre littoral, elle couvre et découvre des zones, modifie les accès et change les possibilités de nourriture ou d’abri du vivant. Pour en parler, partez d’un endroit que le groupe reconnaît : ce qui était dans l’eau ne l’est peut-être plus. Les horaires, les hauteurs et les courants permettent ensuite de préciser ce premier constat.",
+    "accroche": "La mer était ici tout à l’heure. Où est-elle maintenant, et qu’est-ce que cela change autour de nous ?",
+    "a_observer": "Un repère sur le rivage, une zone découverte, un passage ou des oiseaux qui se nourrissent sur l’estran.",
+    "a_retenir": "La marée transforme notre terrain de pratique et le lieu de vie des espèces ; son rythme permet de comprendre ce qui change.",
+    "erreur_frequente": "Le bord de mer serait un terrain fixe que l’on retrouve identique à chaque séance.",
+    "actions": [
+      {
+        "id": "directrice-marees-repere",
+        "label": "Retrouver le rivage",
+        "consigne": "À une pause, choisissez un repère fixe avec le groupe. Comparez la place de la mer à celle du début de séance. Faites nommer un changement pour notre activité et un changement pour le vivant.",
+        "confirmation": "Nous avons relié un changement de marée à notre séance ou au vivant."
+      }
+    ],
+    "dimension": "COMPRENDRE",
+    "niveau": 1,
+    "tags_theme": [
+      "caracteristiques_littoral",
+      "reperes_spatio_temporels"
+    ],
+    "tags_filtre": [
+      "marée",
+      "estran",
+      "coefficient",
+      "mer",
+      "rivage"
+    ],
+    "vote_vrai": "La marée transforme aussi les conditions de vie sur les zones qu’elle couvre et découvre.",
+    "vote_faux": "La marée change seulement la hauteur d’eau, sans conséquence pour les animaux du rivage.",
+    "source": "copun",
+    "is_public": true,
+    "accroches_variantes": [
+      "La mer était ici tout à l’heure. Où est-elle maintenant, et qu’est-ce que cela change autour de nous ?",
+      "Si nous revenons ici demain à la même heure, retrouverons-nous exactement le même bord de mer ?",
+      "Tout à l’heure, la mer était là. Qu’est-ce que son déplacement a changé pour nous… et pour ce qui vit ici ?"
+    ],
+    "accroches_formes": []
+  },
+  {
+    "id": "directrice-courants",
+    "question": "Pourquoi y a-t-il des courants ?",
+    "objectif": "Utiliser un mouvement visible de l’eau pour relier courant, milieu vivant et objets transportés.",
+    "tip": "Reprenez une dérive ou un déplacement déjà remarqué. Le moniteur connaît le courant : la carte lui donne un angle pour le raconter.",
+    "explication": "Un courant est un déplacement d’eau. Les marées, le vent et la configuration du lieu contribuent à ces mouvements. Cette eau transporte aussi des algues, des particules, de la nourriture et parfois des déchets. Un indice déjà présent pendant la séance peut donc ouvrir deux sujets : ce qui fait bouger l’eau, puis ce qui voyage avec elle. Une surface calme ne signifie pas une eau immobile.",
+    "accroche": "Ces algues avancent alors qu’elles n’ont pas de moteur. Qu’est-ce qui les emmène, et quoi d’autre voyage avec elles ?",
+    "a_observer": "Le déplacement d’écume ou d’algues déjà présentes, comparé à un repère fixe.",
+    "a_retenir": "Les courants déplacent de l’eau, mais aussi ce qui nourrit le vivant et ce qui peut polluer le milieu.",
+    "erreur_frequente": "Quand il n’y a pas de vagues, l’eau ne bouge pas.",
+    "actions": [
+      {
+        "id": "directrice-courants-suivre",
+        "label": "Suivre un déplacement",
+        "consigne": "Lors d’une pause adaptée, faites suivre un élément naturellement présent à la surface par rapport à un repère fixe. Demandez ce que ce même mouvement pourrait transporter et ce qu’il change pour notre trajet.",
+        "confirmation": "Nous avons observé un déplacement de l’eau et parlé de ce qu’il transporte."
+      }
+    ],
+    "dimension": "OBSERVER",
+    "niveau": 1,
+    "tags_theme": [
+      "interactions_climatiques"
+    ],
+    "tags_filtre": [
+      "courant",
+      "courants",
+      "dérive",
+      "eau",
+      "transport"
+    ],
+    "vote_vrai": "Même une eau qui paraît calme peut transporter des éléments avec un courant.",
+    "vote_faux": "Sans vagues, un bateau ne peut pas être entraîné par un courant.",
+    "source": "copun",
+    "is_public": true,
+    "accroches_variantes": [
+      "Ces algues avancent alors qu’elles n’ont pas de moteur. Qu’est-ce qui les emmène, et quoi d’autre voyage avec elles ?",
+      "Quand notre bateau dérive, est-ce seulement nous qui nous déplaçons, ou tout ce qui nous entoure ?",
+      "Ce bout d’algue se déplace alors qu’il n’a ni voile ni moteur : où l’eau l’emmène-t-elle ?"
+    ],
+    "accroches_formes": []
+  },
+  {
+    "id": "directrice-vagues",
+    "question": "D’où viennent les vagues ?",
+    "objectif": "Rebondir sur une vague observée pour expliquer son origine et ses liens avec le rivage.",
+    "tip": "Partez d’une remarque sur les vagues du jour. Un lien entre leur origine et ce que le groupe voit suffit pour ouvrir le sujet.",
+    "explication": "Le vent transmet de l’énergie à la surface de l’eau. Les vagues peuvent se former sur place ou venir d’une zone où le vent a soufflé auparavant : c’est la houle. En arrivant près du rivage, elles changent avec la profondeur et le relief du fond. Elles déplacent aussi du sable et des éléments déposés sur la plage. Une vague vue pendant la séance permet ainsi de relier le vent, le fond et les transformations du rivage.",
+    "accroche": "Il y a des vagues ici, mais peu de vent. À votre avis, où leur histoire a-t-elle commencé ?",
+    "a_observer": "La direction d’arrivée, l’espacement des vagues et la façon dont elles changent près du bord.",
+    "a_retenir": "Les vagues relient le vent, parfois lointain, au fond et au rivage qu’elles rencontrent.",
+    "erreur_frequente": "Toutes les vagues visibles sont produites par le vent qui souffle ici et maintenant.",
+    "actions": [
+      {
+        "id": "directrice-vagues-comparer",
+        "label": "Du large au bord",
+        "consigne": "Depuis un point où l’observation est possible, faites suivre une vague vers le rivage. Demandez ce qui change dans sa forme, puis ce qu’elle peut déplacer sur la plage. Appuyez l’explication sur ce que le groupe vient de voir.",
+        "confirmation": "Nous avons relié les vagues observées à leur origine ou à un effet sur le rivage."
+      }
+    ],
+    "dimension": "COMPRENDRE",
+    "niveau": 1,
+    "tags_theme": [
+      "interactions_climatiques"
+    ],
+    "tags_filtre": [
+      "vague",
+      "vagues",
+      "houle",
+      "mer",
+      "sable"
+    ],
+    "vote_vrai": "Une houle peut arriver d’une zone où le vent a soufflé loin de notre plage.",
+    "vote_faux": "S’il n’y a pas de vent sur notre plage, il ne peut pas y avoir de vagues.",
+    "source": "copun",
+    "is_public": true,
+    "accroches_variantes": [
+      "Il y a des vagues ici, mais peu de vent. À votre avis, où leur histoire a-t-elle commencé ?",
+      "Pourquoi la même vague change-t-elle de forme quand elle arrive près de la plage ?",
+      "Le vent est faible ici, mais il reste des vagues : où ont-elles pu commencer leur voyage ?"
+    ],
+    "accroches_formes": []
+  },
+  {
+    "id": "directrice-vent-ciel",
+    "question": "D’où viennent le vent et les changements de temps ?",
+    "objectif": "Transformer les indices météo déjà utilisés en séance en points de départ d’une discussion sur le milieu.",
+    "tip": "Les bases de lecture du vent sont supposées connues du moniteur. Cherchez une façon de les relier à ce que le groupe vient de remarquer.",
+    "explication": "Le vent et les nuages font partie des mouvements et des transformations de l’atmosphère. Les différences de réchauffement entre les terres et la mer peuvent produire des circulations locales ; les nuages rendent visibles certaines transformations de l’eau dans l’air. Ces phénomènes agissent aussi sur notre milieu de pratique. Pour les raconter, reliez une question du groupe à un indice du jour, sans faire d’un signe isolé une prévision certaine.",
+    "accroche": "Le ciel et la surface de l’eau ont changé depuis le départ. Qu’est-ce que nous avons vu changer en premier ?",
+    "a_observer": "Un indice choisi avec le groupe : rides sur l’eau, nuage, déplacement d’une ombre ou différence d’exposition au vent.",
+    "a_retenir": "Le ciel, le vent et la mer donnent des indices liés entre eux ; les comparer aide à comprendre ce que nous vivons pendant la séance.",
+    "erreur_frequente": "Un seul nuage ou une seule rafale suffirait à expliquer l’évolution des conditions.",
+    "actions": [
+      {
+        "id": "directrice-vent-ciel-indice",
+        "label": "Revenir sur un indice",
+        "consigne": "À une pause, faites choisir un signe visible et décrire ce qu’il montre. Revenez sur ce même signe plus tard : qu’est-ce qui a changé ? Reliez le constat aux décisions prises pendant la séance.",
+        "confirmation": "Nous avons utilisé un indice du ciel ou du vent pour parler de notre milieu."
+      }
+    ],
+    "dimension": "OBSERVER",
+    "niveau": 1,
+    "tags_theme": [
+      "interactions_climatiques"
+    ],
+    "tags_filtre": [
+      "vent",
+      "ciel",
+      "nuage",
+      "nuages",
+      "météo",
+      "rafale"
+    ],
+    "vote_vrai": "Comparer plusieurs indices et les prévisions aide à comprendre l’évolution des conditions.",
+    "vote_faux": "Une seule rafale suffit à savoir comment le vent évoluera pendant toute la séance.",
+    "source": "copun",
+    "is_public": true,
+    "accroches_variantes": [
+      "Le ciel et la surface de l’eau ont changé depuis le départ. Qu’est-ce que nous avons vu changer en premier ?",
+      "Nous naviguons avec le vent. Mais que fait-il aussi à la mer et à ce qui se déplace autour de nous ?",
+      "Ce signe nous aide à conduire la séance. Qu’est-ce qu’il nous apprend aussi sur ce qui se passe autour de nous ?"
+    ],
+    "accroches_formes": []
+  },
+  {
+    "id": "directrice-plage-dunes",
+    "question": "Pourquoi les plages et les dunes changent-elles ?",
+    "objectif": "Relier un changement du paysage à ce qui déplace ou retient le sable.",
+    "tip": "Un passage, une pente ou une accumulation de sable offre un point de départ. Évitez de raconter toute l’histoire du littoral d’un seul coup.",
+    "explication": "Le sable se déplace sous l’action du vent, des vagues et des courants. La forme d’une plage peut donc évoluer selon les conditions et les saisons. Dans les dunes, la végétation contribue à retenir le sable, tandis que les passages répétés peuvent la fragiliser. Un changement remarqué par le groupe permet de raconter un littoral en mouvement et de donner du sens au chemin que l’on emprunte.",
+    "accroche": "Cette plage était-elle exactement comme ça la dernière fois ? Qu’est-ce qui a pu déplacer le sable ?",
+    "a_observer": "Une accumulation de sable, un changement de pente, la végétation de dune et les passages aménagés.",
+    "a_retenir": "La plage évolue avec les éléments ; préserver les dunes fait partie de notre manière de pratiquer sur ce rivage.",
+    "erreur_frequente": "Le sable serait un sol stable, et marcher dans la dune n’aurait pas de conséquence.",
+    "actions": [
+      {
+        "id": "directrice-plage-dunes-passage",
+        "label": "Raconter notre passage",
+        "consigne": "Sur le chemin habituel, faites repérer un signe de déplacement du sable. Reliez-le au vent ou aux vagues, puis demandez pourquoi le groupe emprunte le passage aménagé plutôt qu’un raccourci dans la végétation.",
+        "confirmation": "Nous avons parlé du déplacement du sable et de notre passage sur le site."
+      }
+    ],
+    "dimension": "PROTÉGER",
+    "niveau": 1,
+    "tags_theme": [
+      "caracteristiques_littoral"
+    ],
+    "tags_filtre": [
+      "plage",
+      "dune",
+      "dunes",
+      "sable",
+      "érosion"
+    ],
+    "vote_vrai": "La végétation des dunes contribue à retenir le sable.",
+    "vote_faux": "Passer dans la végétation des dunes ne change rien, puisque le sable bouge déjà naturellement.",
+    "source": "copun",
+    "is_public": true,
+    "accroches_variantes": [
+      "Cette plage était-elle exactement comme ça la dernière fois ? Qu’est-ce qui a pu déplacer le sable ?",
+      "Pourquoi passons-nous par ce chemin plutôt que tout droit dans la dune ?",
+      "Ce sable n’est pas forcément resté ici depuis notre dernière séance : qu’est-ce qui a pu le déplacer ?"
+    ],
+    "accroches_formes": []
+  },
+  {
+    "id": "directrice-laisse-mer",
+    "question": "D’où vient ce que la mer dépose sur la plage ?",
+    "objectif": "Partir d’un élément trouvé sur la plage pour raconter son origine et sa place dans le milieu.",
+    "tip": "Choisissez un élément visible sans le manipuler. Faites raconter son trajet ou ce qu’il peut offrir au vivant.",
+    "explication": "La mer dépose près de sa limite de montée des algues, du bois, des coquilles et parfois des déchets : c’est la laisse de mer. Les éléments naturels peuvent fournir de la nourriture et des abris à de petits animaux. Ce que l’on trouve raconte donc à la fois les déplacements de l’eau, la vie du rivage et certaines activités humaines. Une plage vivante n’est pas forcément une plage sans dépôts.",
+    "accroche": "La mer a laissé tout ça ici. Qu’est-ce qui appartient à la vie du rivage, et qu’est-ce qui vient de nos activités ?",
+    "a_observer": "Des éléments naturels et des déchets dans une même zone de dépôt, sans manipuler d’objets coupants ou inconnus.",
+    "a_retenir": "La laisse de mer relie le large au rivage ; retirer les déchets ne signifie pas retirer tous les dépôts naturels.",
+    "erreur_frequente": "Une plage propre devrait être débarrassée de toutes ses algues et de tous ses dépôts.",
+    "actions": [
+      {
+        "id": "directrice-laisse-mer-distinguer",
+        "label": "Garder ce qui fait vivre la plage",
+        "consigne": "Choisissez deux éléments visibles : un dépôt naturel et un déchet. Faites expliquer leur différence, puis cherchez ce qu’un animal peut trouver dans les dépôts naturels. Si un ramassage est adapté, ciblez les déchets identifiables.",
+        "confirmation": "Nous avons distingué des dépôts naturels des déchets présents sur la plage."
+      }
+    ],
+    "dimension": "PROTÉGER",
+    "niveau": 1,
+    "tags_theme": [
+      "caracteristiques_littoral"
+    ],
+    "tags_filtre": [
+      "laisse de mer",
+      "algue",
+      "algues",
+      "déchet",
+      "déchets",
+      "plastique",
+      "traces"
+    ],
+    "vote_vrai": "Les algues déposées sur la plage peuvent servir de nourriture et d’abri à des animaux.",
+    "vote_faux": "Pour préserver la plage, il faut retirer tous les dépôts naturels laissés par la mer.",
+    "source": "copun",
+    "is_public": true,
+    "accroches_variantes": [
+      "La mer a laissé tout ça ici. Qu’est-ce qui appartient à la vie du rivage, et qu’est-ce qui vient de nos activités ?",
+      "Si nous retirions tout ce que la mer dépose, qui perdrait un abri ou de la nourriture ?",
+      "Dans ce que la mer a déposé, qu’est-ce qui appartient au milieu et qu’est-ce qui vient de nos déchets ?"
+    ],
+    "accroches_formes": []
+  },
+  {
+    "id": "directrice-vivant",
+    "question": "Comment vivent les animaux et les plantes du littoral ?",
+    "objectif": "Rebondir sur une rencontre ou une trace pour parler du vivant sans exiger une identification précise.",
+    "tip": "Si vous ne connaissez pas la réponse à la question d’un stagiaire, distinguez ce que vous avez observé de ce qui reste à chercher. Les prolongements permettent de préciser un seul aspect.",
+    "explication": "Le littoral offre de la nourriture, des abris et des lieux de reproduction à de nombreuses espèces. Leur présence dépend du lieu, des marées et des saisons, mais aussi des liens entre les êtres vivants. Après une rencontre, on peut partir d’une question simple : qu’est-ce que cet animal fait ici, ou qu’est-ce que cet endroit peut lui offrir ? Une observation ne permet pas de tout conclure, mais elle suffit pour ouvrir la discussion, même sans connaître le nom exact de l’espèce.",
+    "accroche": "Nous venons de voir cet animal. Qu’est-ce que cet endroit peut lui offrir que le secteur voisin ne lui offre pas ?",
+    "a_observer": "Une présence, une coquille, une trace dans le sable, un déplacement ou un comportement observé pendant la séance.",
+    "a_retenir": "Une rencontre permet de parler des besoins du vivant et de ses liens avec le lieu, avant de chercher à tout identifier.",
+    "erreur_frequente": "Sans pouvoir nommer une espèce, on ne pourrait rien dire d’intéressant à son sujet.",
+    "actions": [
+      {
+        "id": "directrice-vivant-decrire",
+        "label": "Décrire avant de nommer",
+        "consigne": "À partir d’une présence ou d’une trace rencontrée, demandez au groupe de décrire ce qu’il voit. Cherchez ensuite ce que ce lieu peut offrir à un animal. Gardez une question à vérifier plutôt que d’inventer une identification.",
+        "confirmation": "Nous avons observé une présence ou une trace du vivant et parlé de son lien avec le lieu."
+      }
+    ],
+    "dimension": "OBSERVER",
+    "niveau": 1,
+    "tags_theme": [
+      "biodiversite_saisonnalite"
+    ],
+    "tags_filtre": [
+      "vivant",
+      "animal",
+      "poisson",
+      "méduse",
+      "méduses",
+      "phoque",
+      "coquille",
+      "espèce"
+    ],
+    "vote_vrai": "Décrire une trace ou un comportement permet de découvrir le vivant même sans connaître le nom d’une espèce.",
+    "vote_faux": "Pour observer un animal avec le groupe, il faut d’abord pouvoir donner son nom exact.",
+    "source": "copun",
+    "is_public": true,
+    "accroches_variantes": [
+      "Nous venons de voir cet animal. Qu’est-ce que cet endroit peut lui offrir que le secteur voisin ne lui offre pas ?",
+      "Il y a de la vie ici, même quand nous ne voyons personne. Quels indices pourraient nous la faire remarquer ?",
+      "On ne connaît peut-être pas son nom. Mais qu’est-ce qui nous montre qu’un animal utilise cet endroit ?"
+    ],
+    "accroches_formes": []
+  },
+  {
+    "id": "directrice-oiseaux",
+    "question": "Pourquoi les oiseaux sont-ils ici, à ce moment-là ?",
+    "objectif": "Partir d’un comportement d’oiseau pour relier lieu, marée, saison et besoins du vivant.",
+    "tip": "Faites d’abord décrire une action visible. Le nom de l’oiseau peut venir ensuite si quelqu’un le connaît.",
+    "explication": "Les oiseaux utilisent le littoral pour se nourrir, se reposer ou faire une halte pendant leurs déplacements. La marée et la saison changent les ressources et les endroits disponibles. Observer ce qu’un oiseau fait permet de raconter sa présence sans commencer par un inventaire d’espèces. Garder ses distances aide aussi le groupe à voir l’activité que l’animal était venu mener.",
+    "accroche": "Ces oiseaux sont venus ici pour faire quelque chose. Que sont-ils en train de faire ?",
+    "a_observer": "L’endroit où les oiseaux se tiennent et ce qu’ils font : chercher dans la vase, nager, se poser ou rester immobiles.",
+    "a_retenir": "La présence des oiseaux raconte un besoin et un moment de vie ; les observer discrètement permet de le comprendre.",
+    "erreur_frequente": "Faire envoler un groupe d’oiseaux serait une manière de mieux les voir sans les gêner.",
+    "actions": [
+      {
+        "id": "directrice-oiseaux-comportement",
+        "label": "Comprendre leur halte",
+        "consigne": "À distance, faites décrire l’activité des oiseaux. Demandez ce que cet endroit leur offre maintenant et ce qui pourrait changer avec la marée. Choisissez un passage qui leur permet de poursuivre cette activité.",
+        "confirmation": "Nous avons relié le comportement des oiseaux à leur lieu et adapté notre passage."
+      }
+    ],
+    "dimension": "OBSERVER",
+    "niveau": 1,
+    "tags_theme": [
+      "biodiversite_saisonnalite"
+    ],
+    "tags_filtre": [
+      "oiseau",
+      "oiseaux",
+      "migration",
+      "repos",
+      "vasière"
+    ],
+    "vote_vrai": "La marée peut changer les endroits où les oiseaux trouvent de la nourriture ou se reposent.",
+    "vote_faux": "Un oiseau qui s’envole à notre approche a forcément terminé ce qu’il faisait.",
+    "source": "copun",
+    "is_public": true,
+    "accroches_variantes": [
+      "Ces oiseaux sont venus ici pour faire quelque chose. Que sont-ils en train de faire ?",
+      "Si la mer recouvre cet endroit tout à l’heure, où pourraient-ils aller chercher leur nourriture ou se reposer ?",
+      "Ils sont regroupés ici : sont-ils en train de manger, de se reposer ou de se déplacer ?"
+    ],
+    "accroches_formes": []
+  },
+  {
+    "id": "directrice-lieu",
+    "question": "Comment faire découvrir ce qui nous entoure ?",
+    "objectif": "Aider le moniteur à déclencher une observation et à rebondir sur ce que le groupe remarque.",
+    "tip": "Profitez d’une pause ou d’une remarque spontanée. Une seule chose à regarder, puis une seule question : inutile d’interrompre longtemps l’activité.",
+    "explication": "Le groupe remarque plus facilement son environnement quand on lui propose un point d’attention précis : un bruit, une couleur, une trace ou une différence entre deux endroits. Une question courte suffit pour relier cette observation au lieu et à la séance. Le moniteur n’a pas besoin de tout expliquer : faire décrire, comparer ou chercher une relation permet déjà de découvrir quelque chose ensemble.",
+    "accroche": "Qu’avez-vous remarqué ici que vous n’aviez pas vu au départ ?",
+    "a_observer": "Un indice choisi pendant la séance : bruit, trace, couleur, mouvement ou différence entre deux secteurs.",
+    "a_retenir": "Une observation précise et une question courte peuvent ouvrir une découverte, sans transformer la séance en visite guidée.",
+    "erreur_frequente": "Deux secteurs voisins du littoral offriraient les mêmes conditions de pratique et de vie.",
+    "actions": [
+      {
+        "id": "directrice-lieu-comparer",
+        "label": "Une chose que nous n’avions pas vue",
+        "consigne": "Pendant une pause prévue, demandez au groupe de repérer un détail du lieu. Faites-le décrire, puis demandez ce qu’il peut nous apprendre ou quelle question il donne envie de poser.",
+        "confirmation": "Nous avons pris un moment pour observer un détail du milieu et en parler."
+      }
+    ],
+    "dimension": "OBSERVER",
+    "niveau": 1,
+    "tags_theme": [
+      "lecture_paysage"
+    ],
+    "tags_filtre": [
+      "lieu",
+      "paysage",
+      "baie",
+      "rochers",
+      "repère",
+      "abri",
+      "territoire"
+    ],
+    "vote_vrai": "Deux secteurs proches peuvent offrir des conditions différentes selon leur exposition et leur relief.",
+    "vote_faux": "Deux plages voisines accueillent forcément le même vivant et les mêmes conditions de pratique.",
+    "source": "copun",
+    "is_public": true,
+    "accroches_variantes": [
+      "Qu’avez-vous remarqué ici que vous n’aviez pas vu au départ ?",
+      "Regardons ces deux endroits. Quelle différence voyez-vous, et qu’est-ce qu’elle peut changer pour ce qui vit ici ?",
+      "Qu’est-ce que cet endroit offre que le secteur voisin n’offre pas ?"
+    ],
+    "accroches_formes": []
+  },
+  {
+    "id": "directrice-littoral-partage",
+    "question": "Avec qui partageons-nous ce morceau de littoral ?",
+    "objectif": "Partir d’un usage visible pour faire comprendre le partage du littoral et les effets de notre pratique.",
+    "tip": "Choisissez une situation concrète du site. Une règle s’explique mieux quand le groupe comprend ce qu’elle permet de préserver ou de partager.",
+    "explication": "Le littoral est à la fois un lieu de travail, de loisirs et de vie pour de nombreuses espèces. Les activités et les aménagements visibles peuvent aider le groupe à comprendre les usages du site. Un choix de passage, une distance ou une manière d’utiliser le matériel permet ensuite de parler de notre place dans ce milieu et de quelques gestes qui en prennent soin.",
+    "accroche": "Nous utilisons cet endroit pour notre séance. À qui sert-il aussi, aujourd’hui ou à un autre moment ?",
+    "a_observer": "Une activité, un aménagement ou une zone utilisée par le vivant : accès portuaire, passage, lieu de pêche ou reposoir.",
+    "a_retenir": "Comprendre à qui sert le littoral aide à expliquer nos choix et à ajuster notre manière de pratiquer.",
+    "erreur_frequente": "Un espace disponible pour notre groupe serait forcément sans usage ni besoin pour les autres.",
+    "actions": [
+      {
+        "id": "directrice-littoral-partage-choix",
+        "label": "Expliquer un choix de séance",
+        "consigne": "À partir d’un usage visible, demandez à qui le lieu sert. Expliquez un choix concret du groupe qui tient compte de cet usage ou du vivant, puis faites proposer un geste simple à conserver pendant la séance.",
+        "confirmation": "Nous avons parlé du partage du littoral à partir d’un choix de notre pratique."
+      }
+    ],
+    "dimension": "PROTÉGER",
+    "niveau": 1,
+    "tags_theme": [
+      "activites_humaines"
+    ],
+    "tags_filtre": [
+      "usages",
+      "littoral",
+      "pêche",
+      "port",
+      "protection",
+      "impact",
+      "partage"
+    ],
+    "vote_vrai": "Choisir notre passage et notre distance peut aider à partager le lieu avec ses autres usagers et le vivant.",
+    "vote_faux": "Quand un espace paraît vide, notre pratique ne peut gêner aucun usage ni aucun animal.",
+    "source": "copun",
+    "is_public": true,
+    "accroches_variantes": [
+      "Nous utilisons cet endroit pour notre séance. À qui sert-il aussi, aujourd’hui ou à un autre moment ?",
+      "Ce passage ou cet aménagement existe pour une raison. À votre avis, qui l’utilise et de quoi a-t-il besoin ?",
+      "Pour nous, c’est un lieu de séance. Pour qui est-ce aussi un lieu de travail, de repos ou de nourriture ?"
+    ],
+    "accroches_formes": []
+  },
+  {
+    "id": "directrice-pollution",
+    "question": "Comment éviter de polluer la mer et le rivage ?",
+    "objectif": "Partir d’un déchet ou d’un usage visible pour faire comprendre son trajet et proposer un geste accessible.",
+    "tip": "Un objet rencontré ou une habitude du groupe suffit. Cherchez ensemble une action concrète plutôt qu’une leçon générale sur la pollution.",
+    "explication": "Ce qui arrive dans l’eau peut circuler avec les courants et toucher des lieux éloignés. Sur la plage, il faut distinguer les déchets des dépôts naturels qui font partie de la vie du rivage. Parler de pollution pendant une séance peut donc partir d’un objet visible : comment est-il arrivé là, où peut-il aller, et que pouvons-nous changer dans notre pratique ?",
+    "accroche": "Cet objet est arrivé ici. Par quel chemin, et où pourrait-il aller si personne ne le retirait ?",
+    "accroches_variantes": [
+      "Cet objet est arrivé ici. Par quel chemin, et où pourrait-il aller si personne ne le retirait ?",
+      "Qu’est-ce que notre groupe peut éviter de laisser partir vers la mer ?"
+    ],
+    "accroches_formes": [],
+    "a_observer": "Un déchet visible, une zone de dépôt ou un point où l’eau transporte des éléments, sans manipuler d’objet coupant ou inconnu.",
+    "a_retenir": "Comprendre le trajet d’un déchet aide à choisir un geste utile ; les éléments naturels de la laisse de mer ont, eux, une place dans le milieu.",
+    "erreur_frequente": "Tout ce qui reste sur une plage serait un déchet à retirer.",
+    "actions": [
+      {
+        "id": "directrice-pollution-geste",
+        "label": "Un trajet, un geste",
+        "consigne": "À partir d’un objet visible, faites imaginer son trajet jusqu’ici et ce qui pourrait l’emporter plus loin. Choisissez ensuite un geste simple que le groupe peut appliquer pendant la séance.",
+        "confirmation": "Nous avons relié un déchet rencontré à un geste pour limiter notre impact."
+      }
+    ],
+    "dimension": "PROTÉGER",
+    "niveau": 1,
+    "tags_theme": [
+      "impact_presence_humaine"
+    ],
+    "tags_filtre": [
+      "déchets",
+      "pollution",
+      "plastique",
+      "laisse de mer",
+      "courant",
+      "rivage"
+    ],
+    "vote_vrai": "Un déchet arrivé dans l’eau peut toucher un autre lieu en se déplaçant avec elle.",
+    "vote_faux": "Tout ce que la mer dépose sur la plage est un déchet à retirer.",
+    "source": "copun",
+    "is_public": true
+  }
+]

@@ -94,12 +94,13 @@ const ETATS: { valeur: StageObjectiveExecutionStatus; libelle: string }[] = [
     { valeur: 'done', libelle: 'Abordé' },
 ];
 
-function ObjectiveCard({ objective, status, pending, error, choisir }: {
+function ObjectiveCard({ objective, status, pending, error, choisir, readOnly }: {
     objective: Objective;
     status: StageObjectiveExecutionStatus;
     pending: boolean;
     error: string | null;
     choisir: (next: StageObjectiveExecutionStatus) => void;
+    readOnly: boolean;
 }) {
     return <article className="co-hand-card">
         <div className="co-week-objective-body">
@@ -109,9 +110,6 @@ function ObjectiveCard({ objective, status, pending, error, choisir }: {
                 <h3>{objective.question}</h3>
                 {status !== 'not_done' && <span className={`co-hand-card-status co-hand-card-status-${status}`}>{ETATS.find(etat => etat.valeur === status)?.libelle}</span>}
             </div>
-            {status === 'not_done' && objective.plannedFor && <p className="co-eyebrow">
-                Prévu le {new Date(`${objective.plannedFor}T12:00:00Z`).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', timeZone: 'Europe/Paris' })}
-            </p>}
             {/* Se lit comme un article, au calme, pendant la préparation : l'accroche en
                 citation, puis deux paragraphes à intertitre. Pas de cases. */}
             {status !== 'not_done' && <p className="my-4 text-corps">Pour continuer à en parler lors d’une prochaine séance, vous pouvez essayer une autre accroche ou proposer cette activité.</p>}
@@ -121,14 +119,14 @@ function ObjectiveCard({ objective, status, pending, error, choisir }: {
             </section>}
             {objective.action && <section className="co-week-article-groupe"><h4>{status === 'not_done' ? 'Avec le groupe' : 'Une idée pour la suite'}</h4><p>{objective.action}</p></section>}
             {objective.retenir && <section className="co-week-article-part co-week-article-retenir"><h4>À retenir</h4><p>{objective.retenir}</p></section>}
-            <div className="co-week-objective-status" aria-label="Où j’en suis sur ce sujet">
+            {!readOnly && <div className="co-week-objective-status" aria-label="Où j’en suis sur ce sujet">
                 {ETATS.map(etat => (
                     <button key={etat.valeur} type="button" aria-pressed={status === etat.valeur} disabled={pending}
                         onClick={() => choisir(etat.valeur)}>
                         {etat.libelle}
                     </button>
                 ))}
-            </div>
+            </div>}
             {error && <p className="co-week-objective-error" role="alert">{error}</p>}
         </div>
     </article>;
@@ -144,17 +142,24 @@ function ObjectiveCard({ objective, status, pending, error, choisir }: {
  */
 export type EntreeLibre = { href: string; titre: string; detail: string };
 
-export function WeekObjectiveTracker({ stageId, objectives, extra }: {
+export function WeekObjectiveTracker({ stageId, objectives, extra, initialCardId, readOnly = false, futureWeek = false }: {
     stageId: string;
     objectives: Objective[];
     extra?: EntreeLibre;
+    initialCardId?: string;
+    readOnly?: boolean;
+    futureWeek?: boolean;
 }) {
     /* La carte devant est mémorisée par semaine, sur l'appareil (simple confort de
        lecture : rien de partagé). On retient l'identifiant, pas la position, pour
        rester juste si la sélection de la semaine change entre-temps. */
     const cleMemoire = `copun:pile:${stageId}`;
-    const [active, setActiveState] = useState(0);
+    const [active, setActiveState] = useState(() => Math.max(0, objectives.findIndex(objective => objective.id === initialCardId)));
     useEffect(() => {
+        if (initialCardId && objectives.some(objective => objective.id === initialCardId)) {
+            try { localStorage.setItem(cleMemoire, initialCardId); } catch { /* sans effet */ }
+            return;
+        }
         try {
             const id = localStorage.getItem(cleMemoire);
             const index = objectives.findIndex(objective => objective.id === id);
@@ -213,7 +218,7 @@ export function WeekObjectiveTracker({ stageId, objectives, extra }: {
                 onPasser={() => { setError(null); if (prochaine !== undefined) setActive(prochaine); }}
                 onAmener={() => { setError(null); setActive(index); }}
                 multiple={objectives.length > 1}>
-                <ObjectiveCard objective={objectives[index]} status={statuses[objectives[index].id]}
+                <ObjectiveCard objective={objectives[index]} status={statuses[objectives[index].id]} readOnly={readOnly || futureWeek}
                     pending={rang === 0 && pending} error={rang === 0 ? error : null}
                     choisir={rang === 0 ? choisir : () => {}}/>
             </CarteDeLaPile>)}

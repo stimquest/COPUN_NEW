@@ -15,6 +15,8 @@
  * couverture est vérifiée par `scripts/verifier-groupes.mjs` (128 fiches, sans doublon).
  */
 
+import { directriceDe } from './cartes-directrices';
+
 export type Groupe = {
     id: string;
     label: string;
@@ -162,7 +164,7 @@ GROUPES.forEach(g => g.fiches.forEach(f => INDEX.set(String(f), g)));
 
 /** Groupe d'appartenance d'une fiche — null pour les fiches personnelles (hors catalogue). */
 export function groupeDe(ficheId: string): Groupe | null {
-    return INDEX.get(ficheId) ?? null;
+    return INDEX.get(ficheId) ?? GROUPES.find(group => group.id === directriceDe(ficheId)?.groupes[0]) ?? null;
 }
 
 export function groupesDuMilieu(milieu: string): Groupe[] {

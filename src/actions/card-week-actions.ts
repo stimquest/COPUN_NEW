@@ -33,10 +33,10 @@ export async function addCardToWeek(stageId: string, contentId: string, choice: 
     return { success: true };
 }
 
-export async function addCardToCalendarWeek(next: boolean, contentId: string, choice: CardChoice, discussed: boolean, day: string | null = null) {
+export async function addCardToCalendarWeek(next: boolean, contentId: string, choice: CardChoice, discussed: boolean, day: string | null = null, executionStatus?: 'partial' | 'done') {
     if (next && discussed) return { success: false, error: 'Un sujet déjà abordé appartient à la semaine en cours.' };
     const week = await ensureCalendarWeek(next);
     if (!week) return { success: false, error: 'Reconnectez-vous pour retrouver votre semaine.' };
-    const result = await addCardToWeek(week.id, contentId, choice, discussed, day);
+    const result = await addCardToWeek(week.id, contentId, choice, discussed, day, executionStatus);
     return result.success ? { ...result, stageId: week.id } : result;
 }

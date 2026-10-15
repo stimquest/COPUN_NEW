@@ -5,6 +5,7 @@ import { isStageObjectiveExecutionStatus, isStageObjectiveImpactLevel } from '@/
 import { PedagogicalContent, StageObjectiveReviewItem } from '@/types';
 import { OBSERVATION_TYPES } from '@/data/observations';
 import { PILLARS, THEMES_BY_PILLAR } from '@/data/etages';
+import { CARTES_DIRECTRICES } from '@/data/cartes-directrices';
 
 
 export async function getStageById(id: string) {
@@ -511,16 +512,23 @@ export async function getObservationsDashboardStats(): Promise<ObservationsDashb
     return { totalObservations: observations.length, byType, topSpecies };
 }
 
-export async function getPedagogicalPool(): Promise<PedagogicalContent[]> {
+export async function getPedagogicalPool(includeDirectors = false): Promise<PedagogicalContent[]> {
     const supabase = await createClient();
-    const { data, error } = await supabase
+    let query = supabase
         .from('pedagogical_content')
         .select('*');
+    if (!includeDirectors) query = query.not('id', 'like', 'directrice-%');
+    const { data, error } = await query;
 
     if (error) {
         throw new Error('Chargement du catalogue impossible', { cause: error });
     }
     return data.map(contentModel);
+}
+
+/** Cartes principales de la semaine, distinctes du catalogue détaillé par COP. */
+export async function getDirectorCards(): Promise<PedagogicalContent[]> {
+    return getPedagogicalContentByIds(CARTES_DIRECTRICES.map(card => card.id));
 }
 
 /**
